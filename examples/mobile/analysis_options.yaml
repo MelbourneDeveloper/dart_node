@@ -1,0 +1,6 @@
+include: package:lints/recommended.yaml
+
+linter:
+  rules:
+    avoid_print: true
+    prefer_single_quotes: true

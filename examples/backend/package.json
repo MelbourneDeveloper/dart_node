@@ -1,0 +1,6 @@
+{
+  "name": "dart_express_server",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

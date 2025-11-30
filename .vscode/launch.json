@@ -1,0 +1,62 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend: Build & Run",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/examples/backend/build/server.js",
+      "cwd": "${workspaceFolder}/examples/backend",
+      "preLaunchTask": "build-backend",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Backend: Run Only",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/examples/backend/build/server.js",
+      "cwd": "${workspaceFolder}/examples/backend",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Frontend: Build & Serve",
+      "type": "chrome",
+      "request": "launch",
+      "url": "file://${workspaceFolder}/examples/frontend/web/index.html",
+      "webRoot": "${workspaceFolder}/examples/frontend",
+      "preLaunchTask": "build-frontend"
+    },
+    {
+      "name": "Mobile: Build & Run (Expo)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "ios"],
+      "cwd": "${workspaceFolder}/examples/mobile/rn",
+      "preLaunchTask": "build-mobile",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Mobile: Build Only",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "dart",
+      "runtimeArgs": ["run", "tools/build/build.dart", "mobile"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Backend Tests",
+      "type": "dart",
+      "request": "launch",
+      "program": "${workspaceFolder}/examples/backend/test/server_test.dart",
+      "cwd": "${workspaceFolder}/examples/backend"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack: Backend + Frontend",
+      "configurations": ["Backend: Build & Run", "Frontend: Build & Serve"]
+    }
+  ]
+}

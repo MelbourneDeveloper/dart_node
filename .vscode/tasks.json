@@ -1,0 +1,80 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-backend",
+      "type": "shell",
+      "command": "dart",
+      "args": ["run", "tools/build/build.dart", "backend"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": ["$dart"]
+    },
+    {
+      "label": "build-frontend",
+      "type": "shell",
+      "command": "bash",
+      "args": ["build.sh"],
+      "options": {
+        "cwd": "${workspaceFolder}/examples/frontend"
+      },
+      "group": "build",
+      "problemMatcher": ["$dart"]
+    },
+    {
+      "label": "build-mobile",
+      "type": "shell",
+      "command": "dart",
+      "args": ["run", "tools/build/build.dart", "mobile"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": ["$dart"]
+    },
+    {
+      "label": "mobile-expo-start",
+      "type": "shell",
+      "command": "npm",
+      "args": ["start"],
+      "options": {
+        "cwd": "${workspaceFolder}/examples/mobile/rn"
+      },
+      "dependsOn": ["build-mobile"],
+      "problemMatcher": []
+    },
+    {
+      "label": "mobile-install-deps",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "options": {
+        "cwd": "${workspaceFolder}/examples/mobile/rn"
+      },
+      "group": "build"
+    },
+    {
+      "label": "install-backend-deps",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "options": {
+        "cwd": "${workspaceFolder}/examples/backend"
+      },
+      "group": "build"
+    },
+    {
+      "label": "test-backend",
+      "type": "shell",
+      "command": "dart",
+      "args": ["test"],
+      "options": {
+        "cwd": "${workspaceFolder}/examples/backend"
+      },
+      "group": "test",
+      "problemMatcher": ["$dart"]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+
+include: package:austerity/analysis_options.yaml
+
+analyzer:
+  errors:
+    require_trailing_commas: ignore

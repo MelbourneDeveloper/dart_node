@@ -1,0 +1,21 @@
+name: mobile
+description: React Native mobile app in Dart
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  nadz: ^0.0.7-beta
+  dart_node_react:
+    path: ../../packages/dart_node_react
+  dart_node_react_native:
+    path: ../../packages/dart_node_react_native
+  shared:
+    path: ../shared
+
+dev_dependencies:
+  lints: ^5.0.0
+  ui_testing:
+    path: ../../packages/ui_testing

@@ -1,0 +1,20 @@
+name: frontend
+description: React frontend in Dart (compiles to browser JS)
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  austerity: ^1.3.0
+  dart_node_react:
+    path: ../../packages/dart_node_react
+  nadz: ^0.0.7-beta
+  shared:
+    path: ../shared
+
+dev_dependencies:
+  lints: ^5.0.0
+  ui_testing:
+    path: ../../packages/ui_testing

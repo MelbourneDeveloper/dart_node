@@ -1,0 +1,26 @@
+{
+  "name": "dart-mobile",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "prestart": "npx kill-port --port 8083 || true",
+    "preandroid": "npx kill-port --port 8083 || true",
+    "preios": "npx kill-port --port 8083 || true",
+    "start": "expo start --port 8083",
+    "android": "expo start --android --port 8083",
+    "ios": "expo start --ios --port 8083",
+    "build:dart": "cd .. && dart run ../../tools/build/build.dart mobile"
+  },
+  "dependencies": {
+    "expo": "~52.0.0",
+    "expo-asset": "^12.0.10",
+    "expo-status-bar": "~2.0.0",
+    "react": "18.3.1",
+    "react-native": "0.76.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@react-native-community/cli": "latest",
+    "kill-port": "^2.0.1"
+  }
+}

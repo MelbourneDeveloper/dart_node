@@ -1,0 +1,10 @@
+# Build output
+build/
+*.js
+*.js.map
+*.js.deps
+
+# Dart
+.dart_tool/
+.packages
+pubspec.lock

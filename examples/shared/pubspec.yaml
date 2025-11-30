@@ -1,0 +1,10 @@
+name: shared
+description: Shared models and types for frontend and backend
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  nadz: ^0.0.7-beta

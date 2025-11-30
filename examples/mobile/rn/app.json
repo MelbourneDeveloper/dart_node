@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "DartMobile",
+    "slug": "dart-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#f5f5f5"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#f5f5f5"
+      }
+    }
+  }
+}
