@@ -17,5 +17,3 @@ dependencies:
 
 dev_dependencies:
   lints: ^5.0.0
-  ui_testing:
-    path: ../../packages/ui_testing
