@@ -46,9 +46,9 @@
       "name": "Mobile: Build Only",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "dart",
-      "runtimeArgs": ["run", "tools/build/build.dart", "mobile"],
-      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "android"],
+      "cwd": "${workspaceFolder}/examples/mobile/rn",
       "console": "integratedTerminal"
     },
     {
