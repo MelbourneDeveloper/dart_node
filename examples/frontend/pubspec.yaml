@@ -13,6 +13,8 @@ dependencies:
   nadz: ^0.0.7-beta
   shared:
     path: ../shared
+  ui_testing:
+    path: ../../packages/ui_testing
 
 dev_dependencies:
   lints: ^5.0.0

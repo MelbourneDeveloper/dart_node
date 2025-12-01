@@ -12,3 +12,5 @@ examples/frontend/web/app.js.map
 
 
 examples/mobile/rn/.expo/
+
+examples/frontend/web/test/coverage/

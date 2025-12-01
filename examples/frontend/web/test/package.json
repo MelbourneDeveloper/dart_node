@@ -6,7 +6,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "build:tests": "dart compile js ui_test.dart -o dist/ui_test.js"
+    "build:tests": "cd ../.. && dart compile js test/ui_test.dart -o web/test/dist/ui_test.js"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",

@@ -368,7 +368,7 @@ ReactElement _buildTaskManager(
             final data = event['data'] as JSObject?;
             switch (data) {
               case final JSObject d:
-                _handleTaskEvent(type, d, tasksState, setTasks);
+                _handleTaskEvent(type, d, setTasks);
               case null:
                 break;
             }
@@ -636,34 +636,32 @@ JSString _getInputValue(JSAny event) {
   };
 }
 
-/// Handle incoming WebSocket task events
+/// Handle incoming WebSocket task events using functional updater
 void _handleTaskEvent(
   String? type,
   JSObject task,
-  JSAny? tasksState,
   JSFunction setTasks,
 ) {
-  final tasks = tasksState as JSArray?;
-  final current = (tasks?.toDart ?? []).cast<JSObject>();
   final taskId = (task['id'] as JSString?)?.toDart;
 
-  switch (type) {
-    case 'task_created':
-      setTasks.callAsFunction(null, [...current, task].toJS);
-    case 'task_updated':
-      final updated = current.map((t) {
-        final id = (t['id'] as JSString?)?.toDart;
-        return (id == taskId) ? task : t;
-      }).toList();
-      setTasks.callAsFunction(null, updated.toJS);
-    case 'task_deleted':
-      final filtered = current.where((t) {
-        final id = (t['id'] as JSString?)?.toDart;
-        return id != taskId;
-      }).toList();
-      setTasks.callAsFunction(null, filtered.toJS);
-    default:
-      // Unknown event type, ignore
-      break;
-  }
+  // Use functional updater to get current state
+  final updater = ((JSAny? prevState) {
+    final tasks = prevState as JSArray?;
+    final current = (tasks?.toDart ?? []).cast<JSObject>();
+
+    return switch (type) {
+      'task_created' => [...current, task].toJS,
+      'task_updated' => current.map((t) {
+          final id = (t['id'] as JSString?)?.toDart;
+          return (id == taskId) ? task : t;
+        }).toList().toJS,
+      'task_deleted' => current.where((t) {
+          final id = (t['id'] as JSString?)?.toDart;
+          return id != taskId;
+        }).toList().toJS,
+      _ => prevState,
+    };
+  }).toJS;
+
+  setTasks.callAsFunction(null, updater);
 }
