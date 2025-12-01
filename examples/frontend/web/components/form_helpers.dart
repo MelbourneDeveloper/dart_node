@@ -1,22 +1,17 @@
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'package:dart_node_react/dart_node_react.dart';
-import 'package:shared/theme/theme.dart';
 
 /// Create a form group with label
 DivElement formGroup(String labelText, ReactElement inputElement) => div(
       className: 'form-group',
-      style: AppStyles.formGroup,
       children: [labelEl(labelText), inputElement],
     );
 
 /// Create a label element
 ReactElement labelEl(String text) => createElement(
       'label'.toJS,
-      createProps({
-        'className': 'label',
-        'style': convertStyle(AppStyles.label),
-      }),
+      createProps({'className': 'label'}),
       text.toJS,
     );
 

@@ -4,7 +4,6 @@ import 'dart:js_interop';
 import 'package:dart_node_react/dart_node_react.dart';
 import 'package:nadz/nadz.dart';
 import 'package:shared/http/http_client.dart';
-import 'package:shared/theme/theme.dart';
 
 import '../types.dart';
 import 'form_helpers.dart';
@@ -62,15 +61,10 @@ ReactElement buildLoginForm(AuthEffects auth) => createElement(
 
     return div(
       className: 'auth-card',
-      style: AppStyles.authCard,
       children: [
-        h2('Sign In', className: 'auth-title', style: AppStyles.authTitle),
+        h2('Sign In', className: 'auth-title'),
         if (error != null)
-          div(
-            className: 'error-msg',
-            style: AppStyles.errorMsg,
-            child: span(error),
-          )
+          div(className: 'error-msg', child: span(error))
         else
           span(''),
         formGroup(
@@ -80,7 +74,6 @@ ReactElement buildLoginForm(AuthEffects auth) => createElement(
             placeholder: 'you@example.com',
             value: email,
             className: 'input',
-            style: AppStyles.input,
             onChange: (e) => setEmail.callAsFunction(null, getInputValue(e)),
           ),
         ),
@@ -91,25 +84,21 @@ ReactElement buildLoginForm(AuthEffects auth) => createElement(
             placeholder: '••••••••',
             value: password,
             className: 'input',
-            style: AppStyles.input,
             onChange: (e) => setPass.callAsFunction(null, getInputValue(e)),
           ),
         ),
         button(
           text: loading ? 'Signing in...' : 'Sign In',
-          className: 'btn btn-primary',
-          style: AppStyles.btnPrimary,
+          className: 'btn btn-primary btn-full',
           onClick: loading ? null : handleSubmit,
         ),
         div(
           className: 'auth-footer',
-          style: AppStyles.authFooter,
           children: [
             span("Don't have an account? "),
             button(
               text: 'Register',
               className: 'btn-link',
-              style: AppStyles.btnLink,
               onClick: () => auth.setView('register'),
             ),
           ],
@@ -174,19 +163,10 @@ ReactElement buildRegisterForm(AuthEffects auth) => createElement(
 
     return div(
       className: 'auth-card',
-      style: AppStyles.authCard,
       children: [
-        h2(
-          'Create Account',
-          className: 'auth-title',
-          style: AppStyles.authTitle,
-        ),
+        h2('Create Account', className: 'auth-title'),
         if (error != null)
-          div(
-            className: 'error-msg',
-            style: AppStyles.errorMsg,
-            child: span(error),
-          )
+          div(className: 'error-msg', child: span(error))
         else
           span(''),
         formGroup(
@@ -196,7 +176,6 @@ ReactElement buildRegisterForm(AuthEffects auth) => createElement(
             placeholder: 'Your name',
             value: name,
             className: 'input',
-            style: AppStyles.input,
             onChange: (e) => setName.callAsFunction(null, getInputValue(e)),
           ),
         ),
@@ -207,7 +186,6 @@ ReactElement buildRegisterForm(AuthEffects auth) => createElement(
             placeholder: 'you@example.com',
             value: email,
             className: 'input',
-            style: AppStyles.input,
             onChange: (e) => setEmail.callAsFunction(null, getInputValue(e)),
           ),
         ),
@@ -218,25 +196,21 @@ ReactElement buildRegisterForm(AuthEffects auth) => createElement(
             placeholder: '••••••••',
             value: password,
             className: 'input',
-            style: AppStyles.input,
             onChange: (e) => setPass.callAsFunction(null, getInputValue(e)),
           ),
         ),
         button(
           text: loading ? 'Creating...' : 'Create Account',
-          className: 'btn btn-primary',
-          style: AppStyles.btnPrimary,
+          className: 'btn btn-primary btn-full',
           onClick: loading ? null : handleSubmit,
         ),
         div(
           className: 'auth-footer',
-          style: AppStyles.authFooter,
           children: [
             span('Already have an account? '),
             button(
               text: 'Sign In',
               className: 'btn-link',
-              style: AppStyles.btnLink,
               onClick: () => auth.setView('login'),
             ),
           ],

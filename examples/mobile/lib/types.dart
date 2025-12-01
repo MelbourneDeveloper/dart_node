@@ -1,7 +1,9 @@
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 
-/// API configuration
-const apiUrl = 'http://localhost:3000';
+/// API configuration - reads from global set by build preamble
+String get apiUrl =>
+    (globalContext['__API_URL__'] as JSString?)?.toDart ?? 'http://localhost:3000';
 
 /// Auth state - immutable record
 typedef AuthState = ({JSString? token, JSObject? user, String view});

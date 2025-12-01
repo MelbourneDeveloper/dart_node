@@ -10,3 +10,5 @@ examples/frontend/web/app.js
 examples/frontend/web/app.js.deps
 examples/frontend/web/app.js.map
 
+
+examples/mobile/rn/.expo/

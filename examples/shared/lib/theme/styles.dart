@@ -7,10 +7,10 @@ abstract final class AppStyles {
   // Auth card container
   static const Map<String, dynamic> authCard = {
     'backgroundColor': AppColors.bgCard,
-    'border': AppColors.borderCard,
+    'borderWidth': 1,
+    'borderColor': AppColors.borderRN,
     'borderRadius': AppSpacing.radiusXl,
-    'padding': '40px',
-    'boxShadow': '0 16px 64px rgba(0, 0, 0, 0.5)',
+    'padding': 40,
   };
 
   // Auth title
@@ -32,15 +32,14 @@ abstract final class AppStyles {
 
   // Text input
   static const Map<String, dynamic> input = {
-    'width': '100%',
-    'padding': '14px 16px',
+    'paddingVertical': 14,
+    'paddingHorizontal': 16,
     'fontSize': AppTypography.sizeMd,
-    'fontFamily': 'inherit',
     'backgroundColor': AppColors.bgSecondary,
-    'border': AppColors.borderInput,
+    'borderWidth': 1,
+    'borderColor': AppColors.borderRN,
     'borderRadius': AppSpacing.radiusMd,
     'color': AppColors.textPrimary,
-    'outline': 'none',
   };
 
   // Form group spacing
@@ -50,19 +49,12 @@ abstract final class AppStyles {
 
   // Primary button
   static const Map<String, dynamic> btnPrimary = {
-    'display': 'inline-flex',
     'alignItems': 'center',
     'justifyContent': 'center',
-    'padding': '14px 24px',
-    'fontSize': '15px',
-    'fontWeight': '600',
-    'fontFamily': 'inherit',
-    'border': 'none',
+    'paddingVertical': 14,
+    'paddingHorizontal': 24,
     'borderRadius': AppSpacing.radiusMd,
-    'cursor': 'pointer',
-    'background': 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
-    'color': 'white',
-    'boxShadow': '0 2px 8px rgba(0, 0, 0, 0.3)',
+    'backgroundColor': AppColors.accentPrimary,
     'marginTop': AppSpacing.sm,
   };
 
@@ -429,14 +421,13 @@ abstract final class AppStyles {
 
   // Large input (for main task input)
   static const Map<String, dynamic> inputLg = {
-    'width': '100%',
-    'padding': '16px 20px',
+    'paddingVertical': 16,
+    'paddingHorizontal': 20,
     'fontSize': AppTypography.sizeLg,
-    'fontFamily': 'inherit',
     'backgroundColor': AppColors.bgSecondary,
-    'border': AppColors.borderInput,
+    'borderWidth': 1,
+    'borderColor': AppColors.borderRN,
     'borderRadius': AppSpacing.radiusMd,
     'color': AppColors.textPrimary,
-    'outline': 'none',
   };
 }

@@ -29,7 +29,10 @@
       "command": "dart",
       "args": ["run", "tools/build/build.dart", "mobile"],
       "options": {
-        "cwd": "${workspaceFolder}"
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "API_URL": "http://192.168.1.114:3000"
+        }
       },
       "group": "build",
       "problemMatcher": ["$dart"]

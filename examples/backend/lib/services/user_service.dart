@@ -14,7 +14,7 @@ class UserService {
     final id = 'user_${_nextId++}';
     final user = (
       id: id,
-      email: email,
+      email: email.toLowerCase(),
       passwordHash: _hashPassword(password),
       name: name,
       role: UserRole.member,
@@ -28,10 +28,11 @@ class UserService {
   /// Find user by ID
   User? findById(String id) => _users[id];
 
-  /// Find user by email
+  /// Find user by email (case-insensitive)
   User? findByEmail(String email) {
+    final normalizedEmail = email.toLowerCase();
     for (final user in _users.values) {
-      if (user.email == email) return user;
+      if (user.email == normalizedEmail) return user;
     }
     return null;
   }

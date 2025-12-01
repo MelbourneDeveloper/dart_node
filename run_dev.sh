@@ -40,7 +40,7 @@ echo ""
 echo "[3/4] Building React app..."
 cd "$SCRIPT_DIR/examples/frontend"
 dart pub get
-dart compile js web/app.dart -o web/app.js -O2
+dart compile js web/app.dart -o build/app.js -O2
 
 # Start servers
 echo ""

@@ -4,7 +4,6 @@ import 'dart:js_interop_unsafe';
 import 'package:dart_node_react/dart_node_react.dart';
 import 'package:nadz/nadz.dart';
 import 'package:shared/http/http_client.dart';
-import 'package:shared/theme/theme.dart';
 
 const apiUrl = 'http://localhost:3000';
 
@@ -29,7 +28,6 @@ ReactElement App() => createElement(
 
     return div(
       className: 'app',
-      style: AppStyles.app,
       children: [
         _buildHeader(user, () {
           setToken.callAsFunction();
@@ -38,7 +36,6 @@ ReactElement App() => createElement(
         }),
         mainEl(
           className: 'main-content',
-          style: AppStyles.mainContent,
           child: (token == null)
               ? (view == 'register')
                     ? _buildRegisterForm(setToken, setUser, setView)
@@ -47,7 +44,6 @@ ReactElement App() => createElement(
         ),
         footer(
           className: 'footer',
-          style: AppStyles.footer,
           child: pEl('Powered by Dart + React + Express'),
         ),
       ],
@@ -59,33 +55,25 @@ HeaderElement _buildHeader(JSObject? user, void Function() onLogout) {
   final userName = user?['name']?.toString();
   return header(
     className: 'header',
-    style: AppStyles.header,
     children: [
       div(
         className: 'header-content',
-        style: AppStyles.headerContent,
         children: [
-          h1('TaskFlow', className: 'logo', style: AppStyles.logo),
+          h1('TaskFlow', className: 'logo'),
           if (userName != null)
             div(
               className: 'user-info',
-              style: AppStyles.userInfo,
               children: [
-                span(
-                  'Welcome, $userName',
-                  className: 'user-name',
-                  style: AppStyles.headerUserName,
-                ),
+                span('Welcome, $userName', className: 'user-name'),
                 button(
                   text: 'Logout',
-                  className: 'btn-ghost',
-                  style: AppStyles.btnGhost,
+                  className: 'btn btn-ghost',
                   onClick: onLogout,
                 ),
               ],
             )
           else
-            span('', className: 'spacer', style: AppStyles.spacer),
+            span('', className: 'spacer'),
         ],
       ),
     ],
@@ -148,20 +136,14 @@ ReactElement _buildLoginForm(
 
     return div(
       className: 'auth-card',
-      style: AppStyles.authCard,
       children: [
-        h2('Sign In', className: 'auth-title', style: AppStyles.authTitle),
+        h2('Sign In', className: 'auth-title'),
         if (error != null)
-          div(
-            className: 'error-msg',
-            style: AppStyles.errorMsg,
-            child: span(error),
-          )
+          div(className: 'error-msg', child: span(error))
         else
           span(''),
         div(
           className: 'form-group',
-          style: AppStyles.formGroup,
           children: [
             _labelEl('Email'),
             input(
@@ -169,15 +151,12 @@ ReactElement _buildLoginForm(
               placeholder: 'you@example.com',
               value: email,
               className: 'input',
-              style: AppStyles.input,
-              onChange: (e) =>
-                  setEmail.callAsFunction(null, _getInputValue(e)),
+              onChange: (e) => setEmail.callAsFunction(null, _getInputValue(e)),
             ),
           ],
         ),
         div(
           className: 'form-group',
-          style: AppStyles.formGroup,
           children: [
             _labelEl('Password'),
             input(
@@ -185,27 +164,22 @@ ReactElement _buildLoginForm(
               placeholder: '••••••••',
               value: password,
               className: 'input',
-              style: AppStyles.input,
-              onChange: (e) =>
-                  setPass.callAsFunction(null, _getInputValue(e)),
+              onChange: (e) => setPass.callAsFunction(null, _getInputValue(e)),
             ),
           ],
         ),
         button(
           text: loading ? 'Signing in...' : 'Sign In',
-          className: 'btn btn-primary',
-          style: AppStyles.btnPrimary,
+          className: 'btn btn-primary btn-full',
           onClick: loading ? null : handleSubmit,
         ),
         div(
           className: 'auth-footer',
-          style: AppStyles.authFooter,
           children: [
             span("Don't have an account? "),
             button(
               text: 'Register',
               className: 'btn-link',
-              style: AppStyles.btnLink,
               onClick: () => setView.callAsFunction(null, 'register'.toJS),
             ),
           ],
@@ -273,24 +247,14 @@ ReactElement _buildRegisterForm(
 
     return div(
       className: 'auth-card',
-      style: AppStyles.authCard,
       children: [
-        h2(
-          'Create Account',
-          className: 'auth-title',
-          style: AppStyles.authTitle,
-        ),
+        h2('Create Account', className: 'auth-title'),
         if (error != null)
-          div(
-            className: 'error-msg',
-            style: AppStyles.errorMsg,
-            child: span(error),
-          )
+          div(className: 'error-msg', child: span(error))
         else
           span(''),
         div(
           className: 'form-group',
-          style: AppStyles.formGroup,
           children: [
             _labelEl('Name'),
             input(
@@ -298,15 +262,12 @@ ReactElement _buildRegisterForm(
               placeholder: 'Your name',
               value: name,
               className: 'input',
-              style: AppStyles.input,
-              onChange: (e) =>
-                  setName.callAsFunction(null, _getInputValue(e)),
+              onChange: (e) => setName.callAsFunction(null, _getInputValue(e)),
             ),
           ],
         ),
         div(
           className: 'form-group',
-          style: AppStyles.formGroup,
           children: [
             _labelEl('Email'),
             input(
@@ -314,15 +275,12 @@ ReactElement _buildRegisterForm(
               placeholder: 'you@example.com',
               value: email,
               className: 'input',
-              style: AppStyles.input,
-              onChange: (e) =>
-                  setEmail.callAsFunction(null, _getInputValue(e)),
+              onChange: (e) => setEmail.callAsFunction(null, _getInputValue(e)),
             ),
           ],
         ),
         div(
           className: 'form-group',
-          style: AppStyles.formGroup,
           children: [
             _labelEl('Password'),
             input(
@@ -330,27 +288,22 @@ ReactElement _buildRegisterForm(
               placeholder: '••••••••',
               value: password,
               className: 'input',
-              style: AppStyles.input,
-              onChange: (e) =>
-                  setPass.callAsFunction(null, _getInputValue(e)),
+              onChange: (e) => setPass.callAsFunction(null, _getInputValue(e)),
             ),
           ],
         ),
         button(
           text: loading ? 'Creating...' : 'Create Account',
-          className: 'btn btn-primary',
-          style: AppStyles.btnPrimary,
+          className: 'btn btn-primary btn-full',
           onClick: loading ? null : handleSubmit,
         ),
         div(
           className: 'auth-footer',
-          style: AppStyles.authFooter,
           children: [
             span('Already have an account? '),
             button(
               text: 'Sign In',
               className: 'btn-link',
-              style: AppStyles.btnLink,
               onClick: () => setView.callAsFunction(null, 'login'.toJS),
             ),
           ],
@@ -508,34 +461,25 @@ ReactElement _buildTaskManager(
 
     return div(
       className: 'task-container',
-      style: AppStyles.taskContainer,
       children: [
         div(
           className: 'task-header',
-          style: AppStyles.taskHeader,
           children: [
-            h2(
-              'Your Tasks',
-              className: 'section-title',
-              style: AppStyles.sectionTitle,
-            ),
+            h2('Your Tasks', className: 'section-title'),
             _buildStats(tasks),
           ],
         ),
         div(
           className: 'add-task-card',
-          style: AppStyles.addTaskCard,
           children: [
             div(
               className: 'add-task-form',
-              style: AppStyles.addTaskForm,
               children: [
                 input(
                   type: 'text',
                   placeholder: 'What needs to be done?',
                   value: newTask,
                   className: 'input input-lg',
-                  style: AppStyles.inputLg,
                   onChange: (e) =>
                       setNewTask.callAsFunction(null, _getInputValue(e)),
                 ),
@@ -544,14 +488,12 @@ ReactElement _buildTaskManager(
                   placeholder: 'Description (optional)',
                   value: desc,
                   className: 'input',
-                  style: AppStyles.input,
                   onChange: (e) =>
                       setDesc.callAsFunction(null, _getInputValue(e)),
                 ),
                 button(
                   text: '+ Add Task',
                   className: 'btn btn-primary',
-                  style: AppStyles.btnPrimary,
                   onClick: addTask,
                 ),
               ],
@@ -559,21 +501,12 @@ ReactElement _buildTaskManager(
           ],
         ),
         if (error != null)
-          div(
-            className: 'error-msg',
-            style: AppStyles.errorMsg,
-            child: span(error),
-          )
+          div(className: 'error-msg', child: span(error))
         else if (loading)
-          div(
-            className: 'loading',
-            style: AppStyles.loading,
-            child: span('Loading...'),
-          )
+          div(className: 'loading', child: span('Loading...'))
         else
           div(
             className: 'task-list',
-            style: AppStyles.taskList,
             children: _buildTaskList(tasks, toggleTask, deleteTask),
           ),
       ],
@@ -590,19 +523,13 @@ DivElement _buildStats(JSArray? tasks) {
   final pct = total > 0 ? (completed / total * 100).round() : 0;
   return div(
     className: 'stats',
-    style: AppStyles.stats,
     children: [
-      span(
-        '$completed/$total completed',
-        className: 'stat-text',
-        style: AppStyles.statText,
-      ),
+      span('$completed/$total completed', className: 'stat-text'),
       div(
         className: 'progress-bar',
-        style: AppStyles.progressBar,
         child: div(
           className: 'progress-fill',
-          style: {...AppStyles.progressFill, 'width': '$pct%'},
+          props: {'style': {'width': '$pct%'}.jsify()},
         ),
       ),
     ],
@@ -619,14 +546,9 @@ List<ReactElement> _buildTaskList(
       ? [
           div(
             className: 'empty-state',
-            style: AppStyles.emptyState,
             children: [
-              span('🎯', className: 'empty-icon', style: AppStyles.emptyIcon),
-              pEl(
-                'No tasks yet. Add one above!',
-                className: 'empty-text',
-                style: AppStyles.emptyText,
-              ),
+              span('🎯', className: 'empty-icon'),
+              pEl('No tasks yet. Add one above!', className: 'empty-text'),
             ],
           ),
         ]
@@ -643,34 +565,23 @@ DivElement _buildTaskItem(
   final description = (task['description'] as JSString?)?.toDart;
   final completed = (task['completed'] as JSBoolean?)?.toDart ?? false;
   final checkClass = completed ? 'task-checkbox completed' : 'task-checkbox';
-  final checkStyle = completed
-      ? AppStyles.checkboxChecked
-      : AppStyles.checkboxUnchecked;
   final titleClass = completed ? 'task-title completed' : 'task-title';
-  final titleStyle = completed
-      ? AppStyles.taskTitleCompleted
-      : AppStyles.taskTitle;
   final itemClass = completed ? 'task-item completed' : 'task-item';
 
   return div(
     className: itemClass,
-    style: AppStyles.taskItem,
     children: [
       div(
         className: checkClass,
-        style: checkStyle,
         props: {'onClick': ((JSAny? _) => onToggle(id, completed)).toJS},
-        child: completed
-            ? span('✓', className: 'check-icon', style: AppStyles.checkIcon)
-            : span(''),
+        child: completed ? span('✓', className: 'check-icon') : span(''),
       ),
       div(
         className: 'task-content',
-        style: AppStyles.taskContent,
         children: [
-          span(title, className: titleClass, style: titleStyle),
+          span(title, className: titleClass),
           if (description != null && description.isNotEmpty)
-            span(description, className: 'task-desc', style: AppStyles.taskDesc)
+            span(description, className: 'task-desc')
           else
             span(''),
         ],
@@ -678,7 +589,6 @@ DivElement _buildTaskItem(
       button(
         text: '×',
         className: 'btn-delete',
-        style: AppStyles.deleteBtn,
         onClick: () => onDelete(id),
       ),
     ],
@@ -687,7 +597,7 @@ DivElement _buildTaskItem(
 
 ReactElement _labelEl(String text) => createElement(
   'label'.toJS,
-  createProps({'className': 'label', 'style': convertStyle(AppStyles.label)}),
+  createProps({'className': 'label'}),
   text.toJS,
 );
 

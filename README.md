@@ -25,18 +25,29 @@ graph TD
 | [dart_node_react](packages/dart_node_react) | React bindings | 0.1.0-beta |
 | [dart_node_react_native](packages/dart_node_react_native) | React Native bindings | 0.1.0-beta |
 
-## Quick Start
+## Example Quick Start
 
+**Web + Backend:**
 ```bash
 ./run_dev.sh
 ```
+Open http://localhost:8080/web/
 
-Then open http://localhost:8080/web/
+**Mobile:** Use VSCode launch config `Mobile: Build & Run (Expo)`
 
-## What's Running
+```mermaid
+graph LR
+    B[Backend<br/>Express/Node]
+    F[Frontend<br/>React Web]
+    M[Mobile<br/>React Native]
 
-- **Backend**: Express server on port 3000 (Dart compiled to Node.js)
-- **Frontend**: React app on port 8080 (Dart compiled to browser JS)
+    F -->|HTTP| B
+    M -->|HTTP| B
+```
+
+- **Backend**: Express server on port 3000 (Dart → Node.js)
+- **Frontend**: React app on port 8080 (Dart → Browser JS)
+- **Mobile**: Expo app (Dart → React Native)
 
 ## License
 

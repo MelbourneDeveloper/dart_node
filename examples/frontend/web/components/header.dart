@@ -1,33 +1,32 @@
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'package:dart_node_react/dart_node_react.dart';
-import 'package:shared/theme/theme.dart';
 import '../types.dart';
 
 /// Build app header component
 JSObject buildHeader(JSObject? user, OnClick onLogout) {
   final userName = user?.getProperty('name'.toJS)?.toString();
   return header(
-    style: AppStyles.header,
+    className: 'header',
     children: [
       div(
-        style: AppStyles.headerContent,
+        className: 'header-content',
         children: [
-          h1('TaskFlow', style: AppStyles.logo),
+          h1('TaskFlow', className: 'logo'),
           if (userName != null)
             div(
-              style: AppStyles.userInfo,
+              className: 'user-info',
               children: [
-                span('Welcome, $userName', style: AppStyles.headerUserName),
+                span('Welcome, $userName', className: 'user-name'),
                 button(
                   text: 'Logout',
-                  style: AppStyles.btnGhost,
+                  className: 'btn btn-ghost',
                   onClick: onLogout,
                 ),
               ],
             )
           else
-            span('', style: AppStyles.spacer),
+            span('', className: 'spacer'),
         ],
       ),
     ],
