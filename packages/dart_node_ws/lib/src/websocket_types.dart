@@ -71,11 +71,17 @@ class WebSocketClient {
 
   void onClose(CloseHandler handler) => _ws.on(
         'close',
-        ((int code, JSAny reason) => handler((
+        ((int code, JSAny? reason) => handler((
               code: code,
-              reason: (reason as JSString?)?.toDart ?? '',
+              reason: _extractCloseReason(reason),
             ))).toJS,
       );
+
+  String _extractCloseReason(JSAny? reason) => switch (reason) {
+        null => '',
+        final JSString s => s.toDart,
+        _ => reason.toString(),
+      };
 
   void onError(ErrorHandler handler) =>
       _ws.on('error', ((JSAny error) => handler(error)).toJS);
