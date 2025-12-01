@@ -48,10 +48,20 @@ AppRegistry get appRegistry {
   };
 }
 
+@JS('console.log')
+external void _rnCoreLog(JSAny? message);
+
 /// Register the main app component
 void registerApp(String appName, JSFunction component) {
+  _rnCoreLog('=== registerApp() called with appName: $appName ==='.toJS);
+  _rnCoreLog('=== Getting appRegistry ==='.toJS);
+  final registry = appRegistry;
+  _rnCoreLog('=== Got appRegistry ==='.toJS);
+  _rnCoreLog('=== Creating provider function ==='.toJS);
   final provider = (() => component).toJS;
-  appRegistry.callMethod('registerComponent'.toJS, appName.toJS, provider);
+  _rnCoreLog('=== Calling registerComponent ==='.toJS);
+  registry.callMethod('registerComponent'.toJS, appName.toJS, provider);
+  _rnCoreLog('=== registerComponent called successfully ==='.toJS);
 }
 
 /// Create a React Native element

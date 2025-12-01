@@ -62,13 +62,18 @@ external void _consoleError(JSAny? message);
 /// Register the app with React Native
 void registerMobileApp() {
   _consoleLog('=== registerMobileApp() STARTING ==='.toJS);
+  _consoleLog('=== Checking global.reactNative ==='.toJS);
   try {
+    _consoleLog('=== About to call app() ==='.toJS);
     final appComponent = app();
-    _consoleLog('=== app() created ==='.toJS);
+    _consoleLog('=== app() returned successfully ==='.toJS);
+    _consoleLog('=== appComponent type: ${appComponent.runtimeType} ==='.toJS);
+    _consoleLog('=== About to call registerApp() ==='.toJS);
     registerApp('main', appComponent);
-    _consoleLog('=== registerApp() completed ==='.toJS);
-  } catch (e) {
+    _consoleLog('=== registerApp() completed successfully ==='.toJS);
+  } catch (e, st) {
     _consoleError('=== ERROR in registerMobileApp ==='.toJS);
-    _consoleError(e.toString().toJS);
+    _consoleError('Error: $e'.toJS);
+    _consoleError('Stack: $st'.toJS);
   }
 }
