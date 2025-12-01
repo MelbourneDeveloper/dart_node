@@ -36,7 +36,11 @@ class WebSocketServer {
 
   String? _extractUrl(JSIncomingMessage request) {
     final urlObj = request.url;
-    return urlObj.isA<JSString>() ? urlObj.dartify() as String? : null;
+    return switch (urlObj) {
+      null => null,
+      final u when u.isA<JSString>() => (u as JSString).toDart,
+      _ => null,
+    };
   }
 
   void close([void Function()? callback]) => _server.close(

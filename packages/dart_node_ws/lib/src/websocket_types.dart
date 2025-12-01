@@ -42,7 +42,10 @@ extension type JSWebSocket(JSObject _) implements JSObject {
 
 /// JS IncomingMessage for upgrade request
 extension type JSIncomingMessage(JSObject _) implements JSObject {
-  external JSObject get url;
+  /// The request URL string
+  external JSAny? get url;
+
+  /// The request headers object
   external JSObject get headers;
 }
 
