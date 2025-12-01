@@ -26,6 +26,8 @@ echo ""
 
 # Build Express server
 echo "[1/4] Building Express server..."
+cd "$SCRIPT_DIR/tools/build"
+dart pub get
 cd "$SCRIPT_DIR"
 dart run tools/build/build.dart backend
 
