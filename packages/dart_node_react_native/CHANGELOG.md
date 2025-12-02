@@ -2,7 +2,7 @@
 
 ## 0.2.0-beta
 
-- Version bump for package family consistency
+- Updated docs
 
 ## 0.1.0-beta
 

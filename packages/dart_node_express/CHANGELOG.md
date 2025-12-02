@@ -3,6 +3,7 @@
 ## 0.2.0-beta
 
 - Add WebSocket support integration with dart_node_ws
+- Updated docs
 
 ## 0.1.0-beta
 
