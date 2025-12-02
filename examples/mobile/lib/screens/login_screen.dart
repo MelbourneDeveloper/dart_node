@@ -1,7 +1,7 @@
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
-import 'package:dart_node_react/dart_node_react.dart';
+import 'package:dart_node_react/dart_node_react.dart' hide view;
 import 'package:dart_node_react_native/dart_node_react_native.dart';
 import 'package:nadz/nadz.dart';
 import 'package:shared/http/http_client.dart';
@@ -12,29 +12,27 @@ import '../types.dart';
 /// Login screen component
 ReactElement loginScreen({required AuthEffects authEffects}) =>
     functionalComponent('LoginScreen', (JSObject props) {
-      final emailState = useState(''.toJS);
-      final passwordState = useState(''.toJS);
-      final loadingState = useState(false.toJS);
-      final errorState = useState(null);
+      final emailState = useState('');
+      final passwordState = useState('');
+      final loadingState = useState(false);
+      final errorState = useState<String?>(null);
 
-      final email = (emailState.$1 as JSString?)?.toDart ?? '';
-      final password = (passwordState.$1 as JSString?)?.toDart ?? '';
-      final loading = (loadingState.$1 as JSBoolean?)?.toDart ?? false;
-      final error = (errorState.$1 as JSString?)?.toDart;
-
-      final setEmail = wrapSetState<String>(emailState.$2);
-      final setPassword = wrapSetState<String>(passwordState.$2);
-      final setLoading = wrapSetState<bool>(loadingState.$2);
-      final setError = wrapSetState<String?>(errorState.$2);
+      final email = emailState.value;
+      final password = passwordState.value;
+      final loading = loadingState.value;
+      final error = errorState.value;
 
       void handleLogin() {
-        setLoading(true);
-        setError(null);
+        loadingState.set(true);
+        errorState.set(null);
         _performLogin(
           email: email,
           password: password,
           authEffects: authEffects,
-          formEffects: (setLoading: setLoading, setError: setError),
+          formEffects: (
+            setLoading: loadingState.set,
+            setError: errorState.set,
+          ),
         );
       }
 
@@ -57,7 +55,7 @@ ReactElement loginScreen({required AuthEffects authEffects}) =>
                 textInput(
                   placeholder: 'Enter your email',
                   value: email,
-                  onChangeText: setEmail,
+                  onChangeText: emailState.set,
                   style: AppStyles.input,
                   props: {'placeholderTextColor': AppColors.textMuted},
                 ),
@@ -70,7 +68,7 @@ ReactElement loginScreen({required AuthEffects authEffects}) =>
                 textInput(
                   placeholder: 'Enter your password',
                   value: password,
-                  onChangeText: setPassword,
+                  onChangeText: passwordState.set,
                   secureTextEntry: true,
                   style: AppStyles.input,
                   props: {'placeholderTextColor': AppColors.textMuted},

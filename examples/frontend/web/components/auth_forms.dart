@@ -11,25 +11,20 @@ import 'form_helpers.dart';
 /// Build login form component
 ReactElement buildLoginForm(AuthEffects auth) => createElement(
   ((JSAny props) {
-    final (emailState, setEmail) = useState(''.toJS);
-    final (passState, setPass) = useState(''.toJS);
-    final (errorState, setError) = useState(null);
-    final (loadingState, setLoading) = useState(false.toJS);
-
-    final email = (emailState as JSString?)?.toDart ?? '';
-    final password = (passState as JSString?)?.toDart ?? '';
-    final error = (errorState as JSString?)?.toDart;
-    final loading = (loadingState as JSBoolean?)?.toDart ?? false;
+    final emailState = useState('');
+    final passState = useState('');
+    final errorState = useState<String?>(null);
+    final loadingState = useState(false);
 
     void handleSubmit() {
-      setLoading.callAsFunction(null, true.toJS);
-      setError.callAsFunction();
+      loadingState.set(true);
+      errorState.set(null);
 
       unawaited(
         fetchJson(
               '$apiUrl/auth/login',
               method: 'POST',
-              body: {'email': email, 'password': password},
+              body: {'email': emailState.value, 'password': passState.value},
             )
             .then((result) {
               result.match(
@@ -37,25 +32,24 @@ ReactElement buildLoginForm(AuthEffects auth) => createElement(
                   final data = getProp(response, 'data') as JSObject?;
                   switch (data) {
                     case null:
-                      setError.callAsFunction(null, 'Login failed'.toJS);
+                      errorState.set('Login failed');
                     case final d:
                       switch (getProp(d, 'token')) {
                         case final JSString token:
                           auth.setToken(token);
                         default:
-                          setError.callAsFunction(null, 'No token'.toJS);
+                          errorState.set('No token');
                       }
                       auth.setUser(getProp(d, 'user') as JSObject?);
                   }
                 },
-                onError: (message) =>
-                    setError.callAsFunction(null, message.toJS),
+                onError: errorState.set,
               );
             })
             .catchError((Object e) {
-              setError.callAsFunction(null, e.toString().toJS);
+              errorState.set(e.toString());
             })
-            .whenComplete(() => setLoading.callAsFunction(null, false.toJS)),
+            .whenComplete(() => loadingState.set(false)),
       );
     }
 
@@ -63,8 +57,8 @@ ReactElement buildLoginForm(AuthEffects auth) => createElement(
       className: 'auth-card',
       children: [
         h2('Sign In', className: 'auth-title'),
-        if (error != null)
-          div(className: 'error-msg', child: span(error))
+        if (errorState.value != null)
+          div(className: 'error-msg', child: span(errorState.value!))
         else
           span(''),
         formGroup(
@@ -72,9 +66,9 @@ ReactElement buildLoginForm(AuthEffects auth) => createElement(
           input(
             type: 'email',
             placeholder: 'you@example.com',
-            value: email,
+            value: emailState.value,
             className: 'input',
-            onChange: (e) => setEmail.callAsFunction(null, getInputValue(e)),
+            onChange: (e) => emailState.set(getInputValue(e).toDart),
           ),
         ),
         formGroup(
@@ -82,15 +76,15 @@ ReactElement buildLoginForm(AuthEffects auth) => createElement(
           input(
             type: 'password',
             placeholder: '••••••••',
-            value: password,
+            value: passState.value,
             className: 'input',
-            onChange: (e) => setPass.callAsFunction(null, getInputValue(e)),
+            onChange: (e) => passState.set(getInputValue(e).toDart),
           ),
         ),
         button(
-          text: loading ? 'Signing in...' : 'Sign In',
+          text: loadingState.value ? 'Signing in...' : 'Sign In',
           className: 'btn btn-primary btn-full',
-          onClick: loading ? null : handleSubmit,
+          onClick: loadingState.value ? null : handleSubmit,
         ),
         div(
           className: 'auth-footer',
@@ -111,27 +105,25 @@ ReactElement buildLoginForm(AuthEffects auth) => createElement(
 /// Build register form component
 ReactElement buildRegisterForm(AuthEffects auth) => createElement(
   ((JSAny props) {
-    final (nameState, setName) = useState(''.toJS);
-    final (emailState, setEmail) = useState(''.toJS);
-    final (passState, setPass) = useState(''.toJS);
-    final (errorState, setError) = useState(null);
-    final (loadingState, setLoading) = useState(false.toJS);
-
-    final name = (nameState as JSString?)?.toDart ?? '';
-    final email = (emailState as JSString?)?.toDart ?? '';
-    final password = (passState as JSString?)?.toDart ?? '';
-    final error = (errorState as JSString?)?.toDart;
-    final loading = (loadingState as JSBoolean?)?.toDart ?? false;
+    final nameState = useState('');
+    final emailState = useState('');
+    final passState = useState('');
+    final errorState = useState<String?>(null);
+    final loadingState = useState(false);
 
     void handleSubmit() {
-      setLoading.callAsFunction(null, true.toJS);
-      setError.callAsFunction();
+      loadingState.set(true);
+      errorState.set(null);
 
       unawaited(
         fetchJson(
               '$apiUrl/auth/register',
               method: 'POST',
-              body: {'email': email, 'password': password, 'name': name},
+              body: {
+                'email': emailState.value,
+                'password': passState.value,
+                'name': nameState.value,
+              },
             )
             .then((result) {
               result.match(
@@ -139,25 +131,24 @@ ReactElement buildRegisterForm(AuthEffects auth) => createElement(
                   final data = getProp(response, 'data') as JSObject?;
                   switch (data) {
                     case null:
-                      setError.callAsFunction(null, 'Registration failed'.toJS);
+                      errorState.set('Registration failed');
                     case final d:
                       switch (getProp(d, 'token')) {
                         case final JSString token:
                           auth.setToken(token);
                         default:
-                          setError.callAsFunction(null, 'No token'.toJS);
+                          errorState.set('No token');
                       }
                       auth.setUser(getProp(d, 'user') as JSObject?);
                   }
                 },
-                onError: (message) =>
-                    setError.callAsFunction(null, message.toJS),
+                onError: errorState.set,
               );
             })
             .catchError((Object e) {
-              setError.callAsFunction(null, e.toString().toJS);
+              errorState.set(e.toString());
             })
-            .whenComplete(() => setLoading.callAsFunction(null, false.toJS)),
+            .whenComplete(() => loadingState.set(false)),
       );
     }
 
@@ -165,8 +156,8 @@ ReactElement buildRegisterForm(AuthEffects auth) => createElement(
       className: 'auth-card',
       children: [
         h2('Create Account', className: 'auth-title'),
-        if (error != null)
-          div(className: 'error-msg', child: span(error))
+        if (errorState.value != null)
+          div(className: 'error-msg', child: span(errorState.value!))
         else
           span(''),
         formGroup(
@@ -174,9 +165,9 @@ ReactElement buildRegisterForm(AuthEffects auth) => createElement(
           input(
             type: 'text',
             placeholder: 'Your name',
-            value: name,
+            value: nameState.value,
             className: 'input',
-            onChange: (e) => setName.callAsFunction(null, getInputValue(e)),
+            onChange: (e) => nameState.set(getInputValue(e).toDart),
           ),
         ),
         formGroup(
@@ -184,9 +175,9 @@ ReactElement buildRegisterForm(AuthEffects auth) => createElement(
           input(
             type: 'email',
             placeholder: 'you@example.com',
-            value: email,
+            value: emailState.value,
             className: 'input',
-            onChange: (e) => setEmail.callAsFunction(null, getInputValue(e)),
+            onChange: (e) => emailState.set(getInputValue(e).toDart),
           ),
         ),
         formGroup(
@@ -194,15 +185,15 @@ ReactElement buildRegisterForm(AuthEffects auth) => createElement(
           input(
             type: 'password',
             placeholder: '••••••••',
-            value: password,
+            value: passState.value,
             className: 'input',
-            onChange: (e) => setPass.callAsFunction(null, getInputValue(e)),
+            onChange: (e) => passState.set(getInputValue(e).toDart),
           ),
         ),
         button(
-          text: loading ? 'Creating...' : 'Create Account',
+          text: loadingState.value ? 'Creating...' : 'Create Account',
           className: 'btn btn-primary btn-full',
-          onClick: loading ? null : handleSubmit,
+          onClick: loadingState.value ? null : handleSubmit,
         ),
         div(
           className: 'auth-footer',

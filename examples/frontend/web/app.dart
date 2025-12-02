@@ -5,7 +5,12 @@ import 'package:dart_node_react/dart_node_react.dart';
 import 'package:nadz/nadz.dart';
 import 'package:shared/http/http_client.dart';
 
+import 'types.dart';
 import 'websocket.dart';
+
+/// Creates a SetToken function that converts JSString to String for storage
+SetToken _createSetToken(StateHook<String?> tokenState) =>
+    (t) => tokenState.set(t?.toDart);
 
 const apiUrl = 'http://localhost:3000';
 
@@ -20,29 +25,31 @@ void main() {
 // ignore: non_constant_identifier_names
 ReactElement App() => createElement(
   ((JSAny props) {
-    final (tokenState, setToken) = useState(null);
-    final (userState, setUser) = useState(null);
-    final (viewState, setView) = useState('login'.toJS);
+    final tokenState = useState<String?>(null);
+    final userState = useState<JSObject?>(null);
+    final viewState = useState('login');
 
-    final token = tokenState as JSString?;
-    final user = userState as JSObject?;
-    final view = (viewState as JSString?)?.toDart ?? 'login';
+    final auth = (
+      setToken: _createSetToken(tokenState),
+      setUser: userState.set,
+      setView: viewState.set,
+    );
 
     return div(
       className: 'app',
       children: [
-        _buildHeader(user, () {
-          setToken.callAsFunction();
-          setUser.callAsFunction();
-          setView.callAsFunction(null, 'login'.toJS);
+        _buildHeader(userState.value, () {
+          tokenState.set(null);
+          userState.set(null);
+          viewState.set('login');
         }),
         mainEl(
           className: 'main-content',
-          child: (token == null)
-              ? (view == 'register')
-                    ? _buildRegisterForm(setToken, setUser, setView)
-                    : _buildLoginForm(setToken, setUser, setView)
-              : _buildTaskManager(token.toDart, setToken, setUser, setView),
+          child: (tokenState.value == null)
+              ? (viewState.value == 'register')
+                    ? _buildRegisterForm(auth)
+                    : _buildLoginForm(auth)
+              : _buildTaskManager(tokenState.value!, userState, viewState),
         ),
         footer(
           className: 'footer',
@@ -82,31 +89,22 @@ HeaderElement _buildHeader(JSObject? user, void Function() onLogout) {
   );
 }
 
-ReactElement _buildLoginForm(
-  JSFunction setToken,
-  JSFunction setUser,
-  JSFunction setView,
-) => createElement(
+ReactElement _buildLoginForm(AuthEffects auth) => createElement(
   ((JSAny props) {
-    final (emailState, setEmail) = useState(''.toJS);
-    final (passState, setPass) = useState(''.toJS);
-    final (errorState, setError) = useState(null);
-    final (loadingState, setLoading) = useState(false.toJS);
-
-    final email = (emailState as JSString?)?.toDart ?? '';
-    final password = (passState as JSString?)?.toDart ?? '';
-    final error = (errorState as JSString?)?.toDart;
-    final loading = (loadingState as JSBoolean?)?.toDart ?? false;
+    final emailState = useState('');
+    final passState = useState('');
+    final errorState = useState<String?>(null);
+    final loadingState = useState(false);
 
     void handleSubmit() {
-      setLoading.callAsFunction(null, true.toJS);
-      setError.callAsFunction();
+      loadingState.set(true);
+      errorState.set(null);
 
       unawaited(
         fetchJson(
               '$apiUrl/auth/login',
               method: 'POST',
-              body: {'email': email, 'password': password},
+              body: {'email': emailState.value, 'password': passState.value},
             )
             .then((result) {
               result.match(
@@ -114,25 +112,24 @@ ReactElement _buildLoginForm(
                   final data = response['data'];
                   switch (data) {
                     case null:
-                      setError.callAsFunction(null, 'Login failed'.toJS);
+                      errorState.set('Login failed');
                     case final JSObject details:
                       switch (details['token']) {
                         case final JSString token:
-                          setToken.callAsFunction(null, token);
+                          auth.setToken(token);
                         default:
-                          setError.callAsFunction(null, 'No token'.toJS);
+                          errorState.set('No token');
                       }
-                      setUser.callAsFunction(null, details['user']);
+                      auth.setUser(details['user'] as JSObject?);
                   }
                 },
-                onError: (message) =>
-                    setError.callAsFunction(null, message.toJS),
+                onError: errorState.set,
               );
             })
             .catchError((Object e) {
-              setError.callAsFunction(null, e.toString().toJS);
+              errorState.set(e.toString());
             })
-            .whenComplete(() => setLoading.callAsFunction(null, false.toJS)),
+            .whenComplete(() => loadingState.set(false)),
       );
     }
 
@@ -140,8 +137,8 @@ ReactElement _buildLoginForm(
       className: 'auth-card',
       children: [
         h2('Sign In', className: 'auth-title'),
-        if (error != null)
-          div(className: 'error-msg', child: span(error))
+        if (errorState.value != null)
+          div(className: 'error-msg', child: span(errorState.value!))
         else
           span(''),
         div(
@@ -151,9 +148,9 @@ ReactElement _buildLoginForm(
             input(
               type: 'email',
               placeholder: 'you@example.com',
-              value: email,
+              value: emailState.value,
               className: 'input',
-              onChange: (e) => setEmail.callAsFunction(null, _getInputValue(e)),
+              onChange: (e) => emailState.set(_getInputValue(e).toDart),
             ),
           ],
         ),
@@ -164,16 +161,16 @@ ReactElement _buildLoginForm(
             input(
               type: 'password',
               placeholder: '••••••••',
-              value: password,
+              value: passState.value,
               className: 'input',
-              onChange: (e) => setPass.callAsFunction(null, _getInputValue(e)),
+              onChange: (e) => passState.set(_getInputValue(e).toDart),
             ),
           ],
         ),
         button(
-          text: loading ? 'Signing in...' : 'Sign In',
+          text: loadingState.value ? 'Signing in...' : 'Sign In',
           className: 'btn btn-primary btn-full',
-          onClick: loading ? null : handleSubmit,
+          onClick: loadingState.value ? null : handleSubmit,
         ),
         div(
           className: 'auth-footer',
@@ -182,7 +179,7 @@ ReactElement _buildLoginForm(
             button(
               text: 'Register',
               className: 'btn-link',
-              onClick: () => setView.callAsFunction(null, 'register'.toJS),
+              onClick: () => auth.setView('register'),
             ),
           ],
         ),
@@ -191,33 +188,27 @@ ReactElement _buildLoginForm(
   }).toJS,
 );
 
-ReactElement _buildRegisterForm(
-  JSFunction setToken,
-  JSFunction setUser,
-  JSFunction setView,
-) => createElement(
+ReactElement _buildRegisterForm(AuthEffects auth) => createElement(
   ((JSAny props) {
-    final (nameState, setName) = useState(''.toJS);
-    final (emailState, setEmail) = useState(''.toJS);
-    final (passState, setPass) = useState(''.toJS);
-    final (errorState, setError) = useState(null);
-    final (loadingState, setLoading) = useState(false.toJS);
-
-    final name = (nameState as JSString?)?.toDart ?? '';
-    final email = (emailState as JSString?)?.toDart ?? '';
-    final password = (passState as JSString?)?.toDart ?? '';
-    final error = (errorState as JSString?)?.toDart;
-    final loading = (loadingState as JSBoolean?)?.toDart ?? false;
+    final nameState = useState('');
+    final emailState = useState('');
+    final passState = useState('');
+    final errorState = useState<String?>(null);
+    final loadingState = useState(false);
 
     void handleSubmit() {
-      setLoading.callAsFunction(null, true.toJS);
-      setError.callAsFunction();
+      loadingState.set(true);
+      errorState.set(null);
 
       unawaited(
         fetchJson(
               '$apiUrl/auth/register',
               method: 'POST',
-              body: {'email': email, 'password': password, 'name': name},
+              body: {
+                'email': emailState.value,
+                'password': passState.value,
+                'name': nameState.value,
+              },
             )
             .then((result) {
               result.match(
@@ -225,25 +216,24 @@ ReactElement _buildRegisterForm(
                   final data = response['data'];
                   switch (data) {
                     case null:
-                      setError.callAsFunction(null, 'Registration failed'.toJS);
+                      errorState.set('Registration failed');
                     case final JSObject details:
                       switch (details['token']) {
                         case final JSString token:
-                          setToken.callAsFunction(null, token);
+                          auth.setToken(token);
                         default:
-                          setError.callAsFunction(null, 'No token'.toJS);
+                          errorState.set('No token');
                       }
-                      setUser.callAsFunction(null, details['user']);
+                      auth.setUser(details['user'] as JSObject?);
                   }
                 },
-                onError: (message) =>
-                    setError.callAsFunction(null, message.toJS),
+                onError: errorState.set,
               );
             })
             .catchError((Object e) {
-              setError.callAsFunction(null, e.toString().toJS);
+              errorState.set(e.toString());
             })
-            .whenComplete(() => setLoading.callAsFunction(null, false.toJS)),
+            .whenComplete(() => loadingState.set(false)),
       );
     }
 
@@ -251,8 +241,8 @@ ReactElement _buildRegisterForm(
       className: 'auth-card',
       children: [
         h2('Create Account', className: 'auth-title'),
-        if (error != null)
-          div(className: 'error-msg', child: span(error))
+        if (errorState.value != null)
+          div(className: 'error-msg', child: span(errorState.value!))
         else
           span(''),
         div(
@@ -262,9 +252,9 @@ ReactElement _buildRegisterForm(
             input(
               type: 'text',
               placeholder: 'Your name',
-              value: name,
+              value: nameState.value,
               className: 'input',
-              onChange: (e) => setName.callAsFunction(null, _getInputValue(e)),
+              onChange: (e) => nameState.set(_getInputValue(e).toDart),
             ),
           ],
         ),
@@ -275,9 +265,9 @@ ReactElement _buildRegisterForm(
             input(
               type: 'email',
               placeholder: 'you@example.com',
-              value: email,
+              value: emailState.value,
               className: 'input',
-              onChange: (e) => setEmail.callAsFunction(null, _getInputValue(e)),
+              onChange: (e) => emailState.set(_getInputValue(e).toDart),
             ),
           ],
         ),
@@ -288,16 +278,16 @@ ReactElement _buildRegisterForm(
             input(
               type: 'password',
               placeholder: '••••••••',
-              value: password,
+              value: passState.value,
               className: 'input',
-              onChange: (e) => setPass.callAsFunction(null, _getInputValue(e)),
+              onChange: (e) => passState.set(_getInputValue(e).toDart),
             ),
           ],
         ),
         button(
-          text: loading ? 'Creating...' : 'Create Account',
+          text: loadingState.value ? 'Creating...' : 'Create Account',
           className: 'btn btn-primary btn-full',
-          onClick: loading ? null : handleSubmit,
+          onClick: loadingState.value ? null : handleSubmit,
         ),
         div(
           className: 'auth-footer',
@@ -306,7 +296,7 @@ ReactElement _buildRegisterForm(
             button(
               text: 'Sign In',
               className: 'btn-link',
-              onClick: () => setView.callAsFunction(null, 'login'.toJS),
+              onClick: () => auth.setView('login'),
             ),
           ],
         ),
@@ -317,50 +307,43 @@ ReactElement _buildRegisterForm(
 
 ReactElement _buildTaskManager(
   String token,
-  JSFunction setToken,
-  JSFunction setUser,
-  JSFunction setView,
+  StateHook<JSObject?> userState,
+  StateHook<String> viewState,
 ) => createElement(
   ((JSAny props) {
-    final (tasksState, setTasks) = useState(<JSAny>[].toJS);
-    final (newTaskState, setNewTask) = useState(''.toJS);
-    final (descState, setDesc) = useState(''.toJS);
-    final (loadingState, setLoading) = useState(true.toJS);
-    final (errorState, setError) = useState(null);
-
-    final tasks = tasksState as JSArray?;
-    final newTask = (newTaskState as JSString?)?.toDart ?? '';
-    final desc = (descState as JSString?)?.toDart ?? '';
-    final loading = (loadingState as JSBoolean?)?.toDart ?? false;
-    final error = (errorState as JSString?)?.toDart;
+    final tasksState = useState<List<JSObject>>([]);
+    final newTaskState = useState('');
+    final descState = useState('');
+    final loadingState = useState(true);
+    final errorState = useState<String?>(null);
 
     // Fetch tasks on mount
     useEffect(
-      (() {
+      () {
         unawaited(
           fetchTasks(token: token, apiUrl: apiUrl)
               .then((result) {
                 result.match(
                   onSuccess: (list) {
-                    setTasks.callAsFunction(null, list);
-                    setError.callAsFunction();
+                    tasksState.set(list.toDart.cast<JSObject>());
+                    errorState.set(null);
                   },
-                  onError: (message) =>
-                      setError.callAsFunction(null, message.toJS),
+                  onError: errorState.set,
                 );
               })
               .catchError((Object e) {
-                setError.callAsFunction(null, e.toString().toJS);
+                errorState.set(e.toString());
               })
-              .whenComplete(() => setLoading.callAsFunction(null, false.toJS)),
+              .whenComplete(() => loadingState.set(false)),
         );
-      }).toJS,
-      <JSAny>[].toJS,
+        return null;
+      },
+      [],
     );
 
     // WebSocket connection for real-time updates
     useEffect(
-      (() {
+      () {
         final ws = connectWebSocket(
           token: token,
           onTaskEvent: (event) {
@@ -368,29 +351,32 @@ ReactElement _buildTaskManager(
             final data = event['data'] as JSObject?;
             switch (data) {
               case final JSObject d:
-                _handleTaskEvent(type, d, setTasks);
+                _handleTaskEvent(type, d, tasksState);
               case null:
                 break;
             }
           },
         );
-        return (() => ws?.close()).toJS;
-      }).toJS,
-      <JSAny>[token.toJS].toJS,
+        return () => ws?.close();
+      },
+      [token],
     );
 
     void addTask() {
-      switch (newTask.trim().isEmpty) {
+      switch (newTaskState.value.trim().isEmpty) {
         case true:
           return;
         case false:
-          setError.callAsFunction();
+          errorState.set(null);
           unawaited(
             fetchJson(
                   '$apiUrl/tasks',
                   method: 'POST',
                   token: token,
-                  body: {'title': newTask, 'description': desc},
+                  body: {
+                    'title': newTaskState.value,
+                    'description': descState.value,
+                  },
                 )
                 .then((result) {
                   result.match(
@@ -398,26 +384,20 @@ ReactElement _buildTaskManager(
                       final task = response['data'];
                       switch (task) {
                         case final JSObject created:
-                          final current = (tasks?.toDart ?? []).cast<JSAny>();
-                          setTasks.callAsFunction(
-                            null,
-                            [...current, created].toJS,
+                          tasksState.setWithUpdater(
+                            (prev) => [...prev, created],
                           );
-                          setNewTask.callAsFunction(null, ''.toJS);
-                          setDesc.callAsFunction(null, ''.toJS);
+                          newTaskState.set('');
+                          descState.set('');
                         default:
-                          setError.callAsFunction(
-                            null,
-                            'Invalid task payload'.toJS,
-                          );
+                          errorState.set('Invalid task payload');
                       }
                     },
-                    onError: (message) =>
-                        setError.callAsFunction(null, message.toJS),
+                    onError: errorState.set,
                   );
                 })
                 .catchError((Object e) {
-                  setError.callAsFunction(null, e.toString().toJS);
+                  errorState.set(e.toString());
                 }),
           );
       }
@@ -437,25 +417,21 @@ ReactElement _buildTaskManager(
                   final updated = response['data'];
                   switch (updated) {
                     case final JSObject task:
-                      final current = (tasks?.toDart ?? []).cast<JSObject>();
-                      final newList = current.map((t) {
-                        final taskId = (t['id'] as JSString?)?.toDart;
-                        return (taskId == id) ? task : t;
-                      }).toList();
-                      setTasks.callAsFunction(null, newList.toJS);
-                    default:
-                      setError.callAsFunction(
-                        null,
-                        'Invalid task payload'.toJS,
+                      tasksState.setWithUpdater(
+                        (prev) => prev.map((t) {
+                          final taskId = (t['id'] as JSString?)?.toDart;
+                          return (taskId == id) ? task : t;
+                        }).toList(),
                       );
+                    default:
+                      errorState.set('Invalid task payload');
                   }
                 },
-                onError: (message) =>
-                    setError.callAsFunction(null, message.toJS),
+                onError: errorState.set,
               );
             })
             .catchError((Object e) {
-              setError.callAsFunction(null, e.toString().toJS);
+              errorState.set(e.toString());
             }),
       );
     }
@@ -466,18 +442,17 @@ ReactElement _buildTaskManager(
             .then((result) {
               result.match(
                 onSuccess: (_) {
-                  final current = (tasks?.toDart ?? []).cast<JSObject>();
-                  final newList = current
-                      .where((t) => (t['id'] as JSString?)?.toDart != id)
-                      .toList();
-                  setTasks.callAsFunction(null, newList.toJS);
+                  tasksState.setWithUpdater(
+                    (prev) => prev
+                        .where((t) => (t['id'] as JSString?)?.toDart != id)
+                        .toList(),
+                  );
                 },
-                onError: (message) =>
-                    setError.callAsFunction(null, message.toJS),
+                onError: errorState.set,
               );
             })
             .catchError((Object e) {
-              setError.callAsFunction(null, e.toString().toJS);
+              errorState.set(e.toString());
             }),
       );
     }
@@ -489,7 +464,7 @@ ReactElement _buildTaskManager(
           className: 'task-header',
           children: [
             h2('Your Tasks', className: 'section-title'),
-            _buildStats(tasks),
+            _buildStats(tasksState.value),
           ],
         ),
         div(
@@ -501,18 +476,16 @@ ReactElement _buildTaskManager(
                 input(
                   type: 'text',
                   placeholder: 'What needs to be done?',
-                  value: newTask,
+                  value: newTaskState.value,
                   className: 'input input-lg',
-                  onChange: (e) =>
-                      setNewTask.callAsFunction(null, _getInputValue(e)),
+                  onChange: (e) => newTaskState.set(_getInputValue(e).toDart),
                 ),
                 input(
                   type: 'text',
                   placeholder: 'Description (optional)',
-                  value: desc,
+                  value: descState.value,
                   className: 'input',
-                  onChange: (e) =>
-                      setDesc.callAsFunction(null, _getInputValue(e)),
+                  onChange: (e) => descState.set(_getInputValue(e).toDart),
                 ),
                 button(
                   text: '+ Add Task',
@@ -523,24 +496,23 @@ ReactElement _buildTaskManager(
             ),
           ],
         ),
-        if (error != null)
-          div(className: 'error-msg', child: span(error))
-        else if (loading)
+        if (errorState.value != null)
+          div(className: 'error-msg', child: span(errorState.value!))
+        else if (loadingState.value)
           div(className: 'loading', child: span('Loading...'))
         else
           div(
             className: 'task-list',
-            children: _buildTaskList(tasks, toggleTask, deleteTask),
+            children: _buildTaskList(tasksState.value, toggleTask, deleteTask),
           ),
       ],
     );
   }).toJS,
 );
 
-DivElement _buildStats(JSArray? tasks) {
-  final list = (tasks?.toDart ?? []).cast<JSObject>();
-  final total = list.length;
-  final completed = list
+DivElement _buildStats(List<JSObject> tasks) {
+  final total = tasks.length;
+  final completed = tasks
       .where((t) => (t['completed'] as JSBoolean?)?.toDart ?? false)
       .length;
   final pct = total > 0 ? (completed / total * 100).round() : 0;
@@ -560,12 +532,10 @@ DivElement _buildStats(JSArray? tasks) {
 }
 
 List<ReactElement> _buildTaskList(
-  JSArray? tasks,
+  List<JSObject> tasks,
   void Function(String, bool) onToggle,
   void Function(String) onDelete,
-) {
-  final list = (tasks?.toDart ?? []).cast<JSObject>();
-  return list.isEmpty
+) => tasks.isEmpty
       ? [
           div(
             className: 'empty-state',
@@ -575,8 +545,7 @@ List<ReactElement> _buildTaskList(
             ],
           ),
         ]
-      : list.map((task) => _buildTaskItem(task, onToggle, onDelete)).toList();
-}
+      : tasks.map((task) => _buildTaskItem(task, onToggle, onDelete)).toList();
 
 DivElement _buildTaskItem(
   JSObject task,
@@ -640,28 +609,20 @@ JSString _getInputValue(JSAny event) {
 void _handleTaskEvent(
   String? type,
   JSObject task,
-  JSFunction setTasks,
+  StateHook<List<JSObject>> tasksState,
 ) {
   final taskId = (task['id'] as JSString?)?.toDart;
 
-  // Use functional updater to get current state
-  final updater = ((JSAny? prevState) {
-    final tasks = prevState as JSArray?;
-    final current = (tasks?.toDart ?? []).cast<JSObject>();
-
-    return switch (type) {
-      'task_created' => [...current, task].toJS,
-      'task_updated' => current.map((t) {
-          final id = (t['id'] as JSString?)?.toDart;
-          return (id == taskId) ? task : t;
-        }).toList().toJS,
-      'task_deleted' => current.where((t) {
-          final id = (t['id'] as JSString?)?.toDart;
-          return id != taskId;
-        }).toList().toJS,
-      _ => prevState,
-    };
-  }).toJS;
-
-  setTasks.callAsFunction(null, updater);
+  tasksState.setWithUpdater((current) => switch (type) {
+    'task_created' => [...current, task],
+    'task_updated' => current.map((t) {
+        final id = (t['id'] as JSString?)?.toDart;
+        return (id == taskId) ? task : t;
+      }).toList(),
+    'task_deleted' => current.where((t) {
+        final id = (t['id'] as JSString?)?.toDart;
+        return id != taskId;
+      }).toList(),
+    _ => current,
+  });
 }

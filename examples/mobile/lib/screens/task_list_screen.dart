@@ -1,7 +1,7 @@
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
-import 'package:dart_node_react/dart_node_react.dart';
+import 'package:dart_node_react/dart_node_react.dart' hide view;
 import 'package:dart_node_react_native/dart_node_react_native.dart';
 import 'package:nadz/nadz.dart';
 import 'package:shared/http/http_client.dart';
@@ -17,34 +17,29 @@ ReactElement taskListScreen({
   required AuthEffects authEffects,
 }) =>
     functionalComponent('TaskListScreen', (JSObject props) {
-      final tasksState = useState(<JSAny>[].toJS);
-      final loadingState = useState(true.toJS);
-      final errorState = useState(null);
-      final showAddFormState = useState(false.toJS);
-      final newTaskTitleState = useState(''.toJS);
+      final tasksState = useState<List<JSObject>>([]);
+      final loadingState = useState(true);
+      final errorState = useState<String?>(null);
+      final showAddFormState = useState(false);
+      final newTaskTitleState = useState('');
 
-      final tasks = (tasksState.$1 as JSArray?)?.toDart ?? [];
-      final loading = (loadingState.$1 as JSBoolean?)?.toDart ?? true;
-      final error = (errorState.$1 as JSString?)?.toDart;
-      final showAddForm = (showAddFormState.$1 as JSBoolean?)?.toDart ?? false;
-      final newTaskTitle = (newTaskTitleState.$1 as JSString?)?.toDart ?? '';
-
-      final setTasks = tasksState.$2;
-      final setLoading = wrapSetState<bool>(loadingState.$2);
-      final setError = wrapSetState<String?>(errorState.$2);
-      final setShowAddForm = wrapSetState<bool>(showAddFormState.$2);
-      final setNewTaskTitle = wrapSetState<String>(newTaskTitleState.$2);
+      final tasks = tasksState.value;
+      final loading = loadingState.value;
+      final error = errorState.value;
+      final showAddForm = showAddFormState.value;
+      final newTaskTitle = newTaskTitleState.value;
 
       useEffect(
-        (() {
-          _loadTasks(token, setTasks, setLoading, setError);
-        }).toJS,
-        [token.toJS].toJS,
+        () {
+          _loadTasks(token, tasksState, loadingState, errorState);
+          return null;
+        },
+        [token],
       );
 
       // WebSocket connection for real-time updates
       useEffect(
-        (() {
+        () {
           final ws = connectWebSocket(
             token: token,
             onTaskEvent: (event) {
@@ -52,15 +47,15 @@ ReactElement taskListScreen({
               final data = event['data'] as JSObject?;
               switch (data) {
                 case final JSObject d:
-                  _handleTaskEvent(type, d, setTasks);
+                  _handleTaskEvent(type, d, tasksState);
                 case null:
                   break;
               }
             },
           );
-          return (() => ws?.close()).toJS;
-        }).toJS,
-        [token.toJS].toJS,
+          return () => ws?.close();
+        },
+        [token],
       );
 
       void handleLogout() {
@@ -70,20 +65,20 @@ ReactElement taskListScreen({
       }
 
       void handleToggle(String id, bool completed) {
-        _toggleTask(token, id, completed, setTasks, tasks, setError);
+        _toggleTask(token, id, completed, tasksState, errorState);
       }
 
       void handleDelete(String id) {
-        _deleteTask(token, id, setTasks, tasks, setError);
+        _deleteTask(token, id, tasksState, errorState);
       }
 
       void handleAddTask() {
         final title = newTaskTitle.trim();
         (title.isEmpty)
             ? null
-            : _createTask(token, title, setTasks, tasks, setError, () {
-                setNewTaskTitle('');
-                setShowAddForm(false);
+            : _createTask(token, title, tasksState, errorState, () {
+                newTaskTitleState.set('');
+                showAddFormState.set(false);
               });
       }
 
@@ -111,14 +106,14 @@ ReactElement taskListScreen({
                       effects: (onToggle: handleToggle, onDelete: handleDelete),
                       showAddForm: showAddForm,
                       newTaskTitle: newTaskTitle,
-                      setNewTaskTitle: setNewTaskTitle,
+                      setNewTaskTitle: newTaskTitleState.set,
                       onAddTask: handleAddTask,
-                      onCancelAdd: () => setShowAddForm(false),
+                      onCancelAdd: () => showAddFormState.set(false),
                     ),
           showAddForm
               ? null
               : touchableOpacity(
-                  onPress: () => setShowAddForm(true),
+                  onPress: () => showAddFormState.set(true),
                   style: AppStyles.fab,
                   child: text('+', style: AppStyles.fabText),
                 ),
@@ -144,7 +139,7 @@ RNViewElement _buildHeader(String userName, void Function() onLogout) => view(
     );
 
 ReactElement _buildTaskContent({
-  required List<JSAny?> tasks,
+  required List<JSObject> tasks,
   required TaskEffects effects,
   required bool showAddForm,
   required String newTaskTitle,
@@ -156,9 +151,9 @@ ReactElement _buildTaskContent({
       style: AppStyles.content,
       children: [
         showAddForm ? _buildAddTaskForm(newTaskTitle, setNewTaskTitle, onAddTask, onCancelAdd) : null,
-        ...tasks.isEmpty
+        ...(tasks.isEmpty
             ? [_buildEmptyState()]
-            : tasks.map((task) => _buildTaskItem(task, effects)),
+            : tasks.map((task) => _buildTaskItem(task, effects))),
       ].whereType<ReactElement>().toList(),
     );
 
@@ -198,11 +193,10 @@ RNViewElement _buildEmptyState() => view(
       ],
     );
 
-RNViewElement _buildTaskItem(JSAny? task, TaskEffects effects) {
-  final taskObj = task as JSObject?;
-  final id = (taskObj?['id'] as JSString?)?.toDart ?? '';
-  final title = (taskObj?['title'] as JSString?)?.toDart ?? '';
-  final completed = (taskObj?['completed'] as JSBoolean?)?.toDart ?? false;
+RNViewElement _buildTaskItem(JSObject task, TaskEffects effects) {
+  final id = (task['id'] as JSString?)?.toDart ?? '';
+  final title = (task['title'] as JSString?)?.toDart ?? '';
+  final completed = (task['completed'] as JSBoolean?)?.toDart ?? false;
 
   return view(
     style: AppStyles.taskItem,
@@ -239,22 +233,22 @@ RNViewElement _buildTaskItem(JSAny? task, TaskEffects effects) {
 
 void _loadTasks(
   String token,
-  JSFunction setTasks,
-  SetLoading setLoading,
-  SetError setError,
+  StateHook<List<JSObject>> tasksState,
+  StateHook<bool> loadingState,
+  StateHook<String?> errorState,
 ) {
   fetchTasks(token: token, apiUrl: apiUrl).then((result) {
     result.match(
       onSuccess: (tasks) {
-        setTasks.callAsFunction(null, tasks);
-        setError(null);
+        tasksState.set(tasks.toDart.cast<JSObject>());
+        errorState.set(null);
       },
-      onError: (message) => setError(message),
+      onError: (message) => errorState.set(message),
     );
   }).catchError((Object e) {
-    setError(e.toString());
+    errorState.set(e.toString());
   }).whenComplete(() {
-    setLoading(false);
+    loadingState.set(false);
   });
 }
 
@@ -262,9 +256,8 @@ void _toggleTask(
   String token,
   String id,
   bool completed,
-  JSFunction setTasks,
-  List<JSAny?> tasks,
-  SetError setError,
+  StateHook<List<JSObject>> tasksState,
+  StateHook<String?> errorState,
 ) {
   fetchJson(
     '$apiUrl/tasks/$id',
@@ -274,18 +267,18 @@ void _toggleTask(
   ).then((result) {
     result.match(
       onSuccess: (_) {
-        final updated = tasks.map((t) {
-          final obj = t as JSObject?;
-          final taskId = (obj?['id'] as JSString?)?.toDart;
-          return (taskId == id) ? _updateTaskCompleted(obj, completed) : t;
-        }).toList();
-        setTasks.callAsFunction(null, updated.toJS);
-        setError(null);
+        tasksState.setWithUpdater((tasks) {
+          return tasks.map((t) {
+            final taskId = (t['id'] as JSString?)?.toDart;
+            return (taskId == id) ? _updateTaskCompleted(t, completed) : t;
+          }).toList();
+        });
+        errorState.set(null);
       },
-      onError: (message) => setError(message),
+      onError: (message) => errorState.set(message),
     );
   }).catchError((Object e) {
-    setError(e.toString());
+    errorState.set(e.toString());
   });
 }
 
@@ -302,34 +295,32 @@ JSObject _updateTaskCompleted(JSObject? task, bool completed) {
 void _deleteTask(
   String token,
   String id,
-  JSFunction setTasks,
-  List<JSAny?> tasks,
-  SetError setError,
+  StateHook<List<JSObject>> tasksState,
+  StateHook<String?> errorState,
 ) {
   fetchJson('$apiUrl/tasks/$id', method: 'DELETE', token: token).then((result) {
     result.match(
       onSuccess: (_) {
-        final filtered = tasks.where((t) {
-          final obj = t as JSObject?;
-          final taskId = (obj?['id'] as JSString?)?.toDart;
-          return taskId != id;
-        }).toList();
-        setTasks.callAsFunction(null, filtered.toJS);
-        setError(null);
+        tasksState.setWithUpdater((tasks) {
+          return tasks.where((t) {
+            final taskId = (t['id'] as JSString?)?.toDart;
+            return taskId != id;
+          }).toList();
+        });
+        errorState.set(null);
       },
-      onError: (message) => setError(message),
+      onError: (message) => errorState.set(message),
     );
   }).catchError((Object e) {
-    setError(e.toString());
+    errorState.set(e.toString());
   });
 }
 
 void _createTask(
   String token,
   String title,
-  JSFunction setTasks,
-  List<JSAny?> tasks,
-  SetError setError,
+  StateHook<List<JSObject>> tasksState,
+  StateHook<String?> errorState,
   void Function() onSuccess,
 ) {
   fetchJson(
@@ -342,15 +333,15 @@ void _createTask(
       onSuccess: (data) {
         final task = data as JSObject?;
         (task != null)
-            ? setTasks.callAsFunction(null, [...tasks, task].toJS)
+            ? tasksState.setWithUpdater((tasks) => [...tasks, task])
             : null;
-        setError(null);
+        errorState.set(null);
         onSuccess();
       },
-      onError: (message) => setError(message),
+      onError: (message) => errorState.set(message),
     );
   }).catchError((Object e) {
-    setError(e.toString());
+    errorState.set(e.toString());
   });
 }
 
@@ -358,28 +349,20 @@ void _createTask(
 void _handleTaskEvent(
   String? type,
   JSObject task,
-  JSFunction setTasks,
+  StateHook<List<JSObject>> tasksState,
 ) {
   final taskId = (task['id'] as JSString?)?.toDart;
 
-  // Use functional updater to get current state
-  final updater = ((JSAny? prevState) {
-    final tasks = prevState as JSArray?;
-    final current = (tasks?.toDart ?? []).cast<JSObject>();
-
-    return switch (type) {
-      'task_created' => [...current, task].toJS,
-      'task_updated' => current.map((t) {
-          final id = (t['id'] as JSString?)?.toDart;
-          return (id == taskId) ? task : t;
-        }).toList().toJS,
-      'task_deleted' => current.where((t) {
-          final id = (t['id'] as JSString?)?.toDart;
-          return id != taskId;
-        }).toList().toJS,
-      _ => prevState,
-    };
-  }).toJS;
-
-  setTasks.callAsFunction(null, updater);
+  tasksState.setWithUpdater((current) => switch (type) {
+        'task_created' => [...current, task],
+        'task_updated' => current.map((t) {
+            final id = (t['id'] as JSString?)?.toDart;
+            return (id == taskId) ? task : t;
+          }).toList(),
+        'task_deleted' => current.where((t) {
+            final id = (t['id'] as JSString?)?.toDart;
+            return id != taskId;
+          }).toList(),
+        _ => current,
+      });
 }
