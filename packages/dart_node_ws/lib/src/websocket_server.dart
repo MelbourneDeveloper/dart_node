@@ -20,8 +20,11 @@ class WebSocketServer {
   WebSocketServer._(this._server, this.port);
 
   final JSWebSocketServer _server;
+
+  /// The port the server is listening on
   final int port;
 
+  /// Registers a handler for new client connections
   void onConnection(
     void Function(WebSocketClient client, String? url) handler,
   ) =>
@@ -43,6 +46,7 @@ class WebSocketServer {
     };
   }
 
+  /// Closes the WebSocket server
   void close([void Function()? callback]) => _server.close(
         callback != null ? (() => callback()).toJS : null,
       );

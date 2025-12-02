@@ -66,9 +66,11 @@ class WebSocketClient {
 
   bool get isOpen => _ws.readyState == WebSocketReadyState.open.value;
 
+  /// Registers a handler for incoming messages
   void onMessage(MessageHandler handler) =>
       _ws.on('message', ((JSAny data) => handler(data)).toJS);
 
+  /// Registers a handler for connection close events
   void onClose(CloseHandler handler) => _ws.on(
         'close',
         ((int code, JSAny? reason) => handler((
@@ -83,6 +85,7 @@ class WebSocketClient {
         _ => reason.toString(),
       };
 
+  /// Registers a handler for error events
   void onError(ErrorHandler handler) =>
       _ws.on('error', ((JSAny error) => handler(error)).toJS);
 }
