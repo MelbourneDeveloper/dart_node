@@ -9,3 +9,6 @@ node_modules/
 *.js.map
 
 examples/mobile/rn/.expo/
+
+website/_site/
+website/src/
