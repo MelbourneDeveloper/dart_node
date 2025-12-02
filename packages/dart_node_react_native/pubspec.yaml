@@ -8,10 +8,8 @@ environment:
 
 dependencies:
   austerity: ^1.3.0
-  dart_node_core:
-    path: ../dart_node_core
-  dart_node_react:
-    path: ../dart_node_react
+  dart_node_core: ^0.2.0-beta
+  dart_node_react: ^0.2.0-beta
 
 dev_dependencies:
   lints: ^5.0.0
