@@ -1,0 +1,19 @@
+{
+  "name": "dart-node-website",
+  "version": "1.0.0",
+  "description": "Documentation website for dart_node - Full-stack Dart for the JavaScript ecosystem",
+  "type": "module",
+  "scripts": {
+    "dev": "eleventy --serve",
+    "build": "bash scripts/generate-api-docs.sh && eleventy",
+    "build:docs": "bash scripts/generate-api-docs.sh",
+    "build:site": "eleventy"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.2",
+    "@11ty/eleventy-navigation": "^0.3.5",
+    "@11ty/eleventy-plugin-rss": "^2.0.2",
+    "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
+    "jsdom": "^24.1.3"
+  }
+}

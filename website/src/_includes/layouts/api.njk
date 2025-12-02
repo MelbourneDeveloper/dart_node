@@ -1,0 +1,31 @@
+---
+layout: layouts/base.njk
+---
+
+<div class="docs-layout">
+  <aside class="docs-sidebar" id="docs-sidebar">
+    <div class="sidebar-section">
+      <h4>API Reference</h4>
+      <ul>
+        <li><a href="/api/dart_node_core/">dart_node_core</a></li>
+        <li><a href="/api/dart_node_express/">dart_node_express</a></li>
+        <li><a href="/api/dart_node_react/">dart_node_react</a></li>
+        <li><a href="/api/dart_node_react_native/">dart_node_react_native</a></li>
+        <li><a href="/api/dart_node_ws/">dart_node_ws</a></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-section">
+      <h4>Documentation</h4>
+      <ul>
+        <li><a href="/docs/getting-started/">Getting Started</a></li>
+        <li><a href="/docs/why-dart/">Why Dart?</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <article class="docs-content">
+    <h1>{{ title }}</h1>
+    {{ content | safe }}
+  </article>
+</div>

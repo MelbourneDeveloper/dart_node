@@ -10,5 +10,7 @@ node_modules/
 
 examples/mobile/rn/.expo/
 
+# Website generated files
 website/_site/
-website/src/
+website/src/api/
+website/.dart-doc-temp/
