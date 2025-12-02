@@ -12,9 +12,10 @@ packages:
   dart_node_core:
     dependency: "direct main"
     description:
-      path: "../dart_node_core"
-      relative: true
-    source: path
+      name: dart_node_core
+      sha256: "4926d74031883ed7948018ba47604270015571e4e9035db1f4bdf59e18dbd58b"
+      url: "https://pub.dev"
+    source: hosted
     version: "0.2.0-beta"
   nadz:
     dependency: transitive

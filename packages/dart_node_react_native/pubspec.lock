@@ -12,16 +12,18 @@ packages:
   dart_node_core:
     dependency: "direct main"
     description:
-      path: "../dart_node_core"
-      relative: true
-    source: path
+      name: dart_node_core
+      sha256: "4926d74031883ed7948018ba47604270015571e4e9035db1f4bdf59e18dbd58b"
+      url: "https://pub.dev"
+    source: hosted
     version: "0.2.0-beta"
   dart_node_react:
     dependency: "direct main"
     description:
-      path: "../dart_node_react"
-      relative: true
-    source: path
+      name: dart_node_react
+      sha256: e1da283d3c3cb7c753f8d6a04ee5af80cccc8bfdf47a2ef1516cc3dfbe5603cc
+      url: "https://pub.dev"
+    source: hosted
     version: "0.2.0-beta"
   lints:
     dependency: "direct dev"
