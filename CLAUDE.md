@@ -5,12 +5,13 @@ This is a project for Dart packages to be consumed on Node for building node-bas
 # Rules
 - All Dart. Absolutely minimal JS
 - NO DUPLICATION. Move files, code elements instead of copying them. Search for elements before adding them. HIGHEST PRIORITY. PRIORITIZE THIS OVER ALL ELSE!!
+- Avoid casting!!! ! etc are all ILLEGAL!!!
 - Return Result<T,E> from the nadz library for any function that could throw an exception <- CRITICAL!!!
 - All packages MUST have austerity installed for linting and nadz for Result<T,E> types
-- Fix ALL lint errors
+- Do not expose `JSObject` or `JSAny` etc in the public APIs. Put types over everything
 - Do not expose raw JS objects like JSAny to the higher levels. The library packages are supposed to put a TYPED layer over these
+- Fix ALL lint errors
 - NO GLOBAL STATE
-- Casting, ! etc are all ILLEGAL!!!
 - Move non-example-specific code to the framework packages
 - No skipping tests EVER!!! Agressively unskip tests when you find them!!
 - Failing tests = OK. Removing assertions or tests = ILLEGAL!!

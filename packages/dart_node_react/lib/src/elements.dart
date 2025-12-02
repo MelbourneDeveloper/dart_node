@@ -2,6 +2,7 @@ import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
 import 'package:dart_node_react/src/react.dart';
+import 'package:dart_node_react/src/synthetic_event.dart';
 
 // =============================================================================
 // Typed HTML Elements - Each element gets its own type for compile-time safety
@@ -220,7 +221,10 @@ InputElement input({
   String? type,
   String? value,
   String? placeholder,
-  void Function(JSAny)? onChange,
+  void Function(SyntheticEvent)? onChange,
+  void Function(SyntheticEvent)? onInput,
+  void Function(SyntheticFocusEvent)? onFocus,
+  void Function(SyntheticFocusEvent)? onBlur,
   Map<String, dynamic>? props,
   Map<String, dynamic>? style,
   String? className,
@@ -229,7 +233,22 @@ InputElement input({
   if (type != null) p['type'] = type;
   if (value != null) p['value'] = value;
   if (placeholder != null) p['placeholder'] = placeholder;
-  if (onChange != null) p['onChange'] = onChange;
+  if (onChange != null) {
+    void handler(JSObject e) => onChange(SyntheticEvent.fromJs(e));
+    p['onChange'] = handler;
+  }
+  if (onInput != null) {
+    void handler(JSObject e) => onInput(SyntheticEvent.fromJs(e));
+    p['onInput'] = handler;
+  }
+  if (onFocus != null) {
+    void handler(JSObject e) => onFocus(SyntheticFocusEvent.fromJs(e));
+    p['onFocus'] = handler;
+  }
+  if (onBlur != null) {
+    void handler(JSObject e) => onBlur(SyntheticFocusEvent.fromJs(e));
+    p['onBlur'] = handler;
+  }
   return InputElement.fromJS(createElement('input'.toJS, createProps(p)));
 }
 
