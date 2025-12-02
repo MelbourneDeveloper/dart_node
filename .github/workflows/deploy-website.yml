@@ -41,7 +41,7 @@ jobs:
 
       - name: Build website
         working-directory: website
-        run: npx @11ty/eleventy
+        run: npx @11ty/eleventy --pathprefix=/dart_node/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
