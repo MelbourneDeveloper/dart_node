@@ -2,6 +2,8 @@
 
 Write your entire stack in Dart: React web apps, React Native mobile apps with Expo, and Node.js Express backends.
 
+![React and React Native](images/dart_node.gif)
+
 ## Package Architecture
 
 ```mermaid
