@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="{{ site.language }}" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Primary Meta Tags -->
+  <title>{{ title | default(site.title) }}</title>
+  <meta name="title" content="{{ title | default(site.title) }}">
+  <meta name="description" content="{{ description | default(site.description) }}">
+  <meta name="author" content="{{ site.author }}">
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="{{ site.url }}{{ page.url }}">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ site.url }}{{ page.url }}">
+  <meta property="og:title" content="{{ title | default(site.title) }}">
+  <meta property="og:description" content="{{ description | default(site.description) }}">
+  <meta property="og:image" content="{{ site.url }}/assets/images/og-image.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:site_name" content="{{ site.name }}">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="{{ site.url }}{{ page.url }}">
+  <meta property="twitter:title" content="{{ title | default(site.title) }}">
+  <meta property="twitter:description" content="{{ description | default(site.description) }}">
+  <meta property="twitter:image" content="{{ site.url }}/assets/images/og-image.png">
+  <meta name="twitter:site" content="{{ site.twitter }}">
+
+  <!-- Theme Color -->
+  <meta name="theme-color" content="{{ site.themeColor }}">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/assets/css/styles.css">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "{{ site.name }}",
+    "url": "{{ site.url }}",
+    "description": "{{ site.description }}",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "{{ site.url }}/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="header">
+    <nav class="nav container">
+      <a href="/" class="logo">
+        <span class="logo-text">dart_node</span>
+      </a>
+
+      <ul class="nav-links">
+        {% for item in navigation.main %}
+        <li>
+          <a href="{{ item.url }}" {% if item.external %}target="_blank" rel="noopener noreferrer"{% endif %}
+             class="nav-link {% if page.url.startsWith(item.url) %}active{% endif %}">
+            {{ item.text }}
+            {% if item.external %}<span class="external-icon" aria-hidden="true">&#8599;</span>{% endif %}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <div class="nav-actions">
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+          <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Toggle menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    {% block content %}{{ content | safe }}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      {% for section in navigation.footer %}
+      <div class="footer-section">
+        <h3>{{ section.title }}</h3>
+        <ul>
+          {% for item in section.items %}
+          <li><a href="{{ item.url }}">{{ item.text }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="container footer-bottom">
+      <p>&copy; {% year %} dart_node. Built with Dart.</p>
+      <p>Made for React developers. Made for Flutter developers. Made for everyone.</p>
+    </div>
+  </footer>
+
+  <script src="/assets/js/main.js"></script>
+  <!-- Mermaid for diagrams -->
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default',
+      securityLevel: 'loose'
+    });
+
+    // Re-render mermaid when theme changes
+    document.getElementById('theme-toggle')?.addEventListener('click', () => {
+      setTimeout(() => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        mermaid.initialize({ theme: isDark ? 'dark' : 'default' });
+        document.querySelectorAll('.mermaid').forEach(el => {
+          const code = el.getAttribute('data-mermaid') || el.textContent;
+          el.removeAttribute('data-processed');
+          el.innerHTML = code;
+        });
+        mermaid.run();
+      }, 100);
+    });
+  </script>
+</body>
+</html>

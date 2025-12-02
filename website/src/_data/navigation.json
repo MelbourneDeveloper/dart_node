@@ -1,0 +1,122 @@
+{
+  "main": [
+    {
+      "text": "Docs",
+      "url": "/docs/getting-started/"
+    },
+    {
+      "text": "API",
+      "url": "/api/"
+    },
+    {
+      "text": "Blog",
+      "url": "/blog/"
+    },
+    {
+      "text": "GitHub",
+      "url": "https://github.com/melbournedeveloper/dart_node",
+      "external": true
+    }
+  ],
+  "docs": [
+    {
+      "title": "Introduction",
+      "items": [
+        {
+          "text": "Getting Started",
+          "url": "/docs/getting-started/"
+        },
+        {
+          "text": "Why Dart?",
+          "url": "/docs/why-dart/"
+        },
+        {
+          "text": "Dart to JavaScript",
+          "url": "/docs/dart-to-js/"
+        },
+        {
+          "text": "JS Interop",
+          "url": "/docs/js-interop/"
+        }
+      ]
+    },
+    {
+      "title": "Packages",
+      "items": [
+        {
+          "text": "dart_node_core",
+          "url": "/docs/core/"
+        },
+        {
+          "text": "dart_node_express",
+          "url": "/docs/express/"
+        },
+        {
+          "text": "dart_node_react",
+          "url": "/docs/react/"
+        },
+        {
+          "text": "dart_node_react_native",
+          "url": "/docs/react-native/"
+        },
+        {
+          "text": "dart_node_ws",
+          "url": "/docs/websockets/"
+        }
+      ]
+    }
+  ],
+  "footer": [
+    {
+      "title": "Documentation",
+      "items": [
+        {
+          "text": "Getting Started",
+          "url": "/docs/getting-started/"
+        },
+        {
+          "text": "API Reference",
+          "url": "/api/"
+        },
+        {
+          "text": "Examples",
+          "url": "/docs/examples/"
+        }
+      ]
+    },
+    {
+      "title": "Community",
+      "items": [
+        {
+          "text": "GitHub",
+          "url": "https://github.com/melbournedeveloper/dart_node"
+        },
+        {
+          "text": "Discord",
+          "url": "#"
+        },
+        {
+          "text": "Twitter",
+          "url": "https://twitter.com/dart_node"
+        }
+      ]
+    },
+    {
+      "title": "More",
+      "items": [
+        {
+          "text": "Blog",
+          "url": "/blog/"
+        },
+        {
+          "text": "Dart Official",
+          "url": "https://dart.dev"
+        },
+        {
+          "text": "Flutter",
+          "url": "https://flutter.dev"
+        }
+      ]
+    }
+  ]
+}

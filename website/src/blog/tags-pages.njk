@@ -1,0 +1,44 @@
+---
+pagination:
+  data: collections.tagList
+  size: 1
+  alias: tag
+permalink: /blog/tags/{{ tag | slugify }}/
+layout: layouts/base.njk
+eleventyComputed:
+  title: "Posts tagged '{{ tag }}'"
+  description: "All blog posts tagged with {{ tag }}."
+---
+
+<section class="blog-list">
+  <div class="container">
+    <div class="section-title">
+      <h1>Posts tagged "{{ tag }}"</h1>
+      <p><a href="/blog/tags/">← All tags</a></p>
+    </div>
+
+    <div class="blog-grid">
+      {% for post in collections.postsByTag[tag] %}
+      <article class="blog-card">
+        <div class="blog-card-content">
+          <p class="blog-card-meta">
+            <time datetime="{{ post.date | isoDate }}">{{ post.date | dateFormat }}</time>
+            {% if post.data.author %} &middot; {{ post.data.author }}{% endif %}
+          </p>
+          <h3><a href="{{ post.url }}">{{ post.data.title }}</a></h3>
+          <p>{{ post.data.description }}</p>
+          {% if post.data.tags %}
+          <div style="margin-top: var(--space-3);">
+            {% for t in post.data.tags %}
+            {% if t != 'post' and t != 'posts' %}
+            <a href="/blog/tags/{{ t | slugify }}/" class="tag tag-secondary {% if t == tag %}tag-active{% endif %}">{{ t }}</a>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>

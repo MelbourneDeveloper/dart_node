@@ -1,0 +1,33 @@
+---
+layout: layouts/base.njk
+---
+
+<article class="blog-post">
+  <div class="container">
+    <header class="blog-post-header">
+      <p class="blog-post-meta">
+        <time datetime="{{ date | isoDate }}">{{ date | dateFormat }}</time>
+        {% if author %} &middot; {{ author }}{% endif %}
+        {% if category %} &middot; <a href="/blog/categories/{{ category | slugify }}/">{{ category | capitalize }}</a>{% endif %}
+      </p>
+      <h1>{{ title }}</h1>
+      {% if tags %}
+      <div style="margin-top: var(--space-4);">
+        {% for tag in tags %}
+        {% if tag != 'post' and tag != 'posts' %}
+        <a href="/blog/tags/{{ tag | slugify }}/" class="tag tag-secondary">{{ tag }}</a>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+    </header>
+
+    <div class="blog-post-content">
+      {{ content | safe }}
+    </div>
+
+    <footer style="margin-top: var(--space-12); padding-top: var(--space-6); border-top: 1px solid var(--border-color); text-align: center;">
+      <a href="/blog/" class="btn btn-secondary">&larr; Back to Blog</a>
+    </footer>
+  </div>
+</article>

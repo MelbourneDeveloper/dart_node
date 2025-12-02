@@ -1,0 +1,297 @@
+---
+layout: layouts/base.njk
+title: "dart_node - Full-Stack Dart for the JavaScript Ecosystem"
+description: "Write React, React Native, and Express apps entirely in Dart. Runtime type safety, sound null safety, and one language for everything."
+---
+
+<section class="hero">
+  <div class="container">
+    <h1>Full-Stack Dart for the<br>JavaScript Ecosystem</h1>
+    <p class="hero-subtitle">
+      Write React, React Native, and Express applications entirely in Dart.
+      One language. Runtime type safety. Sound null safety. No compromises.
+    </p>
+    <div class="hero-buttons">
+      <a href="/docs/getting-started/" class="btn btn-primary btn-large">Get Started</a>
+      <a href="/docs/why-dart/" class="btn btn-secondary btn-large">Why Dart?</a>
+    </div>
+
+    <div class="hero-code">
+      <pre><code class="language-dart">// A complete Express server in Dart
+import 'package:dart_node_express/dart_node_express.dart';
+
+void main() {
+  final app = createExpressApp();
+
+  app.get('/', (req, res) {
+    res.json({'message': 'Hello from Dart!'});
+  });
+
+  app.listen(3000, () {
+    print('Server running on port 3000');
+  });
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<section class="audience-section">
+  <div class="container">
+    <div class="section-title">
+      <h2>Built for You</h2>
+      <p>Whether you're coming from React or Flutter, dart_node speaks your language.</p>
+    </div>
+
+    <div class="audience-tabs">
+      <button class="audience-tab active" data-audience="react">React / React Native Developers</button>
+      <button class="audience-tab" data-audience="flutter">Flutter Developers</button>
+    </div>
+
+    <div class="audience-content active" id="react-content">
+      <div class="code-comparison">
+        <div class="code-block">
+          <div class="code-block-header">React (TypeScript)</div>
+          <pre><code class="language-typescript">const Counter: React.FC = () => {
+  const [count, setCount] = useState<number>(0);
+
+  return (
+    &lt;button onClick={() => setCount(c => c + 1)}>
+      Count: {count}
+    &lt;/button>
+  );
+};</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header">React (Dart)</div>
+          <pre><code class="language-dart">ReactElement counter() {
+  final (count, setCount) = useState(0);
+
+  return button(
+    onClick: (_) => setCount((c) => c + 1),
+    children: [text('Count: $count')],
+  );
+}</code></pre>
+        </div>
+      </div>
+
+      <div class="features-grid" style="margin-top: var(--space-8);">
+        <div class="feature-card">
+          <div class="feature-icon">1</div>
+          <h3>Same Paradigms</h3>
+          <p>Hooks, components, props, state &mdash; everything you know from React works the same way in Dart.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">2</div>
+          <h3>Runtime Type Safety</h3>
+          <p>Unlike TypeScript, Dart preserves types at runtime. No more <code>any</code> escapes or erased generics.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">3</div>
+          <h3>Simpler Tooling</h3>
+          <p>No webpack, no babel, no tsconfig. Just <code>dart compile js</code> and you're done.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="audience-content" id="flutter-content">
+      <div class="code-comparison">
+        <div class="code-block">
+          <div class="code-block-header">Flutter</div>
+          <pre><code class="language-dart">class Counter extends StatefulWidget {
+  @override
+  State&lt;Counter> createState() => _CounterState();
+}
+
+class _CounterState extends State&lt;Counter> {
+  int count = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => setState(() => count++),
+      child: Text('Count: $count'),
+    );
+  }
+}</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header">dart_node React</div>
+          <pre><code class="language-dart">ReactElement counter() {
+  final (count, setCount) = useState(0);
+
+  return button(
+    onClick: (_) => setCount((c) => c + 1),
+    children: [text('Count: $count')],
+  );
+}</code></pre>
+        </div>
+      </div>
+
+      <div class="features-grid" style="margin-top: var(--space-8);">
+        <div class="feature-card">
+          <div class="feature-icon">1</div>
+          <h3>Same Language</h3>
+          <p>Use your existing Dart skills. Share models, utilities, and business logic across platforms.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">2</div>
+          <h3>Web Ecosystem Access</h3>
+          <p>Leverage the massive React and npm ecosystems while writing pure Dart code.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">3</div>
+          <h3>Full-Stack Dart</h3>
+          <p>Backend (Express), web (React), mobile (React Native) &mdash; all in one language.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="container">
+    <div class="section-title">
+      <h2>The dart_node Stack</h2>
+      <p>Five packages that give you full-stack superpowers.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon" style="background: var(--color-primary);">C</div>
+        <h3>dart_node_core</h3>
+        <p>Foundation layer with JS interop utilities, Node.js bindings, and console helpers.</p>
+        <a href="/docs/core/">Learn more &rarr;</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: var(--color-secondary);">E</div>
+        <h3>dart_node_express</h3>
+        <p>Type-safe Express.js bindings for building HTTP servers and REST APIs.</p>
+        <a href="/docs/express/">Learn more &rarr;</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: var(--color-accent);">R</div>
+        <h3>dart_node_react</h3>
+        <p>React bindings with hooks, JSX-like syntax, and full component support.</p>
+        <a href="/docs/react/">Learn more &rarr;</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: var(--color-warning);">N</div>
+        <h3>dart_node_react_native</h3>
+        <p>React Native + Expo bindings for cross-platform mobile development.</p>
+        <a href="/docs/react-native/">Learn more &rarr;</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: var(--color-success);">W</div>
+        <h3>dart_node_ws</h3>
+        <p>WebSocket bindings for real-time communication on Node.js.</p>
+        <a href="/docs/websockets/">Learn more &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features" style="background: var(--bg-secondary);">
+  <div class="container">
+    <div class="section-title">
+      <h2>Why Types Matter at Runtime</h2>
+      <p>TypeScript erases types when it compiles to JavaScript. Dart doesn't.</p>
+    </div>
+
+    <div class="code-comparison">
+      <div class="code-block">
+        <div class="code-block-header">TypeScript (Types Erased)</div>
+        <pre><code class="language-typescript">interface User {
+  id: number;
+  name: string;
+}
+
+// At runtime, this is just a plain object
+// No way to validate the shape!
+const user: User = JSON.parse(data);
+
+// This could fail silently
+console.log(user.name.toUpperCase());
+// Runtime error if name is undefined!</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">Dart (Types Preserved)</div>
+        <pre><code class="language-dart">class User {
+  final int id;
+  final String name;
+  User({required this.id, required this.name});
+}
+
+// Types exist at runtime - you can validate!
+final user = User.fromJson(jsonDecode(data));
+
+// If name were null, this would fail
+// at deserialization, not at usage
+print(user.name.toUpperCase());</code></pre>
+      </div>
+    </div>
+
+    <div class="text-center" style="margin-top: var(--space-8);">
+      <a href="/docs/why-dart/" class="btn btn-primary">Learn More About Dart's Type System</a>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="container">
+    <div class="section-title">
+      <h2>Get Started in Minutes</h2>
+    </div>
+
+    <div style="max-width: 700px; margin: 0 auto;">
+      <pre><code class="language-bash"># Create a new project
+mkdir my_dart_app && cd my_dart_app
+dart create -t package .
+
+# Add dart_node packages
+dart pub add dart_node_core dart_node_express
+
+# Write your server
+cat > lib/server.dart << 'EOF'
+import 'package:dart_node_express/dart_node_express.dart';
+
+void main() {
+  final app = createExpressApp();
+  app.get('/', (req, res) => res.send('Hello, Dart!'));
+  app.listen(3000);
+}
+EOF
+
+# Compile to JavaScript and run
+dart compile js lib/server.dart -o build/server.js
+node build/server.js</code></pre>
+    </div>
+
+    <div class="text-center" style="margin-top: var(--space-8);">
+      <a href="/docs/getting-started/" class="btn btn-primary btn-large">Read the Full Guide</a>
+    </div>
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const tabs = document.querySelectorAll('.audience-tab');
+  const contents = document.querySelectorAll('.audience-content');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const audience = tab.dataset.audience;
+
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      contents.forEach(content => {
+        content.classList.toggle('active', content.id === `${audience}-content`);
+      });
+    });
+  });
+});
+</script>

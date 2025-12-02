@@ -9,3 +9,8 @@ node_modules/
 *.js.map
 
 examples/mobile/rn/.expo/
+
+# Website generated files
+website/_site/
+website/src/api/
+website/.dart-doc-temp/

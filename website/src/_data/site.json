@@ -1,0 +1,11 @@
+{
+  "name": "dart_node",
+  "title": "dart_node - Full-Stack Dart for the JavaScript Ecosystem",
+  "description": "Write React, React Native, and Express apps entirely in Dart. One language for frontend, backend, and mobile.",
+  "url": "https://dartnode.dev",
+  "author": "dart_node team",
+  "language": "en",
+  "themeColor": "#0E7C6B",
+  "twitter": "@dart_node",
+  "github": "https://github.com/melbournedeveloper/dart_node"
+}

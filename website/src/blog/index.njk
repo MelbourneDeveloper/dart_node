@@ -1,0 +1,50 @@
+---
+layout: layouts/base.njk
+title: Blog
+description: Latest news, tutorials, and updates from the dart_node team.
+---
+
+<section class="blog-list">
+  <div class="container">
+    <div class="section-title">
+      <h1>Blog</h1>
+      <p>Latest news, tutorials, and updates from the dart_node team.</p>
+    </div>
+
+    <div class="blog-nav">
+      <a href="/blog/tags/" class="blog-nav-link">Tags</a>
+      <a href="/blog/categories/" class="blog-nav-link">Categories</a>
+    </div>
+
+    <div class="blog-grid">
+      {% for post in collections.posts %}
+      <article class="blog-card">
+        <div class="blog-card-content">
+          <p class="blog-card-meta">
+            <time datetime="{{ post.date | isoDate }}">{{ post.date | dateFormat }}</time>
+            {% if post.data.author %} &middot; {{ post.data.author }}{% endif %}
+            {% if post.data.category %} &middot; <a href="/blog/categories/{{ post.data.category | slugify }}/">{{ post.data.category | capitalize }}</a>{% endif %}
+          </p>
+          <h3><a href="{{ post.url }}">{{ post.data.title }}</a></h3>
+          <p>{{ post.data.description }}</p>
+          {% if post.data.tags %}
+          <div style="margin-top: var(--space-3);">
+            {% for tag in post.data.tags %}
+            {% if tag != 'post' and tag != 'posts' %}
+            <a href="/blog/tags/{{ tag | slugify }}/" class="tag tag-secondary">{{ tag }}</a>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+
+    {% if collections.posts.length == 0 %}
+    <div class="text-center" style="padding: var(--space-16) 0;">
+      <p>No blog posts yet. Check back soon!</p>
+    </div>
+    {% endif %}
+  </div>
+</section>

@@ -1,0 +1,41 @@
+---
+layout: layouts/base.njk
+---
+
+<div class="docs-layout">
+  <aside class="docs-sidebar" id="docs-sidebar">
+    {% for section in navigation.docs %}
+    <div class="sidebar-section">
+      <h4>{{ section.title }}</h4>
+      <ul>
+        {% for item in section.items %}
+        <li>
+          <a href="{{ item.url }}" {% if page.url == item.url %}class="active"{% endif %}>
+            {{ item.text }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </aside>
+
+  <article class="docs-content">
+    <h1>{{ title }}</h1>
+    {{ content | safe }}
+
+    {% if prevPage or nextPage %}
+    <nav class="docs-nav-footer" style="display: flex; justify-content: space-between; margin-top: var(--space-12); padding-top: var(--space-6); border-top: 1px solid var(--border-color);">
+      {% if prevPage %}
+      <a href="{{ prevPage.url }}" class="btn btn-secondary">&larr; {{ prevPage.title }}</a>
+      {% else %}
+      <span></span>
+      {% endif %}
+
+      {% if nextPage %}
+      <a href="{{ nextPage.url }}" class="btn btn-secondary">{{ nextPage.title }} &rarr;</a>
+      {% endif %}
+    </nav>
+    {% endif %}
+  </article>
+</div>
