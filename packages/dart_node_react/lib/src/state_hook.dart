@@ -75,10 +75,11 @@ StateHook<T> useState<T>(T initialValue) {
       ? null
       : (initialValue as Object).jsify();
   final result = React.useState(jsInitial);
-  final value = result[0].dartify() as T;
+  final jsValue = result[0];
+  final value = (jsValue == null) ? null : jsValue.dartify();
   final setter = result[1];
   final fn = setter! as JSFunction;
-  return StateHook._(value, (v) => fn.callAsFunction(null, v));
+  return StateHook._(value as T, (v) => fn.callAsFunction(null, v));
 }
 
 /// Adds local state to a function component by returning a [StateHook] with
@@ -108,8 +109,45 @@ StateHook<T> useStateLazy<T>(T Function() init) {
   }
 
   final result = React.useState(jsInit.toJS);
-  final value = result[0].dartify() as T;
+  final jsValue = result[0];
+  final value = (jsValue == null) ? null : jsValue.dartify();
   final setter = result[1];
   final fn = setter! as JSFunction;
-  return StateHook._(value, (v) => fn.callAsFunction(null, v));
+  return StateHook._(value as T, (v) => fn.callAsFunction(null, v));
+}
+
+/// State hook for JS interop types (JSString, JSObject, etc).
+///
+/// Use this instead of [useState] when state must remain as a JS type
+/// without dartify/jsify conversion.
+final class StateHookJS {
+  StateHookJS._(this._value, this._setValue);
+
+  final JSAny? _value;
+  final void Function(JSAny?) _setValue;
+
+  /// The current value of the state.
+  JSAny? get value => _value;
+
+  /// Updates [value] to [newValue].
+  void set(JSAny? newValue) => _setValue(newValue);
+}
+
+/// Adds local state for JS interop types to a function component.
+///
+/// Use this instead of [useState] when state must remain as a JS type
+/// (JSString, JSObject, etc.) without Dart conversion.
+///
+/// Example:
+/// ```dart
+/// final tokenState = useStateJS(null);
+/// final token = tokenState.value; // JSAny?
+/// tokenState.set('abc'.toJS);
+/// ```
+StateHookJS useStateJS(JSAny? initialValue) {
+  final result = React.useState(initialValue);
+  final jsValue = result[0];
+  final setter = result[1];
+  final fn = setter! as JSFunction;
+  return StateHookJS._(jsValue, (v) => fn.callAsFunction(null, v));
 }

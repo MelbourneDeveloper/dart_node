@@ -26,7 +26,7 @@ void main() {
 ReactElement App() => createElement(
   ((JSAny props) {
     final tokenState = useState<String?>(null);
-    final userState = useState<JSObject?>(null);
+    final userState = useStateJS(null);
     final viewState = useState('login');
 
     final auth = (
@@ -60,8 +60,9 @@ ReactElement App() => createElement(
   }).toJS,
 );
 
-HeaderElement _buildHeader(JSObject? user, void Function() onLogout) {
-  final userName = user?['name']?.toString();
+HeaderElement _buildHeader(JSAny? user, void Function() onLogout) {
+  final userObj = user as JSObject?;
+  final userName = userObj?['name']?.toString();
   return header(
     className: 'header',
     children: [
@@ -307,7 +308,7 @@ ReactElement _buildRegisterForm(AuthEffects auth) => createElement(
 
 ReactElement _buildTaskManager(
   String token,
-  StateHook<JSObject?> userState,
+  StateHookJS userState,
   StateHook<String> viewState,
 ) => createElement(
   ((JSAny props) {

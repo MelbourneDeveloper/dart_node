@@ -10,17 +10,17 @@ import 'types.dart';
 
 /// Main App component
 JSFunction app() => createFunctionalComponent((JSObject props) {
-      final tokenState = useState<JSString?>(null);
-      final userState = useState<JSObject?>(null);
+      final tokenState = useStateJS(null);
+      final userState = useStateJS(null);
       final viewState = useState('login');
 
-      final token = tokenState.value;
-      final user = userState.value;
+      final token = tokenState.value as JSString?;
+      final user = userState.value as JSObject?;
       final view = viewState.value;
 
       final authEffects = (
-        setToken: (JSString? t) => tokenState.set(t),
-        setUser: (JSObject? u) => userState.set(u),
+        setToken: (JSAny? t) => tokenState.set(t),
+        setUser: (JSAny? u) => userState.set(u),
         setView: (String v) => viewState.set(v),
       );
 
