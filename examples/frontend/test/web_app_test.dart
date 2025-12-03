@@ -1,6 +1,6 @@
 /// UI interaction tests for the TaskFlow web app.
 ///
-/// Tests verify actual user interactions and state changes.
+/// Tests verify actual user interactions using the real lib/ components.
 /// Run with: dart test -p chrome
 @TestOn('browser')
 library;
@@ -10,759 +10,560 @@ import 'dart:js_interop_unsafe';
 
 import 'package:dart_node_react/dart_node_react.dart' hide render;
 import 'package:dart_node_react/src/testing_library.dart';
+import 'package:frontend/frontend.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('Login Form Interactions', () {
-    test('typing in email field updates the input value', () async {
-      final loginForm = registerFunctionComponent((props) {
-        final emailState = useState('');
-        return div(
-          children: [
-            input(
-              type: 'email',
-              placeholder: 'you@example.com',
-              value: emailState.value,
-              className: 'input',
-              onChange: (e) => emailState.set(_getInputValue(e)),
-              props: {'data-testid': 'email-input'},
-            ),
-            pEl(
-              'Email: ${emailState.value}',
-              props: {'data-testid': 'email-display'},
-            ),
-          ],
-        );
-      });
+  group('Header Component', () {
+    test('displays user name when logged in', () {
+      final user = _createJSObject({'name': 'John Doe'});
 
-      final result = render(fc(loginForm));
-      final emailInput = result.getByTestId('email-input');
+      final result = render(buildHeader(user, () {}));
 
-      await userType(emailInput, 'test@example.com');
-
-      expect(
-        result.getByTestId('email-display').textContent,
-        equals('Email: test@example.com'),
-      );
+      expect(result.container.textContent, contains('Welcome, John Doe'));
+      expect(result.container.textContent, contains('Logout'));
 
       result.unmount();
     });
 
-    test('typing in password field updates the input value', () async {
-      final loginForm = registerFunctionComponent((props) {
-        final passState = useState('');
-        return div(
-          children: [
-            input(
-              type: 'password',
-              placeholder: '••••••••',
-              value: passState.value,
-              className: 'input',
-              onChange: (e) => passState.set(_getInputValue(e)),
-              props: {'data-testid': 'password-input'},
-            ),
-            pEl(
-              'Password length: ${passState.value.length}',
-              props: {'data-testid': 'password-display'},
-            ),
-          ],
-        );
-      });
+    test('shows spacer when no user', () {
+      final result = render(buildHeader(null, () {}));
 
-      final result = render(fc(loginForm));
-      final passwordInput = result.getByTestId('password-input');
-
-      await userType(passwordInput, 'secret123');
-
-      expect(
-        result.getByTestId('password-display').textContent,
-        equals('Password length: 9'),
-      );
+      expect(result.container.textContent, isNot(contains('Welcome')));
 
       result.unmount();
     });
 
-    test('clicking register link switches to register view', () {
-      final authView = registerFunctionComponent((props) {
-        final viewState = useState('login');
-        return div(
-          children: [
-            pEl(
-              'Current view: ${viewState.value}',
-              props: {'data-testid': 'view'},
-            ),
-            if (viewState.value == 'login')
-              button(
-                text: 'Register',
-                className: 'btn-link',
-                onClick: () => viewState.set('register'),
-                props: {'data-testid': 'register-link'},
-              )
-            else
-              button(
-                text: 'Sign In',
-                className: 'btn-link',
-                onClick: () => viewState.set('login'),
-                props: {'data-testid': 'login-link'},
-              ),
-          ],
-        );
-      });
+    test('logout button calls callback when clicked', () {
+      final user = _createJSObject({'name': 'Test User'});
+      var logoutCalled = false;
 
-      final result = render(fc(authView));
+      final result = render(buildHeader(user, () => logoutCalled = true));
 
-      expect(
-        result.getByTestId('view').textContent,
-        equals('Current view: login'),
-      );
+      final logoutBtn = result.container.querySelector('.btn-ghost');
+      expect(logoutBtn, isNotNull);
+      fireClick(logoutBtn!);
 
-      fireClick(result.getByTestId('register-link'));
-
-      expect(
-        result.getByTestId('view').textContent,
-        equals('Current view: register'),
-      );
-
-      result.unmount();
-    });
-
-    test('submit button shows loading state when clicked', () {
-      final loginForm = registerFunctionComponent((props) {
-        final loadingState = useState(false);
-        return div(
-          children: [
-            button(
-              text: loadingState.value ? 'Signing in...' : 'Sign In',
-              className: 'btn btn-primary btn-full',
-              onClick: loadingState.value ? null : () => loadingState.set(true),
-              props: {'data-testid': 'submit-btn'},
-            ),
-          ],
-        );
-      });
-
-      final result = render(fc(loginForm));
-      final submitBtn = result.getByTestId('submit-btn');
-
-      expect(submitBtn.textContent, equals('Sign In'));
-
-      fireClick(submitBtn);
-
-      expect(
-        result.getByTestId('submit-btn').textContent,
-        equals('Signing in...'),
-      );
-
-      result.unmount();
-    });
-
-    test('error message displays when error state is set', () {
-      final loginForm = registerFunctionComponent((props) {
-        final errorState = useState<String?>(null);
-        return div(
-          children: [
-            if (errorState.value != null)
-              div(
-                className: 'error-msg',
-                child: span(errorState.value!),
-                props: {'data-testid': 'error-msg'},
-              )
-            else
-              span(''),
-            button(
-              text: 'Trigger Error',
-              onClick: () => errorState.set('Invalid credentials'),
-              props: {'data-testid': 'error-btn'},
-            ),
-          ],
-        );
-      });
-
-      final result = render(fc(loginForm));
-
-      expect(result.queryByTestId('error-msg'), isNull);
-
-      fireClick(result.getByTestId('error-btn'));
-
-      expect(
-        result.getByTestId('error-msg').textContent,
-        equals('Invalid credentials'),
-      );
+      expect(logoutCalled, isTrue);
 
       result.unmount();
     });
   });
 
-  group('Register Form Interactions', () {
-    test('typing in name field updates the input value', () async {
-      final registerForm = registerFunctionComponent((props) {
-        final nameState = useState('');
+  group('Login Form Component', () {
+    test('renders login form with sign in title', () {
+      final auth = _createMockAuth();
+
+      final result = render(buildLoginForm(auth));
+
+      expect(result.container.textContent, contains('Sign In'));
+
+      result.unmount();
+    });
+
+    test('renders email and password labels', () {
+      final auth = _createMockAuth();
+
+      final result = render(buildLoginForm(auth));
+
+      expect(result.container.textContent, contains('Email'));
+      expect(result.container.textContent, contains('Password'));
+
+      result.unmount();
+    });
+
+    test('renders register link', () {
+      final auth = _createMockAuth();
+
+      final result = render(buildLoginForm(auth));
+
+      expect(result.container.textContent, contains("Don't have an account?"));
+      expect(result.container.textContent, contains('Register'));
+
+      result.unmount();
+    });
+
+    test('clicking register switches view', () {
+      var viewValue = '';
+      final auth = (
+        setToken: (JSString? _) {},
+        setUser: (JSObject? _) {},
+        setView: (String v) => viewValue = v,
+      );
+
+      final result = render(buildLoginForm(auth));
+
+      final registerBtn = result.container.querySelector('.btn-link');
+      expect(registerBtn, isNotNull);
+      fireClick(registerBtn!);
+
+      expect(viewValue, equals('register'));
+
+      result.unmount();
+    });
+  });
+
+  group('Register Form Component', () {
+    test('renders register form with create account title', () {
+      final auth = _createMockAuth();
+
+      final result = render(buildRegisterForm(auth));
+
+      expect(result.container.textContent, contains('Create Account'));
+
+      result.unmount();
+    });
+
+    test('renders name, email, and password labels', () {
+      final auth = _createMockAuth();
+
+      final result = render(buildRegisterForm(auth));
+
+      expect(result.container.textContent, contains('Name'));
+      expect(result.container.textContent, contains('Email'));
+      expect(result.container.textContent, contains('Password'));
+
+      result.unmount();
+    });
+
+    test('renders sign in link', () {
+      final auth = _createMockAuth();
+
+      final result = render(buildRegisterForm(auth));
+
+      expect(
+        result.container.textContent,
+        contains('Already have an account?'),
+      );
+
+      result.unmount();
+    });
+
+    test('clicking sign in switches view', () {
+      var viewValue = '';
+      final auth = (
+        setToken: (JSString? _) {},
+        setUser: (JSObject? _) {},
+        setView: (String v) => viewValue = v,
+      );
+
+      final result = render(buildRegisterForm(auth));
+
+      final signInBtn = result.container.querySelector('.btn-link');
+      expect(signInBtn, isNotNull);
+      fireClick(signInBtn!);
+
+      expect(viewValue, equals('login'));
+
+      result.unmount();
+    });
+  });
+
+  group('Form Helpers', () {
+    test('formGroup creates labeled input', () {
+      final inputEl = input(
+        type: 'text',
+        className: 'test-input',
+        props: {'data-testid': 'test-input'},
+      );
+      final group = formGroup('Test Label', inputEl);
+
+      final result = render(group);
+
+      expect(result.container.textContent, contains('Test Label'));
+      expect(result.getByTestId('test-input'), isNotNull);
+
+      result.unmount();
+    });
+
+    test('labelEl creates label element', () {
+      final label = labelEl('My Label');
+
+      final result = render(label);
+
+      expect(result.container.textContent, equals('My Label'));
+
+      result.unmount();
+    });
+
+    test('getInputValue extracts value from input event', () async {
+      final component = registerFunctionComponent((props) {
+        final state = useState('');
         return div(
           children: [
             input(
               type: 'text',
-              placeholder: 'Your name',
-              value: nameState.value,
-              className: 'input',
-              onChange: (e) => nameState.set(_getInputValue(e)),
-              props: {'data-testid': 'name-input'},
+              value: state.value,
+              onChange: (e) => state.set(getInputValue(e).toDart),
+              props: {'data-testid': 'input'},
             ),
-            pEl(
-              'Name: ${nameState.value}',
-              props: {'data-testid': 'name-display'},
-            ),
+            span(state.value, props: {'data-testid': 'output'}),
           ],
         );
       });
 
-      final result = render(fc(registerForm));
-      final nameInput = result.getByTestId('name-input');
+      final result = render(fc(component));
 
-      await userType(nameInput, 'John Doe');
+      await userType(result.getByTestId('input'), 'hello');
 
-      expect(
-        result.getByTestId('name-display').textContent,
-        equals('Name: John Doe'),
-      );
-
-      result.unmount();
-    });
-
-    test('clicking sign in link switches to login view', () {
-      final authView = registerFunctionComponent((props) {
-        final viewState = useState('register');
-        return div(
-          children: [
-            pEl(
-              'Current view: ${viewState.value}',
-              props: {'data-testid': 'view'},
-            ),
-            if (viewState.value == 'register')
-              button(
-                text: 'Sign In',
-                className: 'btn-link',
-                onClick: () => viewState.set('login'),
-                props: {'data-testid': 'login-link'},
-              )
-            else
-              button(
-                text: 'Register',
-                className: 'btn-link',
-                onClick: () => viewState.set('register'),
-                props: {'data-testid': 'register-link'},
-              ),
-          ],
-        );
-      });
-
-      final result = render(fc(authView));
-
-      expect(
-        result.getByTestId('view').textContent,
-        equals('Current view: register'),
-      );
-
-      fireClick(result.getByTestId('login-link'));
-
-      expect(
-        result.getByTestId('view').textContent,
-        equals('Current view: login'),
-      );
-
-      result.unmount();
-    });
-
-    test('create account button shows loading state', () {
-      final registerForm = registerFunctionComponent((props) {
-        final loadingState = useState(false);
-        return button(
-          text: loadingState.value ? 'Creating...' : 'Create Account',
-          className: 'btn btn-primary btn-full',
-          onClick: loadingState.value ? null : () => loadingState.set(true),
-          props: {'data-testid': 'submit-btn'},
-        );
-      });
-
-      final result = render(fc(registerForm));
-
-      expect(
-        result.getByTestId('submit-btn').textContent,
-        equals('Create Account'),
-      );
-
-      fireClick(result.getByTestId('submit-btn'));
-
-      expect(
-        result.getByTestId('submit-btn').textContent,
-        equals('Creating...'),
-      );
+      expect(result.getByTestId('output').textContent, equals('hello'));
 
       result.unmount();
     });
   });
 
-  group('Header Interactions', () {
-    test('logout button clears user state', () {
-      final headerComponent = registerFunctionComponent((props) {
-        final userState = useState<String?>('John');
-        return div(
-          children: [
-            if (userState.value != null)
-              div(
-                children: [
-                  span(
-                    'Welcome, ${userState.value}',
-                    props: {'data-testid': 'user-name'},
-                  ),
-                  button(
-                    text: 'Logout',
-                    className: 'btn btn-ghost',
-                    onClick: () => userState.set(null),
-                    props: {'data-testid': 'logout-btn'},
-                  ),
-                ],
-              )
-            else
-              pEl('Logged out', props: {'data-testid': 'logged-out'}),
-          ],
-        );
-      });
+  group('Task Components - buildStats', () {
+    test('shows completion stats for tasks', () {
+      final tasks = [
+        _createJSObject({'id': '1', 'completed': true}),
+        _createJSObject({'id': '2', 'completed': false}),
+        _createJSObject({'id': '3', 'completed': true}),
+      ];
 
-      final result = render(fc(headerComponent));
+      final stats = buildStats(tasks);
+      final result = render(stats);
 
-      expect(
-        result.getByTestId('user-name').textContent,
-        equals('Welcome, John'),
-      );
+      expect(result.container.textContent, contains('2/3 completed'));
 
-      fireClick(result.getByTestId('logout-btn'));
+      result.unmount();
+    });
 
-      expect(result.queryByTestId('user-name'), isNull);
-      expect(
-        result.getByTestId('logged-out').textContent,
-        equals('Logged out'),
-      );
+    test('shows 0/0 for empty list', () {
+      final stats = buildStats([]);
+      final result = render(stats);
+
+      expect(result.container.textContent, contains('0/0 completed'));
+
+      result.unmount();
+    });
+
+    test('shows 100% for all completed', () {
+      final tasks = [
+        _createJSObject({'id': '1', 'completed': true}),
+        _createJSObject({'id': '2', 'completed': true}),
+      ];
+
+      final stats = buildStats(tasks);
+      final result = render(stats);
+
+      expect(result.container.textContent, contains('2/2 completed'));
 
       result.unmount();
     });
   });
 
-  group('Task Manager Interactions', () {
-    test('typing in task title input updates value', () async {
-      final taskForm = registerFunctionComponent((props) {
-        final newTaskState = useState('');
-        return div(
-          children: [
-            input(
-              type: 'text',
-              placeholder: 'What needs to be done?',
-              value: newTaskState.value,
-              className: 'input input-lg',
-              onChange: (e) => newTaskState.set(_getInputValue(e)),
-              props: {'data-testid': 'task-input'},
-            ),
-            pEl(
-              'Task: ${newTaskState.value}',
-              props: {'data-testid': 'task-display'},
-            ),
-          ],
-        );
-      });
+  group('Task Components - buildTaskList', () {
+    test('shows empty state when no tasks', () {
+      final list = buildTaskList([], (a, b) {}, (c) {});
 
-      final result = render(fc(taskForm));
+      final wrapper = div(children: list);
+      final result = render(wrapper);
 
-      await userType(result.getByTestId('task-input'), 'Buy groceries');
-
-      expect(
-        result.getByTestId('task-display').textContent,
-        equals('Task: Buy groceries'),
-      );
+      expect(result.container.textContent, contains('No tasks yet'));
 
       result.unmount();
     });
 
-    test('clicking add task button adds task to list', () {
-      final taskManager = registerFunctionComponent((props) {
-        // Use comma-separated string for list state (JS interop compatible)
-        final tasksStr = useState('');
-        final newTaskState = useState('New Task');
+    test('renders task items', () {
+      final tasks = [
+        _createJSObject({'id': '1', 'title': 'Task One', 'completed': false}),
+        _createJSObject({'id': '2', 'title': 'Task Two', 'completed': true}),
+      ];
 
-        List<String> getTasks() =>
-            tasksStr.value.isEmpty ? [] : tasksStr.value.split(',');
+      final list = buildTaskList(tasks, (a, b) {}, (c) {});
+      final wrapper = div(children: list);
+      final result = render(wrapper);
 
-        return div(
-          children: [
-            button(
-              text: '+ Add Task',
-              className: 'btn btn-primary',
-              onClick: () {
-                final current = tasksStr.value;
-                tasksStr.set(
-                  current.isEmpty
-                      ? newTaskState.value
-                      : '$current,${newTaskState.value}',
-                );
-                newTaskState.set('');
-              },
-              props: {'data-testid': 'add-btn'},
-            ),
-            div(
-              className: 'task-list',
-              props: {'data-testid': 'task-list'},
-              children: getTasks()
-                  .map((task) => div(className: 'task-item', child: span(task)))
-                  .toList(),
-            ),
-            pEl(
-              'Task count: ${getTasks().length}',
-              props: {'data-testid': 'count'},
-            ),
-          ],
-        );
+      expect(result.container.textContent, contains('Task One'));
+      expect(result.container.textContent, contains('Task Two'));
+
+      result.unmount();
+    });
+  });
+
+  group('Task Components - buildTaskItem', () {
+    test('shows title and description', () {
+      final task = _createJSObject({
+        'id': '123',
+        'title': 'My Task',
+        'description': 'Task description',
+        'completed': false,
       });
 
-      final result = render(fc(taskManager));
+      final item = buildTaskItem(task, (a, b) {}, (c) {});
+      final result = render(item);
 
-      expect(result.getByTestId('count').textContent, equals('Task count: 0'));
-
-      fireClick(result.getByTestId('add-btn'));
-
-      expect(result.getByTestId('count').textContent, equals('Task count: 1'));
-      expect(result.getByTestId('task-list').textContent, contains('New Task'));
+      expect(result.container.textContent, contains('My Task'));
+      expect(result.container.textContent, contains('Task description'));
 
       result.unmount();
     });
 
-    test('clicking checkbox toggles task completion', () {
-      final taskItem = registerFunctionComponent((props) {
-        final completedState = useState(false);
-        return div(
-          className: completedState.value ? 'task-item completed' : 'task-item',
-          props: {'data-testid': 'task-item'},
-          children: [
-            div(
-              className: completedState.value
-                  ? 'task-checkbox completed'
-                  : 'task-checkbox',
-              props: {
-                'data-testid': 'checkbox',
-                'onClick': ((JSAny? _) => completedState.set(
-                  !completedState.value,
-                )).toJS,
-              },
-              child: completedState.value ? span('\u2713') : span(''),
-            ),
-            span('Test Task', className: 'task-title'),
-            pEl(
-              'Status: ${completedState.value ? "completed" : "pending"}',
-              props: {'data-testid': 'status'},
-            ),
-          ],
-        );
+    test('calls onToggle when checkbox clicked', () {
+      final task = _createJSObject({
+        'id': 'task-1',
+        'title': 'Toggle Test',
+        'completed': false,
       });
 
-      final result = render(fc(taskItem));
+      String? toggledId;
+      bool? toggledCompleted;
 
-      expect(
-        result.getByTestId('status').textContent,
-        equals('Status: pending'),
+      final item = buildTaskItem(
+        task,
+        (id, completed) {
+          toggledId = id;
+          toggledCompleted = completed;
+        },
+        (c) {},
       );
-      expect(result.getByTestId('task-item').className, equals('task-item'));
+      final result = render(item);
 
-      fireClick(result.getByTestId('checkbox'));
+      final checkbox = result.container.querySelector('.task-checkbox');
+      expect(checkbox, isNotNull);
+      fireClick(checkbox!);
 
-      expect(
-        result.getByTestId('status').textContent,
-        equals('Status: completed'),
-      );
-      expect(
-        result.getByTestId('task-item').className,
-        equals('task-item completed'),
-      );
-
-      fireClick(result.getByTestId('checkbox'));
-
-      expect(
-        result.getByTestId('status').textContent,
-        equals('Status: pending'),
-      );
+      expect(toggledId, equals('task-1'));
+      expect(toggledCompleted, isFalse);
 
       result.unmount();
     });
 
-    test('clicking delete button removes task from list', () {
-      final taskManager = registerFunctionComponent((props) {
-        // Use comma-separated string for list state
-        final tasksStr = useState('Task 1,Task 2,Task 3');
-
-        List<String> getTasks() =>
-            tasksStr.value.isEmpty ? [] : tasksStr.value.split(',');
-
-        return div(
-          children: [
-            div(
-              className: 'task-list',
-              children: getTasks()
-                  .map(
-                    (task) => div(
-                      className: 'task-item',
-                      children: [
-                        span(task),
-                        button(
-                          text: '\u00D7',
-                          className: 'btn-delete',
-                          onClick: () {
-                            final filtered = getTasks()
-                                .where((t) => t != task)
-                                .join(',');
-                            tasksStr.set(filtered);
-                          },
-                          props: {'data-testid': 'delete-$task'},
-                        ),
-                      ],
-                    ),
-                  )
-                  .toList(),
-            ),
-            pEl(
-              'Task count: ${getTasks().length}',
-              props: {'data-testid': 'count'},
-            ),
-          ],
-        );
+    test('calls onDelete when delete button clicked', () {
+      final task = _createJSObject({
+        'id': 'task-2',
+        'title': 'Delete Test',
+        'completed': false,
       });
 
-      final result = render(fc(taskManager));
+      String? deletedId;
 
-      expect(result.getByTestId('count').textContent, equals('Task count: 3'));
+      final item = buildTaskItem(task, (a, b) {}, (id) => deletedId = id);
+      final result = render(item);
 
-      fireClick(result.getByTestId('delete-Task 2'));
+      final deleteBtn = result.container.querySelector('.btn-delete');
+      expect(deleteBtn, isNotNull);
+      fireClick(deleteBtn!);
 
-      expect(result.getByTestId('count').textContent, equals('Task count: 2'));
-      expect(result.queryByTestId('delete-Task 2'), isNull);
+      expect(deletedId, equals('task-2'));
 
       result.unmount();
     });
 
-    test('empty state shows when no tasks exist', () {
-      final taskManager = registerFunctionComponent((props) {
-        // Use comma-separated string for list state
-        final tasksStr = useState('');
-
-        List<String> getTasks() =>
-            tasksStr.value.isEmpty ? [] : tasksStr.value.split(',');
-
-        return div(
-          children: [
-            if (getTasks().isEmpty)
-              div(
-                className: 'empty-state',
-                props: {'data-testid': 'empty-state'},
-                children: [
-                  pEl('No tasks yet. Add one above!', className: 'empty-text'),
-                ],
-              )
-            else
-              div(
-                className: 'task-list',
-                children: getTasks().map(pEl).toList(),
-              ),
-            button(
-              text: 'Add Task',
-              onClick: () {
-                final current = tasksStr.value;
-                tasksStr.set(
-                  current.isEmpty ? 'New Task' : '$current,New Task',
-                );
-              },
-              props: {'data-testid': 'add-btn'},
-            ),
-          ],
-        );
+    test('shows checkmark when completed', () {
+      final task = _createJSObject({
+        'id': '1',
+        'title': 'Completed Task',
+        'completed': true,
       });
 
-      final result = render(fc(taskManager));
+      final item = buildTaskItem(task, (a, b) {}, (c) {});
+      final result = render(item);
 
-      expect(result.getByTestId('empty-state'), isNotNull);
-
-      fireClick(result.getByTestId('add-btn'));
-
-      expect(result.queryByTestId('empty-state'), isNull);
+      expect(result.container.textContent, contains('\u2713'));
 
       result.unmount();
     });
 
-    test('stats update when tasks are completed', () {
-      final taskStats = registerFunctionComponent((props) {
-        // Use separate state for each task's completion status
-        final task1Done = useState(false);
-        final task2Done = useState(false);
-        final task3Done = useState(true);
+    test('applies completed class when task is done', () {
+      final task = _createJSObject({
+        'id': '1',
+        'title': 'Done Task',
+        'completed': true,
+      });
 
-        int getCompleted() => [
-          task1Done.value,
-          task2Done.value,
-          task3Done.value,
-        ].where((done) => done).length;
+      final item = buildTaskItem(task, (a, b) {}, (c) {});
+      final result = render(item);
+
+      final taskDiv = result.container.querySelector('.task-item');
+      expect(taskDiv, isNotNull);
+      final className = taskDiv!.className;
+      expect(className, contains('completed'));
+
+      result.unmount();
+    });
+  });
+
+  group('handleTaskEvent', () {
+    test('task_created adds task to list', () {
+      final component = registerFunctionComponent((props) {
+        final tasksState = useStateJSArray<JSObject>(<JSObject>[].toJS);
 
         return div(
           children: [
             span(
-              '${getCompleted()}/3 completed',
-              props: {'data-testid': 'stats'},
+              'Count: ${tasksState.value.length}',
+              props: {'data-testid': 'count'},
             ),
             button(
-              text: 'Complete Task 1',
-              onClick: () => task1Done.set(true),
-              props: {'data-testid': 'complete-btn'},
+              text: 'Add',
+              onClick: () {
+                final newTask =
+                    _createJSObject({'id': 'new-1', 'title': 'New'});
+                handleTaskEvent('task_created', newTask, tasksState);
+              },
+              props: {'data-testid': 'add-btn'},
             ),
           ],
         );
       });
 
-      final result = render(fc(taskStats));
+      final result = render(fc(component));
 
-      expect(result.getByTestId('stats').textContent, equals('1/3 completed'));
+      expect(result.getByTestId('count').textContent, equals('Count: 0'));
 
-      fireClick(result.getByTestId('complete-btn'));
+      fireClick(result.getByTestId('add-btn'));
 
-      expect(result.getByTestId('stats').textContent, equals('2/3 completed'));
-
-      result.unmount();
-    });
-  });
-
-  group('Auth Flow Interactions', () {
-    test('successful login shows task manager', () {
-      final app = registerFunctionComponent((props) {
-        final tokenState = useState<String?>(null);
-        final viewState = useState('login');
-
-        return div(
-          children: [
-            if (tokenState.value == null)
-              div(
-                props: {'data-testid': 'auth-view'},
-                children: [
-                  pEl('View: ${viewState.value}'),
-                  button(
-                    text: 'Sign In',
-                    onClick: () => tokenState.set('fake-token'),
-                    props: {'data-testid': 'login-btn'},
-                  ),
-                ],
-              )
-            else
-              div(
-                props: {'data-testid': 'task-manager'},
-                children: [
-                  pEl('Task Manager'),
-                  button(
-                    text: 'Logout',
-                    onClick: () => tokenState.set(null),
-                    props: {'data-testid': 'logout-btn'},
-                  ),
-                ],
-              ),
-          ],
-        );
-      });
-
-      final result = render(fc(app));
-
-      expect(result.getByTestId('auth-view'), isNotNull);
-      expect(result.queryByTestId('task-manager'), isNull);
-
-      fireClick(result.getByTestId('login-btn'));
-
-      expect(result.queryByTestId('auth-view'), isNull);
-      expect(result.getByTestId('task-manager'), isNotNull);
-
-      fireClick(result.getByTestId('logout-btn'));
-
-      expect(result.getByTestId('auth-view'), isNotNull);
-      expect(result.queryByTestId('task-manager'), isNull);
+      expect(result.getByTestId('count').textContent, equals('Count: 1'));
 
       result.unmount();
     });
 
-    test('switching between login and register views', () {
-      final authView = registerFunctionComponent((props) {
-        final viewState = useState('login');
+    test('task_deleted removes task from list', () {
+      final component = registerFunctionComponent((props) {
+        final tasksState = useStateJSArray<JSObject>([
+          _createJSObject({'id': 'task-1', 'title': 'First'}),
+          _createJSObject({'id': 'task-2', 'title': 'Second'}),
+        ].toJS);
 
         return div(
           children: [
-            pEl(
-              'Current: ${viewState.value}',
-              props: {'data-testid': 'current-view'},
+            span(
+              'Count: ${tasksState.value.length}',
+              props: {'data-testid': 'count'},
             ),
-            if (viewState.value == 'login')
-              div(
-                props: {'data-testid': 'login-form'},
-                children: [
-                  h2('Sign In', className: 'auth-title'),
-                  button(
-                    text: 'Register',
-                    onClick: () => viewState.set('register'),
-                    props: {'data-testid': 'to-register'},
-                  ),
-                ],
-              )
-            else
-              div(
-                props: {'data-testid': 'register-form'},
-                children: [
-                  h2('Create Account', className: 'auth-title'),
-                  button(
-                    text: 'Sign In',
-                    onClick: () => viewState.set('login'),
-                    props: {'data-testid': 'to-login'},
-                  ),
-                ],
-              ),
+            button(
+              text: 'Delete',
+              onClick: () {
+                final toDelete = _createJSObject({'id': 'task-1'});
+                handleTaskEvent('task_deleted', toDelete, tasksState);
+              },
+              props: {'data-testid': 'delete-btn'},
+            ),
           ],
         );
       });
 
-      final result = render(fc(authView));
+      final result = render(fc(component));
 
-      expect(
-        result.getByTestId('current-view').textContent,
-        equals('Current: login'),
-      );
-      expect(result.getByTestId('login-form'), isNotNull);
-      expect(result.queryByTestId('register-form'), isNull);
+      expect(result.getByTestId('count').textContent, equals('Count: 2'));
 
-      fireClick(result.getByTestId('to-register'));
+      fireClick(result.getByTestId('delete-btn'));
 
-      expect(
-        result.getByTestId('current-view').textContent,
-        equals('Current: register'),
-      );
-      expect(result.queryByTestId('login-form'), isNull);
-      expect(result.getByTestId('register-form'), isNotNull);
+      expect(result.getByTestId('count').textContent, equals('Count: 1'));
 
-      fireClick(result.getByTestId('to-login'));
+      result.unmount();
+    });
 
-      expect(
-        result.getByTestId('current-view').textContent,
-        equals('Current: login'),
-      );
-      expect(result.getByTestId('login-form'), isNotNull);
+    test('task_updated replaces task in list', () {
+      final component = registerFunctionComponent((props) {
+        final tasksState = useStateJSArray<JSObject>([
+          _createJSObject({
+            'id': 'task-1',
+            'title': 'Original',
+            'completed': false,
+          }),
+        ].toJS);
+
+        String getTitle() {
+          final task = tasksState.value.first;
+          return (task['title'] as JSString?)?.toDart ?? '';
+        }
+
+        return div(
+          children: [
+            span(getTitle(), props: {'data-testid': 'title'}),
+            button(
+              text: 'Update',
+              onClick: () {
+                final updated = _createJSObject({
+                  'id': 'task-1',
+                  'title': 'Updated',
+                  'completed': true,
+                });
+                handleTaskEvent('task_updated', updated, tasksState);
+              },
+              props: {'data-testid': 'update-btn'},
+            ),
+          ],
+        );
+      });
+
+      final result = render(fc(component));
+
+      expect(result.getByTestId('title').textContent, equals('Original'));
+
+      fireClick(result.getByTestId('update-btn'));
+
+      expect(result.getByTestId('title').textContent, equals('Updated'));
+
+      result.unmount();
+    });
+
+    test('unknown event type leaves list unchanged', () {
+      final component = registerFunctionComponent((props) {
+        final tasksState = useStateJSArray<JSObject>([
+          _createJSObject({'id': '1', 'title': 'Task'}),
+        ].toJS);
+
+        return div(
+          children: [
+            span(
+              'Count: ${tasksState.value.length}',
+              props: {'data-testid': 'count'},
+            ),
+            button(
+              text: 'Unknown',
+              onClick: () {
+                final task = _createJSObject({'id': '99'});
+                handleTaskEvent('unknown_event', task, tasksState);
+              },
+              props: {'data-testid': 'unknown-btn'},
+            ),
+          ],
+        );
+      });
+
+      final result = render(fc(component));
+
+      expect(result.getByTestId('count').textContent, equals('Count: 1'));
+
+      fireClick(result.getByTestId('unknown-btn'));
+
+      expect(result.getByTestId('count').textContent, equals('Count: 1'));
 
       result.unmount();
     });
   });
 }
 
-String _getInputValue(JSAny event) {
-  final obj = event as JSObject;
-  final target = obj.getProperty('target'.toJS);
-  return switch (target) {
-    final JSObject t => switch (t.getProperty('value'.toJS)) {
-      final JSString v => v.toDart,
-      _ => throw StateError('Input value is not a string'),
-    },
-    _ => throw StateError('Event target is not an object'),
-  };
+/// Create a mock AuthEffects
+AuthEffects _createMockAuth() => (
+      setToken: (JSString? _) {},
+      setUser: (JSObject? _) {},
+      setView: (String _) {},
+    );
+
+/// Create a JSObject from a Dart map
+JSObject _createJSObject(Map<String, Object?> map) {
+  final json = globalContext['JSON']! as JSObject;
+  final parseFn = json['parse']! as JSFunction;
+  final jsonStr = _toJsonString(map);
+  return parseFn.callAsFunction(null, jsonStr.toJS)! as JSObject;
+}
+
+String _toJsonString(Map<String, Object?> map) {
+  final entries = map.entries.map((e) {
+    final value = e.value;
+    final valueStr = switch (value) {
+      final String s => '"$s"',
+      final bool b => b.toString(),
+      final int n => n.toString(),
+      final double d => d.toString(),
+      null => 'null',
+      _ => '"$value"',
+    };
+    return '"${e.key}":$valueStr';
+  });
+  return '{${entries.join(',')}}';
 }

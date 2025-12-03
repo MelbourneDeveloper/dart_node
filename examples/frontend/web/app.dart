@@ -1,18 +1,15 @@
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
+
 import 'package:dart_node_react/dart_node_react.dart';
+import 'package:frontend/frontend.dart';
 import 'package:nadz/nadz.dart';
 import 'package:shared/http/http_client.dart';
-
-import 'types.dart';
-import 'websocket.dart';
 
 /// Creates a SetToken function that converts JSString to String for storage
 SetToken _createSetToken(StateHook<String?> tokenState) =>
     (t) => tokenState.set(t?.toDart);
-
-const apiUrl = 'http://localhost:3000';
 
 void main() {
   final root = Document.getElementById('root');
@@ -38,7 +35,7 @@ ReactElement App() => createElement(
     return div(
       className: 'app',
       children: [
-        _buildHeader(userState.value, () {
+        buildHeader(userState.value as JSObject?, () {
           tokenState.set(null);
           userState.set(null);
           viewState.set('login');
@@ -47,259 +44,13 @@ ReactElement App() => createElement(
           className: 'main-content',
           child: (tokenState.value == null)
               ? (viewState.value == 'register')
-                    ? _buildRegisterForm(auth)
-                    : _buildLoginForm(auth)
+                    ? buildRegisterForm(auth)
+                    : buildLoginForm(auth)
               : _buildTaskManager(tokenState.value!, userState, viewState),
         ),
         footer(
           className: 'footer',
           child: pEl('Powered by Dart + React + Express'),
-        ),
-      ],
-    );
-  }).toJS,
-);
-
-HeaderElement _buildHeader(JSAny? user, void Function() onLogout) {
-  final userObj = user as JSObject?;
-  final userName = userObj?['name']?.toString();
-  return header(
-    className: 'header',
-    children: [
-      div(
-        className: 'header-content',
-        children: [
-          h1('TaskFlow', className: 'logo'),
-          if (userName != null)
-            div(
-              className: 'user-info',
-              children: [
-                span('Welcome, $userName', className: 'user-name'),
-                button(
-                  text: 'Logout',
-                  className: 'btn btn-ghost',
-                  onClick: onLogout,
-                ),
-              ],
-            )
-          else
-            span('', className: 'spacer'),
-        ],
-      ),
-    ],
-  );
-}
-
-ReactElement _buildLoginForm(AuthEffects auth) => createElement(
-  ((JSAny props) {
-    final emailState = useState('');
-    final passState = useState('');
-    final errorState = useState<String?>(null);
-    final loadingState = useState(false);
-
-    void handleSubmit() {
-      loadingState.set(true);
-      errorState.set(null);
-
-      unawaited(
-        fetchJson(
-              '$apiUrl/auth/login',
-              method: 'POST',
-              body: {'email': emailState.value, 'password': passState.value},
-            )
-            .then((result) {
-              result.match(
-                onSuccess: (response) {
-                  final data = response['data'];
-                  switch (data) {
-                    case null:
-                      errorState.set('Login failed');
-                    case final JSObject details:
-                      switch (details['token']) {
-                        case final JSString token:
-                          auth.setToken(token);
-                        default:
-                          errorState.set('No token');
-                      }
-                      auth.setUser(details['user'] as JSObject?);
-                  }
-                },
-                onError: errorState.set,
-              );
-            })
-            .catchError((Object e) {
-              errorState.set(e.toString());
-            })
-            .whenComplete(() => loadingState.set(false)),
-      );
-    }
-
-    return div(
-      className: 'auth-card',
-      children: [
-        h2('Sign In', className: 'auth-title'),
-        if (errorState.value != null)
-          div(className: 'error-msg', child: span(errorState.value!))
-        else
-          span(''),
-        div(
-          className: 'form-group',
-          children: [
-            _labelEl('Email'),
-            input(
-              type: 'email',
-              placeholder: 'you@example.com',
-              value: emailState.value,
-              className: 'input',
-              onChange: (e) => emailState.set(_getInputValue(e).toDart),
-            ),
-          ],
-        ),
-        div(
-          className: 'form-group',
-          children: [
-            _labelEl('Password'),
-            input(
-              type: 'password',
-              placeholder: '••••••••',
-              value: passState.value,
-              className: 'input',
-              onChange: (e) => passState.set(_getInputValue(e).toDart),
-            ),
-          ],
-        ),
-        button(
-          text: loadingState.value ? 'Signing in...' : 'Sign In',
-          className: 'btn btn-primary btn-full',
-          onClick: loadingState.value ? null : handleSubmit,
-        ),
-        div(
-          className: 'auth-footer',
-          children: [
-            span("Don't have an account? "),
-            button(
-              text: 'Register',
-              className: 'btn-link',
-              onClick: () => auth.setView('register'),
-            ),
-          ],
-        ),
-      ],
-    );
-  }).toJS,
-);
-
-ReactElement _buildRegisterForm(AuthEffects auth) => createElement(
-  ((JSAny props) {
-    final nameState = useState('');
-    final emailState = useState('');
-    final passState = useState('');
-    final errorState = useState<String?>(null);
-    final loadingState = useState(false);
-
-    void handleSubmit() {
-      loadingState.set(true);
-      errorState.set(null);
-
-      unawaited(
-        fetchJson(
-              '$apiUrl/auth/register',
-              method: 'POST',
-              body: {
-                'email': emailState.value,
-                'password': passState.value,
-                'name': nameState.value,
-              },
-            )
-            .then((result) {
-              result.match(
-                onSuccess: (response) {
-                  final data = response['data'];
-                  switch (data) {
-                    case null:
-                      errorState.set('Registration failed');
-                    case final JSObject details:
-                      switch (details['token']) {
-                        case final JSString token:
-                          auth.setToken(token);
-                        default:
-                          errorState.set('No token');
-                      }
-                      auth.setUser(details['user'] as JSObject?);
-                  }
-                },
-                onError: errorState.set,
-              );
-            })
-            .catchError((Object e) {
-              errorState.set(e.toString());
-            })
-            .whenComplete(() => loadingState.set(false)),
-      );
-    }
-
-    return div(
-      className: 'auth-card',
-      children: [
-        h2('Create Account', className: 'auth-title'),
-        if (errorState.value != null)
-          div(className: 'error-msg', child: span(errorState.value!))
-        else
-          span(''),
-        div(
-          className: 'form-group',
-          children: [
-            _labelEl('Name'),
-            input(
-              type: 'text',
-              placeholder: 'Your name',
-              value: nameState.value,
-              className: 'input',
-              onChange: (e) => nameState.set(_getInputValue(e).toDart),
-            ),
-          ],
-        ),
-        div(
-          className: 'form-group',
-          children: [
-            _labelEl('Email'),
-            input(
-              type: 'email',
-              placeholder: 'you@example.com',
-              value: emailState.value,
-              className: 'input',
-              onChange: (e) => emailState.set(_getInputValue(e).toDart),
-            ),
-          ],
-        ),
-        div(
-          className: 'form-group',
-          children: [
-            _labelEl('Password'),
-            input(
-              type: 'password',
-              placeholder: '••••••••',
-              value: passState.value,
-              className: 'input',
-              onChange: (e) => passState.set(_getInputValue(e).toDart),
-            ),
-          ],
-        ),
-        button(
-          text: loadingState.value ? 'Creating...' : 'Create Account',
-          className: 'btn btn-primary btn-full',
-          onClick: loadingState.value ? null : handleSubmit,
-        ),
-        div(
-          className: 'auth-footer',
-          children: [
-            span('Already have an account? '),
-            button(
-              text: 'Sign In',
-              className: 'btn-link',
-              onClick: () => auth.setView('login'),
-            ),
-          ],
         ),
       ],
     );
@@ -319,49 +70,40 @@ ReactElement _buildTaskManager(
     final errorState = useState<String?>(null);
 
     // Fetch tasks on mount
-    useEffect(
-      () {
-        unawaited(
-          fetchTasks(token: token, apiUrl: apiUrl)
-              .then((result) {
-                result.match(
-                  onSuccess: (list) {
-                    tasksState.set(list.toDart.cast<JSObject>());
-                    errorState.set(null);
-                  },
-                  onError: errorState.set,
-                );
-              })
-              .catchError((Object e) {
-                errorState.set(e.toString());
-              })
-              .whenComplete(() => loadingState.set(false)),
-        );
-        return null;
-      },
-      [],
-    );
+    useEffect(() {
+      unawaited(
+        fetchTasks(token: token, apiUrl: apiUrl)
+            .then((result) {
+              result.match(
+                onSuccess: (list) {
+                  tasksState.set(list.toDart.cast<JSObject>());
+                  errorState.set(null);
+                },
+                onError: errorState.set,
+              );
+            })
+            .whenComplete(() => loadingState.set(false)),
+      );
+      return null;
+    }, []);
 
     // WebSocket connection for real-time updates
-    useEffect(
-      () {
-        final ws = connectWebSocket(
-          token: token,
-          onTaskEvent: (event) {
-            final type = (event['type'] as JSString?)?.toDart;
-            final data = event['data'] as JSObject?;
-            switch (data) {
-              case final JSObject d:
-                _handleTaskEvent(type, d, tasksState);
-              case null:
-                break;
-            }
-          },
-        );
-        return () => ws?.close();
-      },
-      [token],
-    );
+    useEffect(() {
+      final ws = connectWebSocket(
+        token: token,
+        onTaskEvent: (event) {
+          final type = (event['type'] as JSString?)?.toDart;
+          final data = event['data'] as JSObject?;
+          switch (data) {
+            case final JSObject d:
+              handleTaskEvent(type, d, tasksState);
+            case null:
+              break;
+          }
+        },
+      );
+      return () => ws?.close();
+    }, [token]);
 
     void addTask() {
       switch (newTaskState.value.trim().isEmpty) {
@@ -396,9 +138,6 @@ ReactElement _buildTaskManager(
                     },
                     onError: errorState.set,
                   );
-                })
-                .catchError((Object e) {
-                  errorState.set(e.toString());
                 }),
           );
       }
@@ -430,9 +169,6 @@ ReactElement _buildTaskManager(
                 },
                 onError: errorState.set,
               );
-            })
-            .catchError((Object e) {
-              errorState.set(e.toString());
             }),
       );
     }
@@ -451,9 +187,6 @@ ReactElement _buildTaskManager(
                 },
                 onError: errorState.set,
               );
-            })
-            .catchError((Object e) {
-              errorState.set(e.toString());
             }),
       );
     }
@@ -465,7 +198,7 @@ ReactElement _buildTaskManager(
           className: 'task-header',
           children: [
             h2('Your Tasks', className: 'section-title'),
-            _buildStats(tasksState.value),
+            buildStats(tasksState.value),
           ],
         ),
         div(
@@ -479,14 +212,14 @@ ReactElement _buildTaskManager(
                   placeholder: 'What needs to be done?',
                   value: newTaskState.value,
                   className: 'input input-lg',
-                  onChange: (e) => newTaskState.set(_getInputValue(e).toDart),
+                  onChange: (e) => newTaskState.set(getInputValue(e).toDart),
                 ),
                 input(
                   type: 'text',
                   placeholder: 'Description (optional)',
                   value: descState.value,
                   className: 'input',
-                  onChange: (e) => descState.set(_getInputValue(e).toDart),
+                  onChange: (e) => descState.set(getInputValue(e).toDart),
                 ),
                 button(
                   text: '+ Add Task',
@@ -504,126 +237,9 @@ ReactElement _buildTaskManager(
         else
           div(
             className: 'task-list',
-            children: _buildTaskList(tasksState.value, toggleTask, deleteTask),
+            children: buildTaskList(tasksState.value, toggleTask, deleteTask),
           ),
       ],
     );
   }).toJS,
 );
-
-DivElement _buildStats(List<JSObject> tasks) {
-  final total = tasks.length;
-  final completed = tasks
-      .where((t) => (t['completed'] as JSBoolean?)?.toDart ?? false)
-      .length;
-  final pct = total > 0 ? (completed / total * 100).round() : 0;
-  return div(
-    className: 'stats',
-    children: [
-      span('$completed/$total completed', className: 'stat-text'),
-      div(
-        className: 'progress-bar',
-        child: div(
-          className: 'progress-fill',
-          props: {'style': {'width': '$pct%'}.jsify()},
-        ),
-      ),
-    ],
-  );
-}
-
-List<ReactElement> _buildTaskList(
-  List<JSObject> tasks,
-  void Function(String, bool) onToggle,
-  void Function(String) onDelete,
-) => tasks.isEmpty
-      ? [
-          div(
-            className: 'empty-state',
-            children: [
-              span('🎯', className: 'empty-icon'),
-              pEl('No tasks yet. Add one above!', className: 'empty-text'),
-            ],
-          ),
-        ]
-      : tasks.map((task) => _buildTaskItem(task, onToggle, onDelete)).toList();
-
-DivElement _buildTaskItem(
-  JSObject task,
-  void Function(String, bool) onToggle,
-  void Function(String) onDelete,
-) {
-  final id = (task['id'] as JSString?)?.toDart ?? '';
-  final title = (task['title'] as JSString?)?.toDart ?? '';
-  final description = (task['description'] as JSString?)?.toDart;
-  final completed = (task['completed'] as JSBoolean?)?.toDart ?? false;
-  final checkClass = completed ? 'task-checkbox completed' : 'task-checkbox';
-  final titleClass = completed ? 'task-title completed' : 'task-title';
-  final itemClass = completed ? 'task-item completed' : 'task-item';
-
-  return div(
-    className: itemClass,
-    children: [
-      div(
-        className: checkClass,
-        props: {'onClick': ((JSAny? _) => onToggle(id, completed)).toJS},
-        child: completed ? span('✓', className: 'check-icon') : span(''),
-      ),
-      div(
-        className: 'task-content',
-        children: [
-          span(title, className: titleClass),
-          if (description != null && description.isNotEmpty)
-            span(description, className: 'task-desc')
-          else
-            span(''),
-        ],
-      ),
-      button(
-        text: '×',
-        className: 'btn-delete',
-        onClick: () => onDelete(id),
-      ),
-    ],
-  );
-}
-
-ReactElement _labelEl(String text) => createElement(
-  'label'.toJS,
-  createProps({'className': 'label'}),
-  text.toJS,
-);
-
-JSString _getInputValue(JSAny event) {
-  final obj = event as JSObject;
-  final target = obj['target'];
-  return switch (target) {
-    final JSObject t => switch (t['value']) {
-      final JSString v => v,
-      _ => throw StateError('Input value is not a string'),
-    },
-    _ => throw StateError('Event target is not an object'),
-  };
-}
-
-/// Handle incoming WebSocket task events using functional updater
-void _handleTaskEvent(
-  String? type,
-  JSObject task,
-  StateHookJSArray<JSObject> tasksState,
-) {
-  final taskId = (task['id'] as JSString?)?.toDart;
-
-  tasksState.setWithUpdater((current) => switch (type) {
-    'task_created' => [...current, task],
-    'task_updated' => current.map((t) {
-        final id = (t['id'] as JSString?)?.toDart;
-        return (id == taskId) ? task : t;
-      }).toList(),
-    'task_deleted' => current.where((t) {
-        final id = (t['id'] as JSString?)?.toDart;
-        return id != taskId;
-      }).toList(),
-    _ => current,
-  });
-}

@@ -14,3 +14,5 @@ examples/mobile/rn/.expo/
 website/_site/
 website/src/api/
 website/.dart-doc-temp/
+
+examples/frontend/coverage/

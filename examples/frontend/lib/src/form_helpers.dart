@@ -1,5 +1,6 @@
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
+
 import 'package:dart_node_react/dart_node_react.dart';
 
 /// Create a form group with label
@@ -18,23 +19,12 @@ ReactElement labelEl(String text) => createElement(
 /// Extract input value from event
 JSString getInputValue(JSAny event) {
   final obj = event as JSObject;
-  final target = obj.getProperty('target'.toJS);
+  final target = obj['target'];
   return switch (target) {
-    final JSObject t => switch (t.getProperty('value'.toJS)) {
-      final JSString v => v,
-      _ => throw StateError('Input value is not a string'),
-    },
+    final JSObject t => switch (t['value']) {
+        final JSString v => v,
+        _ => throw StateError('Input value is not a string'),
+      },
     _ => throw StateError('Event target is not an object'),
   };
 }
-
-/// Get property from JSObject safely
-JSAny? getProp(JSObject obj, String key) => obj.getProperty(key.toJS);
-
-/// Get string property
-String? getStringProp(JSObject obj, String key) =>
-    (obj.getProperty(key.toJS) as JSString?)?.toDart;
-
-/// Get bool property
-bool getBoolProp(JSObject obj, String key, {bool defaultValue = false}) =>
-    (obj.getProperty(key.toJS) as JSBoolean?)?.toDart ?? defaultValue;
