@@ -33,10 +33,21 @@ graph TD
 ## Example Quick Start
 
 **Web + Backend:**
+
+Switch to local dependency references. You need to do this before running everything.
+
 ```bash
-./run_dev.sh
+dart tools/switch_deps.dart local
+```
+
+Install for all packages and run servers
+
+```bash
+sh run_dev.sh
 ```
 Open http://localhost:8080/web/
+
+Use `dart tools/switch_deps.dart release` to switch back to release dependencies.
 
 **Mobile:** Use VSCode launch config `Mobile: Build & Run (Expo)`
 

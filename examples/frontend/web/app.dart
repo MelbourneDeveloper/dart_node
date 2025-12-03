@@ -312,7 +312,7 @@ ReactElement _buildTaskManager(
   StateHook<String> viewState,
 ) => createElement(
   ((JSAny props) {
-    final tasksState = useState<List<JSObject>>([]);
+    final tasksState = useStateJSArray<JSObject>(<JSObject>[].toJS);
     final newTaskState = useState('');
     final descState = useState('');
     final loadingState = useState(true);
@@ -610,7 +610,7 @@ JSString _getInputValue(JSAny event) {
 void _handleTaskEvent(
   String? type,
   JSObject task,
-  StateHook<List<JSObject>> tasksState,
+  StateHookJSArray<JSObject> tasksState,
 ) {
   final taskId = (task['id'] as JSString?)?.toDart;
 

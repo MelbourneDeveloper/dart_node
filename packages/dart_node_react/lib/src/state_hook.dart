@@ -151,3 +151,64 @@ StateHookJS useStateJS(JSAny? initialValue) {
   final fn = setter! as JSFunction;
   return StateHookJS._(jsValue, (v) => fn.callAsFunction(null, v));
 }
+
+/// State hook for lists of JS objects.
+///
+/// Use this instead of [useState] when state is a list of JS objects.
+/// Avoids the jsify/dartify roundtrip issue where `List<JSObject>` becomes
+/// `List<Object?>` after conversion.
+final class StateHookJSArray<T extends JSAny> {
+  StateHookJSArray._(this._value, this._setValue);
+
+  final List<T> _value;
+  final void Function(JSAny?) _setValue;
+
+  /// The current value of the state.
+  List<T> get value => _value;
+
+  /// Updates [value] to [newValue].
+  void set(List<T> newValue) => _setValue(newValue.toJS);
+
+  /// Updates [value] to the return value of [computeNewValue].
+  void setWithUpdater(List<T> Function(List<T> oldValue) computeNewValue) {
+    JSAny? updater(JSAny? oldValue) {
+      final dartOld = _jsArrayToList<T>(oldValue as JSArray?);
+      return computeNewValue(dartOld).toJS;
+    }
+
+    _setValue(updater.toJS);
+  }
+}
+
+/// Convert JSArray to `List<T>` without dartify (which loses type info).
+List<T> _jsArrayToList<T extends JSAny>(JSArray? jsArray) {
+  if (jsArray == null) return <T>[];
+  final length = jsArray.length;
+  final result = <T>[];
+  for (var i = 0; i < length; i++) {
+    final item = jsArray[i];
+    if (item != null) result.add(item as T);
+  }
+  return result;
+}
+
+/// Adds local state for lists of JS objects to a function component.
+///
+/// Use this instead of [useState] when state is a list of JS objects
+/// (like `List<JSObject>`). This avoids type conversion issues.
+///
+/// Example:
+/// ```dart
+/// final tasksState = useStateJSArray<JSObject>(<JSObject>[].toJS);
+/// final tasks = tasksState.value; // List<JSObject>
+/// tasksState.set([...tasks, newTask]);
+/// tasksState.setWithUpdater((prev) => [...prev, newTask]);
+/// ```
+StateHookJSArray<T> useStateJSArray<T extends JSAny>(JSAny? initialValue) {
+  final result = React.useState(initialValue);
+  final jsValue = result[0];
+  final setter = result[1];
+  final fn = setter! as JSFunction;
+  final value = _jsArrayToList<T>(jsValue as JSArray?);
+  return StateHookJSArray._(value, (v) => fn.callAsFunction(null, v));
+}
