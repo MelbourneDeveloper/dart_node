@@ -8,6 +8,7 @@ import 'package:backend/services/user_service.dart';
 import 'package:backend/services/websocket_service.dart';
 import 'package:dart_node_core/dart_node_core.dart';
 import 'package:dart_node_express/dart_node_express.dart';
+import 'package:nadz/nadz.dart';
 import 'package:shared/models/task.dart';
 import 'package:shared/models/user.dart';
 
@@ -33,46 +34,61 @@ void main() {
     ..postWithMiddleware('/auth/register', [
       validateBody(createUserSchema),
       asyncHandler((req, res) async {
-        final data = getValidatedBody<CreateUserData>(req);
-        if (userService.findByEmail(data.email) != null) {
-          throw const ConflictError('Email already registered');
+        switch (getValidatedBody<CreateUserData>(req)) {
+          case Error(:final error):
+            res
+              ..status(400)
+              ..jsonMap({'error': error});
+          case Success(:final value):
+            if (userService.findByEmail(value.email) != null) {
+              throw const ConflictError('Email already registered');
+            }
+            final user = userService.create(
+              email: value.email,
+              password: value.password,
+              name: value.name,
+            );
+            final token = tokenService.generate(user.id);
+            res
+              ..status(201)
+              ..jsonMap({
+                'success': true,
+                'data': {'user': user.toJson(), 'token': token},
+              });
         }
-        final user = userService.create(
-          email: data.email,
-          password: data.password,
-          name: data.name,
-        );
-        final token = tokenService.generate(user.id);
-        res
-          ..status(201)
-          ..jsonMap({
-            'success': true,
-            'data': {'user': user.toJson(), 'token': token},
-          });
       }),
     ])
     ..postWithMiddleware('/auth/login', [
       validateBody(loginSchema),
       asyncHandler((req, res) async {
-        final data = getValidatedBody<LoginData>(req);
-        final user = userService.findByEmail(data.email);
-        if (user == null || !userService.verifyPassword(user, data.password)) {
-          throw const UnauthorizedError('Invalid email or password');
+        switch (getValidatedBody<LoginData>(req)) {
+          case Error(:final error):
+            res
+              ..status(400)
+              ..jsonMap({'error': error});
+          case Success(:final value):
+            final user = userService.findByEmail(value.email);
+            if (user == null) {
+              throw const UnauthorizedError('Invalid email or password');
+            }
+            if (!userService.verifyPassword(user, value.password)) {
+              throw const UnauthorizedError('Invalid email or password');
+            }
+            userService.updateLastLogin(user.id);
+            res.jsonMap({
+              'success': true,
+              'data': {
+                'user': user.toJson(),
+                'token': tokenService.generate(user.id),
+              },
+            });
         }
-        userService.updateLastLogin(user.id);
-        res.jsonMap({
-          'success': true,
-          'data': {
-            'user': user.toJson(),
-            'token': tokenService.generate(user.id),
-          },
-        });
       }),
     ])
     ..getWithMiddleware('/tasks', [
       authenticate(tokenService, userService),
       asyncHandler((req, res) async {
-        final auth = getAuthContext(req);
+        final auth = getAuthContextWithService(req, userService);
         res.jsonMap({
           'success': true,
           'data': taskService
@@ -86,23 +102,33 @@ void main() {
       authenticate(tokenService, userService),
       validateBody(createTaskSchema),
       asyncHandler((req, res) async {
-        final auth = getAuthContext(req);
-        final data = getValidatedBody<CreateTaskData>(req);
-        final task = taskService.create(
-          userId: auth.user.id,
-          title: data.title,
-          description: data.description,
-        );
-        wsService.notifyTaskChange(auth.user.id, TaskEventType.created, task);
-        res
-          ..status(201)
-          ..jsonMap({'success': true, 'data': task.toJson()});
+        final auth = getAuthContextWithService(req, userService);
+        switch (getValidatedBody<CreateTaskData>(req)) {
+          case Error(:final error):
+            res
+              ..status(400)
+              ..jsonMap({'error': error});
+          case Success(:final value):
+            final task = taskService.create(
+              userId: auth.user.id,
+              title: value.title,
+              description: value.description,
+            );
+            wsService.notifyTaskChange(
+              auth.user.id,
+              TaskEventType.created,
+              task,
+            );
+            res
+              ..status(201)
+              ..jsonMap({'success': true, 'data': task.toJson()});
+        }
       }),
     ])
     ..getWithMiddleware('/tasks/:id', [
       authenticate(tokenService, userService),
       asyncHandler((req, res) async {
-        final auth = getAuthContext(req);
+        final auth = getAuthContextWithService(req, userService);
         final task = taskService.findById(getParam(req, 'id'));
         switch (task) {
           case null:
@@ -118,35 +144,41 @@ void main() {
       authenticate(tokenService, userService),
       validateBody(updateTaskSchema),
       asyncHandler((req, res) async {
-        final auth = getAuthContext(req);
+        final auth = getAuthContextWithService(req, userService);
         final taskId = getParam(req, 'id');
-        final data = getValidatedBody<UpdateTaskData>(req);
-        final task = taskService.findById(taskId);
-        switch (task) {
-          case null:
-            throw const NotFoundError('Task');
-          case Task(:final userId) when userId != auth.user.id:
-            throw const ForbiddenError('Cannot modify this task');
-          case Task():
-            final updated = taskService.update(
-              taskId,
-              title: data.title,
-              description: data.description,
-              completed: data.completed,
-            );
-            wsService.notifyTaskChange(
-              auth.user.id,
-              TaskEventType.updated,
-              updated!,
-            );
-            res.jsonMap({'success': true, 'data': updated.toJson()});
+        switch (getValidatedBody<UpdateTaskData>(req)) {
+          case Error(:final error):
+            res
+              ..status(400)
+              ..jsonMap({'error': error});
+          case Success(:final value):
+            final task = taskService.findById(taskId);
+            switch (task) {
+              case null:
+                throw const NotFoundError('Task');
+              case Task(:final userId) when userId != auth.user.id:
+                throw const ForbiddenError('Cannot modify this task');
+              case Task():
+                final updated = taskService.update(
+                  taskId,
+                  title: value.title,
+                  description: value.description,
+                  completed: value.completed,
+                );
+                wsService.notifyTaskChange(
+                  auth.user.id,
+                  TaskEventType.updated,
+                  updated!,
+                );
+                res.jsonMap({'success': true, 'data': updated.toJson()});
+            }
         }
       }),
     ])
     ..deleteWithMiddleware('/tasks/:id', [
       authenticate(tokenService, userService),
       asyncHandler((req, res) async {
-        final auth = getAuthContext(req);
+        final auth = getAuthContextWithService(req, userService);
         final taskId = getParam(req, 'id');
         final task = taskService.findById(taskId);
         switch (task) {
@@ -175,9 +207,18 @@ String getParam(Request req, String name) => req.params[name].toString();
 
 /// JSON body parser middleware
 JSFunction jsonParser() {
-  final express = requireModule('express') as JSObject;
-  final jsonFn = express['json']! as JSFunction;
-  return jsonFn.callAsFunction()! as JSFunction;
+  final express = switch (requireModule('express')) {
+    final JSObject o => o,
+    _ => throw StateError('Express module not found'),
+  };
+  final jsonFn = switch (express['json']) {
+    final JSFunction f => f,
+    _ => throw StateError('Express json function not found'),
+  };
+  return switch (jsonFn.callAsFunction()) {
+    final JSFunction f => f,
+    _ => throw StateError('Failed to create JSON parser'),
+  };
 }
 
 /// CORS middleware
@@ -195,11 +236,12 @@ JSFunction cors() => ((Request req, Response res, JSNextFunction next) {
   next();
 }).toJS;
 
-/// Authentication context
+/// Authentication context stored in request
 typedef AuthContext = ({User user, String token});
 
-/// Storage for auth contexts (keyed by request object identity via hash)
-final _authContexts = <int, AuthContext>{};
+/// Internal storage key for user ID
+const _authUserIdKey = '__auth_user_id__';
+const _authTokenKey = '__auth_token__';
 
 /// Auth middleware
 JSFunction authenticate(TokenService tokenService, UserService userService) =>
@@ -234,18 +276,31 @@ JSFunction authenticate(TokenService tokenService, UserService userService) =>
                     ..jsonMap({'error': 'User not found'});
                   return;
                 case final u:
-                  _authContexts[(req as JSObject).hashCode] = (
-                    user: u,
-                    token: token,
-                  );
+                  // Store user ID and token in request object
+                  req[_authUserIdKey] = u.id.toJS;
+                  req[_authTokenKey] = token.toJS;
                   next();
               }
           }
       }
     }).toJS;
 
-/// Get auth context
-AuthContext getAuthContext(Request req) {
-  final ctx = _authContexts[(req as JSObject).hashCode];
-  return ctx ?? (throw StateError('No auth context'));
+/// Get auth context from request - requires userService to look up user
+AuthContext getAuthContextWithService(Request req, UserService userService) {
+  final userId = switch (req[_authUserIdKey]) {
+    final JSString s => s.toDart,
+    _ => null,
+  };
+  final token = switch (req[_authTokenKey]) {
+    final JSString s => s.toDart,
+    _ => null,
+  };
+  if (userId == null || token == null) {
+    throw StateError('No auth context found');
+  }
+  final user = userService.findById(userId);
+  if (user == null) {
+    throw StateError('User not found');
+  }
+  return (user: user, token: token);
 }

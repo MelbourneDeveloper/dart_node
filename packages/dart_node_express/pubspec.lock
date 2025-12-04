@@ -17,7 +17,7 @@ packages:
     source: path
     version: "0.2.0-beta"
   nadz:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: nadz
       sha256: "749586d5d9c94c3660f85c4fa41979345edd5179ef221d6ac9127f36ca1674f8"

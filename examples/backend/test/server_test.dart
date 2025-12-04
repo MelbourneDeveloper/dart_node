@@ -166,7 +166,7 @@ void main() {
   });
 
   group('Task endpoints', () {
-    late String authToken;
+    String? authToken;
 
     setUp(() async {
       // Create user and get token
@@ -326,9 +326,9 @@ void main() {
   });
 
   group('Task authorization', () {
-    late String user1Token;
-    late String user2Token;
-    late String user1TaskId;
+    String? user1Token;
+    String? user2Token;
+    String? user1TaskId;
 
     setUp(() async {
       final timestamp = DateTime.now().millisecondsSinceEpoch;

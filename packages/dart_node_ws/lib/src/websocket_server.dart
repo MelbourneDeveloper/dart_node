@@ -7,8 +7,15 @@ import 'package:dart_node_ws/src/websocket_types.dart';
 
 /// Creates a WebSocket server on the specified port
 WebSocketServer createWebSocketServer({required int port}) {
-  final ws = requireModule('ws') as JSObject;
-  final serverClass = ws['Server']! as JSFunction;
+  final ws = requireModule('ws');
+  final wsObj = switch (ws) {
+    final JSObject o => o,
+    _ => throw StateError('WebSocket module not found'),
+  };
+  final serverClass = switch (wsObj['Server']) {
+    final JSFunction f => f,
+    _ => throw StateError('WebSocket Server class not found'),
+  };
   final options = JSObject();
   options['port'] = port.toJS;
   final server = serverClass.callAsConstructor<JSWebSocketServer>(options);
@@ -36,14 +43,11 @@ class WebSocketServer {
     }).toJS,
   );
 
-  String? _extractUrl(JSIncomingMessage request) {
-    final urlObj = request.url;
-    return switch (urlObj) {
-      null => null,
-      final u when u.isA<JSString>() => (u as JSString).toDart,
-      _ => null,
-    };
-  }
+  String? _extractUrl(JSIncomingMessage request) => switch (request.url) {
+    null => null,
+    final JSString s => s.toDart,
+    _ => null,
+  };
 
   /// Closes the WebSocket server
   void close([void Function()? callback]) =>

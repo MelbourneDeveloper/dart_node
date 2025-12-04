@@ -55,18 +55,22 @@ const _contextKey = '__dart_context__';
 
 /// Sets a value in the request context.
 void setContext<T>(Request req, String key, T value) {
-  var ctx = (req as JSObject)[_contextKey];
+  var ctx = req[_contextKey];
   if (ctx == null) {
     ctx = JSObject();
-    (req as JSObject)[_contextKey] = ctx;
+    req[_contextKey] = ctx;
   }
-  (ctx as JSObject)[key] = value.jsify();
+  switch (ctx) {
+    case final JSObject ctxObj:
+      ctxObj[key] = value.jsify();
+  }
 }
 
 /// Gets a value from the request context.
-T? getContext<T>(Request req, String key) {
-  final ctx = (req as JSObject)[_contextKey];
-  if (ctx == null) return null;
-  final value = (ctx as JSObject)[key];
-  return value?.dartify() as T?;
-}
+T? getContext<T>(Request req, String key) => switch (req[_contextKey]) {
+  final JSObject ctxObj => switch (ctxObj[key]?.dartify()) {
+    final T v => v,
+    _ => null,
+  },
+  _ => null,
+};
