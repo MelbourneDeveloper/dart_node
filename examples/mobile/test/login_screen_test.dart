@@ -1234,6 +1234,91 @@ void main() {
   // ===== WEBSOCKET TESTS =====
 
   group('WebSocket Events', () {
+    test(
+      'WS task_created DURING initial load does NOT create duplicate',
+      () async {
+        // BUG: WebSocket task_created arrives DURING initial HTTP load,
+        // BEFORE HTTP response. Then HTTP arrives and REPLACES the list,
+        // but HTTP data + WS data = duplicate!
+        //
+        // Timeline:
+        // 1. Login succeeds
+        // 2. Component starts GET /tasks (async)
+        // 3. WebSocket connects, server sends task_created event
+        // 4. WS handler adds task to state (currently empty)
+        // 5. HTTP /tasks responds with SAME task
+        // 6. _loadTasks does tasksState.set() - REPLACES state!
+        //
+        // Result: WS added task + HTTP replaced with same task = OK normally
+        // BUT if we don't deduplicate in set(), we can get race issues.
+        //
+        // Actually the REAL bug: WS arrives AFTER HTTP completes, but for
+        // a task that was ALREADY in the HTTP response. Let's test that.
+
+        Future<Result<JSObject, String>> racingFetch(
+          String url, {
+          String method = 'GET',
+          String? token,
+          Map<String, Object?>? body,
+        }) async {
+          if (url.contains('/auth/login')) {
+            return Success(
+              createJSObject({
+                'success': true,
+                'data': {
+                  'token': 'tok',
+                  'user': {'name': 'Alice'},
+                },
+              }),
+            );
+          }
+          if (url.contains('/tasks') && method == 'GET') {
+            // HTTP returns task, but ALSO WS will send same task later
+            return Success(
+              createJSObject({
+                'success': true,
+                'data': [
+                  {'id': 'task_47', 'title': 'Existing Task', 'completed': false},
+                ],
+              }),
+            );
+          }
+          throw StateError('No mock for $method $url');
+        }
+
+        final result = render(MobileApp(fetchFn: racingFetch));
+
+        // Login
+        final inputs = result.container.querySelectorAll('input');
+        await userType(inputs[0], 'a@b.com');
+        await userType(inputs[1], 'pass');
+        fireClick(result.container.querySelectorAll('button').first);
+
+        // Wait for task list to load
+        await waitForText(result, 'Existing Task');
+
+        // WS sends task_created for same task that's already loaded!
+        // This simulates server broadcasting to all clients
+        simulateWsMessage(
+          '{"type":"task_created","data":'
+          '{"id":"task_47","title":"Existing Task","completed":false}}',
+        );
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        // Count occurrences - must be exactly 1!
+        final textContent = result.container.textContent;
+        final matches = 'Existing Task'.allMatches(textContent).length;
+        expect(
+          matches,
+          1,
+          reason: 'WS task_created for existing task should NOT duplicate!',
+        );
+
+        result.unmount();
+      },
+    );
+
     test('task_created event adds task to list', () async {
       final mockFetch = createMockFetch({
         '/auth/login': {
