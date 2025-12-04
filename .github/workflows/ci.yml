@@ -1,0 +1,402 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  format:
+    name: Check Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Check formatting - packages/dart_node_core
+        run: dart format --set-exit-if-changed packages/dart_node_core
+
+      - name: Check formatting - packages/dart_node_express
+        run: dart format --set-exit-if-changed packages/dart_node_express
+
+      - name: Check formatting - packages/dart_node_react
+        run: dart format --set-exit-if-changed packages/dart_node_react
+
+      - name: Check formatting - packages/dart_node_react_native
+        run: dart format --set-exit-if-changed packages/dart_node_react_native
+
+      - name: Check formatting - packages/dart_node_ws
+        run: dart format --set-exit-if-changed packages/dart_node_ws
+
+      - name: Check formatting - examples/backend
+        run: dart format --set-exit-if-changed examples/backend
+
+      - name: Check formatting - examples/frontend
+        run: dart format --set-exit-if-changed examples/frontend
+
+      - name: Check formatting - examples/mobile
+        run: dart format --set-exit-if-changed examples/mobile
+
+      - name: Check formatting - examples/shared
+        run: dart format --set-exit-if-changed examples/shared
+
+      - name: Check formatting - tools/build
+        run: dart format --set-exit-if-changed tools/build
+
+  analyze:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Get dependencies - packages/dart_node_core
+        working-directory: packages/dart_node_core
+        run: dart pub get
+
+      - name: Get dependencies - packages/dart_node_express
+        working-directory: packages/dart_node_express
+        run: dart pub get
+
+      - name: Get dependencies - packages/dart_node_react
+        working-directory: packages/dart_node_react
+        run: dart pub get
+
+      - name: Get dependencies - packages/dart_node_react_native
+        working-directory: packages/dart_node_react_native
+        run: dart pub get
+
+      - name: Get dependencies - packages/dart_node_ws
+        working-directory: packages/dart_node_ws
+        run: dart pub get
+
+      - name: Get dependencies - examples/shared
+        working-directory: examples/shared
+        run: dart pub get
+
+      - name: Get dependencies - examples/backend
+        working-directory: examples/backend
+        run: dart pub get
+
+      - name: Get dependencies - examples/frontend
+        working-directory: examples/frontend
+        run: dart pub get
+
+      - name: Get dependencies - examples/mobile
+        working-directory: examples/mobile
+        run: dart pub get
+
+      - name: Get dependencies - tools/build
+        working-directory: tools/build
+        run: dart pub get
+
+      - name: Analyze - packages/dart_node_core
+        working-directory: packages/dart_node_core
+        run: dart analyze --fatal-infos
+
+      - name: Analyze - packages/dart_node_express
+        working-directory: packages/dart_node_express
+        run: dart analyze --fatal-infos
+
+      - name: Analyze - packages/dart_node_react
+        working-directory: packages/dart_node_react
+        run: dart analyze --fatal-infos
+
+      - name: Analyze - packages/dart_node_react_native
+        working-directory: packages/dart_node_react_native
+        run: dart analyze --fatal-infos
+
+      - name: Analyze - packages/dart_node_ws
+        working-directory: packages/dart_node_ws
+        run: dart analyze --fatal-infos
+
+      - name: Analyze - examples/backend
+        working-directory: examples/backend
+        run: dart analyze --fatal-infos
+
+      - name: Analyze - examples/frontend
+        working-directory: examples/frontend
+        run: dart analyze --fatal-infos
+
+      - name: Analyze - examples/mobile
+        working-directory: examples/mobile
+        run: dart analyze --fatal-infos
+
+      - name: Analyze - examples/shared
+        working-directory: examples/shared
+        run: dart analyze --fatal-infos
+
+      - name: Analyze - tools/build
+        working-directory: tools/build
+        run: dart analyze --fatal-infos
+
+  test-backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    needs: [format, analyze]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Get dependencies - packages
+        run: |
+          cd packages/dart_node_core && dart pub get
+          cd ../dart_node_express && dart pub get
+          cd ../dart_node_ws && dart pub get
+
+      - name: Get dependencies - examples
+        run: |
+          cd examples/shared && dart pub get
+          cd ../backend && dart pub get
+
+      - name: Get dependencies - tools
+        working-directory: tools/build
+        run: dart pub get
+
+      - name: Build backend
+        run: dart run tools/build/build.dart backend
+
+      - name: Install Node dependencies
+        working-directory: examples/backend
+        run: npm install
+
+      - name: Run tests with coverage
+        working-directory: examples/backend
+        run: dart test --coverage=coverage
+
+      - name: Generate coverage report
+        working-directory: examples/backend
+        run: |
+          dart pub global activate coverage
+          dart pub global run coverage:format_coverage \
+            --lcov \
+            --in=coverage \
+            --out=coverage/lcov.info \
+            --report-on=lib
+
+      - name: Check coverage threshold (90%)
+        working-directory: examples/backend
+        run: |
+          COVERAGE=$(dart pub global run coverage:format_coverage --lcov --in=coverage --out=/dev/stdout --report-on=lib 2>/dev/null | grep -E "^SF:|^LF:|^LH:" | awk -F: '
+            /^LF:/ { total += $2 }
+            /^LH:/ { covered += $2 }
+            END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }
+          ')
+          echo "Coverage: ${COVERAGE}%"
+          if [ -z "$COVERAGE" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
+            echo "Coverage ${COVERAGE}% is below 90% threshold"
+            exit 1
+          fi
+
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    needs: [format, analyze]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Get dependencies - packages
+        run: |
+          cd packages/dart_node_core && dart pub get
+          cd ../dart_node_react && dart pub get
+
+      - name: Get dependencies - examples
+        run: |
+          cd examples/shared && dart pub get
+          cd ../frontend && dart pub get
+
+      - name: Run tests with coverage
+        working-directory: examples/frontend
+        run: dart test --coverage=coverage
+
+      - name: Generate coverage report
+        working-directory: examples/frontend
+        run: |
+          dart pub global activate coverage
+          dart pub global run coverage:format_coverage \
+            --lcov \
+            --in=coverage \
+            --out=coverage/lcov.info \
+            --report-on=lib
+
+      - name: Check coverage threshold (90%)
+        working-directory: examples/frontend
+        run: |
+          COVERAGE=$(dart pub global run coverage:format_coverage --lcov --in=coverage --out=/dev/stdout --report-on=lib 2>/dev/null | grep -E "^SF:|^LF:|^LH:" | awk -F: '
+            /^LF:/ { total += $2 }
+            /^LH:/ { covered += $2 }
+            END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }
+          ')
+          echo "Coverage: ${COVERAGE}%"
+          if [ -z "$COVERAGE" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
+            echo "Coverage ${COVERAGE}% is below 90% threshold"
+            exit 1
+          fi
+
+  test-mobile:
+    name: Test Mobile
+    runs-on: ubuntu-latest
+    needs: [format, analyze]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Get dependencies - packages
+        run: |
+          cd packages/dart_node_core && dart pub get
+          cd ../dart_node_react && dart pub get
+          cd ../dart_node_react_native && dart pub get
+
+      - name: Get dependencies - examples
+        run: |
+          cd examples/shared && dart pub get
+          cd ../mobile && dart pub get
+
+      - name: Run tests with coverage
+        working-directory: examples/mobile
+        run: dart test --coverage=coverage
+
+      - name: Generate coverage report
+        working-directory: examples/mobile
+        run: |
+          dart pub global activate coverage
+          dart pub global run coverage:format_coverage \
+            --lcov \
+            --in=coverage \
+            --out=coverage/lcov.info \
+            --report-on=lib
+
+      - name: Check coverage threshold (90%)
+        working-directory: examples/mobile
+        run: |
+          COVERAGE=$(dart pub global run coverage:format_coverage --lcov --in=coverage --out=/dev/stdout --report-on=lib 2>/dev/null | grep -E "^SF:|^LF:|^LH:" | awk -F: '
+            /^LF:/ { total += $2 }
+            /^LH:/ { covered += $2 }
+            END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }
+          ')
+          echo "Coverage: ${COVERAGE}%"
+          if [ -z "$COVERAGE" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
+            echo "Coverage ${COVERAGE}% is below 90% threshold"
+            exit 1
+          fi
+
+  test-react-package:
+    name: Test React Package
+    runs-on: ubuntu-latest
+    needs: [format, analyze]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Get dependencies - packages
+        run: |
+          cd packages/dart_node_core && dart pub get
+          cd ../dart_node_react && dart pub get
+
+      - name: Run tests with coverage
+        working-directory: packages/dart_node_react
+        run: dart test --coverage=coverage
+
+      - name: Generate coverage report
+        working-directory: packages/dart_node_react
+        run: |
+          dart pub global activate coverage
+          dart pub global run coverage:format_coverage \
+            --lcov \
+            --in=coverage \
+            --out=coverage/lcov.info \
+            --report-on=lib
+
+      - name: Check coverage threshold (90%)
+        working-directory: packages/dart_node_react
+        run: |
+          COVERAGE=$(dart pub global run coverage:format_coverage --lcov --in=coverage --out=/dev/stdout --report-on=lib 2>/dev/null | grep -E "^SF:|^LF:|^LH:" | awk -F: '
+            /^LF:/ { total += $2 }
+            /^LH:/ { covered += $2 }
+            END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }
+          ')
+          echo "Coverage: ${COVERAGE}%"
+          if [ -z "$COVERAGE" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
+            echo "Coverage ${COVERAGE}% is below 90% threshold"
+            exit 1
+          fi
+
+  build:
+    name: Build All Projects
+    runs-on: ubuntu-latest
+    needs: [format, analyze]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Get dependencies - all packages
+        run: |
+          cd packages/dart_node_core && dart pub get
+          cd ../dart_node_express && dart pub get
+          cd ../dart_node_react && dart pub get
+          cd ../dart_node_react_native && dart pub get
+          cd ../dart_node_ws && dart pub get
+
+      - name: Get dependencies - all examples
+        run: |
+          cd examples/shared && dart pub get
+          cd ../backend && dart pub get
+          cd ../frontend && dart pub get
+          cd ../mobile && dart pub get
+
+      - name: Get dependencies - tools
+        working-directory: tools/build
+        run: dart pub get
+
+      - name: Install Node dependencies - backend
+        working-directory: examples/backend
+        run: npm install
+
+      - name: Build backend
+        run: dart run tools/build/build.dart backend
+
+      - name: Build frontend
+        run: dart run tools/build/build.dart frontend
+
+      - name: Build mobile
+        run: dart run tools/build/build.dart mobile
