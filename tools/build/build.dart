@@ -142,7 +142,13 @@ List<Directory> _findNpmDirs(Directory pkg) {
 }
 
 String? _findEntryPoint(String exampleDir) {
-  final candidates = ['server.dart', 'main.dart', 'app.dart'];
+  final candidates = [
+    'server.dart',
+    'main.dart',
+    'app.dart',
+    'web/app.dart',
+    'web/main.dart',
+  ];
   return _searchEntryPoints(exampleDir, candidates);
 }
 
@@ -194,13 +200,14 @@ String? _searchEntryPoints(String exampleDir, List<String> remaining) {
   };
   final tempOutput = '$buildDir/temp_$outputName';
   final finalOutput = '$buildDir/$outputName';
-  final entryFileName = entryPoint.split('/').last;
+  // Get relative path from exampleDir (entryPoint is absolute)
+  final entryRelative = entryPoint.replaceFirst('$exampleDir/', '');
 
   print('  Compiling Dart to JS...');
   final compileResult = Process.runSync('dart', [
     'compile',
     'js',
-    entryFileName,
+    entryRelative,
     '-o',
     tempOutput,
     '-O2',
