@@ -55,8 +55,23 @@ jobs:
           for i in {1..60}; do
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/dart_node_core/versions/$VERSION")
             if [ "$HTTP_CODE" = "200" ]; then
-              echo "dart_node_core $VERSION is now available!"
-              exit 0
+              echo "dart_node_core $VERSION found in API, verifying resolver can fetch it..."
+              # Create a temp project to verify the package is actually resolvable
+              TEMP_DIR=$(mktemp -d)
+              cat > "$TEMP_DIR/pubspec.yaml" << EOF
+          name: verify_package
+          environment:
+            sdk: ^3.10.0
+          dependencies:
+            dart_node_core: ^$VERSION
+          EOF
+              if (cd "$TEMP_DIR" && dart pub get 2>/dev/null); then
+                echo "dart_node_core $VERSION is now resolvable!"
+                rm -rf "$TEMP_DIR"
+                exit 0
+              fi
+              rm -rf "$TEMP_DIR"
+              echo "API shows 200 but resolver can't fetch yet, waiting..."
             fi
             echo "Attempt $i/60: Not yet available (HTTP $HTTP_CODE), waiting 10 seconds..."
             sleep 10
@@ -90,8 +105,23 @@ jobs:
           for i in {1..60}; do
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/dart_node_react/versions/$VERSION")
             if [ "$HTTP_CODE" = "200" ]; then
-              echo "dart_node_react $VERSION is now available!"
-              exit 0
+              echo "dart_node_react $VERSION found in API, verifying resolver can fetch it..."
+              # Create a temp project to verify the package is actually resolvable
+              TEMP_DIR=$(mktemp -d)
+              cat > "$TEMP_DIR/pubspec.yaml" << EOF
+          name: verify_package
+          environment:
+            sdk: ^3.10.0
+          dependencies:
+            dart_node_react: ^$VERSION
+          EOF
+              if (cd "$TEMP_DIR" && dart pub get 2>/dev/null); then
+                echo "dart_node_react $VERSION is now resolvable!"
+                rm -rf "$TEMP_DIR"
+                exit 0
+              fi
+              rm -rf "$TEMP_DIR"
+              echo "API shows 200 but resolver can't fetch yet, waiting..."
             fi
             echo "Attempt $i/60: Not yet available (HTTP $HTTP_CODE), waiting 10 seconds..."
             sleep 10
