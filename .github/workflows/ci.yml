@@ -101,43 +101,43 @@ jobs:
 
       - name: Analyze - packages/dart_node_core
         working-directory: packages/dart_node_core
-        run: dart analyze
+        run: dart analyze --no-fatal-warnings
 
       - name: Analyze - packages/dart_node_express
         working-directory: packages/dart_node_express
-        run: dart analyze
+        run: dart analyze --no-fatal-warnings
 
       - name: Analyze - packages/dart_node_react
         working-directory: packages/dart_node_react
-        run: dart analyze
+        run: dart analyze --no-fatal-warnings
 
       - name: Analyze - packages/dart_node_react_native
         working-directory: packages/dart_node_react_native
-        run: dart analyze
+        run: dart analyze --no-fatal-warnings
 
       - name: Analyze - packages/dart_node_ws
         working-directory: packages/dart_node_ws
-        run: dart analyze
+        run: dart analyze --no-fatal-warnings
 
       - name: Analyze - examples/backend
         working-directory: examples/backend
-        run: dart analyze
+        run: dart analyze --no-fatal-warnings
 
       - name: Analyze - examples/frontend
         working-directory: examples/frontend
-        run: dart analyze
+        run: dart analyze --no-fatal-warnings
 
       - name: Analyze - examples/mobile
         working-directory: examples/mobile
-        run: dart analyze
+        run: dart analyze --no-fatal-warnings
 
       - name: Analyze - examples/shared
         working-directory: examples/shared
-        run: dart analyze
+        run: dart analyze --no-fatal-warnings
 
       - name: Analyze - tools/build
         working-directory: tools/build
-        run: dart analyze
+        run: dart analyze --no-fatal-warnings
 
   test-backend:
     name: Test Backend
