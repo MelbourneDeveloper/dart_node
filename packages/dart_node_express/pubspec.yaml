@@ -2,6 +2,7 @@ name: dart_node_express
 description: Express.js bindings for Dart
 version: 0.2.0-beta
 repository: https://github.com/MelbourneDeveloper/dart_node
+publish_to: none
 
 environment:
   sdk: ^3.10.0
