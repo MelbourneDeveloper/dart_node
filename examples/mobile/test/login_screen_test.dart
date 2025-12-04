@@ -1278,7 +1278,11 @@ void main() {
               createJSObject({
                 'success': true,
                 'data': [
-                  {'id': 'task_47', 'title': 'Existing Task', 'completed': false},
+                  {
+                    'id': 'task_47',
+                    'title': 'Existing Task',
+                    'completed': false,
+                  },
                 ],
               }),
             );

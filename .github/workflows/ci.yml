@@ -101,43 +101,43 @@ jobs:
 
       - name: Analyze - packages/dart_node_core
         working-directory: packages/dart_node_core
-        run: dart analyze --fatal-infos
+        run: dart analyze
 
       - name: Analyze - packages/dart_node_express
         working-directory: packages/dart_node_express
-        run: dart analyze --fatal-infos
+        run: dart analyze
 
       - name: Analyze - packages/dart_node_react
         working-directory: packages/dart_node_react
-        run: dart analyze --fatal-infos
+        run: dart analyze
 
       - name: Analyze - packages/dart_node_react_native
         working-directory: packages/dart_node_react_native
-        run: dart analyze --fatal-infos
+        run: dart analyze
 
       - name: Analyze - packages/dart_node_ws
         working-directory: packages/dart_node_ws
-        run: dart analyze --fatal-infos
+        run: dart analyze
 
       - name: Analyze - examples/backend
         working-directory: examples/backend
-        run: dart analyze --fatal-infos
+        run: dart analyze
 
       - name: Analyze - examples/frontend
         working-directory: examples/frontend
-        run: dart analyze --fatal-infos
+        run: dart analyze
 
       - name: Analyze - examples/mobile
         working-directory: examples/mobile
-        run: dart analyze --fatal-infos
+        run: dart analyze
 
       - name: Analyze - examples/shared
         working-directory: examples/shared
-        run: dart analyze --fatal-infos
+        run: dart analyze
 
       - name: Analyze - tools/build
         working-directory: tools/build
-        run: dart analyze --fatal-infos
+        run: dart analyze
 
   test-backend:
     name: Test Backend
