@@ -17,7 +17,8 @@ description: "Write React, React Native, and Express apps entirely in Dart. Runt
     </div>
 
     <div class="hero-code">
-      <pre><code class="language-dart">// A complete Express server in Dart
+{% highlight "dart" %}
+// A complete Express server in Dart
 import 'package:dart_node_express/dart_node_express.dart';
 
 void main() {
@@ -30,7 +31,8 @@ void main() {
   app.listen(3000, () {
     print('Server running on port 3000');
   });
-}</code></pre>
+}
+{% endhighlight %}
     </div>
   </div>
 </section>
@@ -51,26 +53,30 @@ void main() {
       <div class="code-comparison">
         <div class="code-block">
           <div class="code-block-header">React (TypeScript)</div>
-          <pre><code class="language-typescript">const Counter: React.FC = () => {
+{% highlight "tsx" %}
+const Counter: React.FC = () => {
   const [count, setCount] = useState<number>(0);
 
   return (
-    &lt;button onClick={() => setCount(c => c + 1)}>
+    <button onClick={() => setCount(c => c + 1)}>
       Count: {count}
-    &lt;/button>
+    </button>
   );
-};</code></pre>
+};
+{% endhighlight %}
         </div>
         <div class="code-block">
           <div class="code-block-header">React (Dart)</div>
-          <pre><code class="language-dart">ReactElement counter() {
+{% highlight "dart" %}
+ReactElement counter() {
   final (count, setCount) = useState(0);
 
   return button(
     onClick: (_) => setCount((c) => c + 1),
     children: [text('Count: $count')],
   );
-}</code></pre>
+}
+{% endhighlight %}
         </div>
       </div>
 
@@ -97,12 +103,13 @@ void main() {
       <div class="code-comparison">
         <div class="code-block">
           <div class="code-block-header">Flutter</div>
-          <pre><code class="language-dart">class Counter extends StatefulWidget {
+{% highlight "dart" %}
+class Counter extends StatefulWidget {
   @override
-  State&lt;Counter> createState() => _CounterState();
+  State<Counter> createState() => _CounterState();
 }
 
-class _CounterState extends State&lt;Counter> {
+class _CounterState extends State<Counter> {
   int count = 0;
 
   @override
@@ -112,18 +119,21 @@ class _CounterState extends State&lt;Counter> {
       child: Text('Count: $count'),
     );
   }
-}</code></pre>
+}
+{% endhighlight %}
         </div>
         <div class="code-block">
           <div class="code-block-header">dart_node React</div>
-          <pre><code class="language-dart">ReactElement counter() {
+{% highlight "dart" %}
+ReactElement counter() {
   final (count, setCount) = useState(0);
 
   return button(
     onClick: (_) => setCount((c) => c + 1),
     children: [text('Count: $count')],
   );
-}</code></pre>
+}
+{% endhighlight %}
         </div>
       </div>
 
@@ -204,7 +214,8 @@ class _CounterState extends State&lt;Counter> {
     <div class="code-comparison">
       <div class="code-block">
         <div class="code-block-header">TypeScript (Types Erased)</div>
-        <pre><code class="language-typescript">interface User {
+{% highlight "ts" %}
+interface User {
   id: number;
   name: string;
 }
@@ -215,11 +226,13 @@ const user: User = JSON.parse(data);
 
 // This could fail silently
 console.log(user.name.toUpperCase());
-// Runtime error if name is undefined!</code></pre>
+// Runtime error if name is undefined!
+{% endhighlight %}
       </div>
       <div class="code-block">
         <div class="code-block-header">Dart (Types Preserved)</div>
-        <pre><code class="language-dart">class User {
+{% highlight "dart" %}
+class User {
   final int id;
   final String name;
   User({required this.id, required this.name});
@@ -230,7 +243,8 @@ final user = User.fromJson(jsonDecode(data));
 
 // If name were null, this would fail
 // at deserialization, not at usage
-print(user.name.toUpperCase());</code></pre>
+print(user.name.toUpperCase());
+{% endhighlight %}
       </div>
     </div>
 
@@ -247,7 +261,8 @@ print(user.name.toUpperCase());</code></pre>
     </div>
 
     <div style="max-width: 700px; margin: 0 auto;">
-      <pre><code class="language-bash"># Create a new project
+{% highlight "bash" %}
+# Create a new project
 mkdir my_dart_app && cd my_dart_app
 dart create -t package .
 
@@ -267,7 +282,8 @@ EOF
 
 # Compile to JavaScript and run
 dart compile js lib/server.dart -o build/server.js
-node build/server.js</code></pre>
+node build/server.js
+{% endhighlight %}
     </div>
 
     <div class="text-center" style="margin-top: var(--space-8);">

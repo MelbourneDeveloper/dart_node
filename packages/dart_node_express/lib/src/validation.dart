@@ -80,12 +80,12 @@ class StringValidator extends Validator<String> {
   ValidationResult<String> validate(dynamic value) {
     if (value == null) {
       return Invalid({
-        _fieldName: ['is required']
+        _fieldName: ['is required'],
       });
     }
     if (value is! String) {
       return Invalid({
-        _fieldName: ['must be a string']
+        _fieldName: ['must be a string'],
       });
     }
 
@@ -108,35 +108,29 @@ class StringValidator extends Validator<String> {
 
   /// Minimum length
   StringValidator minLength(int min) => _addCheck(
-        (v) => v.length < min ? 'must be at least $min characters' : '',
-      );
+    (v) => v.length < min ? 'must be at least $min characters' : '',
+  );
 
   /// Maximum length
-  StringValidator maxLength(int max) => _addCheck(
-        (v) => v.length > max ? 'must be at most $max characters' : '',
-      );
+  StringValidator maxLength(int max) =>
+      _addCheck((v) => v.length > max ? 'must be at most $max characters' : '');
 
   /// Must not be empty
-  StringValidator notEmpty() => _addCheck(
-        (v) => v.isEmpty ? 'must not be empty' : '',
-      );
+  StringValidator notEmpty() =>
+      _addCheck((v) => v.isEmpty ? 'must not be empty' : '');
 
   /// Must match pattern
   StringValidator matches(RegExp pattern, [String? message]) => _addCheck(
-        (v) => !pattern.hasMatch(v) ? (message ?? 'invalid format') : '',
-      );
+    (v) => !pattern.hasMatch(v) ? (message ?? 'invalid format') : '',
+  );
 
   /// Must be a valid email
-  StringValidator email() => matches(
-        RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$'),
-        'must be a valid email',
-      );
+  StringValidator email() =>
+      matches(RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$'), 'must be a valid email');
 
   /// Must be alphanumeric
-  StringValidator alphanumeric() => matches(
-        RegExp(r'^[a-zA-Z0-9]+$'),
-        'must be alphanumeric',
-      );
+  StringValidator alphanumeric() =>
+      matches(RegExp(r'^[a-zA-Z0-9]+$'), 'must be alphanumeric');
 }
 
 // ============================================================================
@@ -156,7 +150,7 @@ class IntValidator extends Validator<int> {
   ValidationResult<int> validate(dynamic value) {
     if (value == null) {
       return Invalid({
-        _fieldName: ['is required']
+        _fieldName: ['is required'],
       });
     }
 
@@ -167,7 +161,7 @@ class IntValidator extends Validator<int> {
       final parsed = int.tryParse(value);
       if (parsed == null) {
         return Invalid({
-          _fieldName: ['must be a number']
+          _fieldName: ['must be a number'],
         });
       }
       intValue = parsed;
@@ -175,7 +169,7 @@ class IntValidator extends Validator<int> {
       intValue = value.toInt();
     } else {
       return Invalid({
-        _fieldName: ['must be a number']
+        _fieldName: ['must be a number'],
       });
     }
 
@@ -197,22 +191,18 @@ class IntValidator extends Validator<int> {
   }
 
   /// Minimum value
-  IntValidator min(int min) => _addCheck(
-        (v) => v < min ? 'must be at least $min' : '',
-      );
+  IntValidator min(int min) =>
+      _addCheck((v) => v < min ? 'must be at least $min' : '');
 
   /// Maximum value
-  IntValidator max(int max) => _addCheck(
-        (v) => v > max ? 'must be at most $max' : '',
-      );
+  IntValidator max(int max) =>
+      _addCheck((v) => v > max ? 'must be at most $max' : '');
 
   /// Must be in range
   IntValidator range(int min, int max) => this.min(min).max(max);
 
   /// Must be positive
-  IntValidator positive() => _addCheck(
-        (v) => v <= 0 ? 'must be positive' : '',
-      );
+  IntValidator positive() => _addCheck((v) => v <= 0 ? 'must be positive' : '');
 }
 
 // ============================================================================
@@ -231,7 +221,7 @@ class BoolValidator extends Validator<bool> {
   ValidationResult<bool> validate(dynamic value) {
     if (value == null) {
       return Invalid({
-        _fieldName: ['is required']
+        _fieldName: ['is required'],
       });
     }
     if (value is bool) {
@@ -242,7 +232,7 @@ class BoolValidator extends Validator<bool> {
       if (value.toLowerCase() == 'false') return Valid(false);
     }
     return Invalid({
-      _fieldName: ['must be a boolean']
+      _fieldName: ['must be a boolean'],
     });
   }
 }
@@ -279,8 +269,7 @@ class OptionalValidator<T> extends Validator<T?> {
 Schema<T> schema<T>(
   Map<String, Validator> fields,
   T Function(Map<String, dynamic>) constructor,
-) =>
-    Schema(fields, constructor);
+) => Schema(fields, constructor);
 
 class Schema<T> extends Validator<T> {
   final Map<String, Validator> fields;
@@ -292,7 +281,7 @@ class Schema<T> extends Validator<T> {
   ValidationResult<T> validate(dynamic value) {
     if (value == null) {
       return const Invalid({
-        'body': ['is required']
+        'body': ['is required'],
       });
     }
 
@@ -304,7 +293,7 @@ class Schema<T> extends Validator<T> {
       map = (value.dartify() as Map).cast<String, dynamic>();
     } else {
       return const Invalid({
-        'body': ['must be an object']
+        'body': ['must be an object'],
       });
     }
 
@@ -356,10 +345,7 @@ JSFunction validateBody<T>(Schema<T> schema) {
         next();
       case Invalid(:final errors):
         res.status(400);
-        res.jsonMap({
-          'error': 'Validation failed',
-          'fields': errors,
-        });
+        res.jsonMap({'error': 'Validation failed', 'fields': errors});
     }
   }).toJS;
 }

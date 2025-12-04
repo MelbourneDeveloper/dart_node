@@ -44,12 +44,6 @@ final createUserSchema = schema<CreateUserData>(
 
 /// Validation schema for login
 final loginSchema = schema<LoginData>(
-  {
-    'email': string().email(),
-    'password': string().notEmpty(),
-  },
-  (map) => (
-    email: map['email'] as String,
-    password: map['password'] as String,
-  ),
+  {'email': string().email(), 'password': string().notEmpty()},
+  (map) => (email: map['email'] as String, password: map['password'] as String),
 );

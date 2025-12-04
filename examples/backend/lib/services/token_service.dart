@@ -15,8 +15,9 @@ class TokenService {
     final payload = {
       'userId': userId,
       'iat': DateTime.now().millisecondsSinceEpoch,
-      'exp':
-          DateTime.now().add(const Duration(hours: 24)).millisecondsSinceEpoch,
+      'exp': DateTime.now()
+          .add(const Duration(hours: 24))
+          .millisecondsSinceEpoch,
     };
 
     // Simple base64 encoding (NOT secure - just for demo)

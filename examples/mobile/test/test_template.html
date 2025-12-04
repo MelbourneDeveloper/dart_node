@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{{testName}}</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script>
+    // Mock React Native components as React DOM components
+    // This allows testing RN components in a browser environment
+
+    // Helper to create a mock RN component that renders to DOM
+    function createRNComponent(tagName, displayName) {
+      const Component = React.forwardRef(function(props, ref) {
+        const { children, style, onPress, onChangeText, onValueChange, value, placeholder, secureTextEntry, testID, ...rest } = props;
+
+        // Convert RN style object to CSS string
+        const cssStyle = style ? Object.entries(style).reduce((acc, [key, val]) => {
+          // Convert camelCase to kebab-case
+          const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+          acc[cssKey] = typeof val === 'number' ? `${val}px` : val;
+          return acc;
+        }, {}) : {};
+
+        // Build props for DOM element
+        const domProps = {
+          ref,
+          style: cssStyle,
+          'data-testid': testID,
+          'data-rn-component': displayName,
+          ...rest
+        };
+
+        // Handle component-specific behavior
+        if (displayName === 'TextInput') {
+          return React.createElement('input', {
+            ...domProps,
+            type: secureTextEntry ? 'password' : 'text',
+            value: value || '',
+            placeholder: placeholder,
+            onChange: onChangeText ? (e) => onChangeText(e.target.value) : undefined
+          });
+        }
+
+        if (displayName === 'TouchableOpacity' || displayName === 'Button') {
+          return React.createElement('button', {
+            ...domProps,
+            onClick: onPress,
+            type: 'button'
+          }, children);
+        }
+
+        if (displayName === 'Switch') {
+          return React.createElement('input', {
+            ...domProps,
+            type: 'checkbox',
+            checked: value || false,
+            onChange: onValueChange ? (e) => onValueChange(e.target.checked) : undefined
+          });
+        }
+
+        if (displayName === 'Text') {
+          return React.createElement('span', domProps, children);
+        }
+
+        if (displayName === 'Image') {
+          return React.createElement('img', domProps);
+        }
+
+        // Default: render as div
+        return React.createElement('div', domProps, children);
+      });
+      Component.displayName = displayName;
+      return Component;
+    }
+
+    // Create all RN component mocks
+    window.reactNative = {
+      View: createRNComponent('div', 'View'),
+      Text: createRNComponent('span', 'Text'),
+      TextInput: createRNComponent('input', 'TextInput'),
+      TouchableOpacity: createRNComponent('button', 'TouchableOpacity'),
+      Button: createRNComponent('button', 'Button'),
+      ScrollView: createRNComponent('div', 'ScrollView'),
+      SafeAreaView: createRNComponent('div', 'SafeAreaView'),
+      ActivityIndicator: createRNComponent('div', 'ActivityIndicator'),
+      FlatList: createRNComponent('div', 'FlatList'),
+      Image: createRNComponent('img', 'Image'),
+      Switch: createRNComponent('input', 'Switch'),
+      AppRegistry: {
+        registerComponent: function(name, provider) {
+          // Store for testing
+          window._registeredApps = window._registeredApps || {};
+          window._registeredApps[name] = provider;
+        }
+      }
+    };
+  </script>
+  <script src="packages/test/dart.js"></script>
+  {{testScript}}
+</head>
+<body></body>
+</html>

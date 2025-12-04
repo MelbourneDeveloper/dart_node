@@ -5,10 +5,10 @@ enum TaskPriority {
   high;
 
   static TaskPriority fromString(String? s) => switch (s) {
-        'low' => TaskPriority.low,
-        'high' => TaskPriority.high,
-        _ => TaskPriority.medium,
-      };
+    'low' => TaskPriority.low,
+    'high' => TaskPriority.high,
+    _ => TaskPriority.medium,
+  };
 }
 
 /// Task entity - immutable record
@@ -30,30 +30,27 @@ extension TaskExtension on Task {
     bool? completed,
     TaskPriority? priority,
     DateTime? updatedAt,
-  }) =>
-      (
-        id: id,
-        userId: userId,
-        title: title ?? this.title,
-        description: description ?? this.description,
-        completed: completed ?? this.completed,
-        priority: priority ?? this.priority,
-        createdAt: createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
+  }) => (
+    id: id,
+    userId: userId,
+    title: title ?? this.title,
+    description: description ?? this.description,
+    completed: completed ?? this.completed,
+    priority: priority ?? this.priority,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'userId': userId,
-        'title': title,
-        ...description != null
-            ? {'description': description}
-            : <String, dynamic>{},
-        'completed': completed,
-        'priority': priority.name,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'userId': userId,
+    'title': title,
+    ...description != null ? {'description': description} : <String, dynamic>{},
+    'completed': completed,
+    'priority': priority.name,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 }
 
 /// Data for creating a task

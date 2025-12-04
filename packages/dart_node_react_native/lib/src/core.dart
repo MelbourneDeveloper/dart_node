@@ -16,6 +16,7 @@ export 'package:dart_node_react/src/react.dart'
 @JS()
 extension type ReactNative._(JSObject _) implements JSObject {}
 
+/// The global React Native module instance.
 ReactNative get reactNative => ReactNative._(_resolveReactNative());
 
 JSObject _resolveReactNative() {
@@ -33,6 +34,7 @@ JSObject _resolveReactNative() {
 
 /// AppRegistry for registering the root component
 extension type AppRegistry._(JSObject _) implements JSObject {
+  /// Registers a React Native component with the given name and provider.
   external static void registerComponent(
     JSString appName,
     JSFunction componentProvider,
@@ -76,11 +78,12 @@ ReactElement rnElement(
   final jsProps = (props != null) ? createProps(props) : null;
 
   return switch (component) {
-    final JSAny c => (children != null && children.isNotEmpty)
-        ? createElementWithChildren(c, jsProps, children)
-        : (child != null)
-            ? createElement(c, jsProps, child)
-            : createElement(c, jsProps),
+    final JSAny c =>
+      (children != null && children.isNotEmpty)
+          ? createElementWithChildren(c, jsProps, children)
+          : (child != null)
+          ? createElement(c, jsProps, child)
+          : createElement(c, jsProps),
     _ => throw StateError('Component $componentName not found'),
   };
 }
@@ -88,12 +91,10 @@ ReactElement rnElement(
 /// Create a functional component - returns the component function itself
 JSFunction createFunctionalComponent(
   ReactElement Function(JSObject props) render,
-) =>
-    ((JSAny props) => render(props as JSObject)).toJS;
+) => ((JSAny props) => render(props as JSObject)).toJS;
 
 /// Create a React element with an inline functional component
 ReactElement functionalComponent(
   String name,
   ReactElement Function(JSObject props) render,
-) =>
-    createElement(createFunctionalComponent(render));
+) => createElement(createFunctionalComponent(render));

@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Get dependencies
+        run: |
+          cd packages/dart_node_core && dart pub get
+          cd ../dart_node_express && dart pub get
+          cd ../dart_node_react && dart pub get
+          cd ../dart_node_react_native && dart pub get
+          cd ../dart_node_ws && dart pub get
+          cd ../../examples/shared && dart pub get
+          cd ../backend && dart pub get
+          cd ../frontend && dart pub get
+          cd ../mobile && dart pub get
+          cd ../../tools/build && dart pub get
+
+      - name: Check formatting
+        run: |
+          dart format --set-exit-if-changed packages/dart_node_core
+          dart format --set-exit-if-changed packages/dart_node_express
+          dart format --set-exit-if-changed packages/dart_node_react
+          dart format --set-exit-if-changed packages/dart_node_react_native
+          dart format --set-exit-if-changed packages/dart_node_ws
+          dart format --set-exit-if-changed examples/backend
+          dart format --set-exit-if-changed examples/frontend
+          dart format --set-exit-if-changed examples/mobile
+          dart format --set-exit-if-changed examples/shared
+          dart format --set-exit-if-changed tools/build
+
+      - name: Analyze
+        run: |
+          cd packages/dart_node_core && dart analyze --no-fatal-warnings
+          cd ../dart_node_express && dart analyze --no-fatal-warnings
+          cd ../dart_node_react && dart analyze --no-fatal-warnings
+          cd ../dart_node_react_native && dart analyze --no-fatal-warnings
+          cd ../dart_node_ws && dart analyze --no-fatal-warnings
+          cd ../../examples/backend && dart analyze --no-fatal-warnings
+          cd ../frontend && dart analyze --no-fatal-warnings
+          cd ../mobile && dart analyze --no-fatal-warnings
+          cd ../shared && dart analyze --no-fatal-warnings
+          cd ../../tools/build && dart analyze --no-fatal-warnings
+
+      - name: Install Node dependencies
+        working-directory: examples/backend
+        run: npm install
+
+      - name: Build backend
+        run: dart run tools/build/build.dart backend
+
+      - name: Test backend
+        working-directory: examples/backend
+        run: dart test
+
+      - name: Test frontend
+        working-directory: examples/frontend
+        run: dart test -p chrome
+
+      - name: Test mobile with coverage
+        working-directory: examples/mobile
+        run: |
+          dart test --coverage=coverage
+          dart pub global activate coverage
+          dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+          COVERAGE=$(awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' coverage/lcov.info)
+          echo "Mobile coverage: ${COVERAGE}%"
+          if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
+            echo "Coverage ${COVERAGE}% is below 90% threshold"
+            exit 1
+          fi
+
+      - name: Test react package with coverage
+        working-directory: packages/dart_node_react
+        run: |
+          dart test --coverage=coverage
+          dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+          COVERAGE=$(awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' coverage/lcov.info)
+          echo "React package coverage: ${COVERAGE}%"
+          if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
+            echo "Coverage ${COVERAGE}% is below 90% threshold"
+            exit 1
+          fi
+
+      - name: Build frontend
+        run: dart run tools/build/build.dart frontend
+
+      - name: Build mobile
+        run: dart run tools/build/build.dart mobile

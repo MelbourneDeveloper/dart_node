@@ -1,7 +1,7 @@
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
-import 'package:dart_node_react/dart_node_react.dart';
+import 'package:dart_node_react/dart_node_react.dart' hide view;
 import 'package:dart_node_react_native/dart_node_react_native.dart';
 import 'package:nadz/nadz.dart';
 import 'package:shared/http/http_client.dart';
@@ -10,31 +10,27 @@ import 'package:shared/theme/theme.dart';
 import '../types.dart';
 
 /// Login screen component
-ReactElement loginScreen({required AuthEffects authEffects}) =>
+ReactElement loginScreen({required AuthEffects authEffects, Fetch? fetchFn}) =>
     functionalComponent('LoginScreen', (JSObject props) {
-      final emailState = useState(''.toJS);
-      final passwordState = useState(''.toJS);
-      final loadingState = useState(false.toJS);
-      final errorState = useState(null);
+      final emailState = useState('');
+      final passwordState = useState('');
+      final loadingState = useState(false);
+      final errorState = useState<String?>(null);
 
-      final email = (emailState.$1 as JSString?)?.toDart ?? '';
-      final password = (passwordState.$1 as JSString?)?.toDart ?? '';
-      final loading = (loadingState.$1 as JSBoolean?)?.toDart ?? false;
-      final error = (errorState.$1 as JSString?)?.toDart;
-
-      final setEmail = wrapSetState<String>(emailState.$2);
-      final setPassword = wrapSetState<String>(passwordState.$2);
-      final setLoading = wrapSetState<bool>(loadingState.$2);
-      final setError = wrapSetState<String?>(errorState.$2);
+      final email = emailState.value;
+      final password = passwordState.value;
+      final loading = loadingState.value;
+      final error = errorState.value;
 
       void handleLogin() {
-        setLoading(true);
-        setError(null);
+        loadingState.set(true);
+        errorState.set(null);
         _performLogin(
           email: email,
           password: password,
           authEffects: authEffects,
-          formEffects: (setLoading: setLoading, setError: setError),
+          formEffects: (setLoading: loadingState.set, setError: errorState.set),
+          fetchFn: fetchFn,
         );
       }
 
@@ -57,7 +53,7 @@ ReactElement loginScreen({required AuthEffects authEffects}) =>
                 textInput(
                   placeholder: 'Enter your email',
                   value: email,
-                  onChangeText: setEmail,
+                  onChangeText: emailState.set,
                   style: AppStyles.input,
                   props: {'placeholderTextColor': AppColors.textMuted},
                 ),
@@ -70,7 +66,7 @@ ReactElement loginScreen({required AuthEffects authEffects}) =>
                 textInput(
                   placeholder: 'Enter your password',
                   value: password,
-                  onChangeText: setPassword,
+                  onChangeText: passwordState.set,
                   secureTextEntry: true,
                   style: AppStyles.input,
                   props: {'placeholderTextColor': AppColors.textMuted},
@@ -105,26 +101,44 @@ void _performLogin({
   required String password,
   required AuthEffects authEffects,
   required FormEffects formEffects,
+  Fetch? fetchFn,
 }) {
-  fetchJson(
-    '$apiUrl/auth/login',
-    method: 'POST',
-    body: {'email': email, 'password': password},
-  ).then((result) {
-    result.match(
-      onSuccess: (response) {
-        final data = response['data'] as JSObject?;
-        final token = data?['token'] as JSString?;
-        final user = data?['user'] as JSObject?;
-        authEffects.setToken(token);
-        authEffects.setUser(user);
-        authEffects.setView('tasks');
-      },
-      onError: (message) => formEffects.setError(message),
-    );
-  }).catchError((Object e) {
-    formEffects.setError(e.toString());
-  }).whenComplete(() {
-    formEffects.setLoading(false);
-  });
+  final doFetch = fetchFn ?? fetchJson;
+  doFetch(
+        '$apiUrl/auth/login',
+        method: 'POST',
+        body: {'email': email, 'password': password},
+      )
+      .then((result) {
+        result.match(
+          onSuccess: (response) {
+            final data = response['data'];
+            switch (data) {
+              case final JSObject d:
+                final token = d['token'];
+                final user = switch (d['user']) {
+                  final JSObject u => u,
+                  _ => null,
+                };
+                switch (token) {
+                  case final JSString t:
+                    authEffects.setToken(t);
+                    authEffects.setUser(user);
+                    authEffects.setView('tasks');
+                  case _:
+                    formEffects.setError('No token in response');
+                }
+              case _:
+                formEffects.setError('Login failed');
+            }
+          },
+          onError: (message) => formEffects.setError(message),
+        );
+      })
+      .catchError((Object e) {
+        formEffects.setError(e.toString());
+      })
+      .whenComplete(() {
+        formEffects.setLoading(false);
+      });
 }

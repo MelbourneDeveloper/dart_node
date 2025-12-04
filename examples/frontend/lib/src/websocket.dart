@@ -1,7 +1,7 @@
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
-import 'types.dart';
+import 'package:frontend/src/types.dart';
 
 /// Browser WebSocket extension type
 extension type BrowserWebSocket(JSObject _) implements JSObject {
@@ -28,7 +28,7 @@ extension type MessageEvent(JSObject _) implements JSObject {
 }
 
 /// Create a new WebSocket connection
-BrowserWebSocket _createWebSocket(String url) {
+BrowserWebSocket createWebSocket(String url) {
   final wsCtor = globalContext['WebSocket']! as JSFunction;
   return BrowserWebSocket(wsCtor.callAsConstructor<JSObject>(url.toJS));
 }
@@ -39,8 +39,9 @@ BrowserWebSocket? connectWebSocket({
   required void Function(JSObject event) onTaskEvent,
   void Function()? onOpen,
   void Function()? onClose,
+  String baseWsUrl = wsUrl,
 }) {
-  final ws = _createWebSocket('$wsUrl?token=$token')
+  final ws = createWebSocket('$baseWsUrl?token=$token')
     ..onopen = ((JSAny _) {
       onOpen?.call();
     }).toJS
@@ -51,7 +52,7 @@ BrowserWebSocket? connectWebSocket({
           final message = data.dartify() as String?;
           switch (message) {
             case final String m:
-              _handleMessage(m, onTaskEvent);
+              handleWebSocketMessage(m, onTaskEvent);
             case null:
               break;
           }
@@ -69,7 +70,11 @@ BrowserWebSocket? connectWebSocket({
   return ws;
 }
 
-void _handleMessage(String message, void Function(JSObject) onTaskEvent) {
+/// Parse and handle incoming WebSocket message
+void handleWebSocketMessage(
+  String message,
+  void Function(JSObject) onTaskEvent,
+) {
   final json = globalContext['JSON']! as JSObject;
   final parseFn = json['parse']! as JSFunction;
   final parsed = parseFn.callAsFunction(null, message.toJS)! as JSObject;

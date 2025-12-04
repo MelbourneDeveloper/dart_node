@@ -2,6 +2,7 @@ import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
 import 'package:dart_node_react/src/react.dart';
+import 'package:dart_node_react/src/synthetic_event.dart';
 
 // =============================================================================
 // Typed HTML Elements - Each element gets its own type for compile-time safety
@@ -107,23 +108,23 @@ JSObject convertStyle(Map<String, dynamic> style) {
     final jsValue = (value is num && _needsPxSuffix(entry.key))
         ? '${value}px'.toJS
         : (value is String)
-            ? value.toJS
-            : (value is num)
-                ? value.toJS
-                : (value as Object).jsify();
+        ? value.toJS
+        : (value is num)
+        ? value.toJS
+        : (value as Object).jsify();
     obj.setProperty(entry.key.toJS, jsValue);
   }
   return obj;
 }
 
 bool _needsPxSuffix(String key) => !const {
-      'flex',
-      'fontWeight',
-      'opacity',
-      'zIndex',
-      'lineHeight',
-      'order',
-    }.contains(key);
+  'flex',
+  'fontWeight',
+  'opacity',
+  'zIndex',
+  'lineHeight',
+  'order',
+}.contains(key);
 
 Map<String, dynamic> _buildProps({
   Map<String, dynamic>? props,
@@ -149,8 +150,8 @@ DivElement div({
   final jsObj = (children != null && children.isNotEmpty)
       ? createElementWithChildren('div'.toJS, _propsOrNull(p), children)
       : (child != null)
-          ? createElement('div'.toJS, _propsOrNull(p), child)
-          : createElement('div'.toJS, _propsOrNull(p));
+      ? createElement('div'.toJS, _propsOrNull(p), child)
+      : createElement('div'.toJS, _propsOrNull(p));
   return DivElement.fromJS(jsObj);
 }
 
@@ -220,7 +221,10 @@ InputElement input({
   String? type,
   String? value,
   String? placeholder,
-  void Function(JSAny)? onChange,
+  void Function(SyntheticEvent)? onChange,
+  void Function(SyntheticEvent)? onInput,
+  void Function(SyntheticFocusEvent)? onFocus,
+  void Function(SyntheticFocusEvent)? onBlur,
   Map<String, dynamic>? props,
   Map<String, dynamic>? style,
   String? className,
@@ -229,7 +233,22 @@ InputElement input({
   if (type != null) p['type'] = type;
   if (value != null) p['value'] = value;
   if (placeholder != null) p['placeholder'] = placeholder;
-  if (onChange != null) p['onChange'] = onChange;
+  if (onChange != null) {
+    void handler(JSObject e) => onChange(SyntheticEvent.fromJs(e));
+    p['onChange'] = handler;
+  }
+  if (onInput != null) {
+    void handler(JSObject e) => onInput(SyntheticEvent.fromJs(e));
+    p['onInput'] = handler;
+  }
+  if (onFocus != null) {
+    void handler(JSObject e) => onFocus(SyntheticFocusEvent.fromJs(e));
+    p['onFocus'] = handler;
+  }
+  if (onBlur != null) {
+    void handler(JSObject e) => onBlur(SyntheticFocusEvent.fromJs(e));
+    p['onBlur'] = handler;
+  }
   return InputElement.fromJS(createElement('input'.toJS, createProps(p)));
 }
 
@@ -297,8 +316,8 @@ HeaderElement header({
   final jsObj = (children != null && children.isNotEmpty)
       ? createElementWithChildren('header'.toJS, _propsOrNull(p), children)
       : (child != null)
-          ? createElement('header'.toJS, _propsOrNull(p), child)
-          : createElement('header'.toJS, _propsOrNull(p));
+      ? createElement('header'.toJS, _propsOrNull(p), child)
+      : createElement('header'.toJS, _propsOrNull(p));
   return HeaderElement.fromJS(jsObj);
 }
 
@@ -314,8 +333,8 @@ MainElement mainEl({
   final jsObj = (children != null && children.isNotEmpty)
       ? createElementWithChildren('main'.toJS, _propsOrNull(p), children)
       : (child != null)
-          ? createElement('main'.toJS, _propsOrNull(p), child)
-          : createElement('main'.toJS, _propsOrNull(p));
+      ? createElement('main'.toJS, _propsOrNull(p), child)
+      : createElement('main'.toJS, _propsOrNull(p));
   return MainElement.fromJS(jsObj);
 }
 
@@ -331,7 +350,7 @@ FooterElement footer({
   final jsObj = (children != null && children.isNotEmpty)
       ? createElementWithChildren('footer'.toJS, _propsOrNull(p), children)
       : (child != null)
-          ? createElement('footer'.toJS, _propsOrNull(p), child)
-          : createElement('footer'.toJS, _propsOrNull(p));
+      ? createElement('footer'.toJS, _propsOrNull(p), child)
+      : createElement('footer'.toJS, _propsOrNull(p));
   return FooterElement.fromJS(jsObj);
 }

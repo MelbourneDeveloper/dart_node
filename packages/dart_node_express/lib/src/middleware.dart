@@ -8,11 +8,8 @@ import 'package:dart_node_express/src/response.dart';
 typedef NextFunction = void Function();
 
 /// Type for synchronous middleware
-typedef MiddlewareHandler = void Function(
-  Request req,
-  Response res,
-  NextFunction next,
-);
+typedef MiddlewareHandler =
+    void Function(Request req, Response res, NextFunction next);
 
 /// Converts a Dart middleware to JS function.
 JSFunction middleware(MiddlewareHandler handler) =>

@@ -43,9 +43,7 @@ abstract final class AppStyles {
   };
 
   // Form group spacing
-  static const Map<String, dynamic> formGroup = {
-    'marginBottom': AppSpacing.xl,
-  };
+  static const Map<String, dynamic> formGroup = {'marginBottom': AppSpacing.xl};
 
   // Primary button
   static const Map<String, dynamic> btnPrimary = {
@@ -190,9 +188,7 @@ abstract final class AppStyles {
   };
 
   // Delete button
-  static const Map<String, dynamic> deleteBtn = {
-    'padding': AppSpacing.sm,
-  };
+  static const Map<String, dynamic> deleteBtn = {'padding': AppSpacing.sm};
 
   static const Map<String, dynamic> deleteBtnText = {
     'color': AppColors.danger,
@@ -415,9 +411,7 @@ abstract final class AppStyles {
   };
 
   // Spacer (empty element)
-  static const Map<String, dynamic> spacer = {
-    'display': 'block',
-  };
+  static const Map<String, dynamic> spacer = {'display': 'block'};
 
   // Large input (for main task input)
   static const Map<String, dynamic> inputLg = {

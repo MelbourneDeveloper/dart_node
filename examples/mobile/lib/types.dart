@@ -1,9 +1,13 @@
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
+// Re-export shared JS types
+export 'package:shared/js_types/js_types.dart';
+
 /// API configuration - reads from global set by build preamble
 String get apiUrl =>
-    (globalContext['__API_URL__'] as JSString?)?.toDart ?? 'http://localhost:3000';
+    (globalContext['__API_URL__'] as JSString?)?.toDart ??
+    'http://localhost:3000';
 
 /// WebSocket URL - derives from API URL (port 3001)
 String get wsUrl {
@@ -39,25 +43,3 @@ typedef OnDeleteTask = void Function(String id);
 
 /// Task effects bundle
 typedef TaskEffects = ({OnToggleTask onToggle, OnDeleteTask onDelete});
-
-/// Helper to wrap JSFunction setState calls
-SetFormValue<T> wrapSetState<T>(JSFunction setState) =>
-    (value) => setState.callAsFunction(
-          null,
-          switch (value) {
-            final String s => s.toJS,
-            final bool b => b.toJS,
-            final int i => i.toJS,
-            final double d => d.toJS,
-            null => null,
-            _ => value as JSAny,
-          },
-        );
-
-/// Helper to wrap JSFunction setState for nullable JSAny
-void Function(JSAny?) wrapSetStateJSAny(JSFunction setState) =>
-    (value) => setState.callAsFunction(null, value);
-
-/// Clear state helper
-void Function() wrapClearState(JSFunction setState) =>
-    () => setState.callAsFunction();
