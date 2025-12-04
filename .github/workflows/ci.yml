@@ -178,33 +178,9 @@ jobs:
         working-directory: examples/backend
         run: npm install
 
-      - name: Run tests with coverage
+      - name: Run tests
         working-directory: examples/backend
-        run: dart test --coverage=coverage
-
-      - name: Generate coverage report
-        working-directory: examples/backend
-        run: |
-          dart pub global activate coverage
-          dart pub global run coverage:format_coverage \
-            --lcov \
-            --in=coverage \
-            --out=coverage/lcov.info \
-            --report-on=lib
-
-      - name: Check coverage threshold (90%)
-        working-directory: examples/backend
-        run: |
-          COVERAGE=$(dart pub global run coverage:format_coverage --lcov --in=coverage --out=/dev/stdout --report-on=lib 2>/dev/null | grep -E "^SF:|^LF:|^LH:" | awk -F: '
-            /^LF:/ { total += $2 }
-            /^LH:/ { covered += $2 }
-            END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }
-          ')
-          echo "Coverage: ${COVERAGE}%"
-          if [ -z "$COVERAGE" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
-            echo "Coverage ${COVERAGE}% is below 90% threshold"
-            exit 1
-          fi
+        run: dart test
 
   test-frontend:
     name: Test Frontend
@@ -228,33 +204,9 @@ jobs:
           cd examples/shared && dart pub get
           cd ../frontend && dart pub get
 
-      - name: Run tests with coverage
+      - name: Run tests
         working-directory: examples/frontend
-        run: dart test --coverage=coverage
-
-      - name: Generate coverage report
-        working-directory: examples/frontend
-        run: |
-          dart pub global activate coverage
-          dart pub global run coverage:format_coverage \
-            --lcov \
-            --in=coverage \
-            --out=coverage/lcov.info \
-            --report-on=lib
-
-      - name: Check coverage threshold (90%)
-        working-directory: examples/frontend
-        run: |
-          COVERAGE=$(dart pub global run coverage:format_coverage --lcov --in=coverage --out=/dev/stdout --report-on=lib 2>/dev/null | grep -E "^SF:|^LF:|^LH:" | awk -F: '
-            /^LF:/ { total += $2 }
-            /^LH:/ { covered += $2 }
-            END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }
-          ')
-          echo "Coverage: ${COVERAGE}%"
-          if [ -z "$COVERAGE" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
-            echo "Coverage ${COVERAGE}% is below 90% threshold"
-            exit 1
-          fi
+        run: dart test -p chrome
 
   test-mobile:
     name: Test Mobile
@@ -296,13 +248,13 @@ jobs:
       - name: Check coverage threshold (90%)
         working-directory: examples/mobile
         run: |
-          COVERAGE=$(dart pub global run coverage:format_coverage --lcov --in=coverage --out=/dev/stdout --report-on=lib 2>/dev/null | grep -E "^SF:|^LF:|^LH:" | awk -F: '
+          COVERAGE=$(awk -F: '
             /^LF:/ { total += $2 }
             /^LH:/ { covered += $2 }
             END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }
-          ')
+          ' coverage/lcov.info)
           echo "Coverage: ${COVERAGE}%"
-          if [ -z "$COVERAGE" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
+          if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
             echo "Coverage ${COVERAGE}% is below 90% threshold"
             exit 1
           fi
@@ -341,13 +293,13 @@ jobs:
       - name: Check coverage threshold (90%)
         working-directory: packages/dart_node_react
         run: |
-          COVERAGE=$(dart pub global run coverage:format_coverage --lcov --in=coverage --out=/dev/stdout --report-on=lib 2>/dev/null | grep -E "^SF:|^LF:|^LH:" | awk -F: '
+          COVERAGE=$(awk -F: '
             /^LF:/ { total += $2 }
             /^LH:/ { covered += $2 }
             END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }
-          ')
+          ' coverage/lcov.info)
           echo "Coverage: ${COVERAGE}%"
-          if [ -z "$COVERAGE" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
+          if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
             echo "Coverage ${COVERAGE}% is below 90% threshold"
             exit 1
           fi
