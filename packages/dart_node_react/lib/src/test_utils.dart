@@ -46,10 +46,7 @@ external JSArray _scryRenderedDOMComponentsWithClass(
 );
 
 @JS('React.addons.TestUtils.scryRenderedDOMComponentsWithTag')
-external JSArray _scryRenderedDOMComponentsWithTag(
-  JSAny? tree,
-  String tagName,
-);
+external JSArray _scryRenderedDOMComponentsWithTag(JSAny? tree, String tagName);
 
 @JS('React.addons.TestUtils.isDOMComponent')
 external bool _isDOMComponent(JSAny? instance);
@@ -171,8 +168,7 @@ RenderResult render(ReactElement element) {
 ///
 /// Note: Prefer [render] for new code as it returns a [RenderResult]
 /// with helpful query methods.
-JSAny? renderIntoDocument(ReactElement element) =>
-    _renderIntoDocument(element);
+JSAny? renderIntoDocument(ReactElement element) => _renderIntoDocument(element);
 
 // =============================================================================
 // Query Functions

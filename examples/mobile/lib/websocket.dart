@@ -39,32 +39,31 @@ RNWebSocket? connectWebSocket({
   required void Function(JSObject event) onTaskEvent,
   void Function()? onOpen,
   void Function()? onClose,
-}) =>
-    _createWebSocket('$wsUrl?token=$token')
-      ..onopen = ((JSAny _) {
-        onOpen?.call();
-      }).toJS
-      ..onmessage = ((WSMessageEvent event) {
-        final data = event.data;
-        switch (data.isA<JSString>()) {
-          case true:
-            final message = data.dartify() as String?;
-            switch (message) {
-              case final String m:
-                _handleMessage(m, onTaskEvent);
-              case null:
-                break;
-            }
-          case false:
+}) => _createWebSocket('$wsUrl?token=$token')
+  ..onopen = ((JSAny _) {
+    onOpen?.call();
+  }).toJS
+  ..onmessage = ((WSMessageEvent event) {
+    final data = event.data;
+    switch (data.isA<JSString>()) {
+      case true:
+        final message = data.dartify() as String?;
+        switch (message) {
+          case final String m:
+            _handleMessage(m, onTaskEvent);
+          case null:
             break;
         }
-      }).toJS
-      ..onclose = ((JSAny _) {
-        onClose?.call();
-      }).toJS
-      ..onerror = ((JSAny _) {
-        // Error handling - close will be called after
-      }).toJS;
+      case false:
+        break;
+    }
+  }).toJS
+  ..onclose = ((JSAny _) {
+    onClose?.call();
+  }).toJS
+  ..onerror = ((JSAny _) {
+    // Error handling - close will be called after
+  }).toJS;
 
 void _handleMessage(String message, void Function(JSObject) onTaskEvent) {
   final json = globalContext['JSON']! as JSObject;

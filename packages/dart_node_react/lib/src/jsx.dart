@@ -75,9 +75,7 @@ import 'package:dart_node_react/src/synthetic_event.dart';
 /// Uses a class instead of extension type to enable runtime type checking.
 final class El<T extends ReactElement> {
   /// Wraps an existing element for operator composition.
-  El(this._element)
-      : _type = _element.type,
-        _props = _element.props;
+  El(this._element) : _type = _element.type, _props = _element.props;
 
   /// The wrapped element.
   final T _element;
@@ -229,10 +227,10 @@ Map<String, dynamic> _buildJsxProps({
 }
 
 JSObject? _jsxPropsOrNull(Map<String, dynamic> p) =>
-  p.isEmpty ? null : createProps(p);
+    p.isEmpty ? null : createProps(p);
 
 ReactElement _createJsxElement(String tag, Map<String, dynamic> props) =>
-  createElement(tag.toJS, _jsxPropsOrNull(props));
+    createElement(tag.toJS, _jsxPropsOrNull(props));
 
 // =============================================================================
 // Container Elements
@@ -247,15 +245,22 @@ El<DivElement> $div({
   void Function()? onClick,
   void Function(SyntheticMouseEvent)? onMouseEnter,
   void Function(SyntheticMouseEvent)? onMouseLeave,
-}) => El(DivElement.fromJS(_createJsxElement('div', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-  onClick: onClick,
-  onMouseEnter: onMouseEnter,
-  onMouseLeave: onMouseLeave,
-))));
+}) => El(
+  DivElement.fromJS(
+    _createJsxElement(
+      'div',
+      _buildJsxProps(
+        className: className,
+        id: id,
+        style: style,
+        props: props,
+        onClick: onClick,
+        onMouseEnter: onMouseEnter,
+        onMouseLeave: onMouseLeave,
+      ),
+    ),
+  ),
+);
 
 /// Creates a `<span>` element wrapper for JSX-style composition.
 El<SpanElement> $span({
@@ -264,13 +269,20 @@ El<SpanElement> $span({
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
   void Function()? onClick,
-}) => El(SpanElement.fromJS(_createJsxElement('span', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-  onClick: onClick,
-))));
+}) => El(
+  SpanElement.fromJS(
+    _createJsxElement(
+      'span',
+      _buildJsxProps(
+        className: className,
+        id: id,
+        style: style,
+        props: props,
+        onClick: onClick,
+      ),
+    ),
+  ),
+);
 
 /// Creates a `<p>` element wrapper for JSX-style composition.
 El<PElement> $p({
@@ -278,12 +290,14 @@ El<PElement> $p({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(PElement.fromJS(_createJsxElement('p', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-))));
+}) => El(
+  PElement.fromJS(
+    _createJsxElement(
+      'p',
+      _buildJsxProps(className: className, id: id, style: style, props: props),
+    ),
+  ),
+);
 
 /// Creates a `<section>` element wrapper for JSX-style composition.
 El<ReactElement> $section({
@@ -291,12 +305,12 @@ El<ReactElement> $section({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(_createJsxElement('section', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-)));
+}) => El(
+  _createJsxElement(
+    'section',
+    _buildJsxProps(className: className, id: id, style: style, props: props),
+  ),
+);
 
 /// Creates an `<article>` element wrapper for JSX-style composition.
 El<ReactElement> $article({
@@ -304,12 +318,12 @@ El<ReactElement> $article({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(_createJsxElement('article', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-)));
+}) => El(
+  _createJsxElement(
+    'article',
+    _buildJsxProps(className: className, id: id, style: style, props: props),
+  ),
+);
 
 /// Creates a `<nav>` element wrapper for JSX-style composition.
 El<ReactElement> $nav({
@@ -317,12 +331,12 @@ El<ReactElement> $nav({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(_createJsxElement('nav', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-)));
+}) => El(
+  _createJsxElement(
+    'nav',
+    _buildJsxProps(className: className, id: id, style: style, props: props),
+  ),
+);
 
 /// Creates an `<aside>` element wrapper for JSX-style composition.
 El<ReactElement> $aside({
@@ -330,12 +344,12 @@ El<ReactElement> $aside({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(_createJsxElement('aside', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-)));
+}) => El(
+  _createJsxElement(
+    'aside',
+    _buildJsxProps(className: className, id: id, style: style, props: props),
+  ),
+);
 
 // =============================================================================
 // Heading Elements
@@ -350,12 +364,14 @@ El<H1Element> $h1Props({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(H1Element.fromJS(_createJsxElement('h1', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-))));
+}) => El(
+  H1Element.fromJS(
+    _createJsxElement(
+      'h1',
+      _buildJsxProps(className: className, id: id, style: style, props: props),
+    ),
+  ),
+);
 
 /// Creates an `<h2>` element wrapper for JSX-style composition.
 El<H2Element> get $h2 => El(H2Element.fromJS(_createJsxElement('h2', {})));
@@ -366,12 +382,14 @@ El<H2Element> $h2Props({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(H2Element.fromJS(_createJsxElement('h2', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-))));
+}) => El(
+  H2Element.fromJS(
+    _createJsxElement(
+      'h2',
+      _buildJsxProps(className: className, id: id, style: style, props: props),
+    ),
+  ),
+);
 
 /// Creates an `<h3>` element wrapper for JSX-style composition.
 El<ReactElement> get $h3 => El(_createJsxElement('h3', {}));
@@ -382,12 +400,12 @@ El<ReactElement> $h3Props({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(_createJsxElement('h3', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-)));
+}) => El(
+  _createJsxElement(
+    'h3',
+    _buildJsxProps(className: className, id: id, style: style, props: props),
+  ),
+);
 
 /// Creates an `<h4>` element wrapper for JSX-style composition.
 El<ReactElement> get $h4 => El(_createJsxElement('h4', {}));
@@ -408,12 +426,14 @@ El<HeaderElement> $header({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(HeaderElement.fromJS(_createJsxElement('header', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-))));
+}) => El(
+  HeaderElement.fromJS(
+    _createJsxElement(
+      'header',
+      _buildJsxProps(className: className, id: id, style: style, props: props),
+    ),
+  ),
+);
 
 /// Creates a `<main>` element wrapper for JSX-style composition.
 El<MainElement> $main({
@@ -421,12 +441,14 @@ El<MainElement> $main({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(MainElement.fromJS(_createJsxElement('main', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-))));
+}) => El(
+  MainElement.fromJS(
+    _createJsxElement(
+      'main',
+      _buildJsxProps(className: className, id: id, style: style, props: props),
+    ),
+  ),
+);
 
 /// Creates a `<footer>` element wrapper for JSX-style composition.
 El<FooterElement> $footer({
@@ -434,12 +456,14 @@ El<FooterElement> $footer({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(FooterElement.fromJS(_createJsxElement('footer', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-))));
+}) => El(
+  FooterElement.fromJS(
+    _createJsxElement(
+      'footer',
+      _buildJsxProps(className: className, id: id, style: style, props: props),
+    ),
+  ),
+);
 
 // =============================================================================
 // Interactive Elements
@@ -673,12 +697,14 @@ El<UlElement> $ul({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(UlElement.fromJS(_createJsxElement('ul', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-))));
+}) => El(
+  UlElement.fromJS(
+    _createJsxElement(
+      'ul',
+      _buildJsxProps(className: className, id: id, style: style, props: props),
+    ),
+  ),
+);
 
 /// Creates an `<ol>` element wrapper for JSX-style composition.
 El<ReactElement> $ol({
@@ -818,12 +844,12 @@ El<ReactElement> $table({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(_createJsxElement('table', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-)));
+}) => El(
+  _createJsxElement(
+    'table',
+    _buildJsxProps(className: className, id: id, style: style, props: props),
+  ),
+);
 
 /// Creates a `<thead>` element wrapper for JSX-style composition.
 El<ReactElement> $thead({
@@ -831,12 +857,12 @@ El<ReactElement> $thead({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(_createJsxElement('thead', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-)));
+}) => El(
+  _createJsxElement(
+    'thead',
+    _buildJsxProps(className: className, id: id, style: style, props: props),
+  ),
+);
 
 /// Creates a `<tbody>` element wrapper for JSX-style composition.
 El<ReactElement> $tbody({
@@ -844,12 +870,12 @@ El<ReactElement> $tbody({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(_createJsxElement('tbody', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-)));
+}) => El(
+  _createJsxElement(
+    'tbody',
+    _buildJsxProps(className: className, id: id, style: style, props: props),
+  ),
+);
 
 /// Creates a `<tfoot>` element wrapper for JSX-style composition.
 El<ReactElement> $tfoot({
@@ -857,12 +883,12 @@ El<ReactElement> $tfoot({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(_createJsxElement('tfoot', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-)));
+}) => El(
+  _createJsxElement(
+    'tfoot',
+    _buildJsxProps(className: className, id: id, style: style, props: props),
+  ),
+);
 
 /// Creates a `<tr>` element wrapper for JSX-style composition.
 El<ReactElement> $tr({
@@ -870,12 +896,12 @@ El<ReactElement> $tr({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(_createJsxElement('tr', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-)));
+}) => El(
+  _createJsxElement(
+    'tr',
+    _buildJsxProps(className: className, id: id, style: style, props: props),
+  ),
+);
 
 /// Creates a `<th>` element wrapper for JSX-style composition.
 El<ReactElement> $th({
@@ -938,12 +964,12 @@ El<ReactElement> $pre({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(_createJsxElement('pre', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-)));
+}) => El(
+  _createJsxElement(
+    'pre',
+    _buildJsxProps(className: className, id: id, style: style, props: props),
+  ),
+);
 
 /// Creates a `<blockquote>` element wrapper for JSX-style composition.
 El<ReactElement> $blockquote({
@@ -976,12 +1002,10 @@ ReactElement $hr({
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => _createJsxElement('hr', _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-));
+}) => _createJsxElement(
+  'hr',
+  _buildJsxProps(className: className, id: id, style: style, props: props),
+);
 
 /// Creates an `<iframe>` element (self-closing unless children needed).
 ReactElement $iframe({
@@ -1044,9 +1068,9 @@ El<ReactElement> $el(
   String? id,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
-}) => El(_createJsxElement(tagName, _buildJsxProps(
-  className: className,
-  id: id,
-  style: style,
-  props: props,
-)));
+}) => El(
+  _createJsxElement(
+    tagName,
+    _buildJsxProps(className: className, id: id, style: style, props: props),
+  ),
+);

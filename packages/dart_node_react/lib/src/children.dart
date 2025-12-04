@@ -140,9 +140,7 @@ abstract final class Children {
   /// ```
   ///
   /// See: https://react.dev/reference/react/Children#children-toarray
-  static List<ReactElement> toArray(JSAny? children) =>
-      _childrenToArray(children)
-          .toDart
-          .map((e) => ReactElement.fromJS(e! as JSObject))
-          .toList();
+  static List<ReactElement> toArray(JSAny? children) => _childrenToArray(
+    children,
+  ).toDart.map((e) => ReactElement.fromJS(e! as JSObject)).toList();
 }

@@ -182,18 +182,18 @@ JSFunction jsonParser() {
 
 /// CORS middleware
 JSFunction cors() => ((Request req, Response res, JSNextFunction next) {
-      res
-        ..set('Access-Control-Allow-Origin', '*')
-        ..set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
-        ..set('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-      if (req.method == 'OPTIONS') {
-        res
-          ..status(204)
-          ..end();
-        return;
-      }
-      next();
-    }).toJS;
+  res
+    ..set('Access-Control-Allow-Origin', '*')
+    ..set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+    ..set('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  if (req.method == 'OPTIONS') {
+    res
+      ..status(204)
+      ..end();
+    return;
+  }
+  next();
+}).toJS;
 
 /// Authentication context
 typedef AuthContext = ({User user, String token});
@@ -202,10 +202,7 @@ typedef AuthContext = ({User user, String token});
 final _authContexts = <int, AuthContext>{};
 
 /// Auth middleware
-JSFunction authenticate(
-  TokenService tokenService,
-  UserService userService,
-) =>
+JSFunction authenticate(TokenService tokenService, UserService userService) =>
     ((Request req, Response res, JSNextFunction next) {
       final authHeader = req.headers['authorization'];
       switch (authHeader) {
@@ -237,8 +234,10 @@ JSFunction authenticate(
                     ..jsonMap({'error': 'User not found'});
                   return;
                 case final u:
-                  _authContexts[(req as JSObject).hashCode] =
-                      (user: u, token: token);
+                  _authContexts[(req as JSObject).hashCode] = (
+                    user: u,
+                    token: token,
+                  );
                   next();
               }
           }

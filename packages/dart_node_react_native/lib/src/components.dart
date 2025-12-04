@@ -9,59 +9,70 @@ import 'package:dart_node_react_native/src/core.dart';
 
 /// View component type
 extension type RNViewElement._(JSObject _) implements ReactElement {
+  /// Creates an [RNViewElement] from a raw JavaScript object.
   factory RNViewElement.fromJS(JSObject js) = RNViewElement._;
 }
 
 /// Text component type
 extension type RNTextElement._(JSObject _) implements ReactElement {
+  /// Creates an [RNTextElement] from a raw JavaScript object.
   factory RNTextElement.fromJS(JSObject js) = RNTextElement._;
 }
 
 /// TextInput component type
 extension type RNTextInputElement._(JSObject _) implements ReactElement {
+  /// Creates an [RNTextInputElement] from a raw JavaScript object.
   factory RNTextInputElement.fromJS(JSObject js) = RNTextInputElement._;
 }
 
 /// TouchableOpacity component type
 extension type RNTouchableOpacityElement._(JSObject _) implements ReactElement {
+  /// Creates an [RNTouchableOpacityElement] from a raw JavaScript object.
   factory RNTouchableOpacityElement.fromJS(JSObject js) =
       RNTouchableOpacityElement._;
 }
 
 /// Button component type
 extension type RNButtonElement._(JSObject _) implements ReactElement {
+  /// Creates an [RNButtonElement] from a raw JavaScript object.
   factory RNButtonElement.fromJS(JSObject js) = RNButtonElement._;
 }
 
 /// ScrollView component type
 extension type RNScrollViewElement._(JSObject _) implements ReactElement {
+  /// Creates an [RNScrollViewElement] from a raw JavaScript object.
   factory RNScrollViewElement.fromJS(JSObject js) = RNScrollViewElement._;
 }
 
 /// SafeAreaView component type
 extension type RNSafeAreaViewElement._(JSObject _) implements ReactElement {
+  /// Creates an [RNSafeAreaViewElement] from a raw JavaScript object.
   factory RNSafeAreaViewElement.fromJS(JSObject js) = RNSafeAreaViewElement._;
 }
 
 /// ActivityIndicator component type
 extension type RNActivityIndicatorElement._(JSObject _)
     implements ReactElement {
+  /// Creates an [RNActivityIndicatorElement] from a raw JavaScript object.
   factory RNActivityIndicatorElement.fromJS(JSObject js) =
       RNActivityIndicatorElement._;
 }
 
 /// FlatList component type
 extension type RNFlatListElement._(JSObject _) implements ReactElement {
+  /// Creates an [RNFlatListElement] from a raw JavaScript object.
   factory RNFlatListElement.fromJS(JSObject js) = RNFlatListElement._;
 }
 
 /// Image component type
 extension type RNImageElement._(JSObject _) implements ReactElement {
+  /// Creates an [RNImageElement] from a raw JavaScript object.
   factory RNImageElement.fromJS(JSObject js) = RNImageElement._;
 }
 
 /// Switch component type
 extension type RNSwitchElement._(JSObject _) implements ReactElement {
+  /// Creates an [RNSwitchElement] from a raw JavaScript object.
   factory RNSwitchElement.fromJS(JSObject js) = RNSwitchElement._;
 }
 
@@ -213,10 +224,7 @@ RNFlatListElement flatList({
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
 }) {
-  final p = <String, dynamic>{
-    'data': data,
-    'renderItem': renderItem,
-  };
+  final p = <String, dynamic>{'data': data, 'renderItem': renderItem};
   if (keyExtractor != null) p['keyExtractor'] = keyExtractor;
   if (style != null) p['style'] = style;
   if (props != null) p.addAll(props);

@@ -5,6 +5,14 @@ import 'package:nadz/nadz.dart';
 
 typedef HttpMethod = String;
 
+typedef Fetch =
+    Future<Result<JSObject, String>> Function(
+      String url, {
+      HttpMethod method,
+      String? token,
+      Map<String, dynamic>? body,
+    });
+
 Future<Result<JSObject, String>> fetchJson(
   String url, {
   HttpMethod method = 'GET',
@@ -20,29 +28,23 @@ Future<Result<JSObject, String>> fetchJson(
 Future<Result<JSArray, String>> fetchTasks({
   required String token,
   required String apiUrl,
-}) async =>
-    (await fetchJson('$apiUrl/tasks', token: token)).map(_readTaskData);
+}) async => (await fetchJson('$apiUrl/tasks', token: token)).map(_readTaskData);
 
-List<String> getObjectKeys(JSObject obj) => _jsObjectKeys(obj)
-    .toDart
-    .whereType<JSString>()
-    .map((key) => key.toDart)
-    .toList();
+List<String> getObjectKeys(JSObject obj) => _jsObjectKeys(
+  obj,
+).toDart.whereType<JSString>().map((key) => key.toDart).toList();
 
 JSObject mapToJsObject(Map<String, dynamic> map) {
   final obj = JSObject();
   for (final entry in map.entries) {
     final value = entry.value;
-    obj.setProperty(
-      entry.key.toJS,
-      switch (value) {
-        final String s => s.toJS,
-        final bool b => b.toJS,
-        final num n => n.toJS,
-        final JSAny jsValue => jsValue,
-        _ => value.toString().toJS,
-      },
-    );
+    obj.setProperty(entry.key.toJS, switch (value) {
+      final String s => s.toJS,
+      final bool b => b.toJS,
+      final num n => n.toJS,
+      final JSAny jsValue => jsValue,
+      _ => value.toString().toJS,
+    });
   }
   return obj;
 }
@@ -68,12 +70,12 @@ external JSString _jsonStringify(JSAny obj);
 external JSArray _jsObjectKeys(JSObject obj);
 
 Map<String, String> _buildHeaders(String? token) => switch (token) {
-      null => {'Content-Type': 'application/json'},
-      final String t => {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $t',
-        },
-    };
+  null => {'Content-Type': 'application/json'},
+  final String t => {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $t',
+  },
+};
 
 JSObject _createOptions(
   HttpMethod method,
@@ -85,10 +87,7 @@ JSObject _createOptions(
     ..setProperty('headers'.toJS, mapToJsObject(headers));
   switch (body) {
     case final Map<String, dynamic> payload:
-      options.setProperty(
-        'body'.toJS,
-        _jsonStringify(mapToJsObject(payload)),
-      );
+      options.setProperty('body'.toJS, _jsonStringify(mapToJsObject(payload)));
   }
   return options;
 }
@@ -112,9 +111,7 @@ Future<Result<JSObject, String>> _parseResponse(JSObject response) {
     case JSPromise jsPromise:
       return _resolveJson(jsPromise);
     default:
-      return Future.value(
-        const Error('json() did not return a promise'),
-      );
+      return Future.value(const Error('json() did not return a promise'));
   }
 }
 
@@ -135,16 +132,16 @@ Result<JSObject, String> _guardSuccess(JSObject json) {
 }
 
 JSArray _readTaskData(JSObject json) => switch (json['data']) {
-      final JSArray tasks => tasks,
-      _ => <JSAny>[].toJS,
-    };
+  final JSArray tasks => tasks,
+  _ => <JSAny>[].toJS,
+};
 
 String _readError(JSAny? error) => switch (error) {
-      final JSString s => s.toDart,
-      final JSObject obj =>
-        (obj['message'] as JSString?)?.toDart ?? 'Request failed',
-      _ => 'Request failed',
-    };
+  final JSString s => s.toDart,
+  final JSObject obj =>
+    (obj['message'] as JSString?)?.toDart ?? 'Request failed',
+  _ => 'Request failed',
+};
 
 String? _extractFieldErrors(JSObject fields) {
   final keys = getObjectKeys(fields);
@@ -152,10 +149,11 @@ String? _extractFieldErrors(JSObject fields) {
   for (final key in keys) {
     final value = fields[key];
     final messages = switch (value) {
-      final JSArray arr => arr.toDart
-          .map((entry) => (entry as JSString?)?.toDart ?? '')
-          .where((message) => message.isNotEmpty)
-          .toList(),
+      final JSArray arr =>
+        arr.toDart
+            .map((entry) => (entry as JSString?)?.toDart ?? '')
+            .where((message) => message.isNotEmpty)
+            .toList(),
       _ => <String>[],
     };
     errors.addAll(messages.map((msg) => '$key: $msg'));

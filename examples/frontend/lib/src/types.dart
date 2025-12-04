@@ -1,7 +1,15 @@
 import 'dart:js_interop';
 
+import 'package:shared/http/http_client.dart';
+
+// Re-export shared JS types
+export 'package:shared/js_types/js_types.dart';
+
 /// API configuration
 const apiUrl = 'http://localhost:3000';
+
+/// Replaceable fetch - swap this for testing
+Fetch fetch = fetchJson;
 
 /// WebSocket URL
 const wsUrl = 'ws://localhost:3001';

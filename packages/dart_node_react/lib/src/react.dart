@@ -99,8 +99,8 @@ ReactElement createElement(JSAny type, [JSObject? props, JSAny? children]) =>
       (children != null)
           ? React.createElement(type, props ?? JSObject(), children)
           : (props != null)
-              ? React.createElement(type, props)
-              : React.createElement(type),
+          ? React.createElement(type, props)
+          : React.createElement(type),
     );
 
 /// Create a React element with multiple children using spread
@@ -108,10 +108,9 @@ ReactElement createElementWithChildren(
   JSAny type,
   JSObject? props,
   List<JSAny> children,
-) =>
-    ReactElement._(
-      _createElementApply(type, props ?? JSObject(), children.toJS),
-    );
+) => ReactElement._(
+  _createElementApply(type, props ?? JSObject(), children.toJS),
+);
 
 @JS('React.createElement.apply')
 external JSObject _reactCreateElementApply(JSAny? thisArg, JSArray args);
@@ -145,8 +144,9 @@ JSAny? _toJS(Object? value) => switch (value) {
   final void Function(JSAny) fn => fn.toJS,
   // Support JSObject parameter (used by event handlers)
   final void Function(JSObject) fn => fn.toJS,
-  final Function _ =>
-    throw StateError('Unsupported function signature: ${value.runtimeType}'),
+  final Function _ => throw StateError(
+    'Unsupported function signature: ${value.runtimeType}',
+  ),
   _ => value.jsify(),
 };
 
@@ -182,18 +182,17 @@ ReactElement cloneElement(
   ReactElement element, [
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    ReactElement._(
-      (children != null && children.isNotEmpty)
-          ? _cloneElementWithChildren(
-              element,
-              props != null ? createProps(props) : null,
-              children.toJS,
-            )
-          : (props != null)
-              ? React.cloneElement(element, createProps(props))
-              : React.cloneElement(element),
-    );
+]) => ReactElement._(
+  (children != null && children.isNotEmpty)
+      ? _cloneElementWithChildren(
+          element,
+          props != null ? createProps(props) : null,
+          children.toJS,
+        )
+      : (props != null)
+      ? React.cloneElement(element, createProps(props))
+      : React.cloneElement(element),
+);
 
 @JS('React.cloneElement.apply')
 external JSObject _reactCloneElementApply(JSAny? thisArg, JSArray args);

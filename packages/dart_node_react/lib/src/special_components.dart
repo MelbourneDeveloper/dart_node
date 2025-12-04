@@ -59,8 +59,8 @@ JSAny get Fragment => _reactFragment;
 /// See: https://reactjs.org/docs/fragments.html
 ReactElement fragment({List<ReactElement>? children}) =>
     (children != null && children.isNotEmpty)
-        ? createElementWithChildren(_reactFragment, null, children)
-        : createElement(_reactFragment);
+    ? createElementWithChildren(_reactFragment, null, children)
+    : createElement(_reactFragment);
 
 // =============================================================================
 // Suspense
@@ -103,8 +103,8 @@ ReactElement suspense({
   return (children != null && children.isNotEmpty)
       ? createElementWithChildren(_reactSuspense, props, children)
       : (child != null)
-          ? createElement(_reactSuspense, props, child)
-          : createElement(_reactSuspense, props);
+      ? createElement(_reactSuspense, props, child)
+      : createElement(_reactSuspense, props);
 }
 
 // =============================================================================
@@ -137,20 +137,18 @@ JSAny get StrictMode => _reactStrictMode;
 /// See: https://reactjs.org/docs/strict-mode.html
 ReactElement strictMode({ReactElement? child, List<ReactElement>? children}) =>
     (children != null && children.isNotEmpty)
-        ? createElementWithChildren(_reactStrictMode, null, children)
-        : (child != null)
-            ? createElement(_reactStrictMode, null, child)
-            : createElement(_reactStrictMode);
+    ? createElementWithChildren(_reactStrictMode, null, children)
+    : (child != null)
+    ? createElement(_reactStrictMode, null, child)
+    : createElement(_reactStrictMode);
 
 // =============================================================================
 // forwardRef
 // =============================================================================
 
 /// Typedef for a function component that receives props and a forwarded ref.
-typedef ForwardRefRenderFunction = ReactElement Function(
-  Map<String, Object?> props,
-  JsRef? ref,
-);
+typedef ForwardRefRenderFunction =
+    ReactElement Function(Map<String, Object?> props, JsRef? ref);
 
 /// Creates a React component that forwards the ref attribute to a child.
 ///
@@ -226,7 +224,7 @@ JSAny forwardRef2(ForwardRefRenderFunction render, {String? displayName}) {
 JSAny memo2(
   JSAny component, {
   bool Function(Map<String, Object?> prevProps, Map<String, Object?> nextProps)?
-      arePropsEqual,
+  arePropsEqual,
 }) {
   JSBoolean? jsAreEqual(JSObject prevProps, JSObject nextProps) {
     final prevDartified = prevProps.dartify();
@@ -273,11 +271,11 @@ JSAny memo2(
 /// See: https://reactjs.org/docs/code-splitting.html#reactlazy
 JSAny lazy(Future<JSAny> Function() load) {
   JSPromise<JSObject> jsLoad() => load().then((component) {
-        // React.lazy expects a module with a 'default' export
-        final module = JSObject();
-        module['default'] = component;
-        return module;
-      }).toJS;
+    // React.lazy expects a module with a 'default' export
+    final module = JSObject();
+    module['default'] = component;
+    return module;
+  }).toJS;
 
   return _reactLazy(jsLoad.toJS);
 }

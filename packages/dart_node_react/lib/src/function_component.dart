@@ -8,9 +8,8 @@ import 'dart:js_interop';
 import 'package:dart_node_react/src/react.dart';
 
 /// A Dart function component that takes a props Map and returns a ReactElement.
-typedef DartFunctionComponent = ReactElement Function(
-  Map<String, Object?> props,
-);
+typedef DartFunctionComponent =
+    ReactElement Function(Map<String, Object?> props);
 
 /// Creates a React function component from a Dart function.
 ///
@@ -71,14 +70,10 @@ ReactElement fc(
   JSAny component, [
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    (children != null && children.isNotEmpty)
-        ? createElementWithChildren(
-            component,
-            props != null ? createProps(props) : null,
-            children,
-          )
-        : createElement(
-            component,
-            props != null ? createProps(props) : null,
-          );
+]) => (children != null && children.isNotEmpty)
+    ? createElementWithChildren(
+        component,
+        props != null ? createProps(props) : null,
+        children,
+      )
+    : createElement(component, props != null ? createProps(props) : null);

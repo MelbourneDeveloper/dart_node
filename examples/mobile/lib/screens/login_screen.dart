@@ -10,7 +10,7 @@ import 'package:shared/theme/theme.dart';
 import '../types.dart';
 
 /// Login screen component
-ReactElement loginScreen({required AuthEffects authEffects}) =>
+ReactElement loginScreen({required AuthEffects authEffects, Fetch? fetchFn}) =>
     functionalComponent('LoginScreen', (JSObject props) {
       final emailState = useState('');
       final passwordState = useState('');
@@ -29,10 +29,8 @@ ReactElement loginScreen({required AuthEffects authEffects}) =>
           email: email,
           password: password,
           authEffects: authEffects,
-          formEffects: (
-            setLoading: loadingState.set,
-            setError: errorState.set,
-          ),
+          formEffects: (setLoading: loadingState.set, setError: errorState.set),
+          fetchFn: fetchFn,
         );
       }
 
@@ -103,26 +101,44 @@ void _performLogin({
   required String password,
   required AuthEffects authEffects,
   required FormEffects formEffects,
+  Fetch? fetchFn,
 }) {
-  fetchJson(
-    '$apiUrl/auth/login',
-    method: 'POST',
-    body: {'email': email, 'password': password},
-  ).then((result) {
-    result.match(
-      onSuccess: (response) {
-        final data = response['data'] as JSObject?;
-        final token = data?['token'] as JSString?;
-        final user = data?['user'] as JSObject?;
-        authEffects.setToken(token);
-        authEffects.setUser(user);
-        authEffects.setView('tasks');
-      },
-      onError: (message) => formEffects.setError(message),
-    );
-  }).catchError((Object e) {
-    formEffects.setError(e.toString());
-  }).whenComplete(() {
-    formEffects.setLoading(false);
-  });
+  final doFetch = fetchFn ?? fetchJson;
+  doFetch(
+        '$apiUrl/auth/login',
+        method: 'POST',
+        body: {'email': email, 'password': password},
+      )
+      .then((result) {
+        result.match(
+          onSuccess: (response) {
+            final data = response['data'];
+            switch (data) {
+              case final JSObject d:
+                final token = d['token'];
+                final user = switch (d['user']) {
+                  final JSObject u => u,
+                  _ => null,
+                };
+                switch (token) {
+                  case final JSString t:
+                    authEffects.setToken(t);
+                    authEffects.setUser(user);
+                    authEffects.setView('tasks');
+                  case _:
+                    formEffects.setError('No token in response');
+                }
+              case _:
+                formEffects.setError('Login failed');
+            }
+          },
+          onError: (message) => formEffects.setError(message),
+        );
+      })
+      .catchError((Object e) {
+        formEffects.setError(e.toString());
+      })
+      .whenComplete(() {
+        formEffects.setLoading(false);
+      });
 }

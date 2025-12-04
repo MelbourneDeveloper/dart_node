@@ -72,10 +72,7 @@ JSAny? _toJsAny(Object? value) => (value == null) ? null : value.jsify();
 /// ```
 ///
 /// Learn more: https://reactjs.org/docs/hooks-effect.html
-void useEffect(
-  Object? Function() sideEffect, [
-  List<Object?>? dependencies,
-]) {
+void useEffect(Object? Function() sideEffect, [List<Object?>? dependencies]) {
   JSAny? wrappedSideEffect() {
     final result = sideEffect();
     return (result is void Function()) ? result.toJS : _jsUndefined;
@@ -321,10 +318,8 @@ JSFunction useCallback(Function callback, List<Object?> dependencies) {
   final jsCallback = (callback is void Function())
       ? callback.toJS
       : (callback is void Function(JSAny))
-          ? callback.toJS
-          : throw StateError(
-              'Unsupported callback type: ${callback.runtimeType}',
-            );
+      ? callback.toJS
+      : throw StateError('Unsupported callback type: ${callback.runtimeType}');
 
   final jsDeps = dependencies.map(_toJsAny).toList().toJS;
   return React.useCallback(jsCallback, jsDeps);

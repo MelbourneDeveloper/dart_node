@@ -97,12 +97,9 @@ ReducerHook<TState, TAction> useReducer<TState, TAction>(
   final state = result[0].dartify() as TState;
   final dispatch = result[1]! as JSFunction;
 
-  return ReducerHook._(
-    state,
-    (action) {
-      dispatch.callAsFunction(null, action.jsify());
-    },
-  );
+  return ReducerHook._(state, (action) {
+    dispatch.callAsFunction(null, action.jsify());
+  });
 }
 
 /// Initializes state of a function component to `init(initialArg)` and creates
@@ -181,10 +178,7 @@ ReducerHook<TState, TAction> useReducerLazy<TState, TAction, TInit>(
   final state = result[0].dartify() as TState;
   final dispatch = result[1]! as JSFunction;
 
-  return ReducerHook._(
-    state,
-    (action) {
-      dispatch.callAsFunction(null, action.jsify());
-    },
-  );
+  return ReducerHook._(state, (action) {
+    dispatch.callAsFunction(null, action.jsify());
+  });
 }

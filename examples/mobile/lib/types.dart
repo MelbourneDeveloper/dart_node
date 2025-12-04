@@ -1,9 +1,13 @@
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
+// Re-export shared JS types
+export 'package:shared/js_types/js_types.dart';
+
 /// API configuration - reads from global set by build preamble
 String get apiUrl =>
-    (globalContext['__API_URL__'] as JSString?)?.toDart ?? 'http://localhost:3000';
+    (globalContext['__API_URL__'] as JSString?)?.toDart ??
+    'http://localhost:3000';
 
 /// WebSocket URL - derives from API URL (port 3001)
 String get wsUrl {
@@ -39,4 +43,3 @@ typedef OnDeleteTask = void Function(String id);
 
 /// Task effects bundle
 typedef TaskEffects = ({OnToggleTask onToggle, OnDeleteTask onDelete});
-

@@ -1,11 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>{{testName}}</title>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  {{testScript}}
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a24;
+      --bg-hover: #242430;
+      --accent-primary: #6366f1;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border: rgba(255, 255, 255, 0.08);
+      --radius-md: 12px;
+    }
+    body { font-family: sans-serif; background: var(--bg-primary); color: var(--text-primary); }
+    .btn { cursor: pointer; padding: 0.5rem 1rem; border: none; border-radius: var(--radius-md); }
+    .btn-primary { background: var(--accent-primary); color: white; }
+    .btn-ghost { background: transparent; color: var(--text-secondary); }
+    .btn-link { background: none; border: none; color: var(--accent-primary); cursor: pointer; }
+    .input { padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-secondary); color: var(--text-primary); }
+    .task-checkbox { cursor: pointer; }
+    .task-item { display: flex; gap: 0.5rem; }
+    .task-item.completed { opacity: 0.6; }
+    .btn-delete { cursor: pointer; }
+  </style>
+  <script>
+    window.dartCallback = function(dartFn) {
+      return function() { return dartFn.apply(null, arguments); };
+    };
+  </script>
   <script src="packages/test/dart.js"></script>
+  {{testScript}}
 </head>
 <body></body>
 </html>

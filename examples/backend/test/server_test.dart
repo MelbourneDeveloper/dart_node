@@ -15,11 +15,9 @@ void main() {
     final currentDir = Directory.current.path;
 
     // Start the server
-    serverProcess = await Process.start(
-      'node',
-      ['build/server.js'],
-      workingDirectory: currentDir,
-    );
+    serverProcess = await Process.start('node', [
+      'build/server.js',
+    ], workingDirectory: currentDir);
 
     // Wait for server to be ready
     await Future<void>.delayed(const Duration(seconds: 2));
@@ -275,10 +273,7 @@ void main() {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $authToken',
         },
-        body: jsonEncode({
-          'title': 'Updated Title',
-          'completed': true,
-        }),
+        body: jsonEncode({'title': 'Updated Title', 'completed': true}),
       );
 
       expect(response.statusCode, equals(200));

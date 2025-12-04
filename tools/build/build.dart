@@ -26,7 +26,10 @@ void main(List<String> args) {
   final exampleDir = '$projectRoot/examples/$target';
   final dir = Directory(exampleDir);
   return !dir.existsSync()
-      ? (isSuccess: false, message: 'Example "$target" not found at $exampleDir')
+      ? (
+          isSuccess: false,
+          message: 'Example "$target" not found at $exampleDir',
+        )
       : _buildTarget(exampleDir, target);
 }
 
@@ -61,11 +64,10 @@ void main(List<String> args) {
       ? _pubGetPackages(remaining)
       : () {
           print('  ${pkg.path.split('/').last}...');
-          final result = Process.runSync(
-            'dart',
-            ['pub', 'get'],
-            workingDirectory: pkg.path,
-          );
+          final result = Process.runSync('dart', [
+            'pub',
+            'get',
+          ], workingDirectory: pkg.path);
           return result.exitCode != 0
               ? (
                   isSuccess: false,
@@ -113,21 +115,23 @@ List<Directory> _findNpmDirs(Directory pkg) {
       ? _npmInstallDirs(remainingNpm, remainingPackages)
       : () {
           print('    npm install ${dir.path.split('/').last}...');
-          final result = Process.runSync(
-            'npm',
-            ['install'],
-            workingDirectory: dir.path,
-          );
+          final result = Process.runSync('npm', [
+            'install',
+          ], workingDirectory: dir.path);
           return result.exitCode != 0
               ? (
                   isSuccess: false,
-                  message: 'npm install failed for ${dir.path}:\n${result.stderr}',
+                  message:
+                      'npm install failed for ${dir.path}:\n${result.stderr}',
                 )
               : _npmInstallDirs(remainingNpm, remainingPackages);
         }();
 }
 
-({bool isSuccess, String message}) _buildTarget(String exampleDir, String target) {
+({bool isSuccess, String message}) _buildTarget(
+  String exampleDir,
+  String target,
+) {
   print('Building $target...');
 
   // Resolve entry point
@@ -163,16 +167,16 @@ String? _searchEntryPoints(String exampleDir, List<String> remaining) {
 
   // Get dependencies first
   print('  Getting dependencies...');
-  final pubGetResult = Process.runSync(
-    'dart',
-    ['pub', 'get'],
-    workingDirectory: exampleDir,
-  );
+  final pubGetResult = Process.runSync('dart', [
+    'pub',
+    'get',
+  ], workingDirectory: exampleDir);
 
   return pubGetResult.exitCode != 0
       ? (
           isSuccess: false,
-          message: 'pub get failed:\n${pubGetResult.stdout}\n${pubGetResult.stderr}',
+          message:
+              'pub get failed:\n${pubGetResult.stdout}\n${pubGetResult.stderr}',
         )
       : _compileToJs(exampleDir, entryPoint, target, buildDir);
 }
@@ -193,16 +197,20 @@ String? _searchEntryPoints(String exampleDir, List<String> remaining) {
   final entryFileName = entryPoint.split('/').last;
 
   print('  Compiling Dart to JS...');
-  final compileResult = Process.runSync(
-    'dart',
-    ['compile', 'js', entryFileName, '-o', tempOutput, '-O2'],
-    workingDirectory: exampleDir,
-  );
+  final compileResult = Process.runSync('dart', [
+    'compile',
+    'js',
+    entryFileName,
+    '-o',
+    tempOutput,
+    '-O2',
+  ], workingDirectory: exampleDir);
 
   return compileResult.exitCode != 0
       ? (
           isSuccess: false,
-          message: 'Compilation failed:\n${compileResult.stdout}\n${compileResult.stderr}',
+          message:
+              'Compilation failed:\n${compileResult.stdout}\n${compileResult.stderr}',
         )
       : _finalizeBuild(tempOutput, finalOutput, target);
 }

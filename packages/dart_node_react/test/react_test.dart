@@ -24,12 +24,7 @@ void main() {
     });
 
     test('div with children creates element', () {
-      final element = div(
-        children: [
-          pEl('Child 1'),
-          pEl('Child 2'),
-        ],
-      );
+      final element = div(children: [pEl('Child 1'), pEl('Child 2')]);
       expect(element, isNotNull);
       expect(isValidElement(element), isTrue);
     });
@@ -67,19 +62,13 @@ void main() {
     });
 
     test('button with onClick handler', () {
-      final element = button(
-        text: 'Click',
-        onClick: () {},
-      );
+      final element = button(text: 'Click', onClick: () {});
       expect(element, isNotNull);
       expect(isValidElement(element), isTrue);
     });
 
     test('input creates input element', () {
-      final element = input(
-        type: 'text',
-        placeholder: 'Enter text',
-      );
+      final element = input(type: 'text', placeholder: 'Enter text');
       expect(element, isNotNull);
       expect(isValidElement(element), isTrue);
     });
@@ -109,13 +98,7 @@ void main() {
     });
 
     test('ul with li children', () {
-      final element = ul(
-        children: [
-          li('Item 1'),
-          li('Item 2'),
-          li('Item 3'),
-        ],
-      );
+      final element = ul(children: [li('Item 1'), li('Item 2'), li('Item 3')]);
       expect(element, isNotNull);
       expect(isValidElement(element), isTrue);
     });
@@ -129,20 +112,13 @@ void main() {
 
   group('Special Components', () {
     test('fragment creates fragment element', () {
-      final element = fragment(
-        children: [
-          pEl('Child 1'),
-          pEl('Child 2'),
-        ],
-      );
+      final element = fragment(children: [pEl('Child 1'), pEl('Child 2')]);
       expect(element, isNotNull);
       expect(isValidElement(element), isTrue);
     });
 
     test('strictMode creates strict mode wrapper', () {
-      final element = strictMode(
-        child: div(children: [pEl('Content')]),
-      );
+      final element = strictMode(child: div(children: [pEl('Content')]));
       expect(element, isNotNull);
       expect(isValidElement(element), isTrue);
     });

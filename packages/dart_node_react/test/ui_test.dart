@@ -110,8 +110,7 @@ void main() {
             button(
               text: 'Toggle',
               props: {'data-testid': 'toggle'},
-              onClick: () =>
-                  name.set(name.value == 'Alice' ? 'Bob' : 'Alice'),
+              onClick: () => name.set(name.value == 'Alice' ? 'Bob' : 'Alice'),
             ),
           ],
         );
@@ -138,10 +137,7 @@ void main() {
         final value = useState<String?>(null);
         return div(
           children: [
-            pEl(
-              value.value ?? 'No value',
-              props: {'data-testid': 'value'},
-            ),
+            pEl(value.value ?? 'No value', props: {'data-testid': 'value'}),
             button(
               text: 'Set',
               props: {'data-testid': 'set'},
@@ -177,14 +173,8 @@ void main() {
         final age = useState(25);
         return div(
           children: [
-            pEl(
-              'Name: ${name.value}',
-              props: {'data-testid': 'name'},
-            ),
-            pEl(
-              'Age: ${age.value}',
-              props: {'data-testid': 'age'},
-            ),
+            pEl('Name: ${name.value}', props: {'data-testid': 'name'}),
+            pEl('Age: ${age.value}', props: {'data-testid': 'age'}),
             button(
               text: 'Birthday',
               props: {'data-testid': 'birthday'},
@@ -470,9 +460,9 @@ void main() {
         final items = useStateJSArray<JSObject>(<JSObject>[].toJS);
 
         int getTotal() => items.value.fold(0, (sum, item) {
-              final val = (item['value'] as JSNumber?)?.toDartInt ?? 0;
-              return sum + val;
-            });
+          final val = (item['value'] as JSNumber?)?.toDartInt ?? 0;
+          return sum + val;
+        });
 
         return div(
           children: [
@@ -581,12 +571,14 @@ void main() {
     test('runs cleanup on unmount', () {
       var cleanupRan = false;
 
-      final cleanupComponent = registerFunctionComponent(
-        (props) {
-          useEffect(() => () => cleanupRan = true, []);
-          return pEl('Component');
-        },
-      );
+      final cleanupComponent = registerFunctionComponent((props) {
+        useEffect(
+          () =>
+              () => cleanupRan = true,
+          [],
+        );
+        return pEl('Component');
+      });
 
       final result = render(fc(cleanupComponent));
       expect(cleanupRan, isFalse);
@@ -688,20 +680,17 @@ void main() {
       // useReducer with primitive types (int state, String actions)
       // works reliably across JS/Dart boundary.
       int reducer(int state, String action) => switch (action) {
-            'increment' => state + 1,
-            'decrement' => state - 1,
-            'reset' => 0,
-            _ => state,
-          };
+        'increment' => state + 1,
+        'decrement' => state - 1,
+        'reset' => 0,
+        _ => state,
+      };
 
       final reducerCounter = registerFunctionComponent((props) {
         final state = useReducer(reducer, 0);
         return div(
           children: [
-            pEl(
-              'Count: ${state.state}',
-              props: {'data-testid': 'count'},
-            ),
+            pEl('Count: ${state.state}', props: {'data-testid': 'count'}),
             button(
               text: '+',
               props: {'data-testid': 'inc'},
@@ -743,10 +732,10 @@ void main() {
 
     test('handles string action types', () {
       int reducer(int state, String action) => switch (action) {
-            'add' => state + 10,
-            'subtract' => state - 5,
-            _ => state,
-          };
+        'add' => state + 10,
+        'subtract' => state - 5,
+        _ => state,
+      };
 
       final stringReducer = registerFunctionComponent((props) {
         final state = useReducer(reducer, 100);
@@ -795,19 +784,16 @@ void main() {
       }
 
       int reducer(int state, String action) => switch (action) {
-            'inc' => state + 1,
-            _ => state,
-          };
+        'inc' => state + 1,
+        _ => state,
+      };
 
       final lazyReducer = registerFunctionComponent((props) {
         final initialValue = props['initial'] as int? ?? 5;
         final state = useReducerLazy(reducer, initialValue, init);
         return div(
           children: [
-            pEl(
-              'Count: ${state.state}',
-              props: {'data-testid': 'count'},
-            ),
+            pEl('Count: ${state.state}', props: {'data-testid': 'count'}),
             button(
               text: 'Inc',
               props: {'data-testid': 'inc'},
@@ -989,10 +975,7 @@ void main() {
 
         return div(
           children: [
-            pEl(
-              'Value: ${value.current}',
-              props: {'data-testid': 'value'},
-            ),
+            pEl('Value: ${value.current}', props: {'data-testid': 'value'}),
             button(
               text: 'Mutate',
               props: {'data-testid': 'mutate'},
@@ -1123,18 +1106,12 @@ void main() {
         (props, ref) => input(
           type: 'text',
           placeholder: props['placeholder'] as String? ?? '',
-          props: {
-            'ref': ref,
-            'data-testid': 'fancy-input',
-          },
+          props: {'ref': ref, 'data-testid': 'fancy-input'},
         ),
       );
 
       final result = render(
-        createElement(
-          fancyInput,
-          createProps({'placeholder': 'Enter text'}),
-        ),
+        createElement(fancyInput, createProps({'placeholder': 'Enter text'})),
       );
 
       final inputEl = result.getByTestId('fancy-input');
@@ -1153,10 +1130,7 @@ void main() {
 
       final child = registerFunctionComponent((props) {
         childRenderCount++;
-        return pEl(
-          'Name: ${props['name']}',
-          props: {'data-testid': 'child'},
-        );
+        return pEl('Name: ${props['name']}', props: {'data-testid': 'child'});
       });
 
       final memoizedChild = memo2(child);
@@ -1166,10 +1140,7 @@ void main() {
         return div(
           children: [
             pEl('Parent count: ${count.value}'),
-            createElement(
-              memoizedChild,
-              createProps({'name': 'Alice'}),
-            ),
+            createElement(memoizedChild, createProps({'name': 'Alice'})),
             button(
               text: 'Inc Parent',
               props: {'data-testid': 'inc'},
@@ -1603,8 +1574,9 @@ void main() {
         final items = itemsStr.split(',');
         return ul(
           props: {'data-testid': 'list'},
-          children:
-              items.map((item) => li(item, props: {'key': item})).toList(),
+          children: items
+              .map((item) => li(item, props: {'key': item}))
+              .toList(),
         );
       });
 
@@ -1669,14 +1641,16 @@ void main() {
   group('Component composition', () {
     test('parent passes props to child', () {
       final child = registerFunctionComponent(
-        (props) => pEl(
-          'Hello, ${props['name']}!',
-          props: {'data-testid': 'greeting'},
-        ),
+        (props) =>
+            pEl('Hello, ${props['name']}!', props: {'data-testid': 'greeting'}),
       );
 
       final parent = registerFunctionComponent(
-        (props) => div(children: [fc(child, {'name': 'World'})]),
+        (props) => div(
+          children: [
+            fc(child, {'name': 'World'}),
+          ],
+        ),
       );
 
       final result = render(fc(parent));

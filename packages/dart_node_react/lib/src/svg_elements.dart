@@ -18,49 +18,37 @@ ReactElement svgElement(
   String tagName, [
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    (children != null && children.isNotEmpty)
-        ? createElementWithChildren(
-            tagName.toJS,
-            props != null ? createProps(props) : null,
-            children,
-          )
-        : createElement(
-            tagName.toJS,
-            props != null ? createProps(props) : null,
-          );
+]) => (children != null && children.isNotEmpty)
+    ? createElementWithChildren(
+        tagName.toJS,
+        props != null ? createProps(props) : null,
+        children,
+      )
+    : createElement(tagName.toJS, props != null ? createProps(props) : null);
 
 // =============================================================================
 // Container Elements
 // =============================================================================
 
 /// Creates an `<svg>` element.
-ReactElement svg([
-  Map<String, Object?>? props,
-  List<ReactElement>? children,
-]) =>
+ReactElement svg([Map<String, Object?>? props, List<ReactElement>? children]) =>
     svgElement('svg', props, children);
 
 /// Creates a `<g>` element (group).
-ReactElement g([
-  Map<String, Object?>? props,
-  List<ReactElement>? children,
-]) =>
+ReactElement g([Map<String, Object?>? props, List<ReactElement>? children]) =>
     svgElement('g', props, children);
 
 /// Creates a `<defs>` element.
 ReactElement defs([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('defs', props, children);
+]) => svgElement('defs', props, children);
 
 /// Creates a `<symbol>` element.
 ReactElement symbol([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('symbol', props, children);
+]) => svgElement('symbol', props, children);
 
 /// Creates a `<use>` element.
 ReactElement use([Map<String, Object?>? props]) =>
@@ -106,22 +94,19 @@ ReactElement rect([Map<String, Object?>? props]) =>
 ReactElement textSvg([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('text', props, children);
+]) => svgElement('text', props, children);
 
 /// Creates a `<tspan>` element.
 ReactElement tspan([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('tspan', props, children);
+]) => svgElement('tspan', props, children);
 
 /// Creates a `<textPath>` element.
 ReactElement textPath([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('textPath', props, children);
+]) => svgElement('textPath', props, children);
 
 // =============================================================================
 // Gradient Elements
@@ -131,15 +116,13 @@ ReactElement textPath([
 ReactElement linearGradient([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('linearGradient', props, children);
+]) => svgElement('linearGradient', props, children);
 
 /// Creates a `<radialGradient>` element.
 ReactElement radialGradient([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('radialGradient', props, children);
+]) => svgElement('radialGradient', props, children);
 
 /// Creates a `<stop>` element.
 ReactElement stop([Map<String, Object?>? props]) =>
@@ -153,68 +136,59 @@ ReactElement stop([Map<String, Object?>? props]) =>
 ReactElement filter([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('filter', props, children);
+]) => svgElement('filter', props, children);
 
 /// Creates a `<feBlend>` element.
 ReactElement feBlend([Map<String, Object?>? props]) =>
     createElement('feBlend'.toJS, props != null ? createProps(props) : null);
 
 /// Creates a `<feColorMatrix>` element.
-ReactElement feColorMatrix([Map<String, Object?>? props]) =>
-    createElement(
-      'feColorMatrix'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement feColorMatrix([Map<String, Object?>? props]) => createElement(
+  'feColorMatrix'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<feComponentTransfer>` element.
 ReactElement feComponentTransfer([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('feComponentTransfer', props, children);
+]) => svgElement('feComponentTransfer', props, children);
 
 /// Creates a `<feComposite>` element.
-ReactElement feComposite([Map<String, Object?>? props]) =>
-    createElement(
-      'feComposite'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement feComposite([Map<String, Object?>? props]) => createElement(
+  'feComposite'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<feConvolveMatrix>` element.
-ReactElement feConvolveMatrix([Map<String, Object?>? props]) =>
-    createElement(
-      'feConvolveMatrix'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement feConvolveMatrix([Map<String, Object?>? props]) => createElement(
+  'feConvolveMatrix'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<feDiffuseLighting>` element.
 ReactElement feDiffuseLighting([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('feDiffuseLighting', props, children);
+]) => svgElement('feDiffuseLighting', props, children);
 
 /// Creates a `<feDisplacementMap>` element.
-ReactElement feDisplacementMap([Map<String, Object?>? props]) =>
-    createElement(
-      'feDisplacementMap'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement feDisplacementMap([Map<String, Object?>? props]) => createElement(
+  'feDisplacementMap'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<feDistantLight>` element.
-ReactElement feDistantLight([Map<String, Object?>? props]) =>
-    createElement(
-      'feDistantLight'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement feDistantLight([Map<String, Object?>? props]) => createElement(
+  'feDistantLight'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<feDropShadow>` element.
-ReactElement feDropShadow([Map<String, Object?>? props]) =>
-    createElement(
-      'feDropShadow'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement feDropShadow([Map<String, Object?>? props]) => createElement(
+  'feDropShadow'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<feFlood>` element.
 ReactElement feFlood([Map<String, Object?>? props]) =>
@@ -237,11 +211,10 @@ ReactElement feFuncR([Map<String, Object?>? props]) =>
     createElement('feFuncR'.toJS, props != null ? createProps(props) : null);
 
 /// Creates a `<feGaussianBlur>` element.
-ReactElement feGaussianBlur([Map<String, Object?>? props]) =>
-    createElement(
-      'feGaussianBlur'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement feGaussianBlur([Map<String, Object?>? props]) => createElement(
+  'feGaussianBlur'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<feImage>` element.
 ReactElement feImage([Map<String, Object?>? props]) =>
@@ -251,58 +224,51 @@ ReactElement feImage([Map<String, Object?>? props]) =>
 ReactElement feMerge([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('feMerge', props, children);
+]) => svgElement('feMerge', props, children);
 
 /// Creates a `<feMergeNode>` element.
-ReactElement feMergeNode([Map<String, Object?>? props]) =>
-    createElement(
-      'feMergeNode'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement feMergeNode([Map<String, Object?>? props]) => createElement(
+  'feMergeNode'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<feMorphology>` element.
-ReactElement feMorphology([Map<String, Object?>? props]) =>
-    createElement(
-      'feMorphology'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement feMorphology([Map<String, Object?>? props]) => createElement(
+  'feMorphology'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<feOffset>` element.
 ReactElement feOffset([Map<String, Object?>? props]) =>
     createElement('feOffset'.toJS, props != null ? createProps(props) : null);
 
 /// Creates a `<fePointLight>` element.
-ReactElement fePointLight([Map<String, Object?>? props]) =>
-    createElement(
-      'fePointLight'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement fePointLight([Map<String, Object?>? props]) => createElement(
+  'fePointLight'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<feSpecularLighting>` element.
 ReactElement feSpecularLighting([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('feSpecularLighting', props, children);
+]) => svgElement('feSpecularLighting', props, children);
 
 /// Creates a `<feSpotLight>` element.
-ReactElement feSpotLight([Map<String, Object?>? props]) =>
-    createElement(
-      'feSpotLight'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement feSpotLight([Map<String, Object?>? props]) => createElement(
+  'feSpotLight'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<feTile>` element.
 ReactElement feTile([Map<String, Object?>? props]) =>
     createElement('feTile'.toJS, props != null ? createProps(props) : null);
 
 /// Creates a `<feTurbulence>` element.
-ReactElement feTurbulence([Map<String, Object?>? props]) =>
-    createElement(
-      'feTurbulence'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement feTurbulence([Map<String, Object?>? props]) => createElement(
+  'feTurbulence'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 // =============================================================================
 // Clipping and Masking
@@ -312,15 +278,13 @@ ReactElement feTurbulence([Map<String, Object?>? props]) =>
 ReactElement clipPath([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('clipPath', props, children);
+]) => svgElement('clipPath', props, children);
 
 /// Creates a `<mask>` element.
 ReactElement mask([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('mask', props, children);
+]) => svgElement('mask', props, children);
 
 // =============================================================================
 // Markers
@@ -330,8 +294,7 @@ ReactElement mask([
 ReactElement marker([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('marker', props, children);
+]) => svgElement('marker', props, children);
 
 // =============================================================================
 // Patterns
@@ -341,8 +304,7 @@ ReactElement marker([
 ReactElement patternSvg([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('pattern', props, children);
+]) => svgElement('pattern', props, children);
 
 // =============================================================================
 // Descriptive Elements
@@ -352,22 +314,19 @@ ReactElement patternSvg([
 ReactElement desc([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('desc', props, children);
+]) => svgElement('desc', props, children);
 
 /// Creates a `<metadata>` element.
 ReactElement metadata([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('metadata', props, children);
+]) => svgElement('metadata', props, children);
 
 /// Creates a `<title>` element (SVG).
 ReactElement titleSvg([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('title', props, children);
+]) => svgElement('title', props, children);
 
 // =============================================================================
 // Other Elements
@@ -377,8 +336,7 @@ ReactElement titleSvg([
 ReactElement foreignObject([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('foreignObject', props, children);
+]) => svgElement('foreignObject', props, children);
 
 /// Creates an `<image>` element (SVG).
 ReactElement imageSvg([Map<String, Object?>? props]) =>
@@ -388,8 +346,7 @@ ReactElement imageSvg([Map<String, Object?>? props]) =>
 ReactElement svgSwitch([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('switch', props, children);
+]) => svgElement('switch', props, children);
 
 /// Creates a `<view>` element.
 ReactElement view([Map<String, Object?>? props]) =>
@@ -407,15 +364,13 @@ ReactElement animate([Map<String, Object?>? props]) =>
 ReactElement animateMotion([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('animateMotion', props, children);
+]) => svgElement('animateMotion', props, children);
 
 /// Creates an `<animateTransform>` element.
-ReactElement animateTransform([Map<String, Object?>? props]) =>
-    createElement(
-      'animateTransform'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement animateTransform([Map<String, Object?>? props]) => createElement(
+  'animateTransform'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<mpath>` element.
 ReactElement mpath([Map<String, Object?>? props]) =>
@@ -433,36 +388,31 @@ ReactElement svgSet([Map<String, Object?>? props]) =>
 ReactElement altGlyph([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('altGlyph', props, children);
+]) => svgElement('altGlyph', props, children);
 
 /// Creates an `<altGlyphDef>` element (deprecated SVG).
 ReactElement altGlyphDef([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('altGlyphDef', props, children);
+]) => svgElement('altGlyphDef', props, children);
 
 /// Creates an `<altGlyphItem>` element (deprecated SVG).
 ReactElement altGlyphItem([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('altGlyphItem', props, children);
+]) => svgElement('altGlyphItem', props, children);
 
 /// Creates an `<animateColor>` element (deprecated SVG).
-ReactElement animateColor([Map<String, Object?>? props]) =>
-    createElement(
-      'animateColor'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement animateColor([Map<String, Object?>? props]) => createElement(
+  'animateColor'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<color-profile>` element (deprecated SVG).
-ReactElement colorProfile([Map<String, Object?>? props]) =>
-    createElement(
-      'color-profile'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement colorProfile([Map<String, Object?>? props]) => createElement(
+  'color-profile'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<cursor>` element (deprecated SVG).
 ReactElement cursor([Map<String, Object?>? props]) =>
@@ -476,50 +426,41 @@ ReactElement discard([Map<String, Object?>? props]) =>
 ReactElement font([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('font', props, children);
+]) => svgElement('font', props, children);
 
 /// Creates a `<font-face>` element (deprecated SVG).
 ReactElement fontFace([Map<String, Object?>? props]) =>
-    createElement(
-      'font-face'.toJS,
-      props != null ? createProps(props) : null,
-    );
+    createElement('font-face'.toJS, props != null ? createProps(props) : null);
 
 /// Creates a `<font-face-format>` element (deprecated SVG).
-ReactElement fontFaceFormat([Map<String, Object?>? props]) =>
-    createElement(
-      'font-face-format'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement fontFaceFormat([Map<String, Object?>? props]) => createElement(
+  'font-face-format'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<font-face-name>` element (deprecated SVG).
-ReactElement fontFaceName([Map<String, Object?>? props]) =>
-    createElement(
-      'font-face-name'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement fontFaceName([Map<String, Object?>? props]) => createElement(
+  'font-face-name'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<font-face-src>` element (deprecated SVG).
 ReactElement fontFaceSrc([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('font-face-src', props, children);
+]) => svgElement('font-face-src', props, children);
 
 /// Creates a `<font-face-uri>` element (deprecated SVG).
-ReactElement fontFaceUri([Map<String, Object?>? props]) =>
-    createElement(
-      'font-face-uri'.toJS,
-      props != null ? createProps(props) : null,
-    );
+ReactElement fontFaceUri([Map<String, Object?>? props]) => createElement(
+  'font-face-uri'.toJS,
+  props != null ? createProps(props) : null,
+);
 
 /// Creates a `<glyph>` element (deprecated SVG).
 ReactElement glyph([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('glyph', props, children);
+]) => svgElement('glyph', props, children);
 
 /// Creates a `<glyphRef>` element (deprecated SVG).
 ReactElement glyphRef([Map<String, Object?>? props]) =>
@@ -529,8 +470,7 @@ ReactElement glyphRef([Map<String, Object?>? props]) =>
 ReactElement hatch([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('hatch', props, children);
+]) => svgElement('hatch', props, children);
 
 /// Creates a `<hatchpath>` element.
 ReactElement hatchpath([Map<String, Object?>? props]) =>
@@ -544,36 +484,31 @@ ReactElement hkern([Map<String, Object?>? props]) =>
 ReactElement mesh([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('mesh', props, children);
+]) => svgElement('mesh', props, children);
 
 /// Creates a `<meshgradient>` element.
 ReactElement meshgradient([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('meshgradient', props, children);
+]) => svgElement('meshgradient', props, children);
 
 /// Creates a `<meshpatch>` element.
 ReactElement meshpatch([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('meshpatch', props, children);
+]) => svgElement('meshpatch', props, children);
 
 /// Creates a `<meshrow>` element.
 ReactElement meshrow([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('meshrow', props, children);
+]) => svgElement('meshrow', props, children);
 
 /// Creates a `<missing-glyph>` element (deprecated SVG).
 ReactElement missingGlyph([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('missing-glyph', props, children);
+]) => svgElement('missing-glyph', props, children);
 
 /// Creates a `<solidcolor>` element.
 ReactElement solidcolor([Map<String, Object?>? props]) =>
@@ -587,8 +522,7 @@ ReactElement tref([Map<String, Object?>? props]) =>
 ReactElement unknown([
   Map<String, Object?>? props,
   List<ReactElement>? children,
-]) =>
-    svgElement('unknown', props, children);
+]) => svgElement('unknown', props, children);
 
 /// Creates a `<vkern>` element (deprecated SVG).
 ReactElement vkern([Map<String, Object?>? props]) =>

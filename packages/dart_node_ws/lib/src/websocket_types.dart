@@ -123,15 +123,13 @@ class WebSocketClient {
   void send(String message) => _ws.send(message.toJS);
 
   /// Sends a JSON-serializable map through the WebSocket.
-  void sendJson(Map<String, Object?> data) =>
-      _ws.send(data.jsify()!);
+  void sendJson(Map<String, Object?> data) => _ws.send(data.jsify()!);
 
   /// Closes the WebSocket connection.
   ///
   /// [code] - Status code (default 1000 = normal closure).
   /// [reason] - Optional human-readable reason for closing.
-  void close([int code = 1000, String reason = '']) =>
-      _ws.close(code, reason);
+  void close([int code = 1000, String reason = '']) => _ws.close(code, reason);
 
   /// Returns true if the connection is open and ready to communicate.
   bool get isOpen => _ws.readyState == WebSocketReadyState.open.value;
@@ -142,18 +140,18 @@ class WebSocketClient {
 
   /// Registers a handler for connection close events
   void onClose(CloseHandler handler) => _ws.on(
-        'close',
-        ((int code, JSAny? reason) => handler((
-              code: code,
-              reason: _extractCloseReason(reason),
-            ))).toJS,
-      );
+    'close',
+    ((int code, JSAny? reason) => handler((
+      code: code,
+      reason: _extractCloseReason(reason),
+    ))).toJS,
+  );
 
   String _extractCloseReason(JSAny? reason) => switch (reason) {
-        null => '',
-        final JSString s => s.toDart,
-        _ => reason.toString(),
-      };
+    null => '',
+    final JSString s => s.toDart,
+    _ => reason.toString(),
+  };
 
   /// Registers a handler for error events
   void onError(ErrorHandler handler) =>

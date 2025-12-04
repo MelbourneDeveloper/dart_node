@@ -72,8 +72,7 @@ extension type SyntheticEvent._(JSObject _) implements JSObject {
 /// A SyntheticEvent wrapper backed by a ClipboardEvent.
 ///
 /// See: https://developer.mozilla.org/en-US/docs/Web/API/ClipboardEvent
-extension type SyntheticClipboardEvent._(JSObject _)
-    implements SyntheticEvent {
+extension type SyntheticClipboardEvent._(JSObject _) implements SyntheticEvent {
   /// Creates a SyntheticClipboardEvent from a raw JSObject.
   factory SyntheticClipboardEvent.fromJs(JSObject jsObject) =
       SyntheticClipboardEvent._;
@@ -160,8 +159,7 @@ extension type SyntheticCompositionEvent._(JSObject _)
 /// See: https://developer.mozilla.org/en-US/docs/Web/API/FocusEvent
 extension type SyntheticFocusEvent._(JSObject _) implements SyntheticEvent {
   /// Creates a SyntheticFocusEvent from a raw JSObject.
-  factory SyntheticFocusEvent.fromJs(JSObject jsObject) =
-      SyntheticFocusEvent._;
+  factory SyntheticFocusEvent.fromJs(JSObject jsObject) = SyntheticFocusEvent._;
 
   /// A secondary target for this event.
   external JSAny? get relatedTarget;
@@ -186,8 +184,7 @@ extension type SyntheticFormEvent._(JSObject _) implements SyntheticEvent {
 /// See: https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent
 extension type SyntheticMouseEvent._(JSObject _) implements SyntheticEvent {
   /// Creates a SyntheticMouseEvent from a raw JSObject.
-  factory SyntheticMouseEvent.fromJs(JSObject jsObject) =
-      SyntheticMouseEvent._;
+  factory SyntheticMouseEvent.fromJs(JSObject jsObject) = SyntheticMouseEvent._;
 
   /// Whether the Alt key was down when this event was fired.
   external bool get altKey;
@@ -300,8 +297,7 @@ extension type SyntheticPointerEvent._(JSObject _)
 /// See: https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
 extension type SyntheticTouchEvent._(JSObject _) implements SyntheticEvent {
   /// Creates a SyntheticTouchEvent from a raw JSObject.
-  factory SyntheticTouchEvent.fromJs(JSObject jsObject) =
-      SyntheticTouchEvent._;
+  factory SyntheticTouchEvent.fromJs(JSObject jsObject) = SyntheticTouchEvent._;
 
   /// Whether the Alt key was down when this event was fired.
   external bool get altKey;
@@ -403,8 +399,7 @@ extension type SyntheticUIEvent._(JSObject _) implements SyntheticEvent {
 extension type SyntheticWheelEvent._(JSObject _)
     implements SyntheticMouseEvent {
   /// Creates a SyntheticWheelEvent from a raw JSObject.
-  factory SyntheticWheelEvent.fromJs(JSObject jsObject) =
-      SyntheticWheelEvent._;
+  factory SyntheticWheelEvent.fromJs(JSObject jsObject) = SyntheticWheelEvent._;
 
   /// The horizontal scroll amount.
   external num get deltaX;
@@ -428,8 +423,7 @@ extension type SyntheticWheelEvent._(JSObject _)
 /// See: https://developer.mozilla.org/en-US/docs/Web/API/InputEvent
 extension type SyntheticInputEvent._(JSObject _) implements SyntheticEvent {
   /// Creates a SyntheticInputEvent from a raw JSObject.
-  factory SyntheticInputEvent.fromJs(JSObject jsObject) =
-      SyntheticInputEvent._;
+  factory SyntheticInputEvent.fromJs(JSObject jsObject) = SyntheticInputEvent._;
 
   /// The data being inserted or deleted.
   external String? get data;

@@ -27,15 +27,14 @@ class WebSocketServer {
   /// Registers a handler for new client connections
   void onConnection(
     void Function(WebSocketClient client, String? url) handler,
-  ) =>
-      _server.on(
-        'connection',
-        ((JSWebSocket ws, JSIncomingMessage request) {
-          final client = WebSocketClient(ws);
-          final url = _extractUrl(request);
-          handler(client, url);
-        }).toJS,
-      );
+  ) => _server.on(
+    'connection',
+    ((JSWebSocket ws, JSIncomingMessage request) {
+      final client = WebSocketClient(ws);
+      final url = _extractUrl(request);
+      handler(client, url);
+    }).toJS,
+  );
 
   String? _extractUrl(JSIncomingMessage request) {
     final urlObj = request.url;
@@ -47,7 +46,6 @@ class WebSocketServer {
   }
 
   /// Closes the WebSocket server
-  void close([void Function()? callback]) => _server.close(
-        callback != null ? (() => callback()).toJS : null,
-      );
+  void close([void Function()? callback]) =>
+      _server.close(callback != null ? (() => callback()).toJS : null);
 }

@@ -20,11 +20,12 @@ void main() {
 
 // React component functions follow PascalCase naming convention
 // ignore: non_constant_identifier_names
-ReactElement App() => createElement(
+ReactElement App({Fetch? fetchFn}) => createElement(
   ((JSAny props) {
     final tokenState = useState<String?>(null);
     final userState = useStateJS(null);
     final viewState = useState('login');
+    final doFetch = fetchFn ?? fetch;
 
     final auth = (
       setToken: _createSetToken(tokenState),
@@ -35,18 +36,29 @@ ReactElement App() => createElement(
     return div(
       className: 'app',
       children: [
-        buildHeader(userState.value as JSObject?, () {
-          tokenState.set(null);
-          userState.set(null);
-          viewState.set('login');
-        }),
+        buildHeader(
+          switch (userState.value) {
+            final JSObject user => user,
+            _ => null,
+          },
+          () {
+            tokenState.set(null);
+            userState.set(null);
+            viewState.set('login');
+          },
+        ),
         mainEl(
           className: 'main-content',
           child: (tokenState.value == null)
               ? (viewState.value == 'register')
-                    ? buildRegisterForm(auth)
-                    : buildLoginForm(auth)
-              : _buildTaskManager(tokenState.value!, userState, viewState),
+                    ? buildRegisterForm(auth, fetchFn: doFetch)
+                    : buildLoginForm(auth, fetchFn: doFetch)
+              : _buildTaskManager(
+                  tokenState.value!,
+                  userState,
+                  viewState,
+                  doFetch,
+                ),
         ),
         footer(
           className: 'footer',
@@ -61,9 +73,10 @@ ReactElement _buildTaskManager(
   String token,
   StateHookJS userState,
   StateHook<String> viewState,
+  Fetch doFetch,
 ) => createElement(
   ((JSAny props) {
-    final tasksState = useStateJSArray<JSObject>(<JSObject>[].toJS);
+    final tasksState = useStateJSArray<JSTask>(null);
     final newTaskState = useState('');
     final descState = useState('');
     final loadingState = useState(true);
@@ -72,15 +85,28 @@ ReactElement _buildTaskManager(
     // Fetch tasks on mount
     useEffect(() {
       unawaited(
-        fetchTasks(token: token, apiUrl: apiUrl)
+        doFetch('$apiUrl/tasks', token: token)
             .then((result) {
               result.match(
-                onSuccess: (list) {
-                  tasksState.set(list.toDart.cast<JSObject>());
-                  errorState.set(null);
+                onSuccess: (response) {
+                  switch (response['data']) {
+                    case final JSArray tasks:
+                      final taskList = <JSTask>[
+                        for (final item in tasks.toDart)
+                          if (item case final JSObject task)
+                            JSTask.fromJS(task),
+                      ];
+                      tasksState.set(taskList);
+                      errorState.set(null);
+                    default:
+                      tasksState.set(<JSTask>[]);
+                  }
                 },
                 onError: errorState.set,
               );
+            })
+            .catchError((Object e) {
+              errorState.set(e.toString());
             })
             .whenComplete(() => loadingState.set(false)),
       );
@@ -92,12 +118,17 @@ ReactElement _buildTaskManager(
       final ws = connectWebSocket(
         token: token,
         onTaskEvent: (event) {
-          final type = (event['type'] as JSString?)?.toDart;
-          final data = event['data'] as JSObject?;
-          switch (data) {
-            case final JSObject d:
-              handleTaskEvent(type, d, tasksState);
-            case null:
+          final type = switch (event['type']) {
+            final JSString t => t.toDart,
+            _ => null,
+          };
+          switch (event['data']) {
+            case final JSObject data:
+              tasksState.setWithUpdater(
+                (current) =>
+                    handleTaskEvent(type, JSTask.fromJS(data), current),
+              );
+            default:
               break;
           }
         },
@@ -112,57 +143,25 @@ ReactElement _buildTaskManager(
         case false:
           errorState.set(null);
           unawaited(
-            fetchJson(
-                  '$apiUrl/tasks',
-                  method: 'POST',
-                  token: token,
-                  body: {
-                    'title': newTaskState.value,
-                    'description': descState.value,
-                  },
-                )
-                .then((result) {
-                  result.match(
-                    onSuccess: (response) {
-                      final task = response['data'];
-                      switch (task) {
-                        case final JSObject created:
-                          tasksState.setWithUpdater(
-                            (prev) => [...prev, created],
-                          );
-                          newTaskState.set('');
-                          descState.set('');
-                        default:
-                          errorState.set('Invalid task payload');
-                      }
-                    },
-                    onError: errorState.set,
-                  );
-                }),
-          );
-      }
-    }
-
-    void toggleTask(String id, bool completed) {
-      unawaited(
-        fetchJson(
-              '$apiUrl/tasks/$id',
-              method: 'PUT',
+            doFetch(
+              '$apiUrl/tasks',
+              method: 'POST',
               token: token,
-              body: {'completed': !completed},
-            )
-            .then((result) {
+              body: {
+                'title': newTaskState.value,
+                'description': descState.value,
+              },
+            ).then((result) {
               result.match(
                 onSuccess: (response) {
-                  final updated = response['data'];
-                  switch (updated) {
-                    case final JSObject task:
+                  switch (response['data']) {
+                    case final JSObject created:
+                      final newTask = JSTask.fromJS(created);
                       tasksState.setWithUpdater(
-                        (prev) => prev.map((t) {
-                          final taskId = (t['id'] as JSString?)?.toDart;
-                          return (taskId == id) ? task : t;
-                        }).toList(),
+                        (prev) => addTaskIfNotExists(prev, newTask),
                       );
+                      newTaskState.set('');
+                      descState.set('');
                     default:
                       errorState.set('Invalid task payload');
                   }
@@ -170,24 +169,47 @@ ReactElement _buildTaskManager(
                 onError: errorState.set,
               );
             }),
+          );
+      }
+    }
+
+    void toggleTask(String id, bool completed) {
+      unawaited(
+        doFetch(
+          '$apiUrl/tasks/$id',
+          method: 'PUT',
+          token: token,
+          body: {'completed': !completed},
+        ).then((result) {
+          result.match(
+            onSuccess: (response) {
+              switch (response['data']) {
+                case final JSObject updatedTask:
+                  tasksState.setWithUpdater(
+                    (prev) => updateTaskById(prev, JSTask.fromJS(updatedTask)),
+                  );
+                default:
+                  errorState.set('Invalid task payload');
+              }
+            },
+            onError: errorState.set,
+          );
+        }),
       );
     }
 
     void deleteTask(String id) {
       unawaited(
-        fetchJson('$apiUrl/tasks/$id', method: 'DELETE', token: token)
-            .then((result) {
-              result.match(
-                onSuccess: (_) {
-                  tasksState.setWithUpdater(
-                    (prev) => prev
-                        .where((t) => (t['id'] as JSString?)?.toDart != id)
-                        .toList(),
-                  );
-                },
-                onError: errorState.set,
-              );
-            }),
+        doFetch('$apiUrl/tasks/$id', method: 'DELETE', token: token).then((
+          result,
+        ) {
+          result.match(
+            onSuccess: (_) {
+              tasksState.setWithUpdater((prev) => removeTaskById(prev, id));
+            },
+            onError: errorState.set,
+          );
+        }),
       );
     }
 

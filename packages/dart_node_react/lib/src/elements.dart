@@ -108,23 +108,23 @@ JSObject convertStyle(Map<String, dynamic> style) {
     final jsValue = (value is num && _needsPxSuffix(entry.key))
         ? '${value}px'.toJS
         : (value is String)
-            ? value.toJS
-            : (value is num)
-                ? value.toJS
-                : (value as Object).jsify();
+        ? value.toJS
+        : (value is num)
+        ? value.toJS
+        : (value as Object).jsify();
     obj.setProperty(entry.key.toJS, jsValue);
   }
   return obj;
 }
 
 bool _needsPxSuffix(String key) => !const {
-      'flex',
-      'fontWeight',
-      'opacity',
-      'zIndex',
-      'lineHeight',
-      'order',
-    }.contains(key);
+  'flex',
+  'fontWeight',
+  'opacity',
+  'zIndex',
+  'lineHeight',
+  'order',
+}.contains(key);
 
 Map<String, dynamic> _buildProps({
   Map<String, dynamic>? props,
@@ -150,8 +150,8 @@ DivElement div({
   final jsObj = (children != null && children.isNotEmpty)
       ? createElementWithChildren('div'.toJS, _propsOrNull(p), children)
       : (child != null)
-          ? createElement('div'.toJS, _propsOrNull(p), child)
-          : createElement('div'.toJS, _propsOrNull(p));
+      ? createElement('div'.toJS, _propsOrNull(p), child)
+      : createElement('div'.toJS, _propsOrNull(p));
   return DivElement.fromJS(jsObj);
 }
 
@@ -316,8 +316,8 @@ HeaderElement header({
   final jsObj = (children != null && children.isNotEmpty)
       ? createElementWithChildren('header'.toJS, _propsOrNull(p), children)
       : (child != null)
-          ? createElement('header'.toJS, _propsOrNull(p), child)
-          : createElement('header'.toJS, _propsOrNull(p));
+      ? createElement('header'.toJS, _propsOrNull(p), child)
+      : createElement('header'.toJS, _propsOrNull(p));
   return HeaderElement.fromJS(jsObj);
 }
 
@@ -333,8 +333,8 @@ MainElement mainEl({
   final jsObj = (children != null && children.isNotEmpty)
       ? createElementWithChildren('main'.toJS, _propsOrNull(p), children)
       : (child != null)
-          ? createElement('main'.toJS, _propsOrNull(p), child)
-          : createElement('main'.toJS, _propsOrNull(p));
+      ? createElement('main'.toJS, _propsOrNull(p), child)
+      : createElement('main'.toJS, _propsOrNull(p));
   return MainElement.fromJS(jsObj);
 }
 
@@ -350,7 +350,7 @@ FooterElement footer({
   final jsObj = (children != null && children.isNotEmpty)
       ? createElementWithChildren('footer'.toJS, _propsOrNull(p), children)
       : (child != null)
-          ? createElement('footer'.toJS, _propsOrNull(p), child)
-          : createElement('footer'.toJS, _propsOrNull(p));
+      ? createElement('footer'.toJS, _propsOrNull(p), child)
+      : createElement('footer'.toJS, _propsOrNull(p));
   return FooterElement.fromJS(jsObj);
 }

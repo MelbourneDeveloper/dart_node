@@ -147,15 +147,15 @@ final class DomNode {
 
   /// The value for input elements.
   String get value => switch (_node.value) {
-        final JSString s => s.toDart,
-        _ => '',
-      };
+    final JSString s => s.toDart,
+    _ => '',
+  };
 
   /// Gets an attribute value.
   String? getAttribute(String name) => switch (_node.getAttribute(name)) {
-        final JSString s => s.toDart,
-        _ => null,
-      };
+    final JSString s => s.toDart,
+    _ => null,
+  };
 
   /// Sets an attribute value.
   void setAttribute(String name, String value) =>
@@ -289,11 +289,10 @@ final class ScreenQuery {
   List<DomNode> queryAllByPlaceholderText(
     String placeholder, {
     bool exact = true,
-  }) =>
-      _container.querySelectorAll('[placeholder]').where((el) {
-        final attr = el.getAttribute('placeholder') ?? '';
-        return exact ? attr == placeholder : attr.contains(placeholder);
-      }).toList();
+  }) => _container.querySelectorAll('[placeholder]').where((el) {
+    final attr = el.getAttribute('placeholder') ?? '';
+    return exact ? attr == placeholder : attr.contains(placeholder);
+  }).toList();
 
   /// Finds all elements associated with labels containing the text.
   List<DomNode> queryAllByLabelText(String labelText, {bool exact = true}) {
@@ -375,29 +374,22 @@ final class ScreenQuery {
     String text, {
     bool exact = true,
     Duration timeout = const Duration(seconds: 1),
-  }) =>
-      _waitFor(() => getByText(text, exact: exact), timeout);
+  }) => _waitFor(() => getByText(text, exact: exact), timeout);
 
   /// Waits for element with test ID to appear.
   Future<DomNode> findByTestId(
     String testId, {
     Duration timeout = const Duration(seconds: 1),
-  }) =>
-      _waitFor(() => getByTestId(testId), timeout);
+  }) => _waitFor(() => getByTestId(testId), timeout);
 
   /// Waits for element with role to appear.
   Future<DomNode> findByRole(
     String role, {
     String? name,
     Duration timeout = const Duration(seconds: 1),
-  }) =>
-      _waitFor(() => getByRole(role, name: name), timeout);
+  }) => _waitFor(() => getByRole(role, name: name), timeout);
 
-  DomNode _getSingleResult(
-    List<DomNode> results,
-    String method,
-    String query,
-  ) {
+  DomNode _getSingleResult(List<DomNode> results, String method, String query) {
     if (results.isEmpty) {
       throw TestingLibraryException(
         '$method: Unable to find element with: $query',
@@ -451,7 +443,7 @@ final class ScreenQuery {
 /// Result of rendering a React component for testing.
 final class TestRenderResult extends ScreenQuery {
   TestRenderResult._(this._root, DomNode container, this._baseElement)
-      : super._(container);
+    : super._(container);
 
   final _JsRoot _root;
   final JSObject _baseElement;
@@ -829,9 +821,7 @@ Future<void> waitForElementToBeRemoved(
     await Future<void>.delayed(interval);
   }
 
-  throw TestingLibraryException(
-    'Timed out waiting for element to be removed.',
-  );
+  throw TestingLibraryException('Timed out waiting for element to be removed.');
 }
 
 // =============================================================================

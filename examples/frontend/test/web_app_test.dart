@@ -8,562 +8,521 @@ library;
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
-import 'package:dart_node_react/dart_node_react.dart' hide render;
 import 'package:dart_node_react/src/testing_library.dart';
-import 'package:frontend/frontend.dart';
+import 'package:frontend/src/websocket.dart';
+import 'package:nadz/nadz.dart';
 import 'package:test/test.dart';
 
+import '../web/app.dart' show App;
+import 'test_helpers.dart';
+
 void main() {
-  group('Header Component', () {
-    test('displays user name when logged in', () {
-      final user = _createJSObject({'name': 'John Doe'});
-
-      final result = render(buildHeader(user, () {}));
-
-      expect(result.container.textContent, contains('Welcome, John Doe'));
-      expect(result.container.textContent, contains('Logout'));
-
-      result.unmount();
-    });
-
-    test('shows spacer when no user', () {
-      final result = render(buildHeader(null, () {}));
-
-      expect(result.container.textContent, isNot(contains('Welcome')));
-
-      result.unmount();
-    });
-
-    test('logout button calls callback when clicked', () {
-      final user = _createJSObject({'name': 'Test User'});
-      var logoutCalled = false;
-
-      final result = render(buildHeader(user, () => logoutCalled = true));
-
-      final logoutBtn = result.container.querySelector('.btn-ghost');
-      expect(logoutBtn, isNotNull);
-      fireClick(logoutBtn!);
-
-      expect(logoutCalled, isTrue);
-
-      result.unmount();
-    });
-  });
-
-  group('Login Form Component', () {
-    test('renders login form with sign in title', () {
-      final auth = _createMockAuth();
-
-      final result = render(buildLoginForm(auth));
-
-      expect(result.container.textContent, contains('Sign In'));
-
-      result.unmount();
-    });
-
-    test('renders email and password labels', () {
-      final auth = _createMockAuth();
-
-      final result = render(buildLoginForm(auth));
-
-      expect(result.container.textContent, contains('Email'));
-      expect(result.container.textContent, contains('Password'));
-
-      result.unmount();
-    });
-
-    test('renders register link', () {
-      final auth = _createMockAuth();
-
-      final result = render(buildLoginForm(auth));
-
-      expect(result.container.textContent, contains("Don't have an account?"));
-      expect(result.container.textContent, contains('Register'));
-
-      result.unmount();
-    });
-
-    test('clicking register switches view', () {
-      var viewValue = '';
-      final auth = (
-        setToken: (JSString? _) {},
-        setUser: (JSObject? _) {},
-        setView: (String v) => viewValue = v,
-      );
-
-      final result = render(buildLoginForm(auth));
-
-      final registerBtn = result.container.querySelector('.btn-link');
-      expect(registerBtn, isNotNull);
-      fireClick(registerBtn!);
-
-      expect(viewValue, equals('register'));
-
-      result.unmount();
-    });
-  });
-
-  group('Register Form Component', () {
-    test('renders register form with create account title', () {
-      final auth = _createMockAuth();
-
-      final result = render(buildRegisterForm(auth));
-
-      expect(result.container.textContent, contains('Create Account'));
-
-      result.unmount();
-    });
-
-    test('renders name, email, and password labels', () {
-      final auth = _createMockAuth();
-
-      final result = render(buildRegisterForm(auth));
-
-      expect(result.container.textContent, contains('Name'));
-      expect(result.container.textContent, contains('Email'));
-      expect(result.container.textContent, contains('Password'));
-
-      result.unmount();
-    });
-
-    test('renders sign in link', () {
-      final auth = _createMockAuth();
-
-      final result = render(buildRegisterForm(auth));
-
-      expect(
-        result.container.textContent,
-        contains('Already have an account?'),
-      );
-
-      result.unmount();
-    });
-
-    test('clicking sign in switches view', () {
-      var viewValue = '';
-      final auth = (
-        setToken: (JSString? _) {},
-        setUser: (JSObject? _) {},
-        setView: (String v) => viewValue = v,
-      );
-
-      final result = render(buildRegisterForm(auth));
-
-      final signInBtn = result.container.querySelector('.btn-link');
-      expect(signInBtn, isNotNull);
-      fireClick(signInBtn!);
-
-      expect(viewValue, equals('login'));
-
-      result.unmount();
-    });
-  });
-
-  group('Form Helpers', () {
-    test('formGroup creates labeled input', () {
-      final inputEl = input(
-        type: 'text',
-        className: 'test-input',
-        props: {'data-testid': 'test-input'},
-      );
-      final group = formGroup('Test Label', inputEl);
-
-      final result = render(group);
-
-      expect(result.container.textContent, contains('Test Label'));
-      expect(result.getByTestId('test-input'), isNotNull);
-
-      result.unmount();
-    });
-
-    test('labelEl creates label element', () {
-      final label = labelEl('My Label');
-
-      final result = render(label);
-
-      expect(result.container.textContent, equals('My Label'));
-
-      result.unmount();
-    });
-
-    test('getInputValue extracts value from input event', () async {
-      final component = registerFunctionComponent((props) {
-        final state = useState('');
-        return div(
-          children: [
-            input(
-              type: 'text',
-              value: state.value,
-              onChange: (e) => state.set(getInputValue(e).toDart),
-              props: {'data-testid': 'input'},
-            ),
-            span(state.value, props: {'data-testid': 'output'}),
-          ],
-        );
-      });
-
-      final result = render(fc(component));
-
-      await userType(result.getByTestId('input'), 'hello');
-
-      expect(result.getByTestId('output').textContent, equals('hello'));
-
-      result.unmount();
-    });
-  });
-
-  group('Task Components - buildStats', () {
-    test('shows completion stats for tasks', () {
-      final tasks = [
-        _createJSObject({'id': '1', 'completed': true}),
-        _createJSObject({'id': '2', 'completed': false}),
-        _createJSObject({'id': '3', 'completed': true}),
-      ];
-
-      final stats = buildStats(tasks);
-      final result = render(stats);
-
-      expect(result.container.textContent, contains('2/3 completed'));
-
-      result.unmount();
-    });
-
-    test('shows 0/0 for empty list', () {
-      final stats = buildStats([]);
-      final result = render(stats);
-
-      expect(result.container.textContent, contains('0/0 completed'));
-
-      result.unmount();
-    });
-
-    test('shows 100% for all completed', () {
-      final tasks = [
-        _createJSObject({'id': '1', 'completed': true}),
-        _createJSObject({'id': '2', 'completed': true}),
-      ];
-
-      final stats = buildStats(tasks);
-      final result = render(stats);
-
-      expect(result.container.textContent, contains('2/2 completed'));
-
-      result.unmount();
-    });
-  });
-
-  group('Task Components - buildTaskList', () {
-    test('shows empty state when no tasks', () {
-      final list = buildTaskList([], (a, b) {}, (c) {});
-
-      final wrapper = div(children: list);
-      final result = render(wrapper);
-
-      expect(result.container.textContent, contains('No tasks yet'));
-
-      result.unmount();
-    });
-
-    test('renders task items', () {
-      final tasks = [
-        _createJSObject({'id': '1', 'title': 'Task One', 'completed': false}),
-        _createJSObject({'id': '2', 'title': 'Task Two', 'completed': true}),
-      ];
-
-      final list = buildTaskList(tasks, (a, b) {}, (c) {});
-      final wrapper = div(children: list);
-      final result = render(wrapper);
-
-      expect(result.container.textContent, contains('Task One'));
-      expect(result.container.textContent, contains('Task Two'));
-
-      result.unmount();
-    });
-  });
-
-  group('Task Components - buildTaskItem', () {
-    test('shows title and description', () {
-      final task = _createJSObject({
-        'id': '123',
-        'title': 'My Task',
-        'description': 'Task description',
-        'completed': false,
-      });
-
-      final item = buildTaskItem(task, (a, b) {}, (c) {});
-      final result = render(item);
-
-      expect(result.container.textContent, contains('My Task'));
-      expect(result.container.textContent, contains('Task description'));
-
-      result.unmount();
-    });
-
-    test('calls onToggle when checkbox clicked', () {
-      final task = _createJSObject({
-        'id': 'task-1',
-        'title': 'Toggle Test',
-        'completed': false,
-      });
-
-      String? toggledId;
-      bool? toggledCompleted;
-
-      final item = buildTaskItem(
-        task,
-        (id, completed) {
-          toggledId = id;
-          toggledCompleted = completed;
+  setUp(mockWebSocket);
+
+  test('complete login flow - success', () async {
+    final mockFetch = createMockFetch({
+      '/auth/login': {
+        'success': true,
+        'data': {
+          'token': 'test-token-123',
+          'user': {'name': 'Test User', 'email': 'test@example.com'},
         },
-        (c) {},
-      );
-      final result = render(item);
-
-      final checkbox = result.container.querySelector('.task-checkbox');
-      expect(checkbox, isNotNull);
-      fireClick(checkbox!);
-
-      expect(toggledId, equals('task-1'));
-      expect(toggledCompleted, isFalse);
-
-      result.unmount();
+      },
+      '/tasks': {'success': true, 'data': <Map<String, Object?>>[]},
     });
 
-    test('calls onDelete when delete button clicked', () {
-      final task = _createJSObject({
-        'id': 'task-2',
-        'title': 'Delete Test',
-        'completed': false,
-      });
+    final result = render(App(fetchFn: mockFetch));
 
-      String? deletedId;
+    expect(result.container.textContent, contains('Sign In'));
 
-      final item = buildTaskItem(task, (a, b) {}, (id) => deletedId = id);
-      final result = render(item);
+    final emailInput = result.container.querySelector('input[type="email"]');
+    final passInput = result.container.querySelector('input[type="password"]');
+    await userType(emailInput!, 'test@example.com');
+    await userType(passInput!, 'password123');
 
-      final deleteBtn = result.container.querySelector('.btn-delete');
-      expect(deleteBtn, isNotNull);
-      fireClick(deleteBtn!);
+    fireClick(result.container.querySelector('.btn-primary')!);
 
-      expect(deletedId, equals('task-2'));
+    await waitForText(result, 'Your Tasks');
+    expect(result.container.textContent, contains('Welcome, Test User'));
 
-      result.unmount();
-    });
-
-    test('shows checkmark when completed', () {
-      final task = _createJSObject({
-        'id': '1',
-        'title': 'Completed Task',
-        'completed': true,
-      });
-
-      final item = buildTaskItem(task, (a, b) {}, (c) {});
-      final result = render(item);
-
-      expect(result.container.textContent, contains('\u2713'));
-
-      result.unmount();
-    });
-
-    test('applies completed class when task is done', () {
-      final task = _createJSObject({
-        'id': '1',
-        'title': 'Done Task',
-        'completed': true,
-      });
-
-      final item = buildTaskItem(task, (a, b) {}, (c) {});
-      final result = render(item);
-
-      final taskDiv = result.container.querySelector('.task-item');
-      expect(taskDiv, isNotNull);
-      final className = taskDiv!.className;
-      expect(className, contains('completed'));
-
-      result.unmount();
-    });
+    result.unmount();
   });
 
-  group('handleTaskEvent', () {
-    test('task_created adds task to list', () {
-      final component = registerFunctionComponent((props) {
-        final tasksState = useStateJSArray<JSObject>(<JSObject>[].toJS);
-
-        return div(
-          children: [
-            span(
-              'Count: ${tasksState.value.length}',
-              props: {'data-testid': 'count'},
-            ),
-            button(
-              text: 'Add',
-              onClick: () {
-                final newTask =
-                    _createJSObject({'id': 'new-1', 'title': 'New'});
-                handleTaskEvent('task_created', newTask, tasksState);
-              },
-              props: {'data-testid': 'add-btn'},
-            ),
-          ],
-        );
-      });
-
-      final result = render(fc(component));
-
-      expect(result.getByTestId('count').textContent, equals('Count: 0'));
-
-      fireClick(result.getByTestId('add-btn'));
-
-      expect(result.getByTestId('count').textContent, equals('Count: 1'));
-
-      result.unmount();
+  test('complete login flow - error', () async {
+    final mockFetch = createMockFetch({
+      '/auth/login': {'success': false, 'error': 'Invalid credentials'},
     });
 
-    test('task_deleted removes task from list', () {
-      final component = registerFunctionComponent((props) {
-        final tasksState = useStateJSArray<JSObject>([
-          _createJSObject({'id': 'task-1', 'title': 'First'}),
-          _createJSObject({'id': 'task-2', 'title': 'Second'}),
-        ].toJS);
+    final result = render(App(fetchFn: mockFetch));
 
-        return div(
-          children: [
-            span(
-              'Count: ${tasksState.value.length}',
-              props: {'data-testid': 'count'},
-            ),
-            button(
-              text: 'Delete',
-              onClick: () {
-                final toDelete = _createJSObject({'id': 'task-1'});
-                handleTaskEvent('task_deleted', toDelete, tasksState);
-              },
-              props: {'data-testid': 'delete-btn'},
-            ),
-          ],
-        );
-      });
-
-      final result = render(fc(component));
-
-      expect(result.getByTestId('count').textContent, equals('Count: 2'));
-
-      fireClick(result.getByTestId('delete-btn'));
-
-      expect(result.getByTestId('count').textContent, equals('Count: 1'));
-
-      result.unmount();
-    });
-
-    test('task_updated replaces task in list', () {
-      final component = registerFunctionComponent((props) {
-        final tasksState = useStateJSArray<JSObject>([
-          _createJSObject({
-            'id': 'task-1',
-            'title': 'Original',
-            'completed': false,
-          }),
-        ].toJS);
-
-        String getTitle() {
-          final task = tasksState.value.first;
-          return (task['title'] as JSString?)?.toDart ?? '';
-        }
-
-        return div(
-          children: [
-            span(getTitle(), props: {'data-testid': 'title'}),
-            button(
-              text: 'Update',
-              onClick: () {
-                final updated = _createJSObject({
-                  'id': 'task-1',
-                  'title': 'Updated',
-                  'completed': true,
-                });
-                handleTaskEvent('task_updated', updated, tasksState);
-              },
-              props: {'data-testid': 'update-btn'},
-            ),
-          ],
-        );
-      });
-
-      final result = render(fc(component));
-
-      expect(result.getByTestId('title').textContent, equals('Original'));
-
-      fireClick(result.getByTestId('update-btn'));
-
-      expect(result.getByTestId('title').textContent, equals('Updated'));
-
-      result.unmount();
-    });
-
-    test('unknown event type leaves list unchanged', () {
-      final component = registerFunctionComponent((props) {
-        final tasksState = useStateJSArray<JSObject>([
-          _createJSObject({'id': '1', 'title': 'Task'}),
-        ].toJS);
-
-        return div(
-          children: [
-            span(
-              'Count: ${tasksState.value.length}',
-              props: {'data-testid': 'count'},
-            ),
-            button(
-              text: 'Unknown',
-              onClick: () {
-                final task = _createJSObject({'id': '99'});
-                handleTaskEvent('unknown_event', task, tasksState);
-              },
-              props: {'data-testid': 'unknown-btn'},
-            ),
-          ],
-        );
-      });
-
-      final result = render(fc(component));
-
-      expect(result.getByTestId('count').textContent, equals('Count: 1'));
-
-      fireClick(result.getByTestId('unknown-btn'));
-
-      expect(result.getByTestId('count').textContent, equals('Count: 1'));
-
-      result.unmount();
-    });
-  });
-}
-
-/// Create a mock AuthEffects
-AuthEffects _createMockAuth() => (
-      setToken: (JSString? _) {},
-      setUser: (JSObject? _) {},
-      setView: (String _) {},
+    await userType(
+      result.container.querySelector('input[type="email"]')!,
+      'bad@email.com',
+    );
+    await userType(
+      result.container.querySelector('input[type="password"]')!,
+      'wrong',
     );
 
-/// Create a JSObject from a Dart map
-JSObject _createJSObject(Map<String, Object?> map) {
-  final json = globalContext['JSON']! as JSObject;
-  final parseFn = json['parse']! as JSFunction;
-  final jsonStr = _toJsonString(map);
-  return parseFn.callAsFunction(null, jsonStr.toJS)! as JSObject;
-}
+    fireClick(result.container.querySelector('.btn-primary')!);
 
-String _toJsonString(Map<String, Object?> map) {
-  final entries = map.entries.map((e) {
-    final value = e.value;
-    final valueStr = switch (value) {
-      final String s => '"$s"',
-      final bool b => b.toString(),
-      final int n => n.toString(),
-      final double d => d.toString(),
-      null => 'null',
-      _ => '"$value"',
-    };
-    return '"${e.key}":$valueStr';
+    await waitForText(result, 'Invalid credentials');
+    // Verify error message div is rendered (line 67 coverage)
+    expect(result.container.querySelector('.error-msg'), isNotNull);
+    expect(result.container.textContent, contains('Sign In'));
+
+    result.unmount();
   });
-  return '{${entries.join(',')}}';
+
+  test('login -> view tasks -> logout', () async {
+    final mockFetch = createMockFetch({
+      '/auth/login': {
+        'success': true,
+        'data': {
+          'token': 'tok',
+          'user': {'name': 'Alice'},
+        },
+      },
+      '/tasks': {
+        'success': true,
+        'data': [
+          {'id': '1', 'title': 'Task One', 'completed': false},
+          {'id': '2', 'title': 'Task Two', 'completed': true},
+        ],
+      },
+    });
+
+    final result = render(App(fetchFn: mockFetch));
+
+    await userType(
+      result.container.querySelector('input[type="email"]')!,
+      'a@b.com',
+    );
+    await userType(
+      result.container.querySelector('input[type="password"]')!,
+      'pass',
+    );
+    fireClick(result.container.querySelector('.btn-primary')!);
+
+    await waitForText(result, 'Task One');
+    expect(result.container.textContent, contains('Task Two'));
+    expect(result.container.textContent, contains('1/2 completed'));
+
+    fireClick(result.container.querySelector('.btn-ghost')!);
+
+    await waitForText(result, 'Sign In');
+    expect(result.container.textContent, isNot(contains('Welcome')));
+
+    result.unmount();
+  });
+
+  test('login -> add new task (no duplicates from websocket)', () async {
+    final mockFetch = createMockFetch({
+      '/auth/login': {
+        'success': true,
+        'data': {
+          'token': 'tok',
+          'user': {'name': 'Alice'},
+        },
+      },
+      '/tasks': {'success': true, 'data': <Map<String, Object?>>[]},
+      'POST /tasks': {
+        'success': true,
+        'data': {'id': '99', 'title': 'My New Task', 'completed': false},
+      },
+    });
+
+    final result = render(App(fetchFn: mockFetch));
+
+    // Login
+    await userType(
+      result.container.querySelector('input[type="email"]')!,
+      'a@b.com',
+    );
+    await userType(
+      result.container.querySelector('input[type="password"]')!,
+      'pass',
+    );
+    fireClick(result.container.querySelector('.btn-primary')!);
+
+    await waitForText(result, 'Your Tasks');
+    // Verify 0 tasks initially
+    expect(result.container.textContent, contains('0/0 completed'));
+
+    // Add a new task
+    final taskInput = result.container.querySelector(
+      'input[placeholder="What needs to be done?"]',
+    )!;
+    await userType(taskInput, 'My New Task');
+
+    // Click Add Task button
+    final addButton = result.container.querySelector('.btn-primary')!;
+    fireClick(addButton);
+
+    // The new task should appear in the list
+    await waitForText(result, 'My New Task');
+
+    // Simulate WebSocket also sending task_created (what the server does!)
+    simulateWsMessage(
+      '{"type":"task_created","data":'
+      '{"id":"99","title":"My New Task","completed":false}}',
+    );
+
+    // Give React time to process the WebSocket event
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    // CRITICAL: Assert EXACTLY ONE task, not duplicates!
+    final taskItems = result.container.querySelectorAll('.task-item');
+    expect(
+      taskItems.length,
+      1,
+      reason: 'Should have exactly 1 task, not duplicates',
+    );
+    expect(result.container.textContent, contains('0/1 completed'));
+
+    result.unmount();
+  });
+
+  test('add task - WS arrives BEFORE HTTP response (race condition)', () async {
+    // This tests the REAL bug: WebSocket is faster than HTTP response!
+    // Server broadcasts task_created immediately, HTTP response is slower.
+
+    // Create fetch that triggers WS message BEFORE returning HTTP response
+    Future<Result<JSObject, String>> racingFetch(
+      String url, {
+      String method = 'GET',
+      String? token,
+      Map<String, Object?>? body,
+    }) async {
+      if (url.contains('/auth/login')) {
+        return Success<JSObject, String>(
+          createJSObject({
+            'success': true,
+            'data': {
+              'token': 'tok',
+              'user': {'name': 'Alice'},
+            },
+          }),
+        );
+      }
+      if (url.contains('/tasks') && method == 'GET') {
+        return Success<JSObject, String>(
+          createJSObject({'success': true, 'data': <Map<String, Object?>>[]}),
+        );
+      }
+      if (url.contains('/tasks') && method == 'POST') {
+        // SIMULATE RACE: WebSocket arrives BEFORE HTTP response!
+        simulateWsMessage(
+          '{"type":"task_created","data":'
+          '{"id":"race-1","title":"Race Task","completed":false}}',
+        );
+        // Small delay, then HTTP returns
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        return Success<JSObject, String>(
+          createJSObject({
+            'success': true,
+            'data': {'id': 'race-1', 'title': 'Race Task', 'completed': false},
+          }),
+        );
+      }
+      throw StateError('No mock for $method $url');
+    }
+
+    final result = render(App(fetchFn: racingFetch));
+
+    // Login
+    await userType(
+      result.container.querySelector('input[type="email"]')!,
+      'a@b.com',
+    );
+    await userType(
+      result.container.querySelector('input[type="password"]')!,
+      'pass',
+    );
+    fireClick(result.container.querySelector('.btn-primary')!);
+
+    await waitForText(result, 'Your Tasks');
+
+    // Add task - WS will arrive before HTTP!
+    final taskInput = result.container.querySelector(
+      'input[placeholder="What needs to be done?"]',
+    )!;
+    await userType(taskInput, 'Race Task');
+    fireClick(result.container.querySelector('.btn-primary')!);
+
+    // Wait for task to appear
+    await waitForText(result, 'Race Task');
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+
+    // CRITICAL: Must have exactly 1 task, not 2!
+    final taskItems = result.container.querySelectorAll('.task-item');
+    expect(
+      taskItems.length,
+      1,
+      reason: 'WS arrived first, HTTP should NOT add duplicate!',
+    );
+
+    result.unmount();
+  });
+
+  test('switch between login and register views', () {
+    final result = render(App());
+
+    expect(result.container.textContent, contains('Sign In'));
+
+    fireClick(result.container.querySelector('.btn-link')!);
+
+    expect(result.container.textContent, contains('Create Account'));
+    expect(result.container.textContent, contains('Name'));
+
+    fireClick(result.container.querySelector('.btn-link')!);
+
+    expect(result.container.textContent, contains('Sign In'));
+
+    result.unmount();
+  });
+
+  test('register flow - success', () async {
+    final mockFetch = createMockFetch({
+      '/auth/register': {
+        'success': true,
+        'data': {
+          'token': 'new-token',
+          'user': {'name': 'New User'},
+        },
+      },
+      '/tasks': {'success': true, 'data': <Map<String, Object?>>[]},
+    });
+
+    final result = render(App(fetchFn: mockFetch));
+
+    fireClick(result.container.querySelector('.btn-link')!);
+
+    final inputs = result.container.querySelectorAll('input');
+    await userType(inputs[0], 'New User');
+    await userType(inputs[1], 'new@user.com');
+    await userType(inputs[2], 'password');
+
+    fireClick(result.container.querySelector('.btn-primary')!);
+
+    await waitForText(result, 'Your Tasks');
+    expect(result.container.textContent, contains('Welcome, New User'));
+
+    result.unmount();
+  });
+
+  test('login with no token in response', () async {
+    final mockFetch = createMockFetch({
+      '/auth/login': {
+        'success': true,
+        'data': {
+          'user': {'name': 'No Token User'},
+        },
+      },
+    });
+
+    final result = render(App(fetchFn: mockFetch));
+
+    await userType(
+      result.container.querySelector('input[type="email"]')!,
+      'x@y.com',
+    );
+    await userType(
+      result.container.querySelector('input[type="password"]')!,
+      'pass',
+    );
+    fireClick(result.container.querySelector('.btn-primary')!);
+
+    await waitForText(result, 'No token');
+
+    result.unmount();
+  });
+
+  test('login with null data in response', () async {
+    final mockFetch = createMockFetch({
+      '/auth/login': {'success': true, 'data': null},
+    });
+
+    final result = render(App(fetchFn: mockFetch));
+
+    await userType(
+      result.container.querySelector('input[type="email"]')!,
+      'x@y.com',
+    );
+    await userType(
+      result.container.querySelector('input[type="password"]')!,
+      'pass',
+    );
+    fireClick(result.container.querySelector('.btn-primary')!);
+
+    await waitForText(result, 'Login failed');
+
+    result.unmount();
+  });
+
+  test('register with no token in response', () async {
+    final mockFetch = createMockFetch({
+      '/auth/register': {
+        'success': true,
+        'data': {
+          'user': {'name': 'No Token'},
+        },
+      },
+    });
+
+    final result = render(App(fetchFn: mockFetch));
+
+    fireClick(result.container.querySelector('.btn-link')!);
+
+    final inputs = result.container.querySelectorAll('input');
+    await userType(inputs[0], 'Name');
+    await userType(inputs[1], 'a@b.com');
+    await userType(inputs[2], 'pass');
+
+    fireClick(result.container.querySelector('.btn-primary')!);
+
+    await waitForText(result, 'No token');
+
+    result.unmount();
+  });
+
+  test('register with null data in response', () async {
+    final mockFetch = createMockFetch({
+      '/auth/register': {'success': true, 'data': null},
+    });
+
+    final result = render(App(fetchFn: mockFetch));
+
+    fireClick(result.container.querySelector('.btn-link')!);
+
+    final inputs = result.container.querySelectorAll('input');
+    await userType(inputs[0], 'Name');
+    await userType(inputs[1], 'a@b.com');
+    await userType(inputs[2], 'pass');
+
+    fireClick(result.container.querySelector('.btn-primary')!);
+
+    await waitForText(result, 'Registration failed');
+
+    result.unmount();
+  });
+
+  test('register with server error', () async {
+    final mockFetch = createMockFetch({
+      '/auth/register': {'success': false, 'error': 'Email already exists'},
+    });
+
+    final result = render(App(fetchFn: mockFetch));
+
+    fireClick(result.container.querySelector('.btn-link')!);
+
+    final inputs = result.container.querySelectorAll('input');
+    await userType(inputs[0], 'Name');
+    await userType(inputs[1], 'existing@email.com');
+    await userType(inputs[2], 'pass');
+
+    fireClick(result.container.querySelector('.btn-primary')!);
+
+    await waitForText(result, 'Email already exists');
+
+    result.unmount();
+  });
+
+  test('login with fetch exception', () async {
+    // Create a fetch that throws to test catchError branch
+    final throwingFetch = createThrowingFetch();
+
+    final result = render(App(fetchFn: throwingFetch));
+
+    await userType(
+      result.container.querySelector('input[type="email"]')!,
+      'x@y.com',
+    );
+    await userType(
+      result.container.querySelector('input[type="password"]')!,
+      'pass',
+    );
+    fireClick(result.container.querySelector('.btn-primary')!);
+
+    await waitForText(result, 'Network error');
+
+    result.unmount();
+  });
+
+  test('register with fetch exception', () async {
+    final throwingFetch = createThrowingFetch();
+
+    final result = render(App(fetchFn: throwingFetch));
+
+    fireClick(result.container.querySelector('.btn-link')!);
+
+    final inputs = result.container.querySelectorAll('input');
+    await userType(inputs[0], 'Name');
+    await userType(inputs[1], 'a@b.com');
+    await userType(inputs[2], 'pass');
+
+    fireClick(result.container.querySelector('.btn-primary')!);
+
+    await waitForText(result, 'Network error');
+
+    result.unmount();
+  });
+
+  // --- WebSocket Tests ---
+
+  test('handleWebSocketMessage parses JSON and calls callback', () {
+    final events = <JSObject>[];
+    handleWebSocketMessage('{"type":"created","data":{"id":"1"}}', events.add);
+
+    expect(events.length, 1);
+    expect((events[0]['type']! as JSString).toDart, 'created');
+  });
+
+  test('connectWebSocket creates websocket with handlers', () {
+    var openCalled = false;
+    var closeCalled = false;
+    final events = <JSObject>[];
+
+    final ws = connectWebSocket(
+      token: 'test-token',
+      onTaskEvent: events.add,
+      onOpen: () => openCalled = true,
+      onClose: () => closeCalled = true,
+    );
+
+    expect(ws, isNotNull);
+
+    // Trigger the handlers manually via the mock
+    final dummyEvent = JSObject();
+    ws!.onopen?.callAsFunction(null, dummyEvent);
+    expect(openCalled, isTrue);
+
+    ws.onclose?.callAsFunction(null, dummyEvent);
+    expect(closeCalled, isTrue);
+
+    // Test message handler with valid JSON string
+    final messageEvent = JSObject();
+    messageEvent['data'] = '{"type":"test"}'.toJS;
+    ws.onmessage?.callAsFunction(null, messageEvent);
+    expect(events.length, 1);
+
+    // Test error handler (should not throw)
+    ws.onerror?.callAsFunction(null, dummyEvent);
+
+    ws.close();
+  });
+
+  test('connectWebSocket handles non-string message data', () {
+    final events = <JSObject>[];
+
+    final ws = connectWebSocket(token: 'test-token', onTaskEvent: events.add);
+
+    // Send non-string data (should be ignored)
+    final messageEvent = JSObject();
+    messageEvent['data'] = 123.toJS;
+    ws!.onmessage?.callAsFunction(null, messageEvent);
+
+    expect(events, isEmpty);
+    ws.close();
+  });
 }
