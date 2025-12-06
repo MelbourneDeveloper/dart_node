@@ -1,6 +1,14 @@
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
+/// JS binding to convert any value to string using JavaScript's String()
+@JS('String')
+external JSString _jsString(JSAny? value);
+
+/// JS binding to serialize a value to JSON string using JSON.stringify()
+@JS('JSON.stringify')
+external JSString _jsStringify(JSAny? value);
+
 /// WebSocket connection ready states as defined by the WebSocket API.
 ///
 /// See: https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState
@@ -144,8 +152,11 @@ class WebSocketClient {
   /// Sends a string message through the WebSocket.
   void send(String message) => _ws.send(message.toJS);
 
-  /// Sends a JSON-serializable map through the WebSocket.
-  void sendJson(Map<String, Object?> data) => _ws.send(data.jsify()!);
+  /// Sends a JSON-serializable map through the WebSocket as a JSON string.
+  void sendJson(Map<String, Object?> data) {
+    final jsonStr = _jsStringify(data.jsify());
+    _ws.send(jsonStr);
+  }
 
   /// Closes the WebSocket connection.
   ///
@@ -162,11 +173,14 @@ class WebSocketClient {
     ((JSAny data) => handler(_extractMessage(data))).toJS,
   );
 
-  WebSocketMessage _extractMessage(JSAny data) => switch (data) {
-    final JSString s => (text: s.toDart, bytes: null),
-    final JSUint8Array arr => (text: null, bytes: arr.toDart),
-    _ => (text: data.toString(), bytes: null),
-  };
+  WebSocketMessage _extractMessage(JSAny data) {
+    // For Node.js Buffer and other objects, use JS String() function
+    final str = _jsString(data).toDart;
+    return (text: str.isNotEmpty ? str : null, bytes: null);
+  }
+
+  /// Converts a JSAny to string by calling JavaScript's String() function.
+  String _jsAnyToString(JSAny data) => _jsString(data).toDart;
 
   /// Registers a handler for connection close events
   void onClose(CloseHandler handler) => _ws.on(
@@ -180,7 +194,7 @@ class WebSocketClient {
   String _extractCloseReason(JSAny? reason) => switch (reason) {
     null => '',
     final JSString s => s.toDart,
-    _ => reason.toString(),
+    final JSAny data => _jsAnyToString(data),
   };
 
   /// Registers a handler for error events

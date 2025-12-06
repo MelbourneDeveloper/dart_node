@@ -61,10 +61,7 @@ class TaskService {
   }
 
   /// Delete a task - returns Error if task not found
-  Result<void, String> delete(String id) {
-    final removed = _tasks.remove(id);
-    return (removed != null)
-        ? const Success(null)
-        : const Error('Task not found');
-  }
+  Result<void, String> delete(String id) => (_tasks.remove(id) != null)
+      ? const Success(null)
+      : const Error('Task not found');
 }
