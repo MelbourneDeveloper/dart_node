@@ -5,6 +5,7 @@ import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks/src/config.dart';
 import 'package:too_many_cooks/src/db/db.dart';
+import 'package:too_many_cooks/src/notifications.dart';
 import 'package:too_many_cooks/src/types.dart';
 
 /// Input schema for lock tool.
@@ -54,7 +55,11 @@ const lockToolConfig = (
 );
 
 /// Create lock tool handler.
-ToolCallback createLockHandler(TooManyCooksDb db, TooManyCooksConfig config) =>
+ToolCallback createLockHandler(
+  TooManyCooksDb db,
+  TooManyCooksConfig config,
+  NotificationEmitter emitter,
+) =>
     (args, meta) async {
       final action = args['action']! as String;
       final agentName = args['agent_name'] as String?;
@@ -65,21 +70,24 @@ ToolCallback createLockHandler(TooManyCooksDb db, TooManyCooksConfig config) =>
       return switch (action) {
         'acquire' => _acquire(
             db,
+            emitter,
             filePath,
             agentName,
             agentKey,
             reason,
             config.lockTimeoutMs,
           ),
-        'release' => _release(db, filePath, agentName, agentKey),
+        'release' => _release(db, emitter, filePath, agentName, agentKey),
         'force_release' => _forceRelease(
             db,
+            emitter,
             filePath,
             agentName,
             agentKey,
           ),
         'renew' => _renew(
             db,
+            emitter,
             filePath,
             agentName,
             agentKey,
@@ -98,6 +106,7 @@ ToolCallback createLockHandler(TooManyCooksDb db, TooManyCooksConfig config) =>
 
 CallToolResult _acquire(
   TooManyCooksDb db,
+  NotificationEmitter emitter,
   String? filePath,
   String? agentName,
   String? agentKey,
@@ -118,11 +127,26 @@ CallToolResult _acquire(
   final result =
       db.acquireLock(filePath, agentName, agentKey, reason, timeoutMs);
   return switch (result) {
+    Success(:final value) when value.acquired => () {
+        // Emit notification
+        emitter.emit(eventLockAcquired, {
+          'file_path': filePath,
+          'agent_name': agentName,
+          'expires_at': value.lock!.expiresAt,
+          'reason': reason,
+        });
+        return (
+          content: <Object>[
+            (type: 'text', text: _lockResultJson(value)),
+          ],
+          isError: false,
+        );
+      }(),
     Success(:final value) => (
         content: <Object>[
           (type: 'text', text: _lockResultJson(value)),
         ],
-        isError: !value.acquired,
+        isError: true,
       ),
     Error(:final error) => _errorResult(error),
   };
@@ -130,6 +154,7 @@ CallToolResult _acquire(
 
 CallToolResult _release(
   TooManyCooksDb db,
+  NotificationEmitter emitter,
   String? filePath,
   String? agentName,
   String? agentKey,
@@ -146,16 +171,24 @@ CallToolResult _release(
     );
   }
   return switch (db.releaseLock(filePath, agentName, agentKey)) {
-    Success() => (
-        content: <Object>[(type: 'text', text: '{"released":true}')],
-        isError: false,
-      ),
+    Success() => () {
+        // Emit notification
+        emitter.emit(eventLockReleased, {
+          'file_path': filePath,
+          'agent_name': agentName,
+        });
+        return (
+          content: <Object>[(type: 'text', text: '{"released":true}')],
+          isError: false,
+        );
+      }(),
     Error(:final error) => _errorResult(error),
   };
 }
 
 CallToolResult _forceRelease(
   TooManyCooksDb db,
+  NotificationEmitter emitter,
   String? filePath,
   String? agentName,
   String? agentKey,
@@ -173,16 +206,25 @@ CallToolResult _forceRelease(
     );
   }
   return switch (db.forceReleaseLock(filePath, agentName, agentKey)) {
-    Success() => (
-        content: <Object>[(type: 'text', text: '{"released":true}')],
-        isError: false,
-      ),
+    Success() => () {
+        // Emit notification
+        emitter.emit(eventLockReleased, {
+          'file_path': filePath,
+          'agent_name': agentName,
+          'force': true,
+        });
+        return (
+          content: <Object>[(type: 'text', text: '{"released":true}')],
+          isError: false,
+        );
+      }(),
     Error(:final error) => _errorResult(error),
   };
 }
 
 CallToolResult _renew(
   TooManyCooksDb db,
+  NotificationEmitter emitter,
   String? filePath,
   String? agentName,
   String? agentKey,
@@ -200,10 +242,20 @@ CallToolResult _renew(
     );
   }
   return switch (db.renewLock(filePath, agentName, agentKey, timeoutMs)) {
-    Success() => (
-        content: <Object>[(type: 'text', text: '{"renewed":true}')],
-        isError: false,
-      ),
+    Success() => () {
+        // Emit notification
+        final newExpiresAt =
+            DateTime.now().millisecondsSinceEpoch + timeoutMs;
+        emitter.emit(eventLockRenewed, {
+          'file_path': filePath,
+          'agent_name': agentName,
+          'expires_at': newExpiresAt,
+        });
+        return (
+          content: <Object>[(type: 'text', text: '{"renewed":true}')],
+          isError: false,
+        );
+      }(),
     Error(:final error) => _errorResult(error),
   };
 }

@@ -1,0 +1,112 @@
+{
+  "name": "too-many-cooks",
+  "displayName": "Too Many Cooks",
+  "description": "Visualize multi-agent Git coordination via MCP",
+  "version": "0.1.0",
+  "publisher": "dart-node",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tooManyCooks.connect",
+        "title": "Connect to MCP Server",
+        "category": "Too Many Cooks"
+      },
+      {
+        "command": "tooManyCooks.disconnect",
+        "title": "Disconnect",
+        "category": "Too Many Cooks"
+      },
+      {
+        "command": "tooManyCooks.refresh",
+        "title": "Refresh Status",
+        "category": "Too Many Cooks",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "tooManyCooks.showDashboard",
+        "title": "Show Dashboard",
+        "category": "Too Many Cooks"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tooManyCooks",
+          "title": "Too Many Cooks",
+          "icon": "media/icons/chef.svg"
+        }
+      ]
+    },
+    "views": {
+      "tooManyCooks": [
+        {
+          "id": "tooManyCooksAgents",
+          "name": "Agents"
+        },
+        {
+          "id": "tooManyCooksLocks",
+          "name": "File Locks"
+        },
+        {
+          "id": "tooManyCooksMessages",
+          "name": "Messages"
+        },
+        {
+          "id": "tooManyCooksPlans",
+          "name": "Plans"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "tooManyCooks.refresh",
+          "when": "view =~ /tooManyCooks.*/",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Too Many Cooks",
+      "properties": {
+        "tooManyCooks.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the Too Many Cooks MCP server (leave empty for auto-detect)"
+        },
+        "tooManyCooks.autoConnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically connect to server on startup"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "dependencies": {
+    "@preact/signals-core": "^1.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.3.0"
+  }
+}

@@ -4,6 +4,7 @@ library;
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks/src/db/db.dart';
+import 'package:too_many_cooks/src/notifications.dart';
 import 'package:too_many_cooks/src/types.dart';
 
 /// Input schema for message tool.
@@ -53,7 +54,11 @@ const messageToolConfig = (
 );
 
 /// Create message tool handler.
-ToolCallback createMessageHandler(TooManyCooksDb db) => (args, meta) async {
+ToolCallback createMessageHandler(
+  TooManyCooksDb db,
+  NotificationEmitter emitter,
+) =>
+    (args, meta) async {
       final action = args['action']! as String;
       final agentName = args['agent_name']! as String;
       final agentKey = args['agent_key']! as String;
@@ -61,6 +66,7 @@ ToolCallback createMessageHandler(TooManyCooksDb db) => (args, meta) async {
       return switch (action) {
         'send' => _send(
             db,
+            emitter,
             agentName,
             agentKey,
             args['to_agent'] as String?,
@@ -89,6 +95,7 @@ ToolCallback createMessageHandler(TooManyCooksDb db) => (args, meta) async {
 
 CallToolResult _send(
   TooManyCooksDb db,
+  NotificationEmitter emitter,
   String agentName,
   String agentKey,
   String? toAgent,
@@ -103,12 +110,21 @@ CallToolResult _send(
     );
   }
   return switch (db.sendMessage(agentName, agentKey, toAgent, content)) {
-    Success(:final value) => (
-        content: <Object>[
-          (type: 'text', text: '{"sent":true,"message_id":"$value"}'),
-        ],
-        isError: false,
-      ),
+    Success(:final value) => () {
+        // Emit notification
+        emitter.emit(eventMessageSent, {
+          'message_id': value,
+          'from_agent': agentName,
+          'to_agent': toAgent,
+          'content': content,
+        });
+        return (
+          content: <Object>[
+            (type: 'text', text: '{"sent":true,"message_id":"$value"}'),
+          ],
+          isError: false,
+        );
+      }(),
     Error(:final error) => _errorResult(error),
   };
 }

@@ -462,30 +462,31 @@ JSObject _callToolResultToJs(CallToolResult result) {
 }
 
 JSObject _contentToJs(Object content) {
+  // Content is a typedef record (TextContent, ImageContent, ResourceContent).
+  // Dart records compile to JS arrays with named properties, but JSON.stringify
+  // only serializes array indices. We must manually convert to a plain object.
   final obj = JSObject();
-  switch (content) {
-    case TextContent():
-      obj['type'] = content.type.toJS;
-      obj['text'] = content.text.toJS;
-    case ImageContent():
-      obj['type'] = content.type.toJS;
-      obj['data'] = content.data.toJS;
-      obj['mimeType'] = content.mimeType.toJS;
-    case ResourceContent():
-      obj['type'] = content.type.toJS;
-      obj['uri'] = content.uri.toJS;
-      if (content.mimeType != null) {
-        obj['mimeType'] = content.mimeType!.toJS;
-      }
-      if (content.text != null) {
-        obj['text'] = content.text!.toJS;
-      }
-    default:
-      // Handle as generic map - content must be a Map for jsify
-      final contentMap = content as Map<String, Object?>;
-      final jsified = contentMap.jsify();
-      return jsified! as JSObject;
+
+  // All content types have a 'type' field
+  // Use reflection-like access via the record's named fields
+  final rec = content as ({String type});
+  obj['type'] = rec.type.toJS;
+
+  // Based on type, extract other fields
+  if (rec.type == 'text') {
+    final textRec = content as TextContent;
+    obj['text'] = textRec.text.toJS;
+  } else if (rec.type == 'image') {
+    final imageRec = content as ImageContent;
+    obj['data'] = imageRec.data.toJS;
+    obj['mimeType'] = imageRec.mimeType.toJS;
+  } else if (rec.type == 'resource') {
+    final resRec = content as ResourceContent;
+    obj['uri'] = resRec.uri.toJS;
+    if (resRec.mimeType != null) obj['mimeType'] = resRec.mimeType!.toJS;
+    if (resRec.text != null) obj['text'] = resRec.text!.toJS;
   }
+
   return obj;
 }
 

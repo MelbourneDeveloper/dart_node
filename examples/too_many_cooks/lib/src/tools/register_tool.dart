@@ -4,6 +4,7 @@ library;
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks/src/db/db.dart';
+import 'package:too_many_cooks/src/notifications.dart';
 
 /// Input schema for register tool.
 const registerInputSchema = <String, Object?>{
@@ -27,9 +28,23 @@ const registerToolConfig = (
 );
 
 /// Create register tool handler.
-ToolCallback createRegisterHandler(TooManyCooksDb db) =>
-    (args, meta) async => switch (db.register(args['name']! as String)) {
-          Success(:final value) => (
+ToolCallback createRegisterHandler(
+  TooManyCooksDb db,
+  NotificationEmitter emitter,
+) =>
+    (args, meta) async {
+      final name = args['name']! as String;
+      final result = db.register(name);
+
+      return switch (result) {
+        Success(:final value) => () {
+            // Emit notification
+            emitter.emit(eventAgentRegistered, {
+              'agent_name': value.agentName,
+              'registered_at': DateTime.now().millisecondsSinceEpoch,
+            });
+
+            return (
               content: <Object>[
                 (
                   type: 'text',
@@ -38,14 +53,16 @@ ToolCallback createRegisterHandler(TooManyCooksDb db) =>
                 ),
               ],
               isError: false,
-            ),
-          Error(:final error) => (
-              content: <Object>[
-                (
-                  type: 'text',
-                  text: '{"error":"${error.code}: ${error.message}"}',
-                ),
-              ],
-              isError: true,
-            ),
-        };
+            );
+          }(),
+        Error(:final error) => (
+            content: <Object>[
+              (
+                type: 'text',
+                text: '{"error":"${error.code}: ${error.message}"}',
+              ),
+            ],
+            isError: true,
+          ),
+      };
+    };

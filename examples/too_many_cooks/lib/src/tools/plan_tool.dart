@@ -4,6 +4,7 @@ library;
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks/src/db/db.dart';
+import 'package:too_many_cooks/src/notifications.dart';
 import 'package:too_many_cooks/src/types.dart';
 
 /// Input schema for plan tool.
@@ -45,12 +46,17 @@ const planToolConfig = (
 );
 
 /// Create plan tool handler.
-ToolCallback createPlanHandler(TooManyCooksDb db) => (args, meta) async {
+ToolCallback createPlanHandler(
+  TooManyCooksDb db,
+  NotificationEmitter emitter,
+) =>
+    (args, meta) async {
       final action = args['action']! as String;
 
       return switch (action) {
         'update' => _update(
             db,
+            emitter,
             args['agent_name'] as String?,
             args['agent_key'] as String?,
             args['goal'] as String?,
@@ -69,6 +75,7 @@ ToolCallback createPlanHandler(TooManyCooksDb db) => (args, meta) async {
 
 CallToolResult _update(
   TooManyCooksDb db,
+  NotificationEmitter emitter,
   String? agentName,
   String? agentKey,
   String? goal,
@@ -90,10 +97,18 @@ CallToolResult _update(
     );
   }
   return switch (db.updatePlan(agentName, agentKey, goal, currentTask)) {
-    Success() => (
-        content: <Object>[(type: 'text', text: '{"updated":true}')],
-        isError: false,
-      ),
+    Success() => () {
+        // Emit notification
+        emitter.emit(eventPlanUpdated, {
+          'agent_name': agentName,
+          'goal': goal,
+          'current_task': currentTask,
+        });
+        return (
+          content: <Object>[(type: 'text', text: '{"updated":true}')],
+          isError: false,
+        );
+      }(),
     Error(:final error) => _errorResult(error),
   };
 }
