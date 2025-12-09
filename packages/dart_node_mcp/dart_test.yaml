@@ -1,0 +1,11 @@
+# Test configuration for dart_node_mcp
+#
+# Tests are organized into two categories:
+# 1. Pure Dart tests (types, callbacks, registered) - run in Dart VM
+# 2. JS interop tests (transport, server, mcp_server, integration) - require Node.js
+
+# Only run pure Dart tests by default since JS interop tests need Node.js runtime
+paths:
+  - test/types_test.dart
+  - test/callbacks_test.dart
+  - test/registered_test.dart
