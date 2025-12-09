@@ -15,8 +15,7 @@ typedef ToolCallback =
 /// Read resource callback function type.
 ///
 /// Called when a resource is read by URI.
-typedef ReadResourceCallback =
-    Future<ReadResourceResult> Function(String uri);
+typedef ReadResourceCallback = Future<ReadResourceResult> Function(String uri);
 
 /// Read resource template callback function type.
 ///

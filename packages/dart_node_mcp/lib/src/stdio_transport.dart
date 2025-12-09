@@ -33,12 +33,13 @@ extension type StdioServerTransport._(JSObject _) implements Transport {
 /// Returns [Success] with the transport or [Error] with message on failure.
 Result<StdioServerTransport, String> createStdioServerTransport() {
   try {
-    final sdkModule = requireModule('@modelcontextprotocol/sdk/server/stdio.js')
-        ;
+    final sdkModule = requireModule(
+      '@modelcontextprotocol/sdk/server/stdio.js',
+    );
     final transportClass = (sdkModule as JSObject)['StdioServerTransport'];
     final jsTransportClass = transportClass as JSFunction;
-    final transport =
-        jsTransportClass.callAsConstructor<StdioServerTransport>();
+    final transport = jsTransportClass
+        .callAsConstructor<StdioServerTransport>();
     return Success(transport);
   } catch (e) {
     return Error('Failed to create stdio transport: $e');
@@ -53,8 +54,9 @@ Result<StdioServerTransport, String> createStdioServerTransportWithStreams(
   JSObject stdout,
 ) {
   try {
-    final sdkModule = requireModule('@modelcontextprotocol/sdk/server/stdio.js')
-        ;
+    final sdkModule = requireModule(
+      '@modelcontextprotocol/sdk/server/stdio.js',
+    );
     final transportClass = (sdkModule as JSObject)['StdioServerTransport'];
     final jsTransportClass = transportClass as JSFunction;
     final transport = jsTransportClass.callAsConstructor<StdioServerTransport>(

@@ -1,5 +1,4 @@
 // Pure Dart registered type tests - import only types to avoid JS interop
-import 'package:dart_node_mcp/src/registered.dart';
 import 'package:dart_node_mcp/src/types.dart';
 import 'package:test/test.dart';
 
@@ -77,11 +76,15 @@ void main() {
         description: 'Complete description',
         inputSchema: <String, Object?>{
           'type': 'object',
-          'properties': {'arg': {'type': 'string'}},
+          'properties': {
+            'arg': {'type': 'string'},
+          },
         },
         outputSchema: <String, Object?>{
           'type': 'object',
-          'properties': {'result': {'type': 'boolean'}},
+          'properties': {
+            'result': {'type': 'boolean'},
+          },
         },
         annotations: (
           title: 'Annotated',
@@ -277,11 +280,7 @@ void main() {
       ];
 
       for (final name in names) {
-        final prompt = (
-          name: name,
-          remove: () {},
-          update: (PromptConfig _) {},
-        );
+        final prompt = (name: name, remove: () {}, update: (PromptConfig _) {});
         expect(prompt.name, equals(name));
       }
     });
@@ -289,7 +288,7 @@ void main() {
 
   group('Registered type assignment', () {
     test('RegisteredTool can be assigned to variable', () {
-      final RegisteredTool tool = (
+      final tool = (
         name: 'typed-tool',
         remove: () {},
         update: (ToolConfig _) {},
@@ -301,7 +300,7 @@ void main() {
     });
 
     test('RegisteredResource can be assigned to variable', () {
-      final RegisteredResource resource = (
+      final resource = (
         name: 'typed-resource',
         uri: 'test://uri',
         remove: () {},
@@ -312,7 +311,7 @@ void main() {
     });
 
     test('RegisteredResourceTemplate can be assigned to variable', () {
-      final RegisteredResourceTemplate template = (
+      final template = (
         name: 'typed-template',
         uriTemplate: 'test:///{id}',
         remove: () {},
@@ -323,7 +322,7 @@ void main() {
     });
 
     test('RegisteredPrompt can be assigned to variable', () {
-      final RegisteredPrompt prompt = (
+      final prompt = (
         name: 'typed-prompt',
         remove: () {},
         update: (PromptConfig _) {},

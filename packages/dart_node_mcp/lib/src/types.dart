@@ -67,11 +67,7 @@ typedef PromptConfig = ({
 });
 
 /// Logging message parameters.
-typedef LoggingMessageParams = ({
-  String level,
-  String? logger,
-  Object? data,
-});
+typedef LoggingMessageParams = ({String level, String? logger, Object? data});
 
 /// Text content in tool results.
 typedef TextContent = ({String type, String text});
@@ -97,10 +93,7 @@ typedef ReadResourceResult = ({List<Object> contents});
 typedef PromptMessage = ({String role, Object content});
 
 /// Get prompt result.
-typedef GetPromptResult = ({
-  String? description,
-  List<PromptMessage> messages,
-});
+typedef GetPromptResult = ({String? description, List<PromptMessage> messages});
 
 /// Tool call metadata.
 typedef ToolCallMeta = ({String? progressToken});

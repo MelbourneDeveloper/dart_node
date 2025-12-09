@@ -16,6 +16,45 @@
 
 ## Database Schema
 
+```mermaid
+erDiagram
+    identity ||--o{ locks : "holds"
+    identity ||--o{ messages : "sends"
+    identity ||--o| plans : "has"
+
+    identity {
+        TEXT agent_name PK
+        TEXT agent_key UK
+        INTEGER registered_at
+        INTEGER last_active
+    }
+
+    locks {
+        TEXT file_path PK
+        TEXT agent_name FK
+        INTEGER acquired_at
+        INTEGER expires_at
+        TEXT reason
+        INTEGER version
+    }
+
+    messages {
+        TEXT id PK
+        TEXT from_agent FK
+        TEXT to_agent
+        TEXT content
+        INTEGER created_at
+        INTEGER read_at
+    }
+
+    plans {
+        TEXT agent_name PK_FK
+        TEXT goal
+        TEXT current_task
+        INTEGER updated_at
+    }
+```
+
 ### Table: `identity`
 Agent registration and liveness tracking.
 
@@ -199,9 +238,9 @@ const errDatabase = 'DATABASE';
 
 ---
 
-## File Protection (chmod)
+## File Protection
 
-No chmod for now. Only logical file locks - not physical
+No chmod. Only logical file locks - not physical.
 
 ---
 
@@ -258,7 +297,6 @@ Input: { file_path: string, agent_name: string, agent_key: string }
 Output: { released: bool, error?: string }
 ```
 - Only works if lock.expires_at < now
-- Restores chmod
 
 #### `renew_lock`
 Extend expiration on your lock.
@@ -392,7 +430,6 @@ examples/too_many_cooks/
 │       │   ├── schema.dart           # SQL schema constants
 │       │   ├── db.dart               # TooManyCooksDb implementation
 │       │   └── migrations.dart       # Schema versioning
-│       ├── file_protection.dart      # chmod operations
 │       ├── tools/
 │       │   ├── identity_tools.dart   # register_agent, list_agents
 │       │   ├── lock_tools.dart       # acquire_lock, release_lock, etc.
@@ -454,7 +491,7 @@ Result<void, DbError> forceReleaseLock(
 ) {
   // 1. Authenticate requesting agent (updates their last_active)
   // 2. Check if lock exists and is expired
-  // 3. If expired: restore chmod, delete lock
+  // 3. If expired: delete lock
   // 4. If not expired: return error with holder info
 }
 ```

@@ -120,12 +120,8 @@ void main() {
       Future<CallToolResult> callback(
         Map<String, Object?> args,
         ToolCallMeta? meta,
-      ) async {
-        return (
-          content: <Object>[(type: 'text', text: 'Done')],
-          isError: false,
-        );
-      }
+      ) async =>
+          (content: <Object>[(type: 'text', text: 'Done')], isError: false);
 
       // Verify types are correct
       expect(config.description, equals('Simple tool'));
@@ -139,10 +135,7 @@ void main() {
         inputSchema: <String, Object?>{
           'type': 'object',
           'properties': {
-            'message': {
-              'type': 'string',
-              'description': 'Message to echo',
-            },
+            'message': {'type': 'string', 'description': 'Message to echo'},
           },
           'required': ['message'],
         },
@@ -162,8 +155,8 @@ void main() {
       );
 
       expect(config.title, equals('Echo Tool'));
-      expect(config.inputSchema?['type'], equals('object'));
-      expect(config.annotations?.readOnlyHint, isTrue);
+      expect(config.inputSchema['type'], equals('object'));
+      expect(config.annotations.readOnlyHint, isTrue);
     });
 
     test('tool callback with args', () async {
@@ -205,12 +198,10 @@ void main() {
       Future<CallToolResult> callback(
         Map<String, Object?> args,
         ToolCallMeta? meta,
-      ) async {
-        return (
-          content: <Object>[(type: 'text', text: 'Tool execution failed')],
-          isError: true,
-        );
-      }
+      ) async => (
+        content: <Object>[(type: 'text', text: 'Tool execution failed')],
+        isError: true,
+      );
 
       final result = await callback({}, null);
 
@@ -225,18 +216,16 @@ void main() {
         mimeType: 'application/json',
       );
 
-      Future<ReadResourceResult> callback(String uri) async {
-        return (
-          contents: <Object>[
-            (
-              type: 'resource',
-              uri: uri,
-              mimeType: 'application/json',
-              text: '{"key": "value"}',
-            ),
-          ],
-        );
-      }
+      Future<ReadResourceResult> callback(String uri) async => (
+        contents: <Object>[
+          (
+            type: 'resource',
+            uri: uri,
+            mimeType: 'application/json',
+            text: '{"key": "value"}',
+          ),
+        ],
+      );
 
       expect(metadata.description, equals('Configuration file'));
       expect(callback, isA<ReadResourceCallback>());
@@ -298,14 +287,12 @@ void main() {
         argsSchema: null,
       );
 
-      Future<GetPromptResult> callback(Map<String, String> args) async {
-        return (
-          description: 'A greeting prompt',
-          messages: <PromptMessage>[
-            (role: 'assistant', content: (type: 'text', text: 'Hello!')),
-          ],
-        );
-      }
+      Future<GetPromptResult> callback(Map<String, String> args) async => (
+        description: 'A greeting prompt',
+        messages: <PromptMessage>[
+          (role: 'assistant', content: (type: 'text', text: 'Hello!')),
+        ],
+      );
 
       expect(config.title, equals('Greeting'));
       expect(callback, isA<PromptCallback>());
@@ -325,7 +312,7 @@ void main() {
         },
       );
 
-      expect(config.argsSchema?['type'], equals('object'));
+      expect(config.argsSchema['type'], equals('object'));
     });
 
     test('prompt callback with args', () async {
@@ -352,11 +339,7 @@ void main() {
 
   group('LoggingMessageParams', () {
     test('creates with all fields', () {
-      const params = (
-        level: 'info',
-        logger: 'mcp-server',
-        data: 'Log data',
-      );
+      const params = (level: 'info', logger: 'mcp-server', data: 'Log data');
 
       expect(params.level, equals('info'));
       expect(params.logger, equals('mcp-server'));
@@ -376,7 +359,10 @@ void main() {
       final params = (
         level: 'debug',
         logger: 'test',
-        data: {'key': 'value', 'nested': {'inner': 123}},
+        data: {
+          'key': 'value',
+          'nested': {'inner': 123},
+        },
       );
 
       expect(params.data, isA<Map>());

@@ -35,21 +35,21 @@ class McpServer {
     ServerOptions? options,
   }) {
     try {
-      final sdkModule =
-          requireModule('@modelcontextprotocol/sdk/server/mcp.js');
+      final sdkModule = requireModule(
+        '@modelcontextprotocol/sdk/server/mcp.js',
+      );
       final mcpServerClass = (sdkModule as JSObject)['McpServer'];
       final jsMcpServerClass = mcpServerClass as JSFunction;
 
       final jsServerInfo = _implementationToJs(serverInfo);
       final jsOptions = options != null ? _serverOptionsToJs(options) : null;
 
-      final mcpServer =
-          jsOptions != null
-              ? jsMcpServerClass.callAsConstructor<JSObject>(
-                jsServerInfo,
-                jsOptions,
-              )
-              : jsMcpServerClass.callAsConstructor<JSObject>(jsServerInfo);
+      final mcpServer = jsOptions != null
+          ? jsMcpServerClass.callAsConstructor<JSObject>(
+              jsServerInfo,
+              jsOptions,
+            )
+          : jsMcpServerClass.callAsConstructor<JSObject>(jsServerInfo);
 
       return Success(McpServer._(mcpServer));
     } catch (e) {
@@ -70,12 +70,14 @@ class McpServer {
       final jsCallback = _wrapToolCallback(callback);
 
       final registerToolFn = _mcpServer['registerTool'] as JSFunction;
-      final jsResult = registerToolFn.callAsFunction(
-        _mcpServer,
-        name.toJS,
-        jsConfig,
-        jsCallback,
-      ) as JSObject;
+      final jsResult =
+          registerToolFn.callAsFunction(
+                _mcpServer,
+                name.toJS,
+                jsConfig,
+                jsCallback,
+              )
+              as JSObject;
 
       return Success(_jsToRegisteredTool(name, jsResult));
     } catch (e) {
@@ -97,13 +99,15 @@ class McpServer {
       final jsCallback = _wrapReadResourceCallback(readCallback);
 
       final registerResourceFn = _mcpServer['registerResource'] as JSFunction;
-      final jsResult = registerResourceFn.callAsFunction(
-        _mcpServer,
-        name.toJS,
-        uri.toJS,
-        jsMetadata,
-        jsCallback,
-      ) as JSObject;
+      final jsResult =
+          registerResourceFn.callAsFunction(
+                _mcpServer,
+                name.toJS,
+                uri.toJS,
+                jsMetadata,
+                jsCallback,
+              )
+              as JSObject;
 
       return Success(_jsToRegisteredResource(name, uri, jsResult));
     } catch (e) {
@@ -126,13 +130,15 @@ class McpServer {
       final jsCallback = _wrapReadResourceTemplateCallback(readCallback);
 
       final registerResourceFn = _mcpServer['registerResource'] as JSFunction;
-      final jsResult = registerResourceFn.callAsFunction(
-        _mcpServer,
-        name.toJS,
-        jsTemplate,
-        jsMetadata,
-        jsCallback,
-      ) as JSObject;
+      final jsResult =
+          registerResourceFn.callAsFunction(
+                _mcpServer,
+                name.toJS,
+                jsTemplate,
+                jsMetadata,
+                jsCallback,
+              )
+              as JSObject;
 
       return Success(
         _jsToRegisteredResourceTemplate(name, template.uriTemplate, jsResult),
@@ -155,12 +161,14 @@ class McpServer {
       final jsCallback = _wrapPromptCallback(callback);
 
       final registerPromptFn = _mcpServer['registerPrompt'] as JSFunction;
-      final jsResult = registerPromptFn.callAsFunction(
-        _mcpServer,
-        name.toJS,
-        jsConfig,
-        jsCallback,
-      ) as JSObject;
+      final jsResult =
+          registerPromptFn.callAsFunction(
+                _mcpServer,
+                name.toJS,
+                jsConfig,
+                jsCallback,
+              )
+              as JSObject;
 
       return Success(_jsToRegisteredPrompt(name, jsResult));
     } catch (e) {
@@ -218,14 +226,10 @@ class McpServer {
     try {
       final jsParams = _loggingMessageParamsToJs(params);
       final sendFn = _mcpServer['sendLoggingMessage'] as JSFunction;
-      final promise =
-          sessionId != null
-              ? sendFn.callAsFunction(
-                _mcpServer,
-                jsParams,
-                sessionId.toJS,
-              ) as JSPromise
-              : sendFn.callAsFunction(_mcpServer, jsParams) as JSPromise;
+      final promise = sessionId != null
+          ? sendFn.callAsFunction(_mcpServer, jsParams, sessionId.toJS)
+                as JSPromise
+          : sendFn.callAsFunction(_mcpServer, jsParams) as JSPromise;
       await promise.toDart;
       return const Success(null);
     } catch (e) {
@@ -236,8 +240,9 @@ class McpServer {
   /// Notify clients that resource list changed.
   void sendResourceListChanged() {
     try {
-      (_mcpServer['sendResourceListChanged'] as JSFunction)
-          .callAsFunction(_mcpServer);
+      (_mcpServer['sendResourceListChanged'] as JSFunction).callAsFunction(
+        _mcpServer,
+      );
     } catch (_) {
       // Ignore errors on notifications
     }
@@ -246,8 +251,9 @@ class McpServer {
   /// Notify clients that tool list changed.
   void sendToolListChanged() {
     try {
-      (_mcpServer['sendToolListChanged'] as JSFunction)
-          .callAsFunction(_mcpServer);
+      (_mcpServer['sendToolListChanged'] as JSFunction).callAsFunction(
+        _mcpServer,
+      );
     } catch (_) {
       // Ignore errors on notifications
     }
@@ -256,8 +262,9 @@ class McpServer {
   /// Notify clients that prompt list changed.
   void sendPromptListChanged() {
     try {
-      (_mcpServer['sendPromptListChanged'] as JSFunction)
-          .callAsFunction(_mcpServer);
+      (_mcpServer['sendPromptListChanged'] as JSFunction).callAsFunction(
+        _mcpServer,
+      );
     } catch (_) {
       // Ignore errors on notifications
     }
@@ -412,23 +419,19 @@ JSObject _loggingMessageParamsToJs(LoggingMessageParams params) {
   return obj;
 }
 
-JSFunction _wrapToolCallback(ToolCallback callback) => ((
-  JSObject args,
-  JSObject? meta,
-) async {
-  final dartArgs = args.dartify()! as Map<String, Object?>;
-  final dartMeta =
-      meta != null ? _jsToToolCallMeta(meta) : null;
-  final result = await callback(dartArgs, dartMeta);
-  return _callToolResultToJs(result);
-}).toJS;
+JSFunction _wrapToolCallback(ToolCallback callback) =>
+    ((JSObject args, JSObject? meta) async {
+      final dartArgs = args.dartify()! as Map<String, Object?>;
+      final dartMeta = meta != null ? _jsToToolCallMeta(meta) : null;
+      final result = await callback(dartArgs, dartMeta);
+      return _callToolResultToJs(result);
+    }).toJS;
 
-JSFunction _wrapReadResourceCallback(ReadResourceCallback callback) => ((
-  String uri,
-) async {
-  final result = await callback(uri);
-  return _readResourceResultToJs(result);
-}).toJS;
+JSFunction _wrapReadResourceCallback(ReadResourceCallback callback) =>
+    ((String uri) async {
+      final result = await callback(uri);
+      return _readResourceResultToJs(result);
+    }).toJS;
 
 JSFunction _wrapReadResourceTemplateCallback(
   ReadResourceTemplateCallback callback,
@@ -438,21 +441,19 @@ JSFunction _wrapReadResourceTemplateCallback(
   return _readResourceResultToJs(result);
 }).toJS;
 
-JSFunction _wrapPromptCallback(PromptCallback callback) => ((
-  JSObject args,
-) async {
-  final dartArgs = args.dartify()! as Map<String, String>;
-  final result = await callback(dartArgs);
-  return _getPromptResultToJs(result);
-}).toJS;
+JSFunction _wrapPromptCallback(PromptCallback callback) =>
+    ((JSObject args) async {
+      final dartArgs = args.dartify()! as Map<String, String>;
+      final result = await callback(dartArgs);
+      return _getPromptResultToJs(result);
+    }).toJS;
 
 ToolCallMeta? _jsToToolCallMeta(JSObject meta) {
   final progressToken = meta['progressToken'];
   return (
-    progressToken:
-        progressToken != null
-            ? (progressToken as JSString).toDart
-            : null,
+    progressToken: progressToken != null
+        ? (progressToken as JSString).toDart
+        : null,
   );
 }
 

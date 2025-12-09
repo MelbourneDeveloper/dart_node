@@ -61,18 +61,18 @@ Result<Server, String> createServer(
   ServerOptions? options,
 }) {
   try {
-    final sdkModule = requireModule('@modelcontextprotocol/sdk/server/index.js')
-        ;
+    final sdkModule = requireModule(
+      '@modelcontextprotocol/sdk/server/index.js',
+    );
     final serverClass = (sdkModule as JSObject)['Server'];
     final jsServerClass = serverClass as JSFunction;
 
     final jsServerInfo = _implementationToJs(serverInfo);
     final jsOptions = options != null ? _serverOptionsToJs(options) : null;
 
-    final server =
-        jsOptions != null
-            ? jsServerClass.callAsConstructor<Server>(jsServerInfo, jsOptions)
-            : jsServerClass.callAsConstructor<Server>(jsServerInfo);
+    final server = jsOptions != null
+        ? jsServerClass.callAsConstructor<Server>(jsServerInfo, jsOptions)
+        : jsServerClass.callAsConstructor<Server>(jsServerInfo);
 
     return Success(server);
   } catch (e) {

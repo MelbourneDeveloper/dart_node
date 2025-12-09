@@ -52,6 +52,9 @@ export 'src/stdio_transport.dart'
         createStdioServerTransport,
         createStdioServerTransportWithStreams;
 export 'src/transport.dart'
-    show Transport, TransportCloseCallback, TransportErrorCallback,
+    show
+        Transport,
+        TransportCloseCallback,
+        TransportErrorCallback,
         TransportMessageCallback;
 export 'src/types.dart';

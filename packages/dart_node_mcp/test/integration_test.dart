@@ -146,7 +146,10 @@ void main() {
       );
 
       // Define metadata
-      const metadata = (description: 'User record', mimeType: 'application/json');
+      const metadata = (
+        description: 'User record',
+        mimeType: 'application/json',
+      );
 
       // Define callback
       Future<ReadResourceResult> templateCallback(
@@ -173,10 +176,9 @@ void main() {
       }
 
       // Test callback
-      final result = await templateCallback(
-        'db:///users/123',
-        {'userId': '123'},
-      );
+      final result = await templateCallback('db:///users/123', {
+        'userId': '123',
+      });
 
       expect(result.contents, hasLength(1));
       expect(template.uriTemplate, contains('{userId}'));
@@ -220,7 +222,8 @@ void main() {
               role: 'assistant',
               content: (
                 type: 'text',
-                text: 'I will review your $language code. '
+                text:
+                    'I will review your $language code. '
                     'Please share the code you would like me to review.',
               ),
             ),
@@ -283,11 +286,7 @@ void main() {
             content: <Object>[
               (
                 type: 'text',
-                text: args['text']
-                    .toString()
-                    .split('')
-                    .reversed
-                    .join(),
+                text: args['text'].toString().split('').reversed.join(),
               ),
             ],
             isError: false,
@@ -306,22 +305,20 @@ void main() {
     });
 
     test('multiple resources can be defined', () {
-      final resources = <String, (String, ResourceMetadata, ReadResourceCallback)>{
-        'config': (
-          'file:///config.json',
-          (description: 'Config', mimeType: 'application/json'),
-          (uri) async => (
-            contents: <Object>[(type: 'text', text: '{}')],
-          ),
-        ),
-        'readme': (
-          'file:///README.md',
-          (description: 'Readme', mimeType: 'text/markdown'),
-          (uri) async => (
-            contents: <Object>[(type: 'text', text: '# README')],
-          ),
-        ),
-      };
+      final resources =
+          <String, (String, ResourceMetadata, ReadResourceCallback)>{
+            'config': (
+              'file:///config.json',
+              (description: 'Config', mimeType: 'application/json'),
+              (uri) async => (contents: <Object>[(type: 'text', text: '{}')]),
+            ),
+            'readme': (
+              'file:///README.md',
+              (description: 'Readme', mimeType: 'text/markdown'),
+              (uri) async =>
+                  (contents: <Object>[(type: 'text', text: '# README')]),
+            ),
+          };
 
       expect(resources, hasLength(2));
     });
@@ -436,14 +433,10 @@ void main() {
       Future<CallToolResult> textTool(
         Map<String, Object?> args,
         ToolCallMeta? meta,
-      ) async {
-        return (
-          content: <Object>[
-            (type: 'text', text: 'Simple text response'),
-          ],
-          isError: false,
-        );
-      }
+      ) async => (
+        content: <Object>[(type: 'text', text: 'Simple text response')],
+        isError: false,
+      );
 
       final result = await textTool({}, null);
       final content = result.content.first as TextContent;
@@ -454,18 +447,17 @@ void main() {
       Future<CallToolResult> imageTool(
         Map<String, Object?> args,
         ToolCallMeta? meta,
-      ) async {
-        return (
-          content: <Object>[
-            (
-              type: 'image',
-              data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-              mimeType: 'image/png',
-            ),
-          ],
-          isError: false,
-        );
-      }
+      ) async => (
+        content: <Object>[
+          (
+            type: 'image',
+            data:
+                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+            mimeType: 'image/png',
+          ),
+        ],
+        isError: false,
+      );
 
       final result = await imageTool({}, null);
       final content = result.content.first as ImageContent;
@@ -474,18 +466,16 @@ void main() {
     });
 
     test('resource content in result', () async {
-      Future<ReadResourceResult> resourceReader(String uri) async {
-        return (
-          contents: <Object>[
-            (
-              type: 'resource',
-              uri: uri,
-              mimeType: 'text/plain',
-              text: 'File contents here',
-            ),
-          ],
-        );
-      }
+      Future<ReadResourceResult> resourceReader(String uri) async => (
+        contents: <Object>[
+          (
+            type: 'resource',
+            uri: uri,
+            mimeType: 'text/plain',
+            text: 'File contents here',
+          ),
+        ],
+      );
 
       final result = await resourceReader('file:///test.txt');
       final content = result.contents.first as ResourceContent;
@@ -497,21 +487,19 @@ void main() {
       Future<CallToolResult> mixedTool(
         Map<String, Object?> args,
         ToolCallMeta? meta,
-      ) async {
-        return (
-          content: <Object>[
-            (type: 'text', text: 'Description'),
-            (type: 'image', data: 'base64data', mimeType: 'image/jpeg'),
-            (
-              type: 'resource',
-              uri: 'file:///data.json',
-              mimeType: 'application/json',
-              text: '{"key": "value"}',
-            ),
-          ],
-          isError: false,
-        );
-      }
+      ) async => (
+        content: <Object>[
+          (type: 'text', text: 'Description'),
+          (type: 'image', data: 'base64data', mimeType: 'image/jpeg'),
+          (
+            type: 'resource',
+            uri: 'file:///data.json',
+            mimeType: 'application/json',
+            text: '{"key": "value"}',
+          ),
+        ],
+        isError: false,
+      );
 
       final result = await mixedTool({}, null);
       expect(result.content, hasLength(3));

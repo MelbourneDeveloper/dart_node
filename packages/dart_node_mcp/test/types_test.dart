@@ -32,7 +32,10 @@ void main() {
         instructions: 'System instructions for the server',
       );
 
-      expect(options.instructions, equals('System instructions for the server'));
+      expect(
+        options.instructions,
+        equals('System instructions for the server'),
+      );
     });
   });
 
@@ -45,10 +48,10 @@ void main() {
         logging: (enabled: true),
       );
 
-      expect(caps.tools?.listChanged, isTrue);
-      expect(caps.resources?.subscribe, isTrue);
-      expect(caps.resources?.listChanged, isTrue);
-      expect(caps.prompts?.listChanged, isFalse);
+      expect(caps.tools.listChanged, isTrue);
+      expect(caps.resources.subscribe, isTrue);
+      expect(caps.resources.listChanged, isTrue);
+      expect(caps.prompts.listChanged, isFalse);
       expect(caps.logging.enabled, isTrue);
     });
 
@@ -60,7 +63,7 @@ void main() {
         logging: null,
       );
 
-      expect(caps.tools?.listChanged, isTrue);
+      expect(caps.tools.listChanged, isTrue);
       expect(caps.resources, isNull);
     });
   });
@@ -106,9 +109,9 @@ void main() {
       );
 
       expect(config.title, equals('Echo Tool'));
-      expect(config.inputSchema?['type'], equals('object'));
-      expect(config.annotations?.readOnlyHint, isTrue);
-      expect(config.annotations?.destructiveHint, isFalse);
+      expect(config.inputSchema['type'], equals('object'));
+      expect(config.annotations.readOnlyHint, isTrue);
+      expect(config.annotations.destructiveHint, isFalse);
     });
   });
 
@@ -206,7 +209,7 @@ void main() {
 
       expect(config.title, equals('Greeting Prompt'));
       expect(config.description, equals('Generates a personalized greeting'));
-      expect(config.argsSchema?['type'], equals('object'));
+      expect(config.argsSchema['type'], equals('object'));
     });
 
     test('creates with minimal config', () {
@@ -346,10 +349,7 @@ void main() {
 
   group('PromptMessage', () {
     test('creates user message', () {
-      const message = (
-        role: 'user',
-        content: (type: 'text', text: 'Hello'),
-      );
+      const message = (role: 'user', content: (type: 'text', text: 'Hello'));
 
       expect(message.role, equals('user'));
     });

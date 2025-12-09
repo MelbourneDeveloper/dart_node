@@ -1,6 +1,5 @@
 // Pure Dart callback tests - import only types and callbacks
 // to avoid JS interop
-import 'package:dart_node_mcp/src/callbacks.dart';
 import 'package:dart_node_mcp/src/types.dart';
 import 'package:test/test.dart';
 
@@ -10,15 +9,11 @@ void main() {
       Future<CallToolResult> callback(
         Map<String, Object?> args,
         ToolCallMeta? meta,
-      ) async {
-        return (
-          content: <Object>[(type: 'text', text: 'result')],
-          isError: false,
-        );
-      }
+      ) async =>
+          (content: <Object>[(type: 'text', text: 'result')], isError: false);
 
       // Verify callback can be assigned to ToolCallback type
-      final ToolCallback typedCallback = callback;
+      final typedCallback = callback;
       expect(typedCallback, isNotNull);
     });
 
@@ -61,12 +56,10 @@ void main() {
       Future<CallToolResult> callback(
         Map<String, Object?> args,
         ToolCallMeta? meta,
-      ) async {
-        return (
-          content: <Object>[(type: 'text', text: 'Something went wrong')],
-          isError: true,
-        );
-      }
+      ) async => (
+        content: <Object>[(type: 'text', text: 'Something went wrong')],
+        isError: true,
+      );
 
       final result = await callback({}, null);
 
@@ -77,16 +70,14 @@ void main() {
       Future<CallToolResult> callback(
         Map<String, Object?> args,
         ToolCallMeta? meta,
-      ) async {
-        return (
-          content: <Object>[
-            (type: 'text', text: 'First'),
-            (type: 'text', text: 'Second'),
-            (type: 'image', data: 'base64==', mimeType: 'image/png'),
-          ],
-          isError: false,
-        );
-      }
+      ) async => (
+        content: <Object>[
+          (type: 'text', text: 'First'),
+          (type: 'text', text: 'Second'),
+          (type: 'image', data: 'base64==', mimeType: 'image/png'),
+        ],
+        isError: false,
+      );
 
       final result = await callback({}, null);
 
@@ -124,11 +115,10 @@ void main() {
 
   group('ReadResourceCallback', () {
     test('can be defined with correct signature', () {
-      Future<ReadResourceResult> callback(String uri) async {
-        return (contents: <Object>[]);
-      }
+      Future<ReadResourceResult> callback(String uri) async =>
+          (contents: <Object>[]);
 
-      final ReadResourceCallback typedCallback = callback;
+      final typedCallback = callback;
       expect(typedCallback, isNotNull);
     });
 
@@ -155,9 +145,8 @@ void main() {
     });
 
     test('can return empty contents', () async {
-      Future<ReadResourceResult> callback(String uri) async {
-        return (contents: <Object>[]);
-      }
+      Future<ReadResourceResult> callback(String uri) async =>
+          (contents: <Object>[]);
 
       final result = await callback('file:///empty');
 
@@ -165,14 +154,12 @@ void main() {
     });
 
     test('can return multiple contents', () async {
-      Future<ReadResourceResult> callback(String uri) async {
-        return (
-          contents: <Object>[
-            (type: 'text', text: 'Part 1'),
-            (type: 'text', text: 'Part 2'),
-          ],
-        );
-      }
+      Future<ReadResourceResult> callback(String uri) async => (
+        contents: <Object>[
+          (type: 'text', text: 'Part 1'),
+          (type: 'text', text: 'Part 2'),
+        ],
+      );
 
       final result = await callback('file:///multi');
 
@@ -185,11 +172,9 @@ void main() {
       Future<ReadResourceResult> callback(
         String uri,
         Map<String, String> variables,
-      ) async {
-        return (contents: <Object>[]);
-      }
+      ) async => (contents: <Object>[]);
 
-      final ReadResourceTemplateCallback typedCallback = callback;
+      final typedCallback = callback;
       expect(typedCallback, isNotNull);
     });
 
@@ -225,13 +210,11 @@ void main() {
       Future<ReadResourceResult> callback(
         String uri,
         Map<String, String> variables,
-      ) async {
-        return (
-          contents: <Object>[
-            (type: 'text', text: 'Vars count: ${variables.length}'),
-          ],
-        );
-      }
+      ) async => (
+        contents: <Object>[
+          (type: 'text', text: 'Vars count: ${variables.length}'),
+        ],
+      );
 
       final result = await callback('simple:///path', {});
 
@@ -242,14 +225,10 @@ void main() {
 
   group('PromptCallback', () {
     test('can be defined with correct signature', () {
-      Future<GetPromptResult> callback(Map<String, String> args) async {
-        return (
-          description: null,
-          messages: <PromptMessage>[],
-        );
-      }
+      Future<GetPromptResult> callback(Map<String, String> args) async =>
+          (description: null, messages: <PromptMessage>[]);
 
-      final PromptCallback typedCallback = callback;
+      final typedCallback = callback;
       expect(typedCallback, isNotNull);
     });
 
@@ -261,7 +240,10 @@ void main() {
         return (
           description: 'Greeting for ${args['name']}',
           messages: <PromptMessage>[
-            (role: 'user', content: (type: 'text', text: 'Hello ${args['name']}')),
+            (
+              role: 'user',
+              content: (type: 'text', text: 'Hello ${args['name']}'),
+            ),
           ],
         );
       }
@@ -272,14 +254,12 @@ void main() {
     });
 
     test('can return description', () async {
-      Future<GetPromptResult> callback(Map<String, String> args) async {
-        return (
-          description: 'This is a greeting prompt',
-          messages: <PromptMessage>[
-            (role: 'assistant', content: (type: 'text', text: 'Hello!')),
-          ],
-        );
-      }
+      Future<GetPromptResult> callback(Map<String, String> args) async => (
+        description: 'This is a greeting prompt',
+        messages: <PromptMessage>[
+          (role: 'assistant', content: (type: 'text', text: 'Hello!')),
+        ],
+      );
 
       final result = await callback({});
 
@@ -287,16 +267,14 @@ void main() {
     });
 
     test('can return multiple messages', () async {
-      Future<GetPromptResult> callback(Map<String, String> args) async {
-        return (
-          description: null,
-          messages: <PromptMessage>[
-            (role: 'user', content: (type: 'text', text: 'Start')),
-            (role: 'assistant', content: (type: 'text', text: 'Middle')),
-            (role: 'user', content: (type: 'text', text: 'End')),
-          ],
-        );
-      }
+      Future<GetPromptResult> callback(Map<String, String> args) async => (
+        description: null,
+        messages: <PromptMessage>[
+          (role: 'user', content: (type: 'text', text: 'Start')),
+          (role: 'assistant', content: (type: 'text', text: 'Middle')),
+          (role: 'user', content: (type: 'text', text: 'End')),
+        ],
+      );
 
       final result = await callback({});
 
@@ -307,14 +285,15 @@ void main() {
     });
 
     test('handles empty args', () async {
-      Future<GetPromptResult> callback(Map<String, String> args) async {
-        return (
-          description: 'No args provided',
-          messages: <PromptMessage>[
-            (role: 'assistant', content: (type: 'text', text: 'Default response')),
-          ],
-        );
-      }
+      Future<GetPromptResult> callback(Map<String, String> args) async => (
+        description: 'No args provided',
+        messages: <PromptMessage>[
+          (
+            role: 'assistant',
+            content: (type: 'text', text: 'Default response'),
+          ),
+        ],
+      );
 
       final result = await callback({});
 
