@@ -18,99 +18,15 @@
 
 ```mermaid
 erDiagram
-    identity ||--o{ locks : "holds"
-    identity ||--o{ messages : "sends"
-    identity ||--o| plans : "has"
-
-    identity {
-        TEXT agent_name PK
-        TEXT agent_key UK
-        INTEGER registered_at
-        INTEGER last_active
-    }
-
-    locks {
-        TEXT file_path PK
-        TEXT agent_name FK
-        INTEGER acquired_at
-        INTEGER expires_at
-        TEXT reason
-        INTEGER version
-    }
-
-    messages {
-        TEXT id PK
-        TEXT from_agent FK
-        TEXT to_agent
-        TEXT content
-        INTEGER created_at
-        INTEGER read_at
-    }
-
-    plans {
-        TEXT agent_name PK_FK
-        TEXT goal
-        TEXT current_task
-        INTEGER updated_at
-    }
+    identity ||--o{ locks : holds
+    identity ||--o{ messages : sends
+    identity ||--o| plans : has
 ```
 
-### Table: `identity`
-Agent registration and liveness tracking.
-
-```sql
-CREATE TABLE identity (
-  agent_name TEXT PRIMARY KEY,        -- Unique display name (visible to others)
-  agent_key TEXT NOT NULL UNIQUE,     -- Secret key (NOT visible to others)
-  registered_at INTEGER NOT NULL,     -- Unix timestamp ms
-  last_active INTEGER NOT NULL        -- Updated on EVERY tool call
-);
-```
-
-### Table: `locks`
-File-level advisory locks with lease expiration.
-
-```sql
-CREATE TABLE locks (
-  file_path TEXT PRIMARY KEY,         -- Absolute or repo-relative path
-  agent_name TEXT NOT NULL,           -- Who holds the lock
-  acquired_at INTEGER NOT NULL,       -- Unix timestamp ms
-  expires_at INTEGER NOT NULL,        -- Auto-expire time
-  reason TEXT,                        -- Brief: why locked (~100 chars)
-  version INTEGER NOT NULL DEFAULT 1, -- Optimistic concurrency
-  FOREIGN KEY (agent_name) REFERENCES identity(agent_name)
-);
-```
-
-### Table: `messages`
-Short inter-agent messages (~200 char limit).
-
-```sql
-CREATE TABLE messages (
-  id TEXT PRIMARY KEY,                -- UUID
-  from_agent TEXT NOT NULL,           -- Sender name
-  to_agent TEXT NOT NULL,             -- Recipient name (or '*' for broadcast)
-  content TEXT NOT NULL,              -- Max ~200 chars
-  created_at INTEGER NOT NULL,        -- Unix timestamp ms
-  read_at INTEGER,                    -- NULL until read
-  FOREIGN KEY (from_agent) REFERENCES identity(agent_name)
-);
-
-CREATE INDEX idx_messages_inbox ON messages(to_agent, read_at, created_at DESC);
-```
-
-### Table: `plans`
-One plan per agent - what they're doing and why.
-
-```sql
-CREATE TABLE plans (
-  agent_name TEXT PRIMARY KEY,        -- One plan per agent
-  goal TEXT NOT NULL,                 -- Brief goal (~100 chars)
-  current_task TEXT NOT NULL,         -- What they're doing now (~100 chars)
-  updated_at INTEGER NOT NULL,        -- Unix timestamp ms
-  FOREIGN KEY (agent_name) REFERENCES identity(agent_name)
-);
-```
+- **identity**: agent_name (PK), agent_key, registered_at, last_active
+- **locks**: file_path (PK), agent_name (FK), acquired_at, expires_at, reason, version
+- **messages**: id (PK), from_agent (FK), to_agent, content, created_at, read_at
+- **plans**: agent_name (PK/FK), goal, current_task, updated_at
 
 ---
 
@@ -244,139 +160,73 @@ No chmod. Only logical file locks - not physical.
 
 ---
 
-## MCP Tools
+## MCP Tools (5 total)
 
-### Identity Tools
-
-#### `register_agent`
-Register a new agent identity.
-```dart
-Input: { name: string }
-Output: { agent_name: string, agent_key: string }
+### `register`
+Register a new agent. Returns key ONLY once - store it!
 ```
-- Generates unique key (UUID)
-- Returns key ONLY on registration (store it!)
+Input:  { name: string }
+Output: { agent_name, agent_key }
+```
 
-#### `list_agents`
-List all registered agents (names + last_active only).
-```dart
+### `lock`
+Manage file locks. Action determines behavior.
+```
+Input: {
+  action: "acquire" | "release" | "force_release" | "renew" | "query" | "list",
+  agent_name?: string,
+  agent_key?: string,
+  file_path?: string,
+  reason?: string
+}
+Output: { success, lock?, locks?, error? }
+```
+- `acquire`: requires agent_name, agent_key, file_path. Optional reason.
+- `release`: requires agent_name, agent_key, file_path
+- `force_release`: requires agent_name, agent_key, file_path. Only works if expired.
+- `renew`: requires agent_name, agent_key, file_path
+- `query`: requires file_path only (no auth)
+- `list`: no params (no auth) - returns all locks
+
+### `message`
+Send/receive messages between agents.
+```
+Input: {
+  action: "send" | "get" | "mark_read",
+  agent_name: string,
+  agent_key: string,
+  to_agent?: string,
+  content?: string,
+  message_id?: string,
+  unread_only?: bool
+}
+Output: { success, message_id?, messages? }
+```
+- `send`: requires to_agent, content (max 200 chars). Use '*' for broadcast.
+- `get`: returns messages. unread_only defaults true.
+- `mark_read`: requires message_id
+
+### `plan`
+Manage agent plans (what you're doing and why).
+```
+Input: {
+  action: "update" | "get" | "list",
+  agent_name?: string,
+  agent_key?: string,
+  goal?: string,
+  current_task?: string
+}
+Output: { success, plan?, plans? }
+```
+- `update`: requires agent_name, agent_key, goal, current_task (max 100 chars each)
+- `get`: requires agent_name only (no auth) - view any agent's plan
+- `list`: no params - returns all plans
+
+### `status`
+Get system overview (agents, locks, plans).
+```
 Input: { }
-Output: { agents: [{ name: string, last_active: int }] }
-```
-
-### Lock Tools
-
-#### `acquire_lock`
-Acquire exclusive lock on a file.
-```dart
-Input: {
-  file_path: string,
-  agent_name: string,
-  agent_key: string,
-  reason?: string  // Brief: why you need this
-}
-Output: {
-  acquired: bool,
-  lock?: { file_path, agent_name, expires_at, reason },
-  error?: string
-}
-```
-- Fails if already locked (unless expired)
-
-#### `release_lock`
-Release a lock you hold.
-```dart
-Input: { file_path: string, agent_name: string, agent_key: string }
-Output: { released: bool }
-```
-
-#### `force_release_lock`
-Release an EXPIRED lock held by another agent.
-```dart
-Input: { file_path: string, agent_name: string, agent_key: string }
-Output: { released: bool, error?: string }
-```
-- Only works if lock.expires_at < now
-
-#### `renew_lock`
-Extend expiration on your lock.
-```dart
-Input: { file_path: string, agent_name: string, agent_key: string }
-Output: { renewed: bool, new_expires_at: int }
-```
-
-#### `query_lock`
-Check if a file is locked.
-```dart
-Input: { file_path: string }
-Output: { locked: bool, lock?: { file_path, agent_name, expires_at, reason } }
-```
-
-#### `list_locks`
-List all active locks.
-```dart
-Input: { }
-Output: { locks: [{ file_path, agent_name, expires_at, reason }] }
-```
-
-### Message Tools
-
-#### `send_message`
-Send a short message to another agent.
-```dart
-Input: {
-  agent_name: string,
-  agent_key: string,
-  to_agent: string,  // Or '*' for broadcast
-  content: string    // Max 200 chars
-}
-Output: { sent: bool, message_id: string }
-```
-
-#### `get_messages`
-Retrieve your messages.
-```dart
-Input: {
-  agent_name: string,
-  agent_key: string,
-  unread_only?: bool  // Default: true
-}
-Output: { messages: [{ id, from_agent, content, created_at, read_at }] }
-```
-
-#### `mark_message_read`
-Mark a message as read.
-```dart
-Input: { message_id: string, agent_name: string, agent_key: string }
-Output: { marked: bool }
-```
-
-### Plan Tools
-
-#### `update_plan`
-Set/update your current plan.
-```dart
-Input: {
-  agent_name: string,
-  agent_key: string,
-  goal: string,         // Max 100 chars - overall objective
-  current_task: string  // Max 100 chars - what you're doing NOW
-}
-Output: { updated: bool }
-```
-
-#### `get_plan`
-Get a specific agent's plan.
-```dart
-Input: { agent_name: string }
-Output: { plan?: { agent_name, goal, current_task, updated_at } }
-```
-
-#### `list_plans`
-List all agents' plans.
-```dart
-Input: { }
-Output: { plans: [{ agent_name, goal, current_task, updated_at }] }
+Output: { agents: [...], locks: [...], plans: [...] }
 ```
 
 ---

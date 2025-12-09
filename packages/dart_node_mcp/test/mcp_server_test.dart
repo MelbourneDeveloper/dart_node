@@ -365,7 +365,7 @@ void main() {
         },
       );
 
-      expect(params.data, isA<Map>());
+      expect(params.data, isA<Map<String, Object?>>());
     });
   });
 }

@@ -98,6 +98,7 @@ void main() {
       expect(result.isError, isFalse);
       final content = result.content.first as TextContent;
       expect(content.text, equals('Result: 8'));
+      expect(toolConfig.title, equals('Calculator'));
     });
 
     test('resource registration workflow types', () async {
@@ -134,6 +135,7 @@ void main() {
       expect(result.contents, hasLength(1));
       final resource = result.contents.first as ResourceContent;
       expect(resource.uri, equals('file:///config.json'));
+      expect(metadata.mimeType, equals('application/json'));
     });
 
     test('resource template workflow types', () async {
@@ -244,7 +246,7 @@ void main() {
   });
 
   group('Multiple registrations', () {
-    test('multiple tools can be defined', () async {
+    test('multiple tools can be defined', () {
       final tools = <String, (ToolConfig, ToolCallback)>{
         'echo': (
           (
@@ -409,7 +411,7 @@ void main() {
         },
       );
 
-      expect(params.data, isA<Map>());
+      expect(params.data, isA<Map<String, Object?>>());
     });
   });
 
@@ -451,8 +453,7 @@ void main() {
         content: <Object>[
           (
             type: 'image',
-            data:
-                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+            data: 'base64imagedata==',
             mimeType: 'image/png',
           ),
         ],
