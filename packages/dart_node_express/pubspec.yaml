@@ -12,3 +12,6 @@ dependencies:
   dart_node_core:
     path: ../dart_node_core
   nadz: ^0.0.7-beta
+
+dev_dependencies:
+  test: ^1.24.0
