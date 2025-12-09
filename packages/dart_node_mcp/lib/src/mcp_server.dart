@@ -420,32 +420,27 @@ JSObject _loggingMessageParamsToJs(LoggingMessageParams params) {
 }
 
 JSFunction _wrapToolCallback(ToolCallback callback) =>
-    ((JSObject args, JSObject? meta) async {
+    ((JSObject args, JSObject? meta) {
       final dartArgs = args.dartify()! as Map<String, Object?>;
       final dartMeta = meta != null ? _jsToToolCallMeta(meta) : null;
-      final result = await callback(dartArgs, dartMeta);
-      return _callToolResultToJs(result);
+      return callback(dartArgs, dartMeta).then(_callToolResultToJs).toJS;
     }).toJS;
 
 JSFunction _wrapReadResourceCallback(ReadResourceCallback callback) =>
-    ((String uri) async {
-      final result = await callback(uri);
-      return _readResourceResultToJs(result);
-    }).toJS;
+    ((String uri) =>
+        callback(uri).then(_readResourceResultToJs).toJS).toJS;
 
 JSFunction _wrapReadResourceTemplateCallback(
   ReadResourceTemplateCallback callback,
-) => ((String uri, JSObject variables) async {
+) => ((String uri, JSObject variables) {
   final dartVariables = variables.dartify()! as Map<String, String>;
-  final result = await callback(uri, dartVariables);
-  return _readResourceResultToJs(result);
+  return callback(uri, dartVariables).then(_readResourceResultToJs).toJS;
 }).toJS;
 
 JSFunction _wrapPromptCallback(PromptCallback callback) =>
-    ((JSObject args) async {
+    ((JSObject args) {
       final dartArgs = args.dartify()! as Map<String, String>;
-      final result = await callback(dartArgs);
-      return _getPromptResultToJs(result);
+      return callback(dartArgs).then(_getPromptResultToJs).toJS;
     }).toJS;
 
 ToolCallMeta? _jsToToolCallMeta(JSObject meta) {
