@@ -396,7 +396,9 @@ void main() {
     setUp(() {
       final result = openDatabase(':memory:');
       db = (result as Success<Database, String>).value;
-      db.exec('CREATE TABLE accounts (id INTEGER PRIMARY KEY, balance INTEGER)');
+      db.exec('''
+        CREATE TABLE accounts (id INTEGER PRIMARY KEY, balance INTEGER)
+      ''');
       db.exec('INSERT INTO accounts (balance) VALUES (100)');
     });
 
@@ -413,8 +415,10 @@ void main() {
 
       final selectResult = db.prepare('SELECT balance FROM accounts');
       final selectStmt = (selectResult as Success<Statement, String>).value;
+      final getResult = selectStmt.get();
+      expect(getResult, isA<Success<Map<String, Object?>?, String>>());
       final row =
-          (selectStmt.get() as Success<Map<String, Object?>?, String>).value;
+          (getResult as Success<Map<String, Object?>?, String>).value;
       expect(row!['balance'], 200);
     });
 
@@ -427,8 +431,10 @@ void main() {
 
       final selectResult = db.prepare('SELECT balance FROM accounts');
       final selectStmt = (selectResult as Success<Statement, String>).value;
+      final getResult = selectStmt.get();
+      expect(getResult, isA<Success<Map<String, Object?>?, String>>());
       final row =
-          (selectStmt.get() as Success<Map<String, Object?>?, String>).value;
+          (getResult as Success<Map<String, Object?>?, String>).value;
       expect(row!['balance'], 100);
     });
   });

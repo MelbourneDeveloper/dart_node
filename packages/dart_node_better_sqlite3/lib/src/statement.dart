@@ -28,13 +28,15 @@ Statement createStatement(JSObject jsStmt) => (
       run: ([params]) => _stmtRun(jsStmt, params),
     );
 
+JSAny? _jsifyParam(Object? p) => p.jsify();
+
 Result<List<Map<String, Object?>>, String> _stmtAll(
   JSObject jsStmt,
   List<Object?>? params,
 ) {
   try {
     final allFn = jsStmt['all']! as JSFunction;
-    final jsParams = params?.map((p) => p.jsify()).toList().toJS;
+    final jsParams = params?.map(_jsifyParam).toList().toJS;
     final result = jsParams != null
         ? allFn.callAsFunction(jsStmt, jsParams)!
         : allFn.callAsFunction(jsStmt)!;
@@ -42,7 +44,7 @@ Result<List<Map<String, Object?>>, String> _stmtAll(
     final rows = <Map<String, Object?>>[];
     for (var i = 0; i < jsArray.length; i++) {
       final jsRow = jsArray[i]! as JSObject;
-      final row = jsRow.dartify() as Map<String, Object?>? ?? {};
+      final row = _convertRow(jsRow.dartify()) ?? {};
       rows.add(row);
     }
     return Success(rows);
@@ -51,19 +53,25 @@ Result<List<Map<String, Object?>>, String> _stmtAll(
   }
 }
 
+Map<String, Object?>? _convertRow(Object? dartified) {
+  if (dartified == null) return null;
+  final map = dartified as Map<Object?, Object?>;
+  return map.map((k, v) => MapEntry(k.toString(), v));
+}
+
 Result<Map<String, Object?>?, String> _stmtGet(
   JSObject jsStmt,
   List<Object?>? params,
 ) {
   try {
     final getFn = jsStmt['get']! as JSFunction;
-    final jsParams = params?.map((p) => p.jsify()).toList().toJS;
+    final jsParams = params?.map(_jsifyParam).toList().toJS;
     final result = jsParams != null
         ? getFn.callAsFunction(jsStmt, jsParams)
         : getFn.callAsFunction(jsStmt);
     if (result == null || result.isUndefinedOrNull) return const Success(null);
     final jsRow = result as JSObject;
-    final row = jsRow.dartify() as Map<String, Object?>?;
+    final row = _convertRow(jsRow.dartify());
     return Success(row);
   } catch (e) {
     return Error('Statement.get failed: $e');
@@ -73,7 +81,7 @@ Result<Map<String, Object?>?, String> _stmtGet(
 Result<RunResult, String> _stmtRun(JSObject jsStmt, List<Object?>? params) {
   try {
     final runFn = jsStmt['run']! as JSFunction;
-    final jsParams = params?.map((p) => p.jsify()).toList().toJS;
+    final jsParams = params?.map(_jsifyParam).toList().toJS;
     final result = jsParams != null
         ? runFn.callAsFunction(jsStmt, jsParams)!
         : runFn.callAsFunction(jsStmt)!;
