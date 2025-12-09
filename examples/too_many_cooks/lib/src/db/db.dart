@@ -1,9 +1,10 @@
 /// Database operations for Too Many Cooks.
 library;
 
-import 'dart:math';
+import 'dart:js_interop';
 
 import 'package:dart_node_better_sqlite3/dart_node_better_sqlite3.dart';
+import 'package:dart_node_core/dart_node_core.dart';
 import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks/src/config.dart';
 import 'package:too_many_cooks/src/db/schema.dart';
@@ -71,14 +72,21 @@ typedef TooManyCooksDb = ({
 Result<TooManyCooksDb, String> createDb(TooManyCooksConfig config) {
   final dbResult = openDatabase(config.dbPath);
   return switch (dbResult) {
-    Success(:final value) => _initSchema(value).flatMap((_) => Success(
-          _createDbOps(value, config),
-        )),
+    Success(:final value) => switch (_initSchema(value)) {
+        Success(:final value) => Success(_createDbOps(value, config)),
+        Error(:final error) => Error(error),
+      },
     Error(:final error) => Error(error),
   };
 }
 
-Result<void, String> _initSchema(Database db) => db.exec(createTablesSql);
+Result<Database, String> _initSchema(Database db) {
+  final result = db.exec(createTablesSql);
+  return switch (result) {
+    Success() => Success(db),
+    Error(:final error) => Error(error),
+  };
+}
 
 TooManyCooksDb _createDbOps(Database db, TooManyCooksConfig config) => (
       register: (name) => _register(db, name),
@@ -102,12 +110,20 @@ TooManyCooksDb _createDbOps(Database db, TooManyCooksConfig config) => (
           _updatePlan(db, name, key, goal, task, config.maxPlanLength),
       getPlan: (name) => _getPlan(db, name),
       listPlans: () => _listPlans(db),
-      close: () => db.close().mapError((e) => (code: errDatabase, message: e)),
+      close: () => switch (db.close()) {
+        Success() => const Success(null),
+        Error(:final error) => Error((code: errDatabase, message: error)),
+      },
     );
 
+extension type _Crypto(JSObject _) implements JSObject {
+  external JSUint8Array randomBytes(int size);
+}
+
+final _Crypto _crypto = _Crypto(requireModule('crypto') as JSObject);
+
 String _generateKey() {
-  final r = Random.secure();
-  final bytes = List.generate(32, (_) => r.nextInt(256));
+  final bytes = _crypto.randomBytes(32).toDart;
   return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
 }
 
@@ -125,7 +141,7 @@ Result<void, DbError> _authAndUpdate(
     Success(:final value) => switch (value.run([_now(), agentName, agentKey])) {
         Success(:final value) when value.changes == 0 =>
           const Error((code: errUnauthorized, message: 'Invalid credentials')),
-        Success(_) => const Success(null),
+        Success() => const Success(null),
         Error(:final error) => Error((code: errDatabase, message: error)),
       },
     Error(:final error) => Error((code: errDatabase, message: error)),
@@ -146,9 +162,10 @@ Result<AgentRegistration, DbError> _register(Database db, String name) {
   ''');
   return switch (stmtResult) {
     Success(:final value) => switch (value.run([name, key, now, now])) {
-        Success(_) => Success((agentName: name, agentKey: key)),
+        Success() => Success((agentName: name, agentKey: key)),
         Error(:final error) => error.contains('UNIQUE')
-            ? Error((code: errValidation, message: 'Name already registered'))
+            ? const Error(
+                (code: errValidation, message: 'Name already registered'))
             : Error((code: errDatabase, message: error)),
       },
     Error(:final error) => Error((code: errDatabase, message: error)),
@@ -162,7 +179,7 @@ Result<AgentIdentity, DbError> _authenticate(
 ) {
   final authResult = _authAndUpdate(db, name, key);
   return switch (authResult) {
-    Success(_) => _getAgent(db, name),
+    Success() => _getAgent(db, name),
     Error(:final error) => Error(error),
   };
 }
@@ -249,7 +266,7 @@ Result<LockResult, DbError> _acquireLock(
   return switch (stmtResult) {
     Success(:final value) => switch (
           value.run([filePath, agentName, now, expiresAt, reason])) {
-        Success(_) => Success((
+        Success() => Success((
             acquired: true,
             lock: (
               filePath: filePath,
@@ -262,7 +279,7 @@ Result<LockResult, DbError> _acquireLock(
             error: null,
           )),
         Error(:final error) => error.contains('UNIQUE')
-            ? Success((
+            ? const Success((
                 acquired: false,
                 lock: null,
                 error: 'Lock race condition',
@@ -289,7 +306,7 @@ Result<void, DbError> _releaseLock(
     Success(:final value) => switch (value.run([filePath, agentName])) {
         Success(:final value) when value.changes == 0 =>
           const Error((code: errNotFound, message: 'Lock not held by you')),
-        Success(_) => const Success(null),
+        Success() => const Success(null),
         Error(:final error) => Error((code: errDatabase, message: error)),
       },
     Error(:final error) => Error((code: errDatabase, message: error)),
@@ -314,9 +331,11 @@ Result<void, DbError> _forceReleaseLock(
         code: errLockHeld,
         message: 'Lock not expired, held by ${value.agentName}',
       )),
-    Success(_) => db
-        .exec("DELETE FROM locks WHERE file_path = '$filePath'")
-        .mapError((e) => (code: errDatabase, message: e)),
+    Success() => switch (
+          db.exec("DELETE FROM locks WHERE file_path = '$filePath'")) {
+        Success() => const Success(null),
+        Error(:final error) => Error((code: errDatabase, message: error)),
+      },
   };
 }
 
@@ -383,7 +402,7 @@ Result<void, DbError> _renewLock(
       switch (value.run([newExpiry, filePath, agentName])) {
         Success(:final value) when value.changes == 0 =>
           const Error((code: errNotFound, message: 'Lock not held by you')),
-        Success(_) => const Success(null),
+        Success() => const Success(null),
         Error(:final error) => Error((code: errDatabase, message: error)),
       },
     Error(:final error) => Error((code: errDatabase, message: error)),
@@ -416,7 +435,7 @@ Result<String, DbError> _sendMessage(
   return switch (stmtResult) {
     Success(:final value) =>
       switch (value.run([id, fromAgent, toAgent, content, now])) {
-        Success(_) => Success(id),
+        Success() => Success(id),
         Error(:final error) => Error((code: errDatabase, message: error)),
       },
     Error(:final error) => Error((code: errDatabase, message: error)),
@@ -433,10 +452,12 @@ Result<List<Message>, DbError> _getMessages(
   if (authResult case Error(:final error)) return Error(error);
 
   final sql = unreadOnly
-      ? '''SELECT * FROM messages WHERE (to_agent = ? OR to_agent = '*')
-           AND read_at IS NULL ORDER BY created_at DESC'''
-      : '''SELECT * FROM messages WHERE (to_agent = ? OR to_agent = '*')
-           ORDER BY created_at DESC''';
+      ? '''
+SELECT * FROM messages WHERE (to_agent = ? OR to_agent = '*')
+AND read_at IS NULL ORDER BY created_at DESC'''
+      : '''
+SELECT * FROM messages WHERE (to_agent = ? OR to_agent = '*')
+ORDER BY created_at DESC''';
   final stmtResult = db.prepare(sql);
   return switch (stmtResult) {
     Success(:final value) => switch (value.all([agentName])) {
@@ -478,7 +499,7 @@ Result<void, DbError> _markRead(
       switch (value.run([_now(), messageId, agentName])) {
         Success(:final value) when value.changes == 0 =>
           const Error((code: errNotFound, message: 'Message not found')),
-        Success(_) => const Success(null),
+        Success() => const Success(null),
         Error(:final error) => Error((code: errDatabase, message: error)),
       },
     Error(:final error) => Error((code: errDatabase, message: error)),
@@ -513,7 +534,7 @@ Result<void, DbError> _updatePlan(
   return switch (stmtResult) {
     Success(:final value) =>
       switch (value.run([agentName, goal, currentTask, _now()])) {
-        Success(_) => const Success(null),
+        Success() => const Success(null),
         Error(:final error) => Error((code: errDatabase, message: error)),
       },
     Error(:final error) => Error((code: errDatabase, message: error)),

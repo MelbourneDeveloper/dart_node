@@ -3,10 +3,9 @@ library;
 
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
-
-import '../config.dart';
-import '../db/db.dart';
-import '../types.dart';
+import 'package:too_many_cooks/src/config.dart';
+import 'package:too_many_cooks/src/db/db.dart';
+import 'package:too_many_cooks/src/types.dart';
 
 /// Input schema for lock tool.
 const lockInputSchema = <String, Object?>{
@@ -14,7 +13,14 @@ const lockInputSchema = <String, Object?>{
   'properties': {
     'action': {
       'type': 'string',
-      'enum': ['acquire', 'release', 'force_release', 'renew', 'query', 'list'],
+      'enum': [
+        'acquire',
+        'release',
+        'force_release',
+        'renew',
+        'query',
+        'list',
+      ],
       'description': 'Lock action to perform',
     },
     'agent_name': {
@@ -66,8 +72,19 @@ ToolCallback createLockHandler(TooManyCooksDb db, TooManyCooksConfig config) =>
             config.lockTimeoutMs,
           ),
         'release' => _release(db, filePath, agentName, agentKey),
-        'force_release' => _forceRelease(db, filePath, agentName, agentKey),
-        'renew' => _renew(db, filePath, agentName, agentKey, config.lockTimeoutMs),
+        'force_release' => _forceRelease(
+            db,
+            filePath,
+            agentName,
+            agentKey,
+          ),
+        'renew' => _renew(
+            db,
+            filePath,
+            agentName,
+            agentKey,
+            config.lockTimeoutMs,
+          ),
         'query' => _query(db, filePath),
         'list' => _list(db),
         _ => (
@@ -98,7 +115,9 @@ CallToolResult _acquire(
       isError: true,
     );
   }
-  return switch (db.acquireLock(filePath, agentName, agentKey, reason, timeoutMs)) {
+  final result =
+      db.acquireLock(filePath, agentName, agentKey, reason, timeoutMs);
+  return switch (result) {
     Success(:final value) => (
         content: <Object>[
           (type: 'text', text: _lockResultJson(value)),
@@ -127,7 +146,7 @@ CallToolResult _release(
     );
   }
   return switch (db.releaseLock(filePath, agentName, agentKey)) {
-    Success(_) => (
+    Success() => (
         content: <Object>[(type: 'text', text: '{"released":true}')],
         isError: false,
       ),
@@ -146,15 +165,15 @@ CallToolResult _forceRelease(
       content: <Object>[
         (
           type: 'text',
-          text:
-              '{"error":"force_release requires file_path, agent_name, agent_key"}',
+          text: '{"error":"force_release requires '
+              'file_path, agent_name, agent_key"}',
         ),
       ],
       isError: true,
     );
   }
   return switch (db.forceReleaseLock(filePath, agentName, agentKey)) {
-    Success(_) => (
+    Success() => (
         content: <Object>[(type: 'text', text: '{"released":true}')],
         isError: false,
       ),
@@ -181,7 +200,7 @@ CallToolResult _renew(
     );
   }
   return switch (db.renewLock(filePath, agentName, agentKey, timeoutMs)) {
-    Success(_) => (
+    Success() => (
         content: <Object>[(type: 'text', text: '{"renewed":true}')],
         isError: false,
       ),

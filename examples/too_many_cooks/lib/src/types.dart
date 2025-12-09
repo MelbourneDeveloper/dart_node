@@ -52,10 +52,20 @@ typedef AgentPlan = ({
 /// Database error.
 typedef DbError = ({String code, String message});
 
-/// Error codes.
+/// Error code for resource not found.
 const errNotFound = 'NOT_FOUND';
+
+/// Error code for unauthorized access.
 const errUnauthorized = 'UNAUTHORIZED';
+
+/// Error code when lock is held by another agent.
 const errLockHeld = 'LOCK_HELD';
+
+/// Error code when lock has expired.
 const errLockExpired = 'LOCK_EXPIRED';
+
+/// Error code for validation failures.
 const errValidation = 'VALIDATION';
+
+/// Error code for database errors.
 const errDatabase = 'DATABASE';

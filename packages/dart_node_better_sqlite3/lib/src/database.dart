@@ -20,7 +20,7 @@ typedef Database = ({
   Result<void, String> Function() close,
 
   /// Set a pragma value.
-  Result<void, String> Function(String pragma) pragma,
+  Result<void, String> Function(String pragmaValue) pragma,
 
   /// Check if database is open.
   bool Function() isOpen,
@@ -36,9 +36,8 @@ Result<Database, String> openDatabase(String path) {
     final jsDb = dbClass.callAsConstructor<JSObject>(path.toJS);
 
     // Enable WAL mode for concurrency
-    final pragmaFn = jsDb['pragma'] as JSFunction;
-    pragmaFn.callAsFunction(jsDb, 'journal_mode = WAL'.toJS);
-    pragmaFn.callAsFunction(jsDb, 'busy_timeout = 5000'.toJS);
+    _callPragma(jsDb, 'journal_mode = WAL');
+    _callPragma(jsDb, 'busy_timeout = 5000');
 
     return Success(_createDatabase(jsDb));
   } catch (e) {
@@ -47,17 +46,17 @@ Result<Database, String> openDatabase(String path) {
 }
 
 Database _createDatabase(JSObject jsDb) => (
-  prepare: (sql) => _dbPrepare(jsDb, sql),
-  exec: (sql) => _dbExec(jsDb, sql),
-  close: () => _dbClose(jsDb),
-  pragma: (pragma) => _dbPragma(jsDb, pragma),
-  isOpen: () => _dbIsOpen(jsDb),
-);
+      prepare: (sql) => _dbPrepare(jsDb, sql),
+      exec: (sql) => _dbExec(jsDb, sql),
+      close: () => _dbClose(jsDb),
+      pragma: (pragmaValue) => _dbPragma(jsDb, pragmaValue),
+      isOpen: () => _dbIsOpen(jsDb),
+    );
 
 Result<Statement, String> _dbPrepare(JSObject jsDb, String sql) {
   try {
-    final prepareFn = jsDb['prepare'] as JSFunction;
-    final jsStmt = prepareFn.callAsFunction(jsDb, sql.toJS) as JSObject;
+    final prepareFn = jsDb['prepare']! as JSFunction;
+    final jsStmt = prepareFn.callAsFunction(jsDb, sql.toJS)! as JSObject;
     return Success(createStatement(jsStmt));
   } catch (e) {
     return Error('Failed to prepare statement: $e');
@@ -66,8 +65,7 @@ Result<Statement, String> _dbPrepare(JSObject jsDb, String sql) {
 
 Result<void, String> _dbExec(JSObject jsDb, String sql) {
   try {
-    final execFn = jsDb['exec'] as JSFunction;
-    execFn.callAsFunction(jsDb, sql.toJS);
+    (jsDb['exec']! as JSFunction).callAsFunction(jsDb, sql.toJS);
     return const Success(null);
   } catch (e) {
     return Error('Failed to exec: $e');
@@ -76,18 +74,16 @@ Result<void, String> _dbExec(JSObject jsDb, String sql) {
 
 Result<void, String> _dbClose(JSObject jsDb) {
   try {
-    final closeFn = jsDb['close'] as JSFunction;
-    closeFn.callAsFunction(jsDb);
+    (jsDb['close']! as JSFunction).callAsFunction(jsDb);
     return const Success(null);
   } catch (e) {
     return Error('Failed to close database: $e');
   }
 }
 
-Result<void, String> _dbPragma(JSObject jsDb, String pragma) {
+Result<void, String> _dbPragma(JSObject jsDb, String pragmaValue) {
   try {
-    final pragmaFn = jsDb['pragma'] as JSFunction;
-    pragmaFn.callAsFunction(jsDb, pragma.toJS);
+    (jsDb['pragma']! as JSFunction).callAsFunction(jsDb, pragmaValue.toJS);
     return const Success(null);
   } catch (e) {
     return Error('Failed to set pragma: $e');
@@ -102,4 +98,8 @@ bool _dbIsOpen(JSObject jsDb) {
   } catch (_) {
     return false;
   }
+}
+
+void _callPragma(JSObject jsDb, String pragmaValue) {
+  (jsDb['pragma']! as JSFunction).callAsFunction(jsDb, pragmaValue.toJS);
 }

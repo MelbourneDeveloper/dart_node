@@ -6,7 +6,7 @@ import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks/too_many_cooks.dart';
 
 Future<void> main() async {
-  final serverResult = createTooManyCooksServer(config: defaultConfig);
+  final serverResult = createTooManyCooksServer();
 
   final server = switch (serverResult) {
     Success(:final value) => value,

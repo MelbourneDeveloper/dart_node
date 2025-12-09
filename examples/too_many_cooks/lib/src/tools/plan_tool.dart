@@ -3,9 +3,8 @@ library;
 
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
-
-import '../db/db.dart';
-import '../types.dart';
+import 'package:too_many_cooks/src/db/db.dart';
+import 'package:too_many_cooks/src/types.dart';
 
 /// Input schema for plan tool.
 const planInputSchema = <String, Object?>{
@@ -83,15 +82,15 @@ CallToolResult _update(
       content: <Object>[
         (
           type: 'text',
-          text:
-              '{"error":"update requires agent_name, agent_key, goal, current_task"}',
+          text: '{"error":"update requires '
+              'agent_name, agent_key, goal, current_task"}',
         ),
       ],
       isError: true,
     );
   }
   return switch (db.updatePlan(agentName, agentKey, goal, currentTask)) {
-    Success(_) => (
+    Success() => (
         content: <Object>[(type: 'text', text: '{"updated":true}')],
         isError: false,
       ),
@@ -142,7 +141,7 @@ String _planJson(AgentPlan p) => '{"agent_name":"${p.agentName}",'
     '"updated_at":${p.updatedAt}}';
 
 String _escapeJson(String s) =>
-    s.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll('\n', '\\n');
+    s.replaceAll(r'\', r'\\').replaceAll('"', r'\"').replaceAll('\n', r'\n');
 
 CallToolResult _errorResult(DbError e) => (
       content: <Object>[

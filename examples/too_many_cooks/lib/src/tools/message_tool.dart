@@ -3,9 +3,8 @@ library;
 
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
-
-import '../db/db.dart';
-import '../types.dart';
+import 'package:too_many_cooks/src/db/db.dart';
+import 'package:too_many_cooks/src/types.dart';
 
 /// Input schema for message tool.
 const messageInputSchema = <String, Object?>{
@@ -148,7 +147,7 @@ CallToolResult _markRead(
     );
   }
   return switch (db.markRead(messageId, agentName, agentKey)) {
-    Success(_) => (
+    Success() => (
         content: <Object>[(type: 'text', text: '{"marked":true}')],
         isError: false,
       ),
@@ -163,7 +162,7 @@ String _messageJson(Message m) => '{"id":"${m.id}",'
     '${m.readAt != null ? ',"read_at":${m.readAt}' : ''}}';
 
 String _escapeJson(String s) =>
-    s.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll('\n', '\\n');
+    s.replaceAll(r'\', r'\\').replaceAll('"', r'\"').replaceAll('\n', r'\n');
 
 CallToolResult _errorResult(DbError e) => (
       content: <Object>[

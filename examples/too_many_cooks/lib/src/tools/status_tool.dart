@@ -4,8 +4,8 @@ library;
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 
-import '../db/db.dart';
-import '../types.dart';
+import 'package:too_many_cooks/src/db/db.dart';
+import 'package:too_many_cooks/src/types.dart';
 
 /// Input schema for status tool (no inputs required).
 const statusInputSchema = <String, Object?>{
@@ -73,7 +73,7 @@ ToolCallback createStatusHandler(TooManyCooksDb db) => (args, meta) async {
     };
 
 String _escapeJson(String s) =>
-    s.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll('\n', '\\n');
+    s.replaceAll(r'\', r'\\').replaceAll('"', r'\"').replaceAll('\n', r'\n');
 
 CallToolResult _errorResult(DbError e) => (
       content: <Object>[

@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:nadz/nadz.dart';
 import 'package:test/test.dart';
-import 'package:too_many_cooks/src/config.dart';
 import 'package:too_many_cooks/src/db/db.dart';
 import 'package:too_many_cooks/src/types.dart';
 
@@ -19,21 +16,18 @@ void main() {
       maxPlanLength: 100,
     );
     final result = createDb(config);
-    expect(result, isA<Success>());
+    expect(result, isA<Success<TooManyCooksDb, String>>());
     db = (result as Success<TooManyCooksDb, String>).value;
   });
 
   tearDown(() {
     db.close();
-    try {
-      File(testDbPath).deleteSync();
-    } catch (_) {}
   });
 
   group('Identity', () {
     test('register creates agent with key', () {
       final result = db.register('agent1');
-      expect(result, isA<Success>());
+      expect(result, isA<Success<AgentRegistration, DbError>>());
       final reg = (result as Success<AgentRegistration, DbError>).value;
       expect(reg.agentName, 'agent1');
       expect(reg.agentKey.length, 64);
@@ -42,26 +36,27 @@ void main() {
     test('register rejects duplicate names', () {
       db.register('agent1');
       final result = db.register('agent1');
-      expect(result, isA<Error>());
+      expect(result, isA<Error<AgentRegistration, DbError>>());
       final err = (result as Error<AgentRegistration, DbError>).error;
       expect(err.code, errValidation);
     });
 
     test('register rejects empty name', () {
       final result = db.register('');
-      expect(result, isA<Error>());
+      expect(result, isA<Error<AgentRegistration, DbError>>());
     });
 
     test('authenticate succeeds with valid credentials', () {
-      final reg = (db.register('agent1') as Success).value as AgentRegistration;
+      final regResult = db.register('agent1');
+      final reg = (regResult as Success<AgentRegistration, DbError>).value;
       final result = db.authenticate(reg.agentName, reg.agentKey);
-      expect(result, isA<Success>());
+      expect(result, isA<Success<AgentIdentity, DbError>>());
     });
 
     test('authenticate fails with wrong key', () {
       db.register('agent1');
       final result = db.authenticate('agent1', 'wrongkey');
-      expect(result, isA<Error>());
+      expect(result, isA<Error<AgentIdentity, DbError>>());
       final err = (result as Error<AgentIdentity, DbError>).error;
       expect(err.code, errUnauthorized);
     });
@@ -70,7 +65,7 @@ void main() {
       db.register('agent1');
       db.register('agent2');
       final result = db.listAgents();
-      expect(result, isA<Success>());
+      expect(result, isA<Success<List<AgentIdentity>, DbError>>());
       final agents = (result as Success<List<AgentIdentity>, DbError>).value;
       expect(agents.length, 2);
     });
@@ -81,8 +76,10 @@ void main() {
     late AgentRegistration agent2;
 
     setUp(() {
-      agent1 = (db.register('agent1') as Success).value as AgentRegistration;
-      agent2 = (db.register('agent2') as Success).value as AgentRegistration;
+      final r1 = db.register('agent1') as Success<AgentRegistration, DbError>;
+      final r2 = db.register('agent2') as Success<AgentRegistration, DbError>;
+      agent1 = r1.value;
+      agent2 = r2.value;
     });
 
     test('acquireLock succeeds on free file', () {
@@ -93,7 +90,7 @@ void main() {
         'editing',
         1000,
       );
-      expect(result, isA<Success>());
+      expect(result, isA<Success<LockResult, DbError>>());
       final lockResult = (result as Success<LockResult, DbError>).value;
       expect(lockResult.acquired, true);
       expect(lockResult.lock?.agentName, 'agent1');
@@ -114,7 +111,7 @@ void main() {
         null,
         1000,
       );
-      expect(result, isA<Success>());
+      expect(result, isA<Success<LockResult, DbError>>());
       final lockResult = (result as Success<LockResult, DbError>).value;
       expect(lockResult.acquired, false);
       expect(lockResult.error, contains('agent1'));
@@ -130,7 +127,7 @@ void main() {
       );
       final result =
           db.releaseLock('/path/file.dart', agent1.agentName, agent1.agentKey);
-      expect(result, isA<Success>());
+      expect(result, isA<Success<void, DbError>>());
     });
 
     test('releaseLock fails for non-owner', () {
@@ -143,7 +140,7 @@ void main() {
       );
       final result =
           db.releaseLock('/path/file.dart', agent2.agentName, agent2.agentKey);
-      expect(result, isA<Error>());
+      expect(result, isA<Error<void, DbError>>());
     });
 
     test('forceReleaseLock fails on non-expired lock', () {
@@ -159,14 +156,14 @@ void main() {
         agent2.agentName,
         agent2.agentKey,
       );
-      expect(result, isA<Error>());
+      expect(result, isA<Error<void, DbError>>());
       final err = (result as Error<void, DbError>).error;
       expect(err.code, errLockHeld);
     });
 
     test('queryLock returns null for unlocked file', () {
       final result = db.queryLock('/path/file.dart');
-      expect(result, isA<Success>());
+      expect(result, isA<Success<FileLock?, DbError>>());
       final lock = (result as Success<FileLock?, DbError>).value;
       expect(lock, isNull);
     });
@@ -175,7 +172,7 @@ void main() {
       db.acquireLock('/a.dart', agent1.agentName, agent1.agentKey, null, 1000);
       db.acquireLock('/b.dart', agent2.agentName, agent2.agentKey, null, 1000);
       final result = db.listLocks();
-      expect(result, isA<Success>());
+      expect(result, isA<Success<List<FileLock>, DbError>>());
       final locks = (result as Success<List<FileLock>, DbError>).value;
       expect(locks.length, 2);
     });
@@ -188,11 +185,13 @@ void main() {
         null,
         1000,
       );
-      final before = (db.queryLock('/path/file.dart') as Success).value
-          as FileLock;
+      final beforeResult =
+          db.queryLock('/path/file.dart') as Success<FileLock?, DbError>;
+      final before = beforeResult.value!;
       db.renewLock('/path/file.dart', agent1.agentName, agent1.agentKey, 5000);
-      final after = (db.queryLock('/path/file.dart') as Success).value
-          as FileLock;
+      final afterResult =
+          db.queryLock('/path/file.dart') as Success<FileLock?, DbError>;
+      final after = afterResult.value!;
       expect(after.expiresAt, greaterThan(before.expiresAt));
     });
   });
@@ -202,8 +201,10 @@ void main() {
     late AgentRegistration agent2;
 
     setUp(() {
-      agent1 = (db.register('agent1') as Success).value as AgentRegistration;
-      agent2 = (db.register('agent2') as Success).value as AgentRegistration;
+      final r1 = db.register('agent1') as Success<AgentRegistration, DbError>;
+      final r2 = db.register('agent2') as Success<AgentRegistration, DbError>;
+      agent1 = r1.value;
+      agent2 = r2.value;
     });
 
     test('sendMessage creates message', () {
@@ -213,7 +214,7 @@ void main() {
         agent2.agentName,
         'Hello!',
       );
-      expect(result, isA<Success>());
+      expect(result, isA<Success<String, DbError>>());
     });
 
     test('sendMessage rejects too long content', () {
@@ -224,7 +225,7 @@ void main() {
         agent2.agentName,
         longContent,
       );
-      expect(result, isA<Error>());
+      expect(result, isA<Error<String, DbError>>());
     });
 
     test('getMessages returns messages for recipient', () {
@@ -235,7 +236,7 @@ void main() {
         'Hello!',
       );
       final result = db.getMessages(agent2.agentName, agent2.agentKey);
-      expect(result, isA<Success>());
+      expect(result, isA<Success<List<Message>, DbError>>());
       final messages = (result as Success<List<Message>, DbError>).value;
       expect(messages.length, 1);
       expect(messages.first.content, 'Hello!');
@@ -273,7 +274,8 @@ void main() {
     late AgentRegistration agent1;
 
     setUp(() {
-      agent1 = (db.register('agent1') as Success).value as AgentRegistration;
+      final r = db.register('agent1') as Success<AgentRegistration, DbError>;
+      agent1 = r.value;
     });
 
     test('updatePlan creates plan', () {
@@ -283,7 +285,7 @@ void main() {
         'Fix bugs',
         'Reviewing code',
       );
-      expect(result, isA<Success>());
+      expect(result, isA<Success<void, DbError>>());
     });
 
     test('updatePlan rejects too long fields', () {
@@ -294,7 +296,7 @@ void main() {
         longText,
         'task',
       );
-      expect(result, isA<Error>());
+      expect(result, isA<Error<void, DbError>>());
     });
 
     test('getPlan returns agent plan', () {
@@ -305,20 +307,20 @@ void main() {
         'Reviewing',
       );
       final result = db.getPlan(agent1.agentName);
-      expect(result, isA<Success>());
+      expect(result, isA<Success<AgentPlan?, DbError>>());
       final plan = (result as Success<AgentPlan?, DbError>).value;
       expect(plan?.goal, 'Fix bugs');
     });
 
     test('getPlan returns null for no plan', () {
       final result = db.getPlan('nonexistent');
-      expect((result as Success).value, isNull);
+      expect((result as Success<AgentPlan?, DbError>).value, isNull);
     });
 
     test('listPlans returns all plans', () {
       db.updatePlan(agent1.agentName, agent1.agentKey, 'Goal', 'Task');
       final result = db.listPlans();
-      expect(result, isA<Success>());
+      expect(result, isA<Success<List<AgentPlan>, DbError>>());
       final plans = (result as Success<List<AgentPlan>, DbError>).value;
       expect(plans.length, 1);
     });

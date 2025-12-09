@@ -3,8 +3,7 @@ library;
 
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
-
-import '../db/db.dart';
+import 'package:too_many_cooks/src/db/db.dart';
 
 /// Input schema for register tool.
 const registerInputSchema = <String, Object?>{
@@ -34,15 +33,18 @@ ToolCallback createRegisterHandler(TooManyCooksDb db) =>
               content: <Object>[
                 (
                   type: 'text',
-                  text:
-                      '{"agent_name":"${value.agentName}","agent_key":"${value.agentKey}"}',
+                  text: '{"agent_name":"${value.agentName}",'
+                      '"agent_key":"${value.agentKey}"}',
                 ),
               ],
               isError: false,
             ),
           Error(:final error) => (
               content: <Object>[
-                (type: 'text', text: '{"error":"${error.code}: ${error.message}"}'),
+                (
+                  type: 'text',
+                  text: '{"error":"${error.code}: ${error.message}"}',
+                ),
               ],
               isError: true,
             ),

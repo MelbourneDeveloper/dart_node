@@ -23,22 +23,22 @@ typedef Statement = ({
 
 /// Create a Statement from a JS object.
 Statement createStatement(JSObject jsStmt) => (
-  all: ([params]) => _stmtAll(jsStmt, params),
-  get: ([params]) => _stmtGet(jsStmt, params),
-  run: ([params]) => _stmtRun(jsStmt, params),
-);
+      all: ([params]) => _stmtAll(jsStmt, params),
+      get: ([params]) => _stmtGet(jsStmt, params),
+      run: ([params]) => _stmtRun(jsStmt, params),
+    );
 
 Result<List<Map<String, Object?>>, String> _stmtAll(
   JSObject jsStmt,
   List<Object?>? params,
 ) {
   try {
-    final allFn = jsStmt['all'] as JSFunction;
+    final allFn = jsStmt['all']! as JSFunction;
     final jsParams = params?.map((p) => p.jsify()).toList().toJS;
     final result = jsParams != null
-        ? allFn.callAsFunction(jsStmt, jsParams)
-        : allFn.callAsFunction(jsStmt);
-    final jsArray = result as JSArray;
+        ? allFn.callAsFunction(jsStmt, jsParams)!
+        : allFn.callAsFunction(jsStmt)!;
+    final jsArray = result as JSArray<JSAny?>;
     final rows = <Map<String, Object?>>[];
     for (var i = 0; i < jsArray.length; i++) {
       final jsRow = jsArray[i]! as JSObject;
@@ -72,13 +72,13 @@ Result<Map<String, Object?>?, String> _stmtGet(
 
 Result<RunResult, String> _stmtRun(JSObject jsStmt, List<Object?>? params) {
   try {
-    final runFn = jsStmt['run'] as JSFunction;
+    final runFn = jsStmt['run']! as JSFunction;
     final jsParams = params?.map((p) => p.jsify()).toList().toJS;
     final result = jsParams != null
-        ? runFn.callAsFunction(jsStmt, jsParams)
-        : runFn.callAsFunction(jsStmt);
+        ? runFn.callAsFunction(jsStmt, jsParams)!
+        : runFn.callAsFunction(jsStmt)!;
     final jsResult = result as JSObject;
-    final changes = (jsResult['changes'] as JSNumber).toDartInt;
+    final changes = (jsResult['changes']! as JSNumber).toDartInt;
     final lastId = jsResult['lastInsertRowid'];
     final lastInsertRowid = lastId != null && !lastId.isUndefinedOrNull
         ? (lastId as JSNumber).toDartInt
