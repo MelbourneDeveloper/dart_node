@@ -148,7 +148,6 @@ Result<TooManyCooksDb, String> _tryCreateDb(
   };
 }
 
-
 Logger _noOpLogger() => createLoggerWithContext(createLoggingContext());
 
 Result<Database, String> _initSchema(Database db, Logger log) {

@@ -2,17 +2,10 @@
 library;
 
 /// Agent identity (public info only - no key).
-typedef AgentIdentity = ({
-  String agentName,
-  int registeredAt,
-  int lastActive,
-});
+typedef AgentIdentity = ({String agentName, int registeredAt, int lastActive});
 
 /// Agent registration result (includes secret key).
-typedef AgentRegistration = ({
-  String agentName,
-  String agentKey,
-});
+typedef AgentRegistration = ({String agentName, String agentKey});
 
 /// File lock info.
 typedef FileLock = ({
@@ -25,11 +18,7 @@ typedef FileLock = ({
 });
 
 /// Lock acquisition result.
-typedef LockResult = ({
-  bool acquired,
-  FileLock? lock,
-  String? error,
-});
+typedef LockResult = ({bool acquired, FileLock? lock, String? error});
 
 /// Inter-agent message.
 typedef Message = ({
@@ -72,5 +61,7 @@ const errDatabase = 'DATABASE';
 
 /// Create text content for MCP tool responses.
 /// Uses Map which is required for dart2js compatibility with records.
-Map<String, Object?> textContent(String text) =>
-    <String, Object?>{'type': 'text', 'text': text};
+Map<String, Object?> textContent(String text) => <String, Object?>{
+  'type': 'text',
+  'text': text,
+};

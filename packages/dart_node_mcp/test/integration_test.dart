@@ -451,11 +451,7 @@ void main() {
         ToolCallMeta? meta,
       ) async => (
         content: <Object>[
-          (
-            type: 'image',
-            data: 'base64imagedata==',
-            mimeType: 'image/png',
-          ),
+          (type: 'image', data: 'base64imagedata==', mimeType: 'image/png'),
         ],
         isError: false,
       );

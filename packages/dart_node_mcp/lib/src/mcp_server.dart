@@ -469,7 +469,7 @@ Future<JSObject> _asyncToolHandler(
   JSObject? meta,
 ) async {
   // Convert JS args to Dart Map
-  // dartify() returns JsLinkedHashMap<Object?, Object?>, not 
+  // dartify() returns JsLinkedHashMap<Object?, Object?>, not
   //Map<String, Object?>
   // We need to cast the keys to strings manually
   final dartified = args.dartify();
@@ -505,18 +505,17 @@ JSFunction _wrapReadResourceCallback(ReadResourceCallback callback) =>
 // ignore: no_then
 JSFunction _wrapReadResourceTemplateCallback(
   ReadResourceTemplateCallback callback,
-) =>
-    ((String uri, JSObject variables) {
-      final dartVariables = variables.dartify()! as Map<String, String>;
-      return callback(uri, dartVariables).then(_readResourceResultToJs).toJS;
-    }).toJS;
+) => ((String uri, JSObject variables) {
+  final dartVariables = variables.dartify()! as Map<String, String>;
+  return callback(uri, dartVariables).then(_readResourceResultToJs).toJS;
+}).toJS;
 
 // .then() is REQUIRED here - async functions cannot be converted via .toJS
 // ignore: no_then
 JSFunction _wrapPromptCallback(PromptCallback callback) => ((JSObject args) {
-      final dartArgs = args.dartify()! as Map<String, String>;
-      return callback(dartArgs).then(_getPromptResultToJs).toJS;
-    }).toJS;
+  final dartArgs = args.dartify()! as Map<String, String>;
+  return callback(dartArgs).then(_getPromptResultToJs).toJS;
+}).toJS;
 
 ToolCallMeta? _jsToToolCallMeta(JSObject meta) {
   final progressToken = meta['progressToken'];

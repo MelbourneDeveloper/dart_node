@@ -5,7 +5,8 @@ library;
 const schemaVersion = 1;
 
 /// Create all tables SQL.
-const createTablesSql = '''
+const createTablesSql =
+    '''
 CREATE TABLE IF NOT EXISTS identity (
   agent_name TEXT PRIMARY KEY,
   agent_key TEXT NOT NULL UNIQUE,

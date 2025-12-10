@@ -21,7 +21,8 @@ const subscribeInputSchema = <String, Object?>{
     'events': {
       'type': 'array',
       'items': {'type': 'string'},
-      'description': 'Event types to subscribe to, or ["*"] for all. '
+      'description':
+          'Event types to subscribe to, or ["*"] for all. '
           'Events: agent_registered, lock_acquired, lock_released, '
           'lock_renewed, message_sent, plan_updated',
     },
@@ -32,7 +33,8 @@ const subscribeInputSchema = <String, Object?>{
 /// Tool config for subscribe.
 const subscribeToolConfig = (
   title: 'Subscribe',
-  description: 'Subscribe to real-time notifications for state changes. '
+  description:
+      'Subscribe to real-time notifications for state changes. '
       'REQUIRED: action (subscribe|unsubscribe|list). For subscribe: '
       'subscriber_id, events (array or ["*"] for all). '
       'Events: agent_registered, lock_acquired, lock_released, lock_renewed, '
@@ -50,21 +52,19 @@ ToolCallback createSubscribeHandler(NotificationEmitter emitter) =>
 
       return switch (action) {
         'subscribe' => _subscribe(
-            emitter,
-            args['subscriber_id'] as String?,
-            args['events'] as List<Object?>?,
-          ),
+          emitter,
+          args['subscriber_id'] as String?,
+          args['events'] as List<Object?>?,
+        ),
         'unsubscribe' => _unsubscribe(
-            emitter,
-            args['subscriber_id'] as String?,
-          ),
+          emitter,
+          args['subscriber_id'] as String?,
+        ),
         'list' => _list(emitter),
         _ => (
-            content: <Object>[
-              textContent( '{"error":"Unknown action: $action"}'),
-            ],
-            isError: true,
-          ),
+          content: <Object>[textContent('{"error":"Unknown action: $action"}')],
+          isError: true,
+        ),
       };
     };
 
@@ -87,25 +87,21 @@ CallToolResult _subscribe(
 
   // Validate event types
   final validEvents = [...allEventTypes, '*'];
-  final invalidEvents =
-      eventList.where((e) => !validEvents.contains(e)).toList();
+  final invalidEvents = eventList
+      .where((e) => !validEvents.contains(e))
+      .toList();
   if (invalidEvents.isNotEmpty) {
     final msg = '{"error":"Invalid event types: ${invalidEvents.join(', ')}"}';
-    return (
-      content: <Object>[textContent(msg)],
-      isError: true,
-    );
+    return (content: <Object>[textContent(msg)], isError: true);
   }
 
   emitter.addSubscriber((subscriberId: subscriberId, events: eventList));
 
   final eventsJson = eventList.join('","');
-  final json = '{"subscribed":true,"subscriber_id":"$subscriberId",'
+  final json =
+      '{"subscribed":true,"subscriber_id":"$subscriberId",'
       '"events":["$eventsJson"]}';
-  return (
-    content: <Object>[textContent(json)],
-    isError: false,
-  );
+  return (content: <Object>[textContent(json)], isError: false);
 }
 
 CallToolResult _unsubscribe(NotificationEmitter emitter, String? subscriberId) {
@@ -132,15 +128,14 @@ CallToolResult _list(NotificationEmitter emitter) {
   final subscribers = emitter.getSubscribers();
   final json = subscribers
       .map(
-        (s) => '{"subscriber_id":"${s.subscriberId}",'
+        (s) =>
+            '{"subscriber_id":"${s.subscriberId}",'
             '"events":["${s.events.join('","')}"]}',
       )
       .join(',');
 
   return (
-    content: <Object>[
-      textContent( '{"subscribers":[$json]}'),
-    ],
+    content: <Object>[textContent('{"subscribers":[$json]}')],
     isError: false,
   );
 }

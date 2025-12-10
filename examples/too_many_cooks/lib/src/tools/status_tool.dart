@@ -42,8 +42,7 @@ ToolCallback createStatusHandler(TooManyCooksDb db, Logger logger) =>
       if (locksResult case Error(:final error)) {
         return _errorResult(error);
       }
-      final locks = (locksResult as Success<List<FileLock>, DbError>)
-          .value
+      final locks = (locksResult as Success<List<FileLock>, DbError>).value
           .map(_lockJson)
           .join(',');
 
@@ -52,8 +51,7 @@ ToolCallback createStatusHandler(TooManyCooksDb db, Logger logger) =>
       if (plansResult case Error(:final error)) {
         return _errorResult(error);
       }
-      final plans = (plansResult as Success<List<AgentPlan>, DbError>)
-          .value
+      final plans = (plansResult as Success<List<AgentPlan>, DbError>).value
           .map(_planJson)
           .join(',');
 
@@ -62,8 +60,7 @@ ToolCallback createStatusHandler(TooManyCooksDb db, Logger logger) =>
       if (messagesResult case Error(:final error)) {
         return _errorResult(error);
       }
-      final messages = (messagesResult as Success<List<Message>, DbError>)
-          .value
+      final messages = (messagesResult as Success<List<Message>, DbError>).value
           .map(_messageJson)
           .join(',');
 
@@ -80,22 +77,26 @@ ToolCallback createStatusHandler(TooManyCooksDb db, Logger logger) =>
       );
     };
 
-String _agentJson(AgentIdentity a) => '{"agent_name":"${a.agentName}",'
+String _agentJson(AgentIdentity a) =>
+    '{"agent_name":"${a.agentName}",'
     '"registered_at":${a.registeredAt},'
     '"last_active":${a.lastActive}}';
 
-String _lockJson(FileLock l) => '{"file_path":"${l.filePath}",'
+String _lockJson(FileLock l) =>
+    '{"file_path":"${l.filePath}",'
     '"agent_name":"${l.agentName}",'
     '"acquired_at":${l.acquiredAt},'
     '"expires_at":${l.expiresAt}'
     '${l.reason != null ? ',"reason":"${_escapeJson(l.reason!)}"' : ''}}';
 
-String _planJson(AgentPlan p) => '{"agent_name":"${p.agentName}",'
+String _planJson(AgentPlan p) =>
+    '{"agent_name":"${p.agentName}",'
     '"goal":"${_escapeJson(p.goal)}",'
     '"current_task":"${_escapeJson(p.currentTask)}",'
     '"updated_at":${p.updatedAt}}';
 
-String _messageJson(Message m) => '{"id":"${m.id}",'
+String _messageJson(Message m) =>
+    '{"id":"${m.id}",'
     '"from_agent":"${m.fromAgent}",'
     '"to_agent":"${m.toAgent}",'
     '"content":"${_escapeJson(m.content)}",'
@@ -106,8 +107,6 @@ String _escapeJson(String s) =>
     s.replaceAll(r'\', r'\\').replaceAll('"', r'\"').replaceAll('\n', r'\n');
 
 CallToolResult _errorResult(DbError e) => (
-      content: <Object>[
-        textContent('{"error":"${e.code}: ${e.message}"}'),
-      ],
-      isError: true,
-    );
+  content: <Object>[textContent('{"error":"${e.code}: ${e.message}"}')],
+  isError: true,
+);

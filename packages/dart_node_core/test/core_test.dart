@@ -58,19 +58,13 @@ void main() {
   group('NullableExtensions', () {
     test('match calls some for non-null value', () {
       const value = 'hello';
-      final result = value.match(
-        some: (v) => 'got: $v',
-        none: () => 'nothing',
-      );
+      final result = value.match(some: (v) => 'got: $v', none: () => 'nothing');
       expect(result, equals('got: hello'));
     });
 
     test('match calls none for null value', () {
       const String? value = null;
-      final result = value.match(
-        some: (v) => 'got: $v',
-        none: () => 'nothing',
-      );
+      final result = value.match(some: (v) => 'got: $v', none: () => 'nothing');
       expect(result, equals('nothing'));
     });
   });
@@ -90,14 +84,10 @@ void main() {
   group('withRetry', () {
     test('returns success on first attempt', () {
       var attempts = 0;
-      final result = withRetry(
-        defaultRetryPolicy,
-        (e) => true,
-        () {
-          attempts++;
-          return const Success<int, String>(42);
-        },
-      );
+      final result = withRetry(defaultRetryPolicy, (e) => true, () {
+        attempts++;
+        return const Success<int, String>(42);
+      });
       expect(result, isA<Success<int, String>>());
       expect((result as Success<int, String>).value, equals(42));
       expect(attempts, equals(1));

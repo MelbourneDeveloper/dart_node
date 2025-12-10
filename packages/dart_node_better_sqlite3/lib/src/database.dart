@@ -46,12 +46,12 @@ Result<Database, String> openDatabase(String path) {
 }
 
 Database _createDatabase(JSObject jsDb) => (
-      prepare: (sql) => _dbPrepare(jsDb, sql),
-      exec: (sql) => _dbExec(jsDb, sql),
-      close: () => _dbClose(jsDb),
-      pragma: (pragmaValue) => _dbPragma(jsDb, pragmaValue),
-      isOpen: () => _dbIsOpen(jsDb),
-    );
+  prepare: (sql) => _dbPrepare(jsDb, sql),
+  exec: (sql) => _dbExec(jsDb, sql),
+  close: () => _dbClose(jsDb),
+  pragma: (pragmaValue) => _dbPragma(jsDb, pragmaValue),
+  isOpen: () => _dbIsOpen(jsDb),
+);
 
 Result<Statement, String> _dbPrepare(JSObject jsDb, String sql) {
   try {

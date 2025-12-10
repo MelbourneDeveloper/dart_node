@@ -207,10 +207,16 @@ void main() {
       expect((statusJson['locks']! as List).length, equals(5));
       expect((statusJson['plans']! as List).length, equals(5));
       // CRITICAL: Status MUST return messages!
-      expect(statusJson.containsKey('messages'), isTrue,
-          reason: 'Status response MUST include messages field');
-      expect((statusJson['messages']! as List).length, equals(5),
-          reason: 'Status MUST return all 5 messages sent');
+      expect(
+        statusJson.containsKey('messages'),
+        isTrue,
+        reason: 'Status response MUST include messages field',
+      );
+      expect(
+        (statusJson['messages']! as List).length,
+        equals(5),
+        reason: 'Status MUST return all 5 messages sent',
+      );
 
       // Verify message structure
       final msgs = statusJson['messages']! as List;
@@ -339,8 +345,9 @@ void main() {
       });
 
       // Verify one plan exists
-      var status = jsonDecode(await client.callTool('status', {}))
-          as Map<String, Object?>;
+      var status =
+          jsonDecode(await client.callTool('status', {}))
+              as Map<String, Object?>;
       var plans = status['plans']! as List;
       expect(plans.length, equals(1), reason: 'Should have exactly 1 plan');
 
@@ -354,11 +361,15 @@ void main() {
       });
 
       // CRITICAL: Still only ONE plan - update replaced, didn't create new
-      status = jsonDecode(await client.callTool('status', {}))
-          as Map<String, Object?>;
+      status =
+          jsonDecode(await client.callTool('status', {}))
+              as Map<String, Object?>;
       plans = status['plans']! as List;
-      expect(plans.length, equals(1),
-          reason: 'MUST have exactly 1 plan - update replaces, not creates');
+      expect(
+        plans.length,
+        equals(1),
+        reason: 'MUST have exactly 1 plan - update replaces, not creates',
+      );
 
       // Verify the plan was actually updated
       final plan = plans.first as Map<String, Object?>;
@@ -383,11 +394,15 @@ void main() {
       }
 
       // CRITICAL: Should have exactly 3 plans (one per agent), NOT 9
-      final status = jsonDecode(await client.callTool('status', {}))
-          as Map<String, Object?>;
+      final status =
+          jsonDecode(await client.callTool('status', {}))
+              as Map<String, Object?>;
       final plans = status['plans']! as List;
-      expect(plans.length, equals(3),
-          reason: 'MUST have exactly 3 plans (one per agent), not 9');
+      expect(
+        plans.length,
+        equals(3),
+        reason: 'MUST have exactly 3 plans (one per agent), not 9',
+      );
 
       // Verify each plan shows the latest update (round 2)
       for (final plan in plans) {
@@ -475,8 +490,7 @@ class _McpClient {
   Future<Map<String, Object?>> callToolRaw(
     String name,
     Map<String, Object?> args,
-  ) =>
-      _request('tools/call', {'name': name, 'arguments': args});
+  ) => _request('tools/call', {'name': name, 'arguments': args});
 
   Future<Map<String, Object?>> _request(
     String method,
@@ -561,7 +575,7 @@ void _deleteDbFiles() {
     final path = '$dbDir/$file';
     final exists =
         (existsSync.callAsFunction(fs, path.toJS) as JSBoolean?)?.toDart ??
-            false;
+        false;
     if (exists) {
       unlinkSync.callAsFunction(fs, path.toJS);
     }
@@ -584,8 +598,8 @@ void _deleteDbFiles() {
       try {
         final exists =
             (existsSync.callAsFunction(fs, fileName.toJS) as JSBoolean?)
-                    ?.toDart ??
-                false;
+                ?.toDart ??
+            false;
         if (exists) {
           unlinkSync.callAsFunction(fs, fileName.toJS);
         }
