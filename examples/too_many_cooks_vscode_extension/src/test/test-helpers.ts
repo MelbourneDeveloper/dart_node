@@ -46,7 +46,7 @@ export const waitForCondition = async (
 export async function waitForExtensionActivation(): Promise<void> {
   console.log('[TEST HELPER] Starting extension activation wait...');
 
-  const extension = vscode.extensions.getExtension('dart-node.too-many-cooks');
+  const extension = vscode.extensions.getExtension('Nimblesite.too-many-cooks');
   if (!extension) {
     throw new Error('Extension not found - check publisher name in package.json');
   }

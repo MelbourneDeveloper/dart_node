@@ -13,7 +13,7 @@ suite('Extension Activation', () => {
   });
 
   test('Extension is present and can be activated', async () => {
-    const extension = vscode.extensions.getExtension('dart-node.too-many-cooks');
+    const extension = vscode.extensions.getExtension('Nimblesite.too-many-cooks');
     assert.ok(extension, 'Extension should be present');
     assert.ok(extension.isActive, 'Extension should be active');
   });
