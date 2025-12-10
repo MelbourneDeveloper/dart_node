@@ -41,9 +41,11 @@ const lockInputSchema = <String, Object?>{
 /// Tool config for lock.
 const lockToolConfig = (
   title: 'File Lock',
-  description:
-      'Manage file locks: acquire, release, force_release, '
-      'renew, query, list',
+  description: 'Manage file locks: acquire, release, force_release, renew, '
+      'query, list. REQUIRED: action. For acquire/release/renew: file_path, '
+      'agent_name, agent_key. For query: file_path. '
+      'Example acquire: {"action":"acquire","file_path":"/path/file.dart",'
+      ' "agent_name":"me","agent_key":"xxx","reason":"editing"}',
   inputSchema: lockInputSchema,
   outputSchema: null,
   annotations: null,

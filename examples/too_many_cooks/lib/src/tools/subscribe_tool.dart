@@ -32,7 +32,12 @@ const subscribeInputSchema = <String, Object?>{
 /// Tool config for subscribe.
 const subscribeToolConfig = (
   title: 'Subscribe',
-  description: 'Subscribe to real-time notifications for state changes',
+  description: 'Subscribe to real-time notifications for state changes. '
+      'REQUIRED: action (subscribe|unsubscribe|list). For subscribe: '
+      'subscriber_id, events (array or ["*"] for all). '
+      'Events: agent_registered, lock_acquired, lock_released, lock_renewed, '
+      'message_sent, plan_updated. '
+      'Example: {"action":"subscribe","subscriber_id":"my-ext","events":["*"]}',
   inputSchema: subscribeInputSchema,
   outputSchema: null,
   annotations: null,

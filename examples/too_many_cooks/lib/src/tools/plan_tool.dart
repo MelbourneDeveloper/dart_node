@@ -40,7 +40,11 @@ const planInputSchema = <String, Object?>{
 /// Tool config for plan.
 const planToolConfig = (
   title: 'Plan',
-  description: 'Manage agent plans: update, get, list',
+  description: 'Manage agent plans: update, get, list. REQUIRED: action. '
+      'For update: agent_name, agent_key, goal, current_task. '
+      'For get: agent_name. Example update: {"action":"update",'
+      ' "agent_name":"me","agent_key":"xxx","goal":"Fix bug",'
+      ' "current_task":"Reading code"}',
   inputSchema: planInputSchema,
   outputSchema: null,
   annotations: null,

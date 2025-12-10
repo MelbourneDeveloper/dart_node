@@ -48,7 +48,11 @@ const messageInputSchema = <String, Object?>{
 /// Tool config for message.
 const messageToolConfig = (
   title: 'Message',
-  description: 'Send/receive messages: send, get, mark_read',
+  description: 'Send/receive messages. '
+      'REQUIRED: action (send|get|mark_read), agent_name, agent_key. '
+      'For send: to_agent, content. For mark_read: message_id. '
+      'Example send: {"action":"send","agent_name":"me","agent_key":"xxx",'
+      ' "to_agent":"other","content":"hello"}',
   inputSchema: messageInputSchema,
   outputSchema: null,
   annotations: null,

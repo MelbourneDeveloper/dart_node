@@ -12,7 +12,7 @@ import 'package:too_many_cooks/src/db/schema.dart';
 import 'package:too_many_cooks/src/types.dart';
 
 @JS('require')
-external _Fs _require(String module);
+external JSObject _require(String module);
 
 extension type _Fs(JSObject _) implements JSObject {
   external bool existsSync(String path);
@@ -27,8 +27,8 @@ extension type _Path(JSObject _) implements JSObject {
   external String dirname(String path);
 }
 
-final _Fs _fs = _require('fs');
-final _Path _path = _require('path') as _Path;
+final _Fs _fs = _Fs(_require('fs'));
+final _Path _path = _Path(_require('path'));
 
 /// SQLite-specific retryable errors.
 bool _isSqliteRetryable(String error) =>
@@ -200,6 +200,8 @@ extension type _Crypto(JSObject _) implements JSObject {
   external JSUint8Array randomBytes(int size);
 }
 
+// requireModule returns JSAny which must be cast to JSObject for extension type
+// ignore: no_casts
 final _Crypto _crypto = _Crypto(requireModule('crypto') as JSObject);
 
 String _generateKey() {

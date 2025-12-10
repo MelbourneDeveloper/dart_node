@@ -23,7 +23,9 @@ const registerInputSchema = <String, Object?>{
 /// Tool config for register.
 const registerToolConfig = (
   title: 'Register Agent',
-  description: 'Register a new agent. Returns secret key - store it!',
+  description: 'Register a new agent. Returns secret key - store it! '
+      'REQUIRED: name (string) - unique agent name 1-50 chars. '
+      'Example: {"name": "my-agent"}',
   inputSchema: registerInputSchema,
   outputSchema: null,
   annotations: null,
