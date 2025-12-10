@@ -568,18 +568,28 @@ void _deleteDbFiles() {
   }
 
   // Delete any .test_*.db files and .mjs temp files in current directory
-  final files = (readdirSync.callAsFunction(fs, '.'.toJS)! as JSArray).toDart;
+  final filesResult = readdirSync.callAsFunction(fs, '.'.toJS);
+  if (filesResult == null) return;
+  final files = (filesResult as JSArray).toDart;
   for (final file in files) {
-    final fileName = (file! as JSString).toDart;
+    if (file == null) continue;
+    final fileName = switch (file) {
+      final JSString s => s.toDart,
+      _ => continue,
+    };
     final isTestDb = fileName.startsWith('.test_') && fileName.contains('.db');
     final isTempMjs = fileName.endsWith('.mjs');
     if (isTestDb || isTempMjs) {
-      final exists =
-          (existsSync.callAsFunction(fs, fileName.toJS) as JSBoolean?)
-                  ?.toDart ??
-              false;
-      if (exists) {
-        unlinkSync.callAsFunction(fs, fileName.toJS);
+      try {
+        final exists =
+            (existsSync.callAsFunction(fs, fileName.toJS) as JSBoolean?)
+                    ?.toDart ??
+                false;
+        if (exists) {
+          unlinkSync.callAsFunction(fs, fileName.toJS);
+        }
+      } catch (_) {
+        // File may have been deleted by another process - ignore
       }
     }
   }
