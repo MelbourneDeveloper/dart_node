@@ -15,12 +15,16 @@ export class AgentTreeItem extends vscode.TreeItem {
     collapsibleState: vscode.TreeItemCollapsibleState,
     public readonly itemType: TreeItemType,
     public readonly agentName?: string,
-    public readonly filePath?: string
+    public readonly filePath?: string,
+    tooltip?: vscode.MarkdownString
   ) {
     super(label, collapsibleState);
     this.description = description;
     this.iconPath = this.getIcon();
     this.contextValue = itemType;
+    if (tooltip) {
+      this.tooltip = tooltip;
+    }
   }
 
   private getIcon(): vscode.ThemeIcon {
@@ -94,8 +98,54 @@ export class AgentsTreeProvider
       parts.join(', ') || 'idle',
       vscode.TreeItemCollapsibleState.Collapsed,
       'agent',
-      detail.agent.agentName
+      detail.agent.agentName,
+      undefined,
+      this.createAgentTooltip(detail)
     );
+  }
+
+  private createAgentTooltip(detail: AgentDetails): vscode.MarkdownString {
+    const md = new vscode.MarkdownString();
+    const agent = detail.agent;
+
+    md.appendMarkdown(`**Agent:** ${agent.agentName}\n\n`);
+    md.appendMarkdown(
+      `**Registered:** ${new Date(agent.registeredAt).toLocaleString()}\n\n`
+    );
+    md.appendMarkdown(
+      `**Last Active:** ${new Date(agent.lastActive).toLocaleString()}\n\n`
+    );
+
+    if (detail.plan) {
+      md.appendMarkdown('---\n\n');
+      md.appendMarkdown(`**Goal:** ${detail.plan.goal}\n\n`);
+      md.appendMarkdown(`**Current Task:** ${detail.plan.currentTask}\n\n`);
+    }
+
+    if (detail.locks.length > 0) {
+      md.appendMarkdown('---\n\n');
+      md.appendMarkdown(`**Locks (${detail.locks.length}):**\n`);
+      for (const lock of detail.locks) {
+        const expired = lock.expiresAt <= Date.now();
+        const status = expired ? 'EXPIRED' : 'active';
+        md.appendMarkdown(`- \`${lock.filePath}\` (${status})\n`);
+      }
+    }
+
+    const unread = detail.receivedMessages.filter(
+      (m) => m.readAt === undefined
+    ).length;
+    if (detail.sentMessages.length > 0 || detail.receivedMessages.length > 0) {
+      md.appendMarkdown('\n---\n\n');
+      md.appendMarkdown(
+        `**Messages:** ${detail.sentMessages.length} sent, ` +
+          `${detail.receivedMessages.length} received` +
+          (unread > 0 ? ` **(${unread} unread)**` : '') +
+          '\n'
+      );
+    }
+
+    return md;
   }
 
   private createAgentChildren(detail: AgentDetails): AgentTreeItem[] {

@@ -505,12 +505,11 @@ JSFunction _wrapReadResourceCallback(ReadResourceCallback callback) =>
 // ignore: no_then
 JSFunction _wrapReadResourceTemplateCallback(
   ReadResourceTemplateCallback callback,
-) {
-  return ((String uri, JSObject variables) {
-    final dartVariables = variables.dartify()! as Map<String, String>;
-    return callback(uri, dartVariables).then(_readResourceResultToJs).toJS;
-  }).toJS;
-}
+) =>
+    ((String uri, JSObject variables) {
+      final dartVariables = variables.dartify()! as Map<String, String>;
+      return callback(uri, dartVariables).then(_readResourceResultToJs).toJS;
+    }).toJS;
 
 // .then() is REQUIRED here - async functions cannot be converted via .toJS
 // ignore: no_then

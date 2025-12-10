@@ -574,7 +574,13 @@ void _deleteDbFiles() {
     final isTestDb = fileName.startsWith('.test_') && fileName.contains('.db');
     final isTempMjs = fileName.endsWith('.mjs');
     if (isTestDb || isTempMjs) {
-      unlinkSync.callAsFunction(fs, fileName.toJS);
+      final exists =
+          (existsSync.callAsFunction(fs, fileName.toJS) as JSBoolean?)
+                  ?.toDart ??
+              false;
+      if (exists) {
+        unlinkSync.callAsFunction(fs, fileName.toJS);
+      }
     }
   }
 }

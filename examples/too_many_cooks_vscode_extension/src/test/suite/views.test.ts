@@ -3,7 +3,6 @@
  * Verifies tree views are registered and visible.
  */
 
-import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { waitForExtensionActivation, openTooManyCooksPanel } from '../test-helpers';
 

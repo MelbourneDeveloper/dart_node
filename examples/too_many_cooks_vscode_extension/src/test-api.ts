@@ -24,9 +24,9 @@ import type {
 } from './mcp/types';
 import type { AgentDetails as AgentDetailsType } from './state/signals';
 import type { AgentsTreeProvider, AgentTreeItem } from './ui/tree/agentsTreeProvider';
-import type { LocksTreeProvider, LockTreeItem } from './ui/tree/locksTreeProvider';
-import type { MessagesTreeProvider, MessageTreeItem } from './ui/tree/messagesTreeProvider';
-import type { PlansTreeProvider, PlanTreeItem } from './ui/tree/plansTreeProvider';
+import type { LocksTreeProvider } from './ui/tree/locksTreeProvider';
+import type { MessagesTreeProvider } from './ui/tree/messagesTreeProvider';
+import type { PlansTreeProvider } from './ui/tree/plansTreeProvider';
 
 /** Serializable tree item for test assertions - proves what appears in UI */
 export interface TreeItemSnapshot {

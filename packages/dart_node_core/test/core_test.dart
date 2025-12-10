@@ -57,7 +57,7 @@ void main() {
 
   group('NullableExtensions', () {
     test('match calls some for non-null value', () {
-      const String? value = 'hello';
+      const value = 'hello';
       final result = value.match(
         some: (v) => 'got: $v',
         none: () => 'nothing',

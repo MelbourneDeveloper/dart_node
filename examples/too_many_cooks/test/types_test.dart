@@ -1,5 +1,4 @@
-/// Tests for pure Dart types - runs on VM for coverage.
-@TestOn('vm')
+/// Tests for pure Dart types.
 library;
 
 import 'package:test/test.dart';
@@ -9,7 +8,8 @@ import 'package:too_many_cooks/src/types.dart';
 void main() {
   group('TooManyCooksConfig', () {
     test('defaultConfig has correct values', () {
-      expect(defaultConfig.dbPath, '.too_many_cooks.db');
+      // dbPath is dynamic based on HOME env var, just check it ends correctly
+      expect(defaultConfig.dbPath, endsWith('.too_many_cooks/data.db'));
       expect(defaultConfig.lockTimeoutMs, 600000);
       expect(defaultConfig.maxMessageLength, 200);
       expect(defaultConfig.maxPlanLength, 100);

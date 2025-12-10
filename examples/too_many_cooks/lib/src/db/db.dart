@@ -131,7 +131,11 @@ Result<TooManyCooksDb, String> _tryCreateDb(
   final dbDir = _path.dirname(config.dbPath);
   if (!_fs.existsSync(dbDir)) {
     log.info('Creating database directory: $dbDir');
-    _fs.mkdirSync(dbDir, _MkdirOptions(recursive: true));
+    try {
+      _fs.mkdirSync(dbDir, _MkdirOptions(recursive: true));
+    } on Object catch (e) {
+      return Error('Failed to create database directory: $e');
+    }
   }
 
   final dbResult = openDatabase(config.dbPath);
@@ -363,9 +367,12 @@ Result<LockResult, DbError> _acquireLock(
       ));
     }
     // Expired - delete it
-    final delResult = db.exec(
-      "DELETE FROM locks WHERE file_path = '$filePath'",
-    );
+    final delStmtResult = db.prepare('DELETE FROM locks WHERE file_path = ?');
+    if (delStmtResult case Error(:final error)) {
+      return Error((code: errDatabase, message: error));
+    }
+    final delStmt = (delStmtResult as Success<Statement, String>).value;
+    final delResult = delStmt.run([filePath]);
     if (delResult case Error(:final error)) {
       return Error((code: errDatabase, message: error));
     }
@@ -457,12 +464,18 @@ Result<void, DbError> _forceReleaseLock(
       code: errLockHeld,
       message: 'Lock not expired, held by ${value.agentName}',
     )),
-    Success() => switch (db.exec(
-      "DELETE FROM locks WHERE file_path = '$filePath'",
-    )) {
+    Success() => _deleteExpiredLock(db, filePath),
+  };
+}
+
+Result<void, DbError> _deleteExpiredLock(Database db, String filePath) {
+  final stmtResult = db.prepare('DELETE FROM locks WHERE file_path = ?');
+  return switch (stmtResult) {
+    Success(:final value) => switch (value.run([filePath])) {
       Success() => const Success(null),
       Error(:final error) => Error((code: errDatabase, message: error)),
     },
+    Error(:final error) => Error((code: errDatabase, message: error)),
   };
 }
 

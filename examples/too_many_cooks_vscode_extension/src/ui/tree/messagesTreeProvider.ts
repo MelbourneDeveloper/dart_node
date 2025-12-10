@@ -41,20 +41,46 @@ export class MessageTreeItem extends vscode.TreeItem {
 
   private createTooltip(msg: Message): vscode.MarkdownString {
     const md = new vscode.MarkdownString();
-    md.appendMarkdown(`**From:** ${msg.fromAgent}\n\n`);
-    md.appendMarkdown(
-      `**To:** ${msg.toAgent === '*' ? 'Everyone (broadcast)' : msg.toAgent}\n\n`
-    );
-    md.appendMarkdown(`**Content:**\n\n${msg.content}\n\n`);
-    md.appendMarkdown(
-      `**Sent:** ${new Date(msg.createdAt).toLocaleString()}\n`
-    );
+    md.isTrusted = true;
+
+    // Header with from/to
+    const target = msg.toAgent === '*' ? 'Everyone (broadcast)' : msg.toAgent;
+    md.appendMarkdown(`### ${msg.fromAgent} \u2192 ${target}\n\n`);
+
+    // Full message content in a quote block for visibility
+    md.appendMarkdown(`> ${msg.content.split('\n').join('\n> ')}\n\n`);
+
+    // Time info with relative time
+    const sentDate = new Date(msg.createdAt);
+    const relativeTime = this.getRelativeTime(msg.createdAt);
+    md.appendMarkdown('---\n\n');
+    md.appendMarkdown(`**Sent:** ${sentDate.toLocaleString()} (${relativeTime})\n\n`);
+
     if (msg.readAt) {
-      md.appendMarkdown(
-        `**Read:** ${new Date(msg.readAt).toLocaleString()}\n`
-      );
+      const readDate = new Date(msg.readAt);
+      md.appendMarkdown(`**Read:** ${readDate.toLocaleString()}\n\n`);
+    } else {
+      md.appendMarkdown('**Status:** Unread\n\n');
     }
+
+    // Message ID for debugging
+    md.appendMarkdown(`*ID: ${msg.id}*`);
+
     return md;
+  }
+
+  private getRelativeTime(timestamp: number): string {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    if (minutes > 0) return `${minutes}m ago`;
+    return 'just now';
   }
 }
 

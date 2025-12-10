@@ -1,5 +1,7 @@
 /// React Native package tests - factory tests and type tests.
 /// Actual React Native runtime requires Expo/RN environment.
+library;
+
 import 'package:dart_node_react_native/dart_node_react_native.dart';
 import 'package:test/test.dart';
 
