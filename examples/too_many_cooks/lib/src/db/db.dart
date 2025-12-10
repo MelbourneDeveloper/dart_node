@@ -11,6 +11,25 @@ import 'package:too_many_cooks/src/config.dart';
 import 'package:too_many_cooks/src/db/schema.dart';
 import 'package:too_many_cooks/src/types.dart';
 
+@JS('require')
+external _Fs _require(String module);
+
+extension type _Fs(JSObject _) implements JSObject {
+  external bool existsSync(String path);
+  external void mkdirSync(String path, _MkdirOptions options);
+}
+
+extension type _MkdirOptions._(JSObject _) implements JSObject {
+  external factory _MkdirOptions({bool recursive});
+}
+
+extension type _Path(JSObject _) implements JSObject {
+  external String dirname(String path);
+}
+
+final _Fs _fs = _require('fs');
+final _Path _path = _require('path') as _Path;
+
 /// SQLite-specific retryable errors.
 bool _isSqliteRetryable(String error) =>
     error.contains('disk I/O error') ||
@@ -107,6 +126,13 @@ Result<TooManyCooksDb, String> _tryCreateDb(
   TooManyCooksConfig config,
   Logger log,
 ) {
+  // Ensure parent directory exists for the database file
+  final dbDir = _path.dirname(config.dbPath);
+  if (!_fs.existsSync(dbDir)) {
+    log.info('Creating database directory: $dbDir');
+    _fs.mkdirSync(dbDir, _MkdirOptions(recursive: true));
+  }
+
   final dbResult = openDatabase(config.dbPath);
   return switch (dbResult) {
     Success(:final value) => switch (_initSchema(value, log)) {

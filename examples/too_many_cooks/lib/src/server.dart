@@ -16,14 +16,15 @@ import 'package:too_many_cooks/src/tools/subscribe_tool.dart';
 
 /// Create the Too Many Cooks MCP server.
 Result<McpServer, String> createTooManyCooksServer({
-  TooManyCooksConfig config = defaultConfig,
+  TooManyCooksConfig? config,
   Logger? logger,
 }) {
+  final cfg = config ?? defaultConfig;
   final log = logger ?? _createNoOpLogger()
     ..info('Creating Too Many Cooks server');
 
   // Create database
-  final dbResult = createDb(config);
+  final dbResult = createDb(cfg);
   if (dbResult case Error(:final error)) {
     log.error('Failed to create database', structuredData: {'error': error});
     return Error(error);
@@ -64,7 +65,7 @@ Result<McpServer, String> createTooManyCooksServer({
     ..registerTool(
       'lock',
       lockToolConfig,
-      createLockHandler(db, config, emitter, log),
+      createLockHandler(db, cfg, emitter, log),
     )
     ..registerTool(
       'message',

@@ -14,6 +14,68 @@
 
 ---
 
+## CRITICAL: Architecture Requirements
+
+### ONE PROCESS, ONE DATABASE
+
+**The MCP server MUST run as a single, long-lived process.** All clients (Claude Code, VSCode extension, other agents) connect to the SAME server instance.
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Claude Code   │     │ VSCode Extension│     │  Other Agents   │
+└────────┬────────┘     └────────┬────────┘     └────────┬────────┘
+         │                       │                       │
+         └───────────────────────┼───────────────────────┘
+                                 │
+                                 ▼
+                    ┌────────────────────────┐
+                    │   Too Many Cooks MCP   │  ← SINGLE PROCESS
+                    │        Server          │
+                    └───────────┬────────────┘
+                                │
+                                ▼
+                    ┌────────────────────────┐
+                    │   ~/.too_many_cooks/   │  ← SINGLE DATABASE
+                    │        data.db         │
+                    └────────────────────────┘
+```
+
+### Server Startup
+
+**The MCP server must be started BEFORE any client connects.** Clients do NOT spawn the server.
+
+```bash
+# Start the server (run once, keeps running)
+node examples/too_many_cooks/build/bin/server_node.js
+
+# Or as a background daemon
+nohup node examples/too_many_cooks/build/bin/server_node.js &
+```
+
+### Database Location
+
+The database MUST be at a fixed, absolute path so all server instances share state:
+
+```dart
+// In config.dart
+static String get dbPath {
+  final home = Platform.environment['HOME'] ?? '/tmp';
+  return '$home/.too_many_cooks/data.db';
+}
+```
+
+**NOT** relative to cwd. **NOT** spawned per-client.
+
+### Client Connection
+
+Clients connect to the already-running server via:
+- **stdio**: For Claude Code MCP integration
+- **HTTP/SSE**: For VSCode extension (polls for changes)
+
+The VSCode extension does NOT spawn its own server. It connects to the existing one or polls the shared database.
+
+---
+
 ## Database Schema
 
 ```mermaid

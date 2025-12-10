@@ -38,6 +38,7 @@ function log(message: string): void {
 export class Store {
   private client: McpClient | null = null;
   private serverPath: string;
+  private pollInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(serverPath: string) {
     this.serverPath = serverPath;
@@ -87,6 +88,17 @@ export class Store {
 
       connectionStatus.value = 'connected';
       log('Connection status: connected');
+
+      // Start polling to pick up changes from other MCP server instances
+      // (e.g., Claude Code registering agents in the shared database)
+      this.pollInterval = setInterval(() => {
+        if (this.isConnected()) {
+          this.refreshStatus().catch((err) => {
+            log(`Polling refresh failed: ${err}`);
+          });
+        }
+      }, 2000);
+      log('Polling started (every 2s)');
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       log(`Connection failed: ${msg}`);
@@ -96,6 +108,11 @@ export class Store {
   }
 
   async disconnect(): Promise<void> {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+      log('Polling stopped');
+    }
     if (this.client) {
       await this.client.stop();
       this.client = null;
