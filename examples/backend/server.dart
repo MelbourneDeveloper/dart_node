@@ -2,12 +2,14 @@ import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
 import 'package:backend/schemas.dart';
+import 'package:backend/services/pomodoro_service.dart';
 import 'package:backend/services/task_service.dart';
 import 'package:backend/services/token_service.dart';
 import 'package:backend/services/user_service.dart';
 import 'package:backend/services/websocket_service.dart';
 import 'package:dart_node_core/dart_node_core.dart';
 import 'package:dart_node_express/dart_node_express.dart';
+import 'package:shared/models/pomodoro.dart';
 import 'package:shared/models/task.dart';
 import 'package:shared/models/user.dart';
 
@@ -15,6 +17,7 @@ void main() {
   final tokenService = TokenService('super-secret-jwt-key-change-in-prod');
   final userService = UserService();
   final taskService = TaskService();
+  final pomodoroService = PomodoroService();
   final wsService = WebSocketService(tokenService)..start(port: 3001);
 
   express()
@@ -158,6 +161,168 @@ void main() {
             taskService.delete(taskId);
             wsService.notifyTaskChange(auth.user.id, TaskEventType.deleted, t);
             res.jsonMap({'success': true, 'message': 'Task deleted'});
+        }
+      }),
+    ])
+    ..getWithMiddleware('/pomodoro/active', [
+      authenticate(tokenService, userService),
+      asyncHandler((req, res) async {
+        final auth = getAuthContext(req);
+        final activeSession = pomodoroService.getActiveSession(auth.user.id);
+        res.jsonMap({
+          'success': true,
+          'data': activeSession?.toJson(),
+        });
+      }),
+    ])
+    ..postWithMiddleware('/pomodoro/start', [
+      authenticate(tokenService, userService),
+      validateBody(createPomodoroSessionSchema),
+      asyncHandler((req, res) async {
+        final auth = getAuthContext(req);
+        final data = getValidatedBody<CreatePomodoroSessionData>(req);
+        final session = pomodoroService.create(
+          userId: auth.user.id,
+          title: data.title,
+          duration: data.duration ?? 25,
+          breakDuration: data.breakDuration ?? 5,
+          linkedTaskId: data.linkedTaskId,
+        );
+        final started = pomodoroService.start(session.id);
+        res
+          ..status(201)
+          ..jsonMap({'success': true, 'data': started?.toJson()});
+      }),
+    ])
+    ..getWithMiddleware('/pomodoro', [
+      authenticate(tokenService, userService),
+      asyncHandler((req, res) async {
+        final auth = getAuthContext(req);
+        res.jsonMap({
+          'success': true,
+          'data': pomodoroService
+              .findByUser(auth.user.id)
+              .map((s) => s.toJson())
+              .toList(),
+        });
+      }),
+    ])
+    ..postWithMiddleware('/pomodoro', [
+      authenticate(tokenService, userService),
+      validateBody(createPomodoroSessionSchema),
+      asyncHandler((req, res) async {
+        final auth = getAuthContext(req);
+        final data = getValidatedBody<CreatePomodoroSessionData>(req);
+        final session = pomodoroService.create(
+          userId: auth.user.id,
+          title: data.title,
+          duration: data.duration ?? 25,
+          breakDuration: data.breakDuration ?? 5,
+          linkedTaskId: data.linkedTaskId,
+        );
+        res
+          ..status(201)
+          ..jsonMap({'success': true, 'data': session.toJson()});
+      }),
+    ])
+    ..postWithMiddleware('/pomodoro/:id/start', [
+      authenticate(tokenService, userService),
+      asyncHandler((req, res) async {
+        final auth = getAuthContext(req);
+        final sessionId = getParam(req, 'id');
+        final session = pomodoroService.findById(sessionId);
+        switch (session) {
+          case null:
+            throw const NotFoundError('Pomodoro session');
+          case final s when s.userId != auth.user.id:
+            throw const ForbiddenError('Cannot start this session');
+          case final s:
+            final started = pomodoroService.start(s.id);
+            res.jsonMap({'success': true, 'data': started?.toJson()});
+        }
+      }),
+    ])
+    ..postWithMiddleware('/pomodoro/:id/pause', [
+      authenticate(tokenService, userService),
+      asyncHandler((req, res) async {
+        final auth = getAuthContext(req);
+        final sessionId = getParam(req, 'id');
+        final session = pomodoroService.findById(sessionId);
+        switch (session) {
+          case null:
+            throw const NotFoundError('Pomodoro session');
+          case final s when s.userId != auth.user.id:
+            throw const ForbiddenError('Cannot pause this session');
+          case final s:
+            final paused = pomodoroService.pauseSession(s.id);
+            res.jsonMap({'success': true, 'data': paused?.toJson()});
+        }
+      }),
+    ])
+    ..postWithMiddleware('/pomodoro/:id/resume', [
+      authenticate(tokenService, userService),
+      asyncHandler((req, res) async {
+        final auth = getAuthContext(req);
+        final sessionId = getParam(req, 'id');
+        final session = pomodoroService.findById(sessionId);
+        switch (session) {
+          case null:
+            throw const NotFoundError('Pomodoro session');
+          case final s when s.userId != auth.user.id:
+            throw const ForbiddenError('Cannot resume this session');
+          case final s:
+            final resumed = pomodoroService.resumeSession(s.id);
+            res.jsonMap({'success': true, 'data': resumed?.toJson()});
+        }
+      }),
+    ])
+    ..postWithMiddleware('/pomodoro/:id/complete', [
+      authenticate(tokenService, userService),
+      asyncHandler((req, res) async {
+        final auth = getAuthContext(req);
+        final sessionId = getParam(req, 'id');
+        final session = pomodoroService.findById(sessionId);
+        switch (session) {
+          case null:
+            throw const NotFoundError('Pomodoro session');
+          case final s when s.userId != auth.user.id:
+            throw const ForbiddenError('Cannot complete this session');
+          case final s:
+            final completed = pomodoroService.completeSession(s.id);
+            res.jsonMap({'success': true, 'data': completed?.toJson()});
+        }
+      }),
+    ])
+    ..getWithMiddleware('/pomodoro/:id', [
+      authenticate(tokenService, userService),
+      asyncHandler((req, res) async {
+        final auth = getAuthContext(req);
+        final sessionId = getParam(req, 'id');
+        final session = pomodoroService.findById(sessionId);
+        switch (session) {
+          case null:
+            throw const NotFoundError('Pomodoro session');
+          case final s when s.userId != auth.user.id:
+            throw const ForbiddenError('Cannot access this session');
+          case final s:
+            res.jsonMap({'success': true, 'data': s.toJson()});
+        }
+      }),
+    ])
+    ..deleteWithMiddleware('/pomodoro/:id', [
+      authenticate(tokenService, userService),
+      asyncHandler((req, res) async {
+        final auth = getAuthContext(req);
+        final sessionId = getParam(req, 'id');
+        final session = pomodoroService.findById(sessionId);
+        switch (session) {
+          case null:
+            throw const NotFoundError('Pomodoro session');
+          case final s when s.userId != auth.user.id:
+            throw const ForbiddenError('Cannot delete this session');
+          case final s:
+            pomodoroService.delete(s.id);
+            res.jsonMap({'success': true, 'message': 'Session deleted'});
         }
       }),
     ])

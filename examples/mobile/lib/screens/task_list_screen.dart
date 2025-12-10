@@ -93,7 +93,7 @@ ReactElement taskListScreen({
   return view(
     style: AppStyles.container,
     children: [
-      _buildHeader(getUserDisplayName(user), handleLogout),
+      _buildHeader(getUserDisplayName(user), handleLogout, () => authEffects.setView('pomodoro')),
       loading
           ? view(
               style: {'flex': 1, 'justifyContent': 'center'},
@@ -127,7 +127,11 @@ ReactElement taskListScreen({
   );
 });
 
-RNViewElement _buildHeader(String userName, void Function() onLogout) => view(
+RNViewElement _buildHeader(
+  String userName,
+  void Function() onLogout,
+  void Function() onTimerPress,
+) => view(
   style: AppStyles.header,
   children: [
     text('TaskFlow', style: AppStyles.headerTitle),
@@ -135,6 +139,11 @@ RNViewElement _buildHeader(String userName, void Function() onLogout) => view(
       style: {'flexDirection': 'row', 'alignItems': 'center', 'gap': 16},
       children: [
         text('Hi, $userName', style: AppStyles.headerUserName),
+        touchableOpacity(
+          onPress: onTimerPress,
+          style: _styles.timerButton,
+          child: text('⏱', style: _styles.timerIcon),
+        ),
         touchableOpacity(
           onPress: onLogout,
           child: text('Logout', style: AppStyles.logoutText),
@@ -380,4 +389,20 @@ void _handleTaskEvent(
   StateHookJSArray<JSTask> tasksState,
 ) {
   tasksState.setWithUpdater((current) => handleTaskEvent(type, task, current));
+}
+
+final _styles = _TaskListStyles();
+
+class _TaskListStyles {
+  Map<String, Object?> get timerButton => {
+    'paddingHorizontal': AppSpacing.md,
+    'paddingVertical': AppSpacing.sm,
+    'backgroundColor': AppColors.accentPrimary,
+    'borderRadius': AppSpacing.sm,
+  };
+
+  Map<String, Object?> get timerIcon => {
+    'fontSize': 20,
+    'color': '#ffffff',
+  };
 }

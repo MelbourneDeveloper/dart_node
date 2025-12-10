@@ -123,17 +123,43 @@ Fetch createThrowingFetch() =>
 
 // --- WebSocket Mock ---
 
-JSObject? _lastMockWs;
-
 /// Setup mock WebSocket for testing
+/// Uses eval to create a proper JS class that works with `new` keyword
 void mockWebSocket() {
-  globalContext['WebSocket'] = ((JSString url) {
-    final ws = JSObject();
-    ws['close'] = (() {}).toJS;
-    ws['send'] = ((JSAny _) {}).toJS;
-    _lastMockWs = ws;
-    return ws;
-  }).toJS;
+  // Create a proper JS class that can be instantiated with `new`
+  // and stores a reference to itself in a global array
+  final evalFn = globalContext['eval']! as JSFunction;
+  globalContext['WebSocket'] = evalFn.callAsFunction(
+    null,
+    '''
+    (function() {
+      var instances = [];
+      function MockWebSocket(url) {
+        this.url = url;
+        this.readyState = 1;
+        this.close = function() {};
+        this.send = function() {};
+        this.onmessage = null;
+        this.onopen = null;
+        this.onclose = null;
+        this.onerror = null;
+        instances.push(this);
+      }
+      MockWebSocket.instances = instances;
+      return MockWebSocket;
+    })()
+    '''
+        .toJS,
+  );
+}
+
+/// Get the most recently created mock WebSocket
+JSObject? get _lastMockWs {
+  final wsCtor = globalContext['WebSocket'];
+  if (wsCtor == null) return null;
+  final instances = (wsCtor as JSObject)['instances'] as JSArray?;
+  if (instances == null || instances.length == 0) return null;
+  return instances[instances.length - 1] as JSObject?;
 }
 
 /// Simulate a WebSocket message from the server

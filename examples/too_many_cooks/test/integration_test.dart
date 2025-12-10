@@ -575,8 +575,9 @@ void _deleteDbFiles() {
     if (file == null) continue;
     final fileName = switch (file) {
       final JSString s => s.toDart,
-      _ => continue,
+      _ => null,
     };
+    if (fileName == null) continue;
     final isTestDb = fileName.startsWith('.test_') && fileName.contains('.db');
     final isTempMjs = fileName.endsWith('.mjs');
     if (isTestDb || isTempMjs) {
@@ -588,7 +589,7 @@ void _deleteDbFiles() {
         if (exists) {
           unlinkSync.callAsFunction(fs, fileName.toJS);
         }
-      } catch (_) {
+      } on Object catch (_) {
         // File may have been deleted by another process - ignore
       }
     }
