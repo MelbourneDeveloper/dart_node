@@ -11,6 +11,8 @@ import 'package:test/test.dart';
 
 void main() {
   group('Too Many Cooks MCP Server Integration', () {
+    // late is required for setUp/tearDown pattern in test files
+    // ignore: no_late
     late _McpClient client;
 
     setUp(() async {
@@ -23,6 +25,9 @@ void main() {
     tearDown(() async {
       await client.stop();
     });
+
+    // Clean up after ALL tests complete so we don't pollute the shared DB
+    tearDownAll(_deleteDbFiles);
 
     test('5 agents register concurrently', () async {
       final registerFutures = List.generate(
@@ -317,6 +322,79 @@ void main() {
       final text = content['text']! as String;
       expect(text, contains('missing_parameter'));
       expect(text, contains('action'));
+    });
+
+    // CRITICAL: One plan per agent - updating replaces, doesn't create new
+    test('updating plan replaces existing - ONE PLAN PER AGENT', () async {
+      final agents = await _registerAgents(client, 1);
+      final agent = agents.first;
+
+      // Create initial plan
+      await client.callTool('plan', {
+        'action': 'update',
+        'agent_name': agent.name,
+        'agent_key': agent.key,
+        'goal': 'Initial goal',
+        'current_task': 'Initial task',
+      });
+
+      // Verify one plan exists
+      var status = jsonDecode(await client.callTool('status', {}))
+          as Map<String, Object?>;
+      var plans = status['plans']! as List;
+      expect(plans.length, equals(1), reason: 'Should have exactly 1 plan');
+
+      // Update the plan
+      await client.callTool('plan', {
+        'action': 'update',
+        'agent_name': agent.name,
+        'agent_key': agent.key,
+        'goal': 'Updated goal',
+        'current_task': 'Updated task',
+      });
+
+      // CRITICAL: Still only ONE plan - update replaced, didn't create new
+      status = jsonDecode(await client.callTool('status', {}))
+          as Map<String, Object?>;
+      plans = status['plans']! as List;
+      expect(plans.length, equals(1),
+          reason: 'MUST have exactly 1 plan - update replaces, not creates');
+
+      // Verify the plan was actually updated
+      final plan = plans.first as Map<String, Object?>;
+      expect(plan['goal'], equals('Updated goal'));
+      expect(plan['current_task'], equals('Updated task'));
+    });
+
+    test('each agent has exactly one plan after multiple updates', () async {
+      final agents = await _registerAgents(client, 3);
+
+      // Each agent updates their plan 3 times
+      for (var round = 0; round < 3; round++) {
+        for (final agent in agents) {
+          await client.callTool('plan', {
+            'action': 'update',
+            'agent_name': agent.name,
+            'agent_key': agent.key,
+            'goal': 'Goal round $round',
+            'current_task': 'Task round $round',
+          });
+        }
+      }
+
+      // CRITICAL: Should have exactly 3 plans (one per agent), NOT 9
+      final status = jsonDecode(await client.callTool('status', {}))
+          as Map<String, Object?>;
+      final plans = status['plans']! as List;
+      expect(plans.length, equals(3),
+          reason: 'MUST have exactly 3 plans (one per agent), not 9');
+
+      // Verify each plan shows the latest update (round 2)
+      for (final plan in plans) {
+        final p = plan as Map<String, Object?>;
+        expect(p['goal'], equals('Goal round 2'));
+        expect(p['current_task'], equals('Task round 2'));
+      }
     });
   });
 }

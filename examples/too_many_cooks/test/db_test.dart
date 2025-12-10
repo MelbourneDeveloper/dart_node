@@ -9,7 +9,11 @@ import 'package:too_many_cooks/src/db/db.dart';
 import 'package:too_many_cooks/src/types.dart';
 
 void main() {
+  // late is required for setUp/tearDown pattern in test files
+  // ignore: no_late
   late TooManyCooksDb db;
+  // late is required for setUp/tearDown pattern in test files
+  // ignore: no_late
   late String testDbPath;
   final logger = createLoggerWithContext(
     createLoggingContext(
@@ -31,7 +35,10 @@ void main() {
     logger.info('Creating test database: $testDbPath');
     final result = createDb(config, logger: logger);
     expect(result, isA<Success<TooManyCooksDb, String>>());
-    db = (result as Success<TooManyCooksDb, String>).value;
+    db = switch (result) {
+      Success(:final value) => value,
+      Error() => throw StateError('DB creation failed'),
+    };
   });
 
   tearDown(() {
@@ -44,7 +51,10 @@ void main() {
     test('register creates agent with key', () {
       final result = db.register('agent1');
       expect(result, isA<Success<AgentRegistration, DbError>>());
-      final reg = (result as Success<AgentRegistration, DbError>).value;
+      final reg = switch (result) {
+        Success(:final value) => value,
+        Error() => throw StateError('Expected success'),
+      };
       expect(reg.agentName, 'agent1');
       expect(reg.agentKey.length, 64);
     });

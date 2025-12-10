@@ -3,10 +3,12 @@
 This is a project for Dart packages to be consumed on Node for building node-based apps with the Dart
 
 MANDATORY: TOO MANY COOKS
+ - check your messages regularly
  - lock files with too many cooks before editing, and unlock afterwards
  - always signal your intent to other agents
  - If you are coordinator, keep doling out orders until the grande scheme has been achieved
  - If you are not coordinator, DOT NOT STOP and keep asking for something to do
+ - Routinely clean up expired locks
 
 # Rules
 - All Dart. Absolutely minimal JS

@@ -45,6 +45,10 @@ function dumpTree(name: string, items: TreeItemSnapshot[]): void {
 suite('MCP Integration - UI Verification', function () {
   let agent1Key: string;
   let agent2Key: string;
+  // Use timestamped agent names to avoid collisions with other test runs
+  const testId = Date.now();
+  const agent1Name = `test-agent-${testId}-1`;
+  const agent2Name = `test-agent-${testId}-2`;
 
   suiteSetup(async function () {
     this.timeout(60000);
@@ -129,25 +133,25 @@ suite('MCP Integration - UI Verification', function () {
     );
   });
 
-  test('Register agent-1 → label "agent-1" APPEARS in agents tree', async function () {
+  test('Register agent-1 → label APPEARS in agents tree', async function () {
     this.timeout(10000);
     const api = getTestAPI();
 
-    const result = await api.callTool('register', { name: 'agent-1' });
+    const result = await api.callTool('register', { name: agent1Name });
     agent1Key = JSON.parse(result).agent_key;
     assert.ok(agent1Key, 'Should return agent key');
 
     // Wait for tree to update
     await waitForCondition(
-      () => api.findAgentInTree('agent-1') !== undefined,
-      'agent-1 to appear in tree',
+      () => api.findAgentInTree(agent1Name) !== undefined,
+      `${agent1Name} to appear in tree`,
       5000
     );
 
-    // PROOF: The label "agent-1" is in the tree
-    const agentItem = api.findAgentInTree('agent-1');
-    assert.ok(agentItem, 'agent-1 MUST appear in the tree');
-    assert.strictEqual(agentItem.label, 'agent-1', 'Label must be exactly "agent-1"');
+    // PROOF: The agent label is in the tree
+    const agentItem = api.findAgentInTree(agent1Name);
+    assert.ok(agentItem, `${agent1Name} MUST appear in the tree`);
+    assert.strictEqual(agentItem.label, agent1Name, `Label must be exactly "${agent1Name}"`);
 
     // Dump full tree for visibility
     dumpTree('AGENTS after register', api.getAgentsTreeSnapshot());
@@ -157,7 +161,7 @@ suite('MCP Integration - UI Verification', function () {
     this.timeout(10000);
     const api = getTestAPI();
 
-    const result = await api.callTool('register', { name: 'agent-2' });
+    const result = await api.callTool('register', { name: agent2Name });
     agent2Key = JSON.parse(result).agent_key;
 
     await waitForCondition(
@@ -170,8 +174,8 @@ suite('MCP Integration - UI Verification', function () {
     dumpTree('AGENTS after second register', tree);
 
     // PROOF: Both agent labels appear
-    assert.ok(api.findAgentInTree('agent-1'), 'agent-1 MUST still be in tree');
-    assert.ok(api.findAgentInTree('agent-2'), 'agent-2 MUST be in tree');
+    assert.ok(api.findAgentInTree(agent1Name), `${agent1Name} MUST still be in tree`);
+    assert.ok(api.findAgentInTree(agent2Name), `${agent2Name} MUST be in tree`);
     assert.strictEqual(tree.length, 2, 'Exactly 2 agent items');
   });
 
@@ -182,7 +186,7 @@ suite('MCP Integration - UI Verification', function () {
     await api.callTool('lock', {
       action: 'acquire',
       file_path: '/src/main.ts',
-      agent_name: 'agent-1',
+      agent_name: agent1Name,
       agent_key: agent1Key,
       reason: 'Editing main',
     });
@@ -201,7 +205,7 @@ suite('MCP Integration - UI Verification', function () {
     assert.strictEqual(lockItem.label, '/src/main.ts', 'Label must be exact file path');
     // Description should contain agent name
     assert.ok(
-      lockItem.description?.includes('agent-1'),
+      lockItem.description?.includes(agent1Name),
       `Description should contain agent name, got: ${lockItem.description}`
     );
   });
@@ -213,7 +217,7 @@ suite('MCP Integration - UI Verification', function () {
     await api.callTool('lock', {
       action: 'acquire',
       file_path: '/src/utils.ts',
-      agent_name: 'agent-1',
+      agent_name: agent1Name,
       agent_key: agent1Key,
       reason: 'Utils',
     });
@@ -221,7 +225,7 @@ suite('MCP Integration - UI Verification', function () {
     await api.callTool('lock', {
       action: 'acquire',
       file_path: '/src/types.ts',
-      agent_name: 'agent-2',
+      agent_name: agent2Name,
       agent_key: agent2Key,
       reason: 'Types',
     });
@@ -249,7 +253,7 @@ suite('MCP Integration - UI Verification', function () {
     await api.callTool('lock', {
       action: 'release',
       file_path: '/src/utils.ts',
-      agent_name: 'agent-1',
+      agent_name: agent1Name,
       agent_key: agent1Key,
     });
 
@@ -279,15 +283,15 @@ suite('MCP Integration - UI Verification', function () {
 
     await api.callTool('plan', {
       action: 'update',
-      agent_name: 'agent-1',
+      agent_name: agent1Name,
       agent_key: agent1Key,
       goal: 'Implement feature X',
       current_task: 'Writing tests',
     });
 
     await waitForCondition(
-      () => api.findPlanInTree('agent-1') !== undefined,
-      'agent-1 plan to appear in tree',
+      () => api.findPlanInTree(agent1Name) !== undefined,
+      `${agent1Name} plan to appear in tree`,
       5000
     );
 
@@ -295,9 +299,9 @@ suite('MCP Integration - UI Verification', function () {
     dumpTree('PLANS after update', tree);
 
     // PROOF: Plan appears with correct content
-    const planItem = api.findPlanInTree('agent-1');
-    assert.ok(planItem, 'agent-1 plan MUST appear in tree');
-    assert.strictEqual(planItem.label, 'agent-1', 'Plan label should be agent name');
+    const planItem = api.findPlanInTree(agent1Name);
+    assert.ok(planItem, `${agent1Name} plan MUST appear in tree`);
+    assert.strictEqual(planItem.label, agent1Name, 'Plan label should be agent name');
     // Description should contain current task
     assert.ok(
       planItem.description?.includes('Writing tests'),
@@ -318,9 +322,9 @@ suite('MCP Integration - UI Verification', function () {
 
     await api.callTool('message', {
       action: 'send',
-      agent_name: 'agent-1',
+      agent_name: agent1Name,
       agent_key: agent1Key,
-      to_agent: 'agent-2',
+      to_agent: agent2Name,
       content: 'Starting work on main.ts',
     });
 
@@ -337,11 +341,11 @@ suite('MCP Integration - UI Verification', function () {
     const msgItem = api.findMessageInTree('Starting work');
     assert.ok(msgItem, 'Message MUST appear in tree');
     assert.ok(
-      msgItem.label.includes('agent-1'),
+      msgItem.label.includes(agent1Name),
       `Message label should contain sender, got: ${msgItem.label}`
     );
     assert.ok(
-      msgItem.label.includes('agent-2'),
+      msgItem.label.includes(agent2Name),
       `Message label should contain recipient, got: ${msgItem.label}`
     );
     assert.ok(
@@ -356,17 +360,17 @@ suite('MCP Integration - UI Verification', function () {
 
     await api.callTool('message', {
       action: 'send',
-      agent_name: 'agent-2',
+      agent_name: agent2Name,
       agent_key: agent2Key,
-      to_agent: 'agent-1',
+      to_agent: agent1Name,
       content: 'Acknowledged',
     });
 
     await api.callTool('message', {
       action: 'send',
-      agent_name: 'agent-1',
+      agent_name: agent1Name,
       agent_key: agent1Key,
-      to_agent: 'agent-2',
+      to_agent: agent2Name,
       content: 'Done with main.ts',
     });
 
