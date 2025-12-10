@@ -1,0 +1,41 @@
+{
+  "name": "too-many-cooks",
+  "version": "0.2.0",
+  "description": "Multi-agent Git coordination MCP server - enables multiple AI agents to safely edit a git repository simultaneously with file locking, messaging, and plan visibility",
+  "main": "build/bin/server_node.js",
+  "bin": {
+    "too-many-cooks": "build/bin/server_node.js"
+  },
+  "scripts": {
+    "start": "node build/bin/server_node.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai-agents",
+    "multi-agent",
+    "dart"
+  ],
+  "author": "Christian Findlay",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MelbourneDeveloper/dart_node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MelbourneDeveloper/dart_node/issues"
+  },
+  "homepage": "https://github.com/MelbourneDeveloper/dart_node/tree/main/examples/too_many_cooks#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "better-sqlite3": "^12.5.0"
+  },
+  "files": [
+    "build/bin/server_node.js",
+    "README.md",
+    "LICENSE"
+  ]
+}

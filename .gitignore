@@ -4,6 +4,8 @@ node_modules/
 !tools/build/
 .dart_tool/
 
+coverage/
+
 # Generated JS files from dart compile js
 *.js.deps
 *.js.map
@@ -16,3 +18,19 @@ website/src/api/
 website/.dart-doc-temp/
 
 examples/frontend/coverage/
+
+*.mjs
+
+examples/too_many_cooks_vscode_extension/.vscode-test/user-data/
+
+examples/too_many_cooks_vscode_extension/.vscode-test/vscode-darwin-arm64-1.106.3/
+
+*.db
+
+*.db-shm
+
+*.db-wal
+
+*.vsix
+
+examples/too_many_cooks_vscode_extension/.vscode-test/

@@ -2,12 +2,23 @@
 
 This is a project for Dart packages to be consumed on Node for building node-based apps with the Dart
 
+MANDATORY: TOO MANY COOKS
+ - check your messages regularly
+ - lock files with too many cooks before editing, and unlock afterwards
+ - do not edit files that others have locked up
+ - always signal your intent to other agents
+ - If you are coordinator, keep delegating until the grande scheme has been achieved
+ - If you are not coordinator, don't stop and keep asking for something to do
+ - Routinely clean up expired locks
+ - If you find yourself with nothing to do, check someone else's plan and help them
+
 # Rules
 - All Dart. Absolutely minimal JS
 - Use async/await. Do not use `.then`
 - NO DUPLICATION. Move files, code elements instead of copying them. Search for elements before adding them. HIGHEST PRIORITY. PRIORITIZE THIS OVER ALL ELSE!!
 - Prefer typedef records with named fields instead of classes for data (structural typing). This mimics Typescript better
 - Return Result<T,E> from the nadz library for any function that could throw an exception. NO THROWING EXCEPTIONS.
+- Don't make consecutive log calls. Use string interpolation
 - Avoid casting!!! [! `as` `late`] are all ILLEGAL!!! U
 - Use pattern matching switch expressions or ternaries. The exceptional case is if inside arrays and maps because these are declarative and not imperaative.
 - All packages MUST have austerity installed for linting and nadz for Result<T,E> types

@@ -1,0 +1,10 @@
+include: package:austerity/analysis_options.yaml
+
+analyzer:
+  errors:
+    require_trailing_commas: ignore
+    public_member_api_docs: error
+    # JS interop requires casts that are unavoidable
+    cast_nullable_to_non_nullable: ignore
+    # Generic catch is needed for JS exceptions which don't have specific types
+    avoid_catches_without_on_clauses: ignore
