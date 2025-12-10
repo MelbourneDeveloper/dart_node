@@ -69,3 +69,8 @@ const errValidation = 'VALIDATION';
 
 /// Error code for database errors.
 const errDatabase = 'DATABASE';
+
+/// Create text content for MCP tool responses.
+/// Uses Map which is required for dart2js compatibility with records.
+Map<String, Object?> textContent(String text) =>
+    <String, Object?>{'type': 'text', 'text': text};

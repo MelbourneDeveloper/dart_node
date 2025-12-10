@@ -1,6 +1,7 @@
 /// Message tool - inter-agent messaging.
 library;
 
+import 'package:dart_logging/dart_logging.dart';
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks/src/db/db.dart';
@@ -57,16 +58,50 @@ const messageToolConfig = (
 ToolCallback createMessageHandler(
   TooManyCooksDb db,
   NotificationEmitter emitter,
+  Logger logger,
 ) =>
     (args, meta) async {
-      final action = args['action']! as String;
-      final agentName = args['agent_name']! as String;
-      final agentKey = args['agent_key']! as String;
+      final actionArg = args['action'];
+      final agentNameArg = args['agent_name'];
+      final agentKeyArg = args['agent_key'];
+      if (actionArg == null || actionArg is! String) {
+        return (
+          content: <Object>[
+            textContent('{"error":"missing_parameter: action is required"}'),
+          ],
+          isError: true,
+        );
+      }
+      if (agentNameArg == null || agentNameArg is! String) {
+        return (
+          content: <Object>[
+            textContent(
+              '{"error":"missing_parameter: agent_name is required"}',
+            ),
+          ],
+          isError: true,
+        );
+      }
+      if (agentKeyArg == null || agentKeyArg is! String) {
+        return (
+          content: <Object>[
+            textContent(
+              '{"error":"missing_parameter: agent_key is required"}',
+            ),
+          ],
+          isError: true,
+        );
+      }
+      final action = actionArg;
+      final agentName = agentNameArg;
+      final agentKey = agentKeyArg;
+      final log = logger.child({'tool': 'message', 'action': action});
 
       return switch (action) {
         'send' => _send(
             db,
             emitter,
+            log,
             agentName,
             agentKey,
             args['to_agent'] as String?,
@@ -86,7 +121,7 @@ ToolCallback createMessageHandler(
           ),
         _ => (
             content: <Object>[
-              (type: 'text', text: '{"error":"Unknown action: $action"}'),
+              textContent('{"error":"Unknown action: $action"}'),
             ],
             isError: true,
           ),
@@ -96,6 +131,7 @@ ToolCallback createMessageHandler(
 CallToolResult _send(
   TooManyCooksDb db,
   NotificationEmitter emitter,
+  Logger log,
   String agentName,
   String agentKey,
   String? toAgent,
@@ -104,23 +140,23 @@ CallToolResult _send(
   if (toAgent == null || content == null) {
     return (
       content: <Object>[
-        (type: 'text', text: '{"error":"send requires to_agent and content"}'),
+        textContent('{"error":"send requires to_agent and content"}'),
       ],
       isError: true,
     );
   }
   return switch (db.sendMessage(agentName, agentKey, toAgent, content)) {
     Success(:final value) => () {
-        // Emit notification
         emitter.emit(eventMessageSent, {
           'message_id': value,
           'from_agent': agentName,
           'to_agent': toAgent,
           'content': content,
         });
+        log.info('Message sent from $agentName to $toAgent');
         return (
           content: <Object>[
-            (type: 'text', text: '{"sent":true,"message_id":"$value"}'),
+            textContent('{"sent":true,"message_id":"$value"}'),
           ],
           isError: false,
         );
@@ -138,9 +174,8 @@ CallToolResult _get(
     switch (db.getMessages(agentName, agentKey, unreadOnly: unreadOnly)) {
       Success(:final value) => (
           content: <Object>[
-            (
-              type: 'text',
-              text: '{"messages":[${value.map(_messageJson).join(',')}]}',
+            textContent(
+              '{"messages":[${value.map(_messageJson).join(',')}]}',
             ),
           ],
           isError: false,
@@ -157,14 +192,14 @@ CallToolResult _markRead(
   if (messageId == null) {
     return (
       content: <Object>[
-        (type: 'text', text: '{"error":"mark_read requires message_id"}'),
+        textContent( '{"error":"mark_read requires message_id"}'),
       ],
       isError: true,
     );
   }
   return switch (db.markRead(messageId, agentName, agentKey)) {
     Success() => (
-        content: <Object>[(type: 'text', text: '{"marked":true}')],
+        content: <Object>[textContent( '{"marked":true}')],
         isError: false,
       ),
     Error(:final error) => _errorResult(error),
@@ -182,7 +217,7 @@ String _escapeJson(String s) =>
 
 CallToolResult _errorResult(DbError e) => (
       content: <Object>[
-        (type: 'text', text: '{"error":"${e.code}: ${e.message}"}'),
+        textContent( '{"error":"${e.code}: ${e.message}"}'),
       ],
       isError: true,
     );

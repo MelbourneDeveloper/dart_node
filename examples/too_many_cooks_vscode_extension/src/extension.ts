@@ -13,6 +13,9 @@ import { PlansTreeProvider } from './ui/tree/plansTreeProvider';
 import { LockDecorationProvider } from './ui/decorations/lockDecorations';
 import { StatusBarManager } from './ui/statusBar/statusBarItem';
 import { DashboardPanel } from './ui/webview/dashboardPanel';
+import { createTestAPI, addLogMessage, type TestAPI } from './test-api';
+
+export type { TestAPI };
 
 let store: Store | undefined;
 let statusBar: StatusBarManager | undefined;
@@ -21,15 +24,60 @@ let locksProvider: LocksTreeProvider | undefined;
 let messagesProvider: MessagesTreeProvider | undefined;
 let plansProvider: PlansTreeProvider | undefined;
 let lockDecorations: LockDecorationProvider | undefined;
+let outputChannel: vscode.OutputChannel | undefined;
+
+function log(message: string): void {
+  const timestamp = new Date().toISOString();
+  const fullMessage = `[${timestamp}] ${message}`;
+  outputChannel?.appendLine(fullMessage);
+  // Also store for test verification
+  addLogMessage(fullMessage);
+}
 
 export async function activate(
   context: vscode.ExtensionContext
-): Promise<void> {
+): Promise<TestAPI> {
+  // Create output channel for logging - show it immediately so user can see logs
+  outputChannel = vscode.window.createOutputChannel('Too Many Cooks');
+  outputChannel.show(true); // Show but don't take focus
+  // Expose globally for Store to use
+  (globalThis as Record<string, unknown>)._tooManyCooksOutput = outputChannel;
+  log('Extension activating...');
+
   const config = vscode.workspace.getConfiguration('tooManyCooks');
-  const serverPath = config.get<string>(
-    'serverPath',
-    'dart run too_many_cooks'
-  );
+  let serverPath = config.get<string>('serverPath', '');
+
+  // Auto-detect server path if not configured
+  if (!serverPath) {
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (workspaceFolder) {
+      // Try common locations relative to workspace
+      const candidates = [
+        'examples/too_many_cooks/build/bin/server_node.js',
+        'too_many_cooks/build/bin/server_node.js',
+        'build/bin/server_node.js',
+      ];
+      const fs = require('fs');
+      const path = require('path');
+      for (const candidate of candidates) {
+        const fullPath = path.join(workspaceFolder.uri.fsPath, candidate);
+        if (fs.existsSync(fullPath)) {
+          serverPath = fullPath;
+          log(`Auto-detected server at: ${serverPath}`);
+          break;
+        }
+      }
+    }
+  }
+
+  if (!serverPath) {
+    log('WARNING: No server path configured and auto-detect failed');
+    vscode.window.showWarningMessage(
+      'Too Many Cooks: Set tooManyCooks.serverPath in settings'
+    );
+  }
+
+  log(`Server path: ${serverPath}`);
 
   // Initialize store
   store = new Store(serverPath);
@@ -72,15 +120,17 @@ export async function activate(
   const connectCmd = vscode.commands.registerCommand(
     'tooManyCooks.connect',
     async () => {
+      log('Connect command triggered');
       try {
         await store?.connect();
+        log('Connected successfully');
         vscode.window.showInformationMessage(
           'Connected to Too Many Cooks server'
         );
       } catch (err) {
-        vscode.window.showErrorMessage(
-          `Failed to connect: ${err instanceof Error ? err.message : String(err)}`
-        );
+        const msg = err instanceof Error ? err.message : String(err);
+        log(`Connection failed: ${msg}`);
+        vscode.window.showErrorMessage(`Failed to connect: ${msg}`);
       }
     }
   );
@@ -115,10 +165,15 @@ export async function activate(
     }
   );
 
-  // Auto-connect on startup if configured
-  const autoConnect = config.get<boolean>('autoConnect', false);
+  // Auto-connect on startup if configured (default: true)
+  const autoConnect = config.get<boolean>('autoConnect', true);
+  log(`Auto-connect: ${autoConnect}`);
   if (autoConnect) {
-    store.connect().catch((err) => {
+    log('Attempting auto-connect...');
+    store.connect().then(() => {
+      log('Auto-connect successful');
+    }).catch((err) => {
+      log(`Auto-connect failed: ${err instanceof Error ? err.message : String(err)}`);
       console.error('Auto-connect failed:', err);
     });
   }
@@ -133,8 +188,11 @@ export async function activate(
     }
   });
 
+  log('Extension activated');
+
   // Register disposables
   context.subscriptions.push(
+    outputChannel,
     agentsView,
     locksView,
     messagesView,
@@ -157,6 +215,14 @@ export async function activate(
       },
     }
   );
+
+  // Return test API for integration tests
+  return createTestAPI(store, {
+    agents: agentsProvider,
+    locks: locksProvider,
+    messages: messagesProvider,
+    plans: plansProvider,
+  });
 }
 
 export function deactivate(): void {

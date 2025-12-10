@@ -1,3 +1,8 @@
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+
+import 'package:dart_logging/dart_logging.dart';
+import 'package:dart_node_core/dart_node_core.dart';
 import 'package:nadz/nadz.dart';
 import 'package:test/test.dart';
 import 'package:too_many_cooks/src/db/db.dart';
@@ -6,6 +11,14 @@ import 'package:too_many_cooks/src/types.dart';
 void main() {
   late TooManyCooksDb db;
   late String testDbPath;
+  final logger = createLoggerWithContext(
+    createLoggingContext(
+      transports: [logTransport(logToConsole)],
+      minimumLogLevel: LogLevel.debug,
+    ),
+  );
+
+  setUpAll(_deleteAllTestDbs);
 
   setUp(() {
     testDbPath = '.test_${DateTime.now().millisecondsSinceEpoch}.db';
@@ -15,13 +28,16 @@ void main() {
       maxMessageLength: 200,
       maxPlanLength: 100,
     );
-    final result = createDb(config);
+    logger.info('Creating test database: $testDbPath');
+    final result = createDb(config, logger: logger);
     expect(result, isA<Success<TooManyCooksDb, String>>());
     db = (result as Success<TooManyCooksDb, String>).value;
   });
 
   tearDown(() {
+    logger.info('Closing and deleting test database: $testDbPath');
     db.close();
+    _deleteDbFile(testDbPath);
   });
 
   group('Identity', () {
@@ -325,4 +341,167 @@ void main() {
       expect(plans.length, 1);
     });
   });
+
+  group('Retry Policy', () {
+    test('createDb uses default retry policy', () {
+      // Default policy should succeed on valid path
+      final ts = DateTime.now().millisecondsSinceEpoch;
+      final path = '.test_retry_default_$ts.db';
+      final config = (
+        dbPath: path,
+        lockTimeoutMs: 1000,
+        maxMessageLength: 200,
+        maxPlanLength: 100,
+      );
+      final result = createDb(config, logger: logger);
+      expect(result, isA<Success<TooManyCooksDb, String>>());
+      (result as Success<TooManyCooksDb, String>).value.close();
+      _deleteDbFile(path);
+    });
+
+    test('createDb accepts custom retry policy', () {
+      final ts = DateTime.now().millisecondsSinceEpoch;
+      final path = '.test_retry_custom_$ts.db';
+      final config = (
+        dbPath: path,
+        lockTimeoutMs: 1000,
+        maxMessageLength: 200,
+        maxPlanLength: 100,
+      );
+      const customPolicy = (
+        maxAttempts: 5,
+        baseDelayMs: 10,
+        backoffMultiplier: 1.5,
+      );
+      final result = createDb(
+        config,
+        logger: logger,
+        retryPolicy: customPolicy,
+      );
+      expect(result, isA<Success<TooManyCooksDb, String>>());
+      (result as Success<TooManyCooksDb, String>).value.close();
+      _deleteDbFile(path);
+    });
+
+    test('retry policy does not retry non-retryable errors', () {
+      // Invalid path should fail immediately without retry
+      const config = (
+        dbPath: '/nonexistent/path/that/does/not/exist/db.sqlite',
+        lockTimeoutMs: 1000,
+        maxMessageLength: 200,
+        maxPlanLength: 100,
+      );
+      const fastPolicy = (
+        maxAttempts: 5,
+        baseDelayMs: 1,
+        backoffMultiplier: 1.0,
+      );
+      final start = DateTime.now();
+      final result = createDb(
+        config,
+        logger: logger,
+        retryPolicy: fastPolicy,
+      );
+      final elapsed = DateTime.now().difference(start);
+      expect(result, isA<Error<TooManyCooksDb, String>>());
+      // Should be fast - no retries on path errors (not I/O errors)
+      expect(elapsed.inMilliseconds, lessThan(500));
+    });
+
+    test('default retry policy constants are correct', () {
+      expect(defaultRetryPolicy.maxAttempts, 3);
+      expect(defaultRetryPolicy.baseDelayMs, 50);
+      expect(defaultRetryPolicy.backoffMultiplier, 2.0);
+    });
+
+    test('concurrent db creation succeeds with retry', () {
+      // Simulate concurrent access by creating multiple DBs rapidly
+      final paths = <String>[];
+      final dbs = <TooManyCooksDb>[];
+
+      for (var i = 0; i < 5; i++) {
+        final ts = DateTime.now().millisecondsSinceEpoch;
+        final path = '.test_concurrent_${ts}_$i.db';
+        paths.add(path);
+        final config = (
+          dbPath: path,
+          lockTimeoutMs: 1000,
+          maxMessageLength: 200,
+          maxPlanLength: 100,
+        );
+        final result = createDb(config, logger: logger);
+        expect(
+          result,
+          isA<Success<TooManyCooksDb, String>>(),
+          reason: 'DB $i should succeed',
+        );
+        dbs.add((result as Success<TooManyCooksDb, String>).value);
+      }
+
+      // Verify all DBs work
+      for (var i = 0; i < dbs.length; i++) {
+        final reg = dbs[i].register('agent_$i');
+        expect(
+          reg,
+          isA<Success<AgentRegistration, DbError>>(),
+          reason: 'Registration in DB $i should succeed',
+        );
+      }
+
+      // Cleanup
+      for (var i = 0; i < dbs.length; i++) {
+        dbs[i].close();
+        _deleteDbFile(paths[i]);
+      }
+    });
+  });
+}
+
+/// Delete all test database files before running tests.
+void _deleteAllTestDbs() {
+  final fs = requireModule('fs') as JSObject;
+  final readdirSync = fs['readdirSync']! as JSFunction;
+  final unlinkSync = fs['unlinkSync']! as JSFunction;
+
+  final files =
+      (readdirSync.callAsFunction(fs, '.'.toJS)! as JSArray).toDart;
+  for (final file in files) {
+    final fileName = (file! as JSString).toDart;
+    if (fileName.startsWith('.test_') && fileName.endsWith('.db') ||
+        fileName.startsWith('.test_') && fileName.contains('.db-')) {
+      unlinkSync.callAsFunction(fs, fileName.toJS);
+    }
+  }
+
+  // Also delete main db files
+  for (final dbFile in [
+    '.too_many_cooks.db',
+    '.too_many_cooks.db-wal',
+    '.too_many_cooks.db-shm',
+  ]) {
+    final existsSync = fs['existsSync']! as JSFunction;
+    final exists =
+        (existsSync.callAsFunction(fs, dbFile.toJS) as JSBoolean?)?.toDart ??
+            false;
+    if (exists) {
+      unlinkSync.callAsFunction(fs, dbFile.toJS);
+    }
+  }
+}
+
+/// Delete a specific database file and its WAL/SHM files.
+void _deleteDbFile(String path) {
+  final fs = requireModule('fs') as JSObject;
+  final unlinkSync = fs['unlinkSync']! as JSFunction;
+  final existsSync = fs['existsSync']! as JSFunction;
+
+  for (final suffix in ['', '-wal', '-shm']) {
+    final filePath = '$path$suffix';
+    final exists =
+        (existsSync.callAsFunction(fs, filePath.toJS) as JSBoolean?)?.toDart ??
+            false;
+    if (exists) {
+      unlinkSync.callAsFunction(fs, filePath.toJS);
+    }
+  }
 }

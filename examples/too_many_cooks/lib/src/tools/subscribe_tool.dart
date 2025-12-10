@@ -3,6 +3,7 @@ library;
 
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:too_many_cooks/src/notifications.dart';
+import 'package:too_many_cooks/src/types.dart';
 
 /// Input schema for subscribe tool.
 const subscribeInputSchema = <String, Object?>{
@@ -55,7 +56,7 @@ ToolCallback createSubscribeHandler(NotificationEmitter emitter) =>
         'list' => _list(emitter),
         _ => (
             content: <Object>[
-              (type: 'text', text: '{"error":"Unknown action: $action"}'),
+              textContent( '{"error":"Unknown action: $action"}'),
             ],
             isError: true,
           ),
@@ -70,10 +71,7 @@ CallToolResult _subscribe(
   if (subscriberId == null) {
     return (
       content: <Object>[
-        (
-          type: 'text',
-          text: '{"error":"subscribe requires subscriber_id"}',
-        ),
+        textContent('{"error":"subscribe requires subscriber_id"}'),
       ],
       isError: true,
     );
@@ -87,27 +85,20 @@ CallToolResult _subscribe(
   final invalidEvents =
       eventList.where((e) => !validEvents.contains(e)).toList();
   if (invalidEvents.isNotEmpty) {
+    final msg = '{"error":"Invalid event types: ${invalidEvents.join(', ')}"}';
     return (
-      content: <Object>[
-        (
-          type: 'text',
-          text: '{"error":"Invalid event types: ${invalidEvents.join(', ')}"}',
-        ),
-      ],
+      content: <Object>[textContent(msg)],
       isError: true,
     );
   }
 
   emitter.addSubscriber((subscriberId: subscriberId, events: eventList));
 
+  final eventsJson = eventList.join('","');
+  final json = '{"subscribed":true,"subscriber_id":"$subscriberId",'
+      '"events":["$eventsJson"]}';
   return (
-    content: <Object>[
-      (
-        type: 'text',
-        text: '{"subscribed":true,"subscriber_id":"$subscriberId",'
-            '"events":["${eventList.join('","')}"]}',
-      ),
-    ],
+    content: <Object>[textContent(json)],
     isError: false,
   );
 }
@@ -116,10 +107,7 @@ CallToolResult _unsubscribe(NotificationEmitter emitter, String? subscriberId) {
   if (subscriberId == null) {
     return (
       content: <Object>[
-        (
-          type: 'text',
-          text: '{"error":"unsubscribe requires subscriber_id"}',
-        ),
+        textContent('{"error":"unsubscribe requires subscriber_id"}'),
       ],
       isError: true,
     );
@@ -129,10 +117,7 @@ CallToolResult _unsubscribe(NotificationEmitter emitter, String? subscriberId) {
 
   return (
     content: <Object>[
-      (
-        type: 'text',
-        text: '{"unsubscribed":true,"subscriber_id":"$subscriberId"}',
-      ),
+      textContent('{"unsubscribed":true,"subscriber_id":"$subscriberId"}'),
     ],
     isError: false,
   );
@@ -149,7 +134,7 @@ CallToolResult _list(NotificationEmitter emitter) {
 
   return (
     content: <Object>[
-      (type: 'text', text: '{"subscribers":[$json]}'),
+      textContent( '{"subscribers":[$json]}'),
     ],
     isError: false,
   );

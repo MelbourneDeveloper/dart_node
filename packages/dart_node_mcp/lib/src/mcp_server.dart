@@ -273,6 +273,26 @@ class McpServer {
 
 // Helper functions for JS conversion
 
+/// Convert dartify() result to `Map<String, Object?>`.
+/// dartify() returns `JsLinkedHashMap<Object?, Object?>` which doesn't match
+/// `Map<String, Object?>` in type checks. This converts it properly.
+Map<String, Object?> _toStringKeyMap(Object? dartified) {
+  if (dartified == null) return <String, Object?>{};
+  if (dartified is! Map) return <String, Object?>{};
+  return Map<String, Object?>.fromEntries(
+    dartified.entries.map(
+      (e) => MapEntry(e.key.toString(), _convertValue(e.value)),
+    ),
+  );
+}
+
+/// Recursively convert nested maps to `Map<String, Object?>`.
+Object? _convertValue(Object? value) {
+  if (value is Map) return _toStringKeyMap(value);
+  if (value is List) return value.map(_convertValue).toList();
+  return value;
+}
+
 JSObject _implementationToJs(Implementation impl) {
   final obj = JSObject();
   obj['name'] = impl.name.toJS;
@@ -335,16 +355,26 @@ JSObject _toolConfigToJs(ToolConfig config) {
   if (config.description != null) {
     obj['description'] = config.description!.toJS;
   }
-  if (config.inputSchema != null) {
-    obj['inputSchema'] = config.inputSchema!.jsify();
-  }
-  if (config.outputSchema != null) {
-    obj['outputSchema'] = config.outputSchema!.jsify();
-  }
+  // MCP SDK v1.24+ requires Zod schemas for inputSchema.
+  // We use z.object({}).passthrough() to accept any arguments.
+  // This ensures the SDK passes args to our callback properly.
+  obj['inputSchema'] = _createPassthroughZodSchema();
   if (config.annotations != null) {
     obj['annotations'] = _toolAnnotationsToJs(config.annotations!);
   }
   return obj;
+}
+
+/// Create a Zod passthrough schema that accepts any object.
+/// Equivalent to: z.object({}).passthrough()
+JSObject _createPassthroughZodSchema() {
+  final zod = requireModule('zod') as JSObject;
+  final z = zod['z'] as JSObject;
+  final objectFn = z['object'] as JSFunction;
+  final emptyObj = JSObject();
+  final zodObject = objectFn.callAsFunction(z, emptyObj) as JSObject;
+  final passthroughFn = zodObject['passthrough'] as JSFunction;
+  return passthroughFn.callAsFunction(zodObject) as JSObject;
 }
 
 JSObject _toolAnnotationsToJs(ToolAnnotations annotations) {
@@ -419,16 +449,55 @@ JSObject _loggingMessageParamsToJs(LoggingMessageParams params) {
   return obj;
 }
 
+// The MCP SDK calls tool handlers with: handler(args, extra)
+// - args: the validated tool arguments (object)
+// - extra: context info with signal and requestId
+//
+// We always pass a Zod passthrough schema, so the SDK always passes 2 args.
 JSFunction _wrapToolCallback(ToolCallback callback) =>
-    ((JSObject args, JSObject? meta) {
-      final dartArgs = args.dartify()! as Map<String, Object?>;
-      final dartMeta = meta != null ? _jsToToolCallMeta(meta) : null;
-      return callback(dartArgs, dartMeta).then(_callToolResultToJs).toJS;
+    ((JSAny? arg1, JSAny? arg2) {
+      final args = arg1 as JSObject? ?? JSObject();
+      final meta = arg2 as JSObject?;
+      return _asyncToolHandler(callback, args, meta).toJS;
     }).toJS;
 
+/// Async helper to process tool callback results.
+/// Separated to avoid closure capture issues in the main wrapper.
+Future<JSObject> _asyncToolHandler(
+  ToolCallback callback,
+  JSObject args,
+  JSObject? meta,
+) async {
+  // Convert JS args to Dart Map
+  // dartify() returns JsLinkedHashMap<Object?, Object?>, not 
+  //Map<String, Object?>
+  // We need to cast the keys to strings manually
+  final dartified = args.dartify();
+  final dartArgs = _toStringKeyMap(dartified);
+  final dartMeta = meta != null ? _jsToToolCallMeta(meta) : null;
+
+  // Call the callback and await it
+  final result = await callback(dartArgs, dartMeta);
+
+  // Access record fields directly - result is typed as CallToolResult
+  final content = result.content;
+  final isError = result.isError;
+
+  // Build JS object
+  final obj = JSObject();
+  final contentJs = <JSObject>[];
+  for (final item in content) {
+    contentJs.add(_contentToJs(item));
+  }
+  obj['content'] = contentJs.toJS;
+  if (isError != null) {
+    obj['isError'] = isError.toJS;
+  }
+  return obj;
+}
+
 JSFunction _wrapReadResourceCallback(ReadResourceCallback callback) =>
-    ((String uri) =>
-        callback(uri).then(_readResourceResultToJs).toJS).toJS;
+    ((String uri) => callback(uri).then(_readResourceResultToJs).toJS).toJS;
 
 JSFunction _wrapReadResourceTemplateCallback(
   ReadResourceTemplateCallback callback,
@@ -437,11 +506,10 @@ JSFunction _wrapReadResourceTemplateCallback(
   return callback(uri, dartVariables).then(_readResourceResultToJs).toJS;
 }).toJS;
 
-JSFunction _wrapPromptCallback(PromptCallback callback) =>
-    ((JSObject args) {
-      final dartArgs = args.dartify()! as Map<String, String>;
-      return callback(dartArgs).then(_getPromptResultToJs).toJS;
-    }).toJS;
+JSFunction _wrapPromptCallback(PromptCallback callback) => ((JSObject args) {
+  final dartArgs = args.dartify()! as Map<String, String>;
+  return callback(dartArgs).then(_getPromptResultToJs).toJS;
+}).toJS;
 
 ToolCallMeta? _jsToToolCallMeta(JSObject meta) {
   final progressToken = meta['progressToken'];
@@ -452,42 +520,26 @@ ToolCallMeta? _jsToToolCallMeta(JSObject meta) {
   );
 }
 
-JSObject _callToolResultToJs(CallToolResult result) {
-  final obj = JSObject();
-  obj['content'] = result.content.map(_contentToJs).toList().toJS;
-  if (result.isError != null) {
-    obj['isError'] = result.isError!.toJS;
-  }
-  return obj;
-}
-
 JSObject _contentToJs(Object content) {
   // Content is a typedef record (TextContent, ImageContent, ResourceContent).
-  // Dart records compile to JS arrays with named properties, but JSON.stringify
-  // only serializes array indices. We must manually convert to a plain object.
-  final obj = JSObject();
-
-  // All content types have a 'type' field
-  // Use reflection-like access via the record's named fields
-  final rec = content as ({String type});
-  obj['type'] = rec.type.toJS;
-
-  // Based on type, extract other fields
-  if (rec.type == 'text') {
-    final textRec = content as TextContent;
-    obj['text'] = textRec.text.toJS;
-  } else if (rec.type == 'image') {
-    final imageRec = content as ImageContent;
-    obj['data'] = imageRec.data.toJS;
-    obj['mimeType'] = imageRec.mimeType.toJS;
-  } else if (rec.type == 'resource') {
-    final resRec = content as ResourceContent;
-    obj['uri'] = resRec.uri.toJS;
-    if (resRec.mimeType != null) obj['mimeType'] = resRec.mimeType!.toJS;
-    if (resRec.text != null) obj['text'] = resRec.text!.toJS;
+  // We need to convert it to a plain JS object for the MCP SDK.
+  //
+  // IMPORTANT: In dart2js, records with String fields don't match patterns
+  // that expect Object? fields. Record pattern matching checks exact type
+  // identity at runtime, not structural compatibility.
+  //
+  // Solution: Accept Map<String, Object?> as content type. Callers should
+  // pass {'type': 'text', 'text': 'value'} instead of typedef records.
+  // This is the only reliable cross-platform approach.
+  if (content is Map<String, Object?>) {
+    return content.jsify()! as JSObject;
   }
 
-  return obj;
+  throw StateError(
+    'Content must be Map<String, Object?>. '
+    'Got: ${content.runtimeType}. '
+    'Use {"type": "text", "text": "value"} format.',
+  );
 }
 
 JSObject _readResourceResultToJs(ReadResourceResult result) {

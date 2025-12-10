@@ -1,6 +1,7 @@
 /// Lock tool - file lock management.
 library;
 
+import 'package:dart_logging/dart_logging.dart';
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks/src/config.dart';
@@ -14,14 +15,7 @@ const lockInputSchema = <String, Object?>{
   'properties': {
     'action': {
       'type': 'string',
-      'enum': [
-        'acquire',
-        'release',
-        'force_release',
-        'renew',
-        'query',
-        'list',
-      ],
+      'enum': ['acquire', 'release', 'force_release', 'renew', 'query', 'list'],
       'description': 'Lock action to perform',
     },
     'agent_name': {
@@ -47,7 +41,8 @@ const lockInputSchema = <String, Object?>{
 /// Tool config for lock.
 const lockToolConfig = (
   title: 'File Lock',
-  description: 'Manage file locks: acquire, release, force_release, '
+  description:
+      'Manage file locks: acquire, release, force_release, '
       'renew, query, list',
   inputSchema: lockInputSchema,
   outputSchema: null,
@@ -59,54 +54,70 @@ ToolCallback createLockHandler(
   TooManyCooksDb db,
   TooManyCooksConfig config,
   NotificationEmitter emitter,
-) =>
-    (args, meta) async {
-      final action = args['action']! as String;
-      final agentName = args['agent_name'] as String?;
-      final agentKey = args['agent_key'] as String?;
-      final filePath = args['file_path'] as String?;
-      final reason = args['reason'] as String?;
+  Logger logger,
+) => (args, meta) async {
+  final actionArg = args['action'];
+  if (actionArg == null || actionArg is! String) {
+    return (
+      content: <Object>[
+        textContent('{"error":"missing_parameter: action is required"}'),
+      ],
+      isError: true,
+    );
+  }
+  final action = actionArg;
+  final agentName = args['agent_name'] as String?;
+  final agentKey = args['agent_key'] as String?;
+  final filePath = args['file_path'] as String?;
+  final reason = args['reason'] as String?;
+  final log = logger.child({
+    'tool': 'lock',
+    'action': action,
+    'filePath': ?filePath,
+  });
 
-      return switch (action) {
-        'acquire' => _acquire(
-            db,
-            emitter,
-            filePath,
-            agentName,
-            agentKey,
-            reason,
-            config.lockTimeoutMs,
-          ),
-        'release' => _release(db, emitter, filePath, agentName, agentKey),
-        'force_release' => _forceRelease(
-            db,
-            emitter,
-            filePath,
-            agentName,
-            agentKey,
-          ),
-        'renew' => _renew(
-            db,
-            emitter,
-            filePath,
-            agentName,
-            agentKey,
-            config.lockTimeoutMs,
-          ),
-        'query' => _query(db, filePath),
-        'list' => _list(db),
-        _ => (
-            content: <Object>[
-              (type: 'text', text: '{"error":"Unknown action: $action"}'),
-            ],
-            isError: true,
-          ),
-      };
-    };
+  return switch (action) {
+    'acquire' => _acquire(
+      db,
+      emitter,
+      log,
+      filePath,
+      agentName,
+      agentKey,
+      reason,
+      config.lockTimeoutMs,
+    ),
+    'release' => _release(db, emitter, log, filePath, agentName, agentKey),
+    'force_release' => _forceRelease(
+      db,
+      emitter,
+      log,
+      filePath,
+      agentName,
+      agentKey,
+    ),
+    'renew' => _renew(
+      db,
+      emitter,
+      log,
+      filePath,
+      agentName,
+      agentKey,
+      config.lockTimeoutMs,
+    ),
+    'query' => _query(db, filePath),
+    'list' => _list(db),
+    _ => (
+      content: <Object>[textContent('{"error":"Unknown action: $action"}')],
+      isError: true,
+    ),
+  };
+};
 
 CallToolResult _acquire(
   TooManyCooksDb db,
   NotificationEmitter emitter,
+  Logger log,
   String? filePath,
   String? agentName,
   String? agentKey,
@@ -116,38 +127,38 @@ CallToolResult _acquire(
   if (filePath == null || agentName == null || agentKey == null) {
     return (
       content: <Object>[
-        (
-          type: 'text',
-          text: '{"error":"acquire requires file_path, agent_name, agent_key"}',
+        textContent(
+          '{"error":"acquire requires file_path, agent_name, agent_key"}',
         ),
       ],
       isError: true,
     );
   }
-  final result =
-      db.acquireLock(filePath, agentName, agentKey, reason, timeoutMs);
+  final result = db.acquireLock(
+    filePath,
+    agentName,
+    agentKey,
+    reason,
+    timeoutMs,
+  );
   return switch (result) {
     Success(:final value) when value.acquired => () {
-        // Emit notification
-        emitter.emit(eventLockAcquired, {
-          'file_path': filePath,
-          'agent_name': agentName,
-          'expires_at': value.lock!.expiresAt,
-          'reason': reason,
-        });
-        return (
-          content: <Object>[
-            (type: 'text', text: _lockResultJson(value)),
-          ],
-          isError: false,
-        );
-      }(),
+      emitter.emit(eventLockAcquired, {
+        'file_path': filePath,
+        'agent_name': agentName,
+        'expires_at': value.lock!.expiresAt,
+        'reason': reason,
+      });
+      log.info('Lock acquired on $filePath by $agentName');
+      return (
+        content: <Object>[textContent(_lockResultJson(value))],
+        isError: false,
+      );
+    }(),
     Success(:final value) => (
-        content: <Object>[
-          (type: 'text', text: _lockResultJson(value)),
-        ],
-        isError: true,
-      ),
+      content: <Object>[textContent(_lockResultJson(value))],
+      isError: true,
+    ),
     Error(:final error) => _errorResult(error),
   };
 }
@@ -155,6 +166,7 @@ CallToolResult _acquire(
 CallToolResult _release(
   TooManyCooksDb db,
   NotificationEmitter emitter,
+  Logger log,
   String? filePath,
   String? agentName,
   String? agentKey,
@@ -162,9 +174,8 @@ CallToolResult _release(
   if (filePath == null || agentName == null || agentKey == null) {
     return (
       content: <Object>[
-        (
-          type: 'text',
-          text: '{"error":"release requires file_path, agent_name, agent_key"}',
+        textContent(
+          '{"error":"release requires file_path, agent_name, agent_key"}',
         ),
       ],
       isError: true,
@@ -172,16 +183,16 @@ CallToolResult _release(
   }
   return switch (db.releaseLock(filePath, agentName, agentKey)) {
     Success() => () {
-        // Emit notification
-        emitter.emit(eventLockReleased, {
-          'file_path': filePath,
-          'agent_name': agentName,
-        });
-        return (
-          content: <Object>[(type: 'text', text: '{"released":true}')],
-          isError: false,
-        );
-      }(),
+      emitter.emit(eventLockReleased, {
+        'file_path': filePath,
+        'agent_name': agentName,
+      });
+      log.info('Lock released on $filePath by $agentName');
+      return (
+        content: <Object>[textContent('{"released":true}')],
+        isError: false,
+      );
+    }(),
     Error(:final error) => _errorResult(error),
   };
 }
@@ -189,6 +200,7 @@ CallToolResult _release(
 CallToolResult _forceRelease(
   TooManyCooksDb db,
   NotificationEmitter emitter,
+  Logger log,
   String? filePath,
   String? agentName,
   String? agentKey,
@@ -196,10 +208,9 @@ CallToolResult _forceRelease(
   if (filePath == null || agentName == null || agentKey == null) {
     return (
       content: <Object>[
-        (
-          type: 'text',
-          text: '{"error":"force_release requires '
-              'file_path, agent_name, agent_key"}',
+        textContent(
+          '{"error":"force_release requires '
+          'file_path, agent_name, agent_key"}',
         ),
       ],
       isError: true,
@@ -207,17 +218,17 @@ CallToolResult _forceRelease(
   }
   return switch (db.forceReleaseLock(filePath, agentName, agentKey)) {
     Success() => () {
-        // Emit notification
-        emitter.emit(eventLockReleased, {
-          'file_path': filePath,
-          'agent_name': agentName,
-          'force': true,
-        });
-        return (
-          content: <Object>[(type: 'text', text: '{"released":true}')],
-          isError: false,
-        );
-      }(),
+      emitter.emit(eventLockReleased, {
+        'file_path': filePath,
+        'agent_name': agentName,
+        'force': true,
+      });
+      log.warn('Lock force-released on $filePath by $agentName');
+      return (
+        content: <Object>[textContent('{"released":true}')],
+        isError: false,
+      );
+    }(),
     Error(:final error) => _errorResult(error),
   };
 }
@@ -225,6 +236,7 @@ CallToolResult _forceRelease(
 CallToolResult _renew(
   TooManyCooksDb db,
   NotificationEmitter emitter,
+  Logger log,
   String? filePath,
   String? agentName,
   String? agentKey,
@@ -233,9 +245,8 @@ CallToolResult _renew(
   if (filePath == null || agentName == null || agentKey == null) {
     return (
       content: <Object>[
-        (
-          type: 'text',
-          text: '{"error":"renew requires file_path, agent_name, agent_key"}',
+        textContent(
+          '{"error":"renew requires file_path, agent_name, agent_key"}',
         ),
       ],
       isError: true,
@@ -243,19 +254,18 @@ CallToolResult _renew(
   }
   return switch (db.renewLock(filePath, agentName, agentKey, timeoutMs)) {
     Success() => () {
-        // Emit notification
-        final newExpiresAt =
-            DateTime.now().millisecondsSinceEpoch + timeoutMs;
-        emitter.emit(eventLockRenewed, {
-          'file_path': filePath,
-          'agent_name': agentName,
-          'expires_at': newExpiresAt,
-        });
-        return (
-          content: <Object>[(type: 'text', text: '{"renewed":true}')],
-          isError: false,
-        );
-      }(),
+      final newExpiresAt = DateTime.now().millisecondsSinceEpoch + timeoutMs;
+      emitter.emit(eventLockRenewed, {
+        'file_path': filePath,
+        'agent_name': agentName,
+        'expires_at': newExpiresAt,
+      });
+      log.debug('Lock renewed on $filePath by $agentName');
+      return (
+        content: <Object>[textContent('{"renewed":true}')],
+        isError: false,
+      );
+    }(),
     Error(:final error) => _errorResult(error),
   };
 }
@@ -263,41 +273,37 @@ CallToolResult _renew(
 CallToolResult _query(TooManyCooksDb db, String? filePath) {
   if (filePath == null) {
     return (
-      content: <Object>[
-        (type: 'text', text: '{"error":"query requires file_path"}'),
-      ],
+      content: <Object>[textContent('{"error":"query requires file_path"}')],
       isError: true,
     );
   }
   return switch (db.queryLock(filePath)) {
     Success(:final value) when value == null => (
-        content: <Object>[(type: 'text', text: '{"locked":false}')],
-        isError: false,
-      ),
+      content: <Object>[textContent('{"locked":false}')],
+      isError: false,
+    ),
     Success(:final value) => (
-        content: <Object>[
-          (type: 'text', text: '{"locked":true,"lock":${_lockJson(value!)}}'),
-        ],
-        isError: false,
-      ),
+      content: <Object>[
+        textContent('{"locked":true,"lock":${_lockJson(value!)}}'),
+      ],
+      isError: false,
+    ),
     Error(:final error) => _errorResult(error),
   };
 }
 
 CallToolResult _list(TooManyCooksDb db) => switch (db.listLocks()) {
-      Success(:final value) => (
-          content: <Object>[
-            (
-              type: 'text',
-              text: '{"locks":[${value.map(_lockJson).join(',')}]}',
-            ),
-          ],
-          isError: false,
-        ),
-      Error(:final error) => _errorResult(error),
-    };
+  Success(:final value) => (
+    content: <Object>[
+      textContent('{"locks":[${value.map(_lockJson).join(',')}]}'),
+    ],
+    isError: false,
+  ),
+  Error(:final error) => _errorResult(error),
+};
 
-String _lockJson(FileLock l) => '{"file_path":"${l.filePath}",'
+String _lockJson(FileLock l) =>
+    '{"file_path":"${l.filePath}",'
     '"agent_name":"${l.agentName}",'
     '"expires_at":${l.expiresAt}'
     '${l.reason != null ? ',"reason":"${l.reason}"' : ''}}';
@@ -307,8 +313,6 @@ String _lockResultJson(LockResult r) => r.acquired
     : '{"acquired":false,"error":"${r.error}"}';
 
 CallToolResult _errorResult(DbError e) => (
-      content: <Object>[
-        (type: 'text', text: '{"error":"${e.code}: ${e.message}"}'),
-      ],
-      isError: true,
-    );
+  content: <Object>[textContent('{"error":"${e.code}: ${e.message}"}')],
+  isError: true,
+);

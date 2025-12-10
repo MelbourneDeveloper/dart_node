@@ -16,13 +16,13 @@ export interface McpClientEvents {
 export class McpClient extends EventEmitter {
   private process: ChildProcess | null = null;
   private buffer = '';
-  private contentLength: number | null = null;
   private pending = new Map<
     number,
     { resolve: (value: unknown) => void; reject: (error: Error) => void }
   >();
   private nextId = 1;
   private serverPath: string;
+  private initialized = false;
 
   constructor(serverPath: string) {
     super();
@@ -68,6 +68,7 @@ export class McpClient extends EventEmitter {
 
     // Send initialized notification
     this.notify('notifications/initialized', {});
+    this.initialized = true;
   }
 
   async callTool(
@@ -121,9 +122,9 @@ export class McpClient extends EventEmitter {
   }
 
   private send(message: JsonRpcMessage): void {
-    const body = JSON.stringify(message);
-    const framed = `Content-Length: ${Buffer.byteLength(body)}\r\n\r\n${body}`;
-    this.process?.stdin?.write(framed);
+    // MCP SDK stdio uses newline-delimited JSON (not Content-Length framing)
+    const body = JSON.stringify(message) + '\n';
+    this.process?.stdin?.write(body);
   }
 
   private onData(chunk: Buffer): void {
@@ -132,30 +133,18 @@ export class McpClient extends EventEmitter {
   }
 
   private processBuffer(): void {
-    // eslint-disable-next-line no-constant-condition
+    // MCP SDK stdio uses newline-delimited JSON
     while (true) {
-      if (this.contentLength === null) {
-        const headerEnd = this.buffer.indexOf('\r\n\r\n');
-        if (headerEnd === -1) return;
+      const newlineIndex = this.buffer.indexOf('\n');
+      if (newlineIndex === -1) return;
 
-        const headers = this.buffer.substring(0, headerEnd);
-        const match = headers.match(/Content-Length:\s*(\d+)/i);
-        if (!match) {
-          this.buffer = this.buffer.substring(headerEnd + 4);
-          continue;
-        }
-        this.contentLength = parseInt(match[1], 10);
-        this.buffer = this.buffer.substring(headerEnd + 4);
-      }
+      const line = this.buffer.substring(0, newlineIndex).replace(/\r$/, '');
+      this.buffer = this.buffer.substring(newlineIndex + 1);
 
-      if (this.buffer.length < this.contentLength) return;
-
-      const body = this.buffer.substring(0, this.contentLength);
-      this.buffer = this.buffer.substring(this.contentLength);
-      this.contentLength = null;
+      if (line.length === 0) continue;
 
       try {
-        this.handleMessage(JSON.parse(body) as JsonRpcMessage);
+        this.handleMessage(JSON.parse(line) as JsonRpcMessage);
       } catch (e) {
         this.emit('error', e instanceof Error ? e : new Error(String(e)));
       }
@@ -186,13 +175,21 @@ export class McpClient extends EventEmitter {
   }
 
   async stop(): Promise<void> {
-    await this.unsubscribe();
+    // Only try to unsubscribe if we successfully initialized
+    if (this.initialized && this.isConnected()) {
+      await this.unsubscribe();
+    }
+    // Reject any pending requests
+    for (const [, handler] of this.pending) {
+      handler.reject(new Error('Client stopped'));
+    }
+    this.pending.clear();
     this.process?.kill();
     this.process = null;
-    this.pending.clear();
+    this.initialized = false;
   }
 
   isConnected(): boolean {
-    return this.process !== null && !this.process.killed;
+    return this.process !== null && !this.process.killed && this.initialized;
   }
 }

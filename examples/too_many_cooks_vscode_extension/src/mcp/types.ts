@@ -39,10 +39,15 @@ export interface AgentPlan {
 
 /** Status response from MCP server. */
 export interface StatusResponse {
-  agents: Array<{ name: string; last_active: number }>;
+  agents: Array<{
+    agent_name: string;
+    registered_at: number;
+    last_active: number;
+  }>;
   locks: Array<{
     file_path: string;
     agent_name: string;
+    acquired_at: number;
     expires_at: number;
     reason?: string;
   }>;

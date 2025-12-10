@@ -1,9 +1,9 @@
 /// Status tool - system overview.
 library;
 
+import 'package:dart_logging/dart_logging.dart';
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
-
 import 'package:too_many_cooks/src/db/db.dart';
 import 'package:too_many_cooks/src/types.dart';
 
@@ -23,61 +23,71 @@ const statusToolConfig = (
 );
 
 /// Create status tool handler.
-ToolCallback createStatusHandler(TooManyCooksDb db) => (args, meta) async {
+ToolCallback createStatusHandler(TooManyCooksDb db, Logger logger) =>
+    (args, meta) async {
+      final log = logger.child({'tool': 'status'});
+
+      // Get agents
       final agentsResult = db.listAgents();
+      if (agentsResult case Error(:final error)) {
+        return _errorResult(error);
+      }
+      final agents = (agentsResult as Success<List<AgentIdentity>, DbError>)
+          .value
+          .map(_agentJson)
+          .join(',');
+
+      // Get locks
       final locksResult = db.listLocks();
+      if (locksResult case Error(:final error)) {
+        return _errorResult(error);
+      }
+      final locks = (locksResult as Success<List<FileLock>, DbError>)
+          .value
+          .map(_lockJson)
+          .join(',');
+
+      // Get plans
       final plansResult = db.listPlans();
-
-      if (agentsResult case Error(:final error)) return _errorResult(error);
-      if (locksResult case Error(:final error)) return _errorResult(error);
-      if (plansResult case Error(:final error)) return _errorResult(error);
-
-      final agents = (agentsResult as Success).value as List<AgentIdentity>;
-      final locks = (locksResult as Success).value as List<FileLock>;
-      final plans = (plansResult as Success).value as List<AgentPlan>;
-
-      final agentsJson = agents
-          .map(
-            (a) => '{"name":"${a.agentName}","last_active":${a.lastActive}}',
-          )
+      if (plansResult case Error(:final error)) {
+        return _errorResult(error);
+      }
+      final plans = (plansResult as Success<List<AgentPlan>, DbError>)
+          .value
+          .map(_planJson)
           .join(',');
 
-      final locksJson = locks
-          .map(
-            (l) => '{"file_path":"${l.filePath}",'
-                '"agent_name":"${l.agentName}",'
-                '"expires_at":${l.expiresAt}'
-                '${l.reason != null ? ',"reason":"${l.reason}"' : ''}}',
-          )
-          .join(',');
-
-      final plansJson = plans
-          .map(
-            (p) => '{"agent_name":"${p.agentName}",'
-                '"goal":"${_escapeJson(p.goal)}",'
-                '"current_task":"${_escapeJson(p.currentTask)}"}',
-          )
-          .join(',');
+      log.debug('Status queried');
 
       return (
         content: <Object>[
-          (
-            type: 'text',
-            text: '{"agents":[$agentsJson],'
-                '"locks":[$locksJson],'
-                '"plans":[$plansJson]}',
-          ),
+          textContent('{"agents":[$agents],"locks":[$locks],"plans":[$plans]}'),
         ],
         isError: false,
       );
     };
+
+String _agentJson(AgentIdentity a) => '{"agent_name":"${a.agentName}",'
+    '"registered_at":${a.registeredAt},'
+    '"last_active":${a.lastActive}}';
+
+String _lockJson(FileLock l) => '{"file_path":"${l.filePath}",'
+    '"agent_name":"${l.agentName}",'
+    '"acquired_at":${l.acquiredAt},'
+    '"expires_at":${l.expiresAt}'
+    '${l.reason != null ? ',"reason":"${_escapeJson(l.reason!)}"' : ''}}';
+
+String _planJson(AgentPlan p) => '{"agent_name":"${p.agentName}",'
+    '"goal":"${_escapeJson(p.goal)}",'
+    '"current_task":"${_escapeJson(p.currentTask)}",'
+    '"updated_at":${p.updatedAt}}';
 
 String _escapeJson(String s) =>
     s.replaceAll(r'\', r'\\').replaceAll('"', r'\"').replaceAll('\n', r'\n');
 
 CallToolResult _errorResult(DbError e) => (
       content: <Object>[
-        (type: 'text', text: '{"error":"${e.code}: ${e.message}"}'),
+        textContent('{"error":"${e.code}: ${e.message}"}'),
       ],
       isError: true,
     );

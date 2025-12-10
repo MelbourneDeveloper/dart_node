@@ -5,7 +5,6 @@ import 'package:dart_node_react/dart_node_react.dart' hide view;
 import 'package:dart_node_react_native/dart_node_react_native.dart';
 import 'package:nadz/nadz.dart';
 import 'package:shared/http/http_client.dart';
-import 'package:shared/js_types/js_types.dart';
 import 'package:shared/theme/theme.dart';
 
 import '../types.dart';

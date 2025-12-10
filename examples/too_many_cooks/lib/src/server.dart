@@ -1,6 +1,7 @@
 /// MCP server setup for Too Many Cooks.
 library;
 
+import 'package:dart_logging/dart_logging.dart';
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks/src/config.dart';
@@ -16,11 +17,19 @@ import 'package:too_many_cooks/src/tools/subscribe_tool.dart';
 /// Create the Too Many Cooks MCP server.
 Result<McpServer, String> createTooManyCooksServer({
   TooManyCooksConfig config = defaultConfig,
+  Logger? logger,
 }) {
+  final log = logger ?? _createNoOpLogger()
+    ..info('Creating Too Many Cooks server');
+
   // Create database
   final dbResult = createDb(config);
-  if (dbResult case Error(:final error)) return Error(error);
+  if (dbResult case Error(:final error)) {
+    log.error('Failed to create database', structuredData: {'error': error});
+    return Error(error);
+  }
   final db = (dbResult as Success<TooManyCooksDb, String>).value;
+  log.debug('Database created successfully');
 
   // Create MCP server with logging capability enabled
   final serverResult = McpServer.create(
@@ -35,8 +44,12 @@ Result<McpServer, String> createTooManyCooksServer({
       instructions: null,
     ),
   );
-  if (serverResult case Error(:final error)) return Error(error);
+  if (serverResult case Error(:final error)) {
+    log.error('Failed to create MCP server', structuredData: {'error': error});
+    return Error(error);
+  }
   final server = (serverResult as Success<McpServer, String>).value;
+  log.debug('MCP server created');
 
   // Create notification emitter
   final emitter = createNotificationEmitter(server);
@@ -46,33 +59,30 @@ Result<McpServer, String> createTooManyCooksServer({
     ..registerTool(
       'register',
       registerToolConfig,
-      createRegisterHandler(db, emitter),
+      createRegisterHandler(db, emitter, log),
     )
     ..registerTool(
       'lock',
       lockToolConfig,
-      createLockHandler(db, config, emitter),
+      createLockHandler(db, config, emitter, log),
     )
     ..registerTool(
       'message',
       messageToolConfig,
-      createMessageHandler(db, emitter),
+      createMessageHandler(db, emitter, log),
     )
-    ..registerTool(
-      'plan',
-      planToolConfig,
-      createPlanHandler(db, emitter),
-    )
-    ..registerTool(
-      'status',
-      statusToolConfig,
-      createStatusHandler(db),
-    )
+    ..registerTool('plan', planToolConfig, createPlanHandler(db, emitter, log))
+    ..registerTool('status', statusToolConfig, createStatusHandler(db, log))
     ..registerTool(
       'subscribe',
       subscribeToolConfig,
       createSubscribeHandler(emitter),
     );
 
+  log.info('Server initialized with all tools registered');
+
   return Success(server);
 }
+
+/// Creates a no-op logger that supports child() for when no logger is provided
+Logger _createNoOpLogger() => createLoggerWithContext(createLoggingContext());

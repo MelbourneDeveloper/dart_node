@@ -1,0 +1,1 @@
+{"type":"CodeCoverage","coverage":[{"source":"package:too_many_cooks/src/types.dart","script":{"type":"@Script","fixedId":true,"id":"libraries/1/scripts/package%3Atoo_many_cooks%2Fsrc%2Ftypes.dart","uri":"package:too_many_cooks/src/types.dart","_kind":"library"},"hits":[75,1,76,1]}]}

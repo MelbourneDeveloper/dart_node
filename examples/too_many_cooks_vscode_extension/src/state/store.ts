@@ -2,6 +2,7 @@
  * State store - manages MCP client and syncs with signals.
  */
 
+import * as vscode from 'vscode';
 import { McpClient } from '../mcp/client';
 import type {
   NotificationEvent,
@@ -20,12 +21,27 @@ import {
   resetState,
 } from './signals';
 
+function getOutputChannel(): vscode.OutputChannel | undefined {
+  // Get the output channel created by extension.ts
+  return (globalThis as Record<string, unknown>)._tooManyCooksOutput as vscode.OutputChannel | undefined;
+}
+
+function log(message: string): void {
+  const timestamp = new Date().toISOString();
+  const output = getOutputChannel();
+  if (output) {
+    output.appendLine(`[${timestamp}] [Store] ${message}`);
+  }
+  console.log(`[Too Many Cooks Store] ${message}`);
+}
+
 export class Store {
   private client: McpClient | null = null;
   private serverPath: string;
 
   constructor(serverPath: string) {
     this.serverPath = serverPath;
+    log(`Store created with serverPath: ${serverPath}`);
   }
 
   setServerPath(path: string): void {
@@ -33,34 +49,47 @@ export class Store {
   }
 
   async connect(): Promise<void> {
+    log(`connect() called, serverPath: ${this.serverPath}`);
     if (this.client?.isConnected()) {
+      log('Already connected, returning');
       return;
     }
 
     connectionStatus.value = 'connecting';
+    log('Connection status: connecting');
 
     try {
+      log('Creating McpClient...');
       this.client = new McpClient(this.serverPath);
 
       // Handle notifications
       this.client.on('notification', (event: NotificationEvent) => {
+        log(`Notification received: ${event.event}`);
         this.handleNotification(event);
       });
 
       this.client.on('close', () => {
+        log('Client closed');
         connectionStatus.value = 'disconnected';
       });
 
       this.client.on('error', (err) => {
+        log(`Client error: ${err}`);
         console.error('MCP client error:', err);
       });
 
+      log('Calling client.start()...');
       await this.client.start();
+      log('Client started, subscribing...');
       await this.client.subscribe(['*']);
+      log('Subscribed, refreshing status...');
       await this.refreshStatus();
 
       connectionStatus.value = 'connected';
+      log('Connection status: connected');
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      log(`Connection failed: ${msg}`);
       connectionStatus.value = 'disconnected';
       throw err;
     }
@@ -85,8 +114,8 @@ export class Store {
     // Update agents
     agents.value = status.agents.map(
       (a): AgentIdentity => ({
-        agentName: a.name,
-        registeredAt: 0,
+        agentName: a.agent_name,
+        registeredAt: a.registered_at,
         lastActive: a.last_active,
       })
     );
@@ -96,7 +125,7 @@ export class Store {
       (l): FileLock => ({
         filePath: l.file_path,
         agentName: l.agent_name,
-        acquiredAt: 0,
+        acquiredAt: l.acquired_at,
         expiresAt: l.expires_at,
         reason: l.reason,
         version: 1,
@@ -200,5 +229,12 @@ export class Store {
 
   isConnected(): boolean {
     return this.client?.isConnected() ?? false;
+  }
+
+  async callTool(name: string, args: Record<string, unknown>): Promise<string> {
+    if (!this.client?.isConnected()) {
+      throw new Error('Not connected');
+    }
+    return this.client.callTool(name, args);
   }
 }

@@ -6,5 +6,6 @@
 library;
 
 export 'src/config.dart';
+export 'src/db/db.dart' show createDb;
 export 'src/server.dart';
 export 'src/types.dart';

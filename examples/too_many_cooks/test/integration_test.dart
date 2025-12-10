@@ -14,6 +14,8 @@ void main() {
     late _McpClient client;
 
     setUp(() async {
+      // Delete DB file to start fresh each test
+      _deleteDbFiles();
       client = _McpClient();
       await client.start();
     });
@@ -77,10 +79,8 @@ void main() {
         }),
       ]);
 
-      final acquired0 =
-          (jsonDecode(raceResults[0]) as Map)['acquired'] == true;
-      final acquired1 =
-          (jsonDecode(raceResults[1]) as Map)['acquired'] == true;
+      final acquired0 = (jsonDecode(raceResults[0]) as Map)['acquired'] == true;
+      final acquired1 = (jsonDecode(raceResults[1]) as Map)['acquired'] == true;
 
       // Exactly one should win the race
       expect(acquired0 != acquired1, isTrue);
@@ -113,13 +113,15 @@ void main() {
       for (var i = 0; i < agents.length; i++) {
         final sender = agents[i];
         final recipient = agents[(i + 1) % agents.length];
-        msgFutures.add(client.callTool('message', {
-          'action': 'send',
-          'agent_name': sender.name,
-          'agent_key': sender.key,
-          'to_agent': recipient.name,
-          'content': 'Hello from ${sender.name}!',
-        }));
+        msgFutures.add(
+          client.callTool('message', {
+            'action': 'send',
+            'agent_name': sender.name,
+            'agent_key': sender.key,
+            'to_agent': recipient.name,
+            'content': 'Hello from ${sender.name}!',
+          }),
+        );
       }
       final results = await Future.wait(msgFutures);
 
@@ -180,8 +182,9 @@ void main() {
       }
 
       // Check status
-      final statusJson = jsonDecode(await client.callTool('status', {}))
-          as Map<String, Object?>;
+      final statusJson =
+          jsonDecode(await client.callTool('status', {}))
+              as Map<String, Object?>;
       expect((statusJson['agents']! as List).length, equals(5));
       expect((statusJson['locks']! as List).length, equals(5));
       expect((statusJson['plans']! as List).length, equals(5));
@@ -217,9 +220,76 @@ void main() {
       }
 
       // Verify no locks remain
-      final status = jsonDecode(await client.callTool('status', {}))
-          as Map<String, Object?>;
+      final status =
+          jsonDecode(await client.callTool('status', {}))
+              as Map<String, Object?>;
       expect((status['locks']! as List).length, equals(0));
+    });
+
+    // REGRESSION TESTS: Missing parameter validation
+    // These ensure tools return proper errors instead of crashing
+
+    test('register without name returns error', () async {
+      final result = await client.callToolRaw('register', {});
+      expect(result['isError'], isTrue);
+      final content =
+          (result['content']! as List).first as Map<String, Object?>;
+      final text = content['text']! as String;
+      expect(text, contains('missing_parameter'));
+      expect(text, contains('name'));
+    });
+
+    test('lock without action returns error', () async {
+      final result = await client.callToolRaw('lock', {});
+      expect(result['isError'], isTrue);
+      final content =
+          (result['content']! as List).first as Map<String, Object?>;
+      final text = content['text']! as String;
+      expect(text, contains('missing_parameter'));
+      expect(text, contains('action'));
+    });
+
+    test('message without action returns error', () async {
+      final result = await client.callToolRaw('message', {});
+      expect(result['isError'], isTrue);
+      final content =
+          (result['content']! as List).first as Map<String, Object?>;
+      final text = content['text']! as String;
+      expect(text, contains('missing_parameter'));
+      expect(text, contains('action'));
+    });
+
+    test('message without agent_name returns error', () async {
+      final result = await client.callToolRaw('message', {'action': 'get'});
+      expect(result['isError'], isTrue);
+      final content =
+          (result['content']! as List).first as Map<String, Object?>;
+      final text = content['text']! as String;
+      expect(text, contains('missing_parameter'));
+      expect(text, contains('agent_name'));
+    });
+
+    test('message without agent_key returns error', () async {
+      final result = await client.callToolRaw('message', {
+        'action': 'get',
+        'agent_name': 'test',
+      });
+      expect(result['isError'], isTrue);
+      final content =
+          (result['content']! as List).first as Map<String, Object?>;
+      final text = content['text']! as String;
+      expect(text, contains('missing_parameter'));
+      expect(text, contains('agent_key'));
+    });
+
+    test('plan without action returns error', () async {
+      final result = await client.callToolRaw('plan', {});
+      expect(result['isError'], isTrue);
+      final content =
+          (result['content']! as List).first as Map<String, Object?>;
+      final text = content['text']! as String;
+      expect(text, contains('missing_parameter'));
+      expect(text, contains('action'));
     });
   });
 }
@@ -243,24 +313,27 @@ Future<List<({String name, String key})>> _registerAgents(
   }).toList();
 }
 
-/// MCP Client - uses content-length framing like LSP/MCP stdio transport.
+/// MCP Client - uses newline-delimited JSON over stdio.
 class _McpClient {
   JSObject? _process;
   final _pending = <int, Completer<Map<String, Object?>>>{};
   var _nextId = 1;
   var _buffer = '';
-  int? _contentLength;
 
   Future<void> start() async {
     final childProcess = requireModule('child_process') as JSObject;
     final spawnFn = childProcess['spawn']! as JSFunction;
 
-    _process = spawnFn.callAsFunction(
-      null,
-      'node'.toJS,
-      <String>['build/bin/server.js'].jsify(),
-      <String, Object?>{'stdio': ['pipe', 'pipe', 'inherit']}.jsify(),
-    )! as JSObject;
+    _process =
+        spawnFn.callAsFunction(
+              null,
+              'node'.toJS,
+              <String>['build/bin/server_node.js'].jsify(),
+              <String, Object?>{
+                'stdio': ['pipe', 'pipe', 'inherit'],
+              }.jsify(),
+            )!
+            as JSObject;
 
     final stdout = _process!['stdout']! as JSObject;
     (stdout['on']! as JSFunction).callAsFunction(
@@ -285,12 +358,20 @@ class _McpClient {
   }
 
   Future<String> callTool(String name, Map<String, Object?> args) async {
-    final result =
-        await _request('tools/call', {'name': name, 'arguments': args});
-    final content =
-        (result['content']! as List).first as Map<String, Object?>;
+    final result = await _request('tools/call', {
+      'name': name,
+      'arguments': args,
+    });
+    final content = (result['content']! as List).first as Map<String, Object?>;
     return content['text']! as String;
   }
+
+  /// Returns raw result including isError flag for testing error responses.
+  Future<Map<String, Object?>> callToolRaw(
+    String name,
+    Map<String, Object?> args,
+  ) =>
+      _request('tools/call', {'name': name, 'arguments': args});
 
   Future<Map<String, Object?>> _request(
     String method,
@@ -307,9 +388,8 @@ class _McpClient {
       'params': params,
     });
 
-    // LSP/MCP framing: Content-Length header + blank line + body
-    final msg = 'Content-Length: ${body.length}\r\n\r\n$body';
-    _write(msg);
+    // MCP stdio uses newline-delimited JSON
+    _write('$body\n');
 
     return completer.future;
   }
@@ -320,8 +400,7 @@ class _McpClient {
       'method': method,
       'params': params,
     });
-    final msg = 'Content-Length: ${body.length}\r\n\r\n$body';
-    _write(msg);
+    _write('$body\n');
   }
 
   void _write(String data) {
@@ -336,29 +415,16 @@ class _McpClient {
   }
 
   void _processBuffer() {
+    // MCP stdio uses newline-delimited JSON
     while (true) {
-      if (_contentLength == null) {
-        // Look for Content-Length header
-        final headerEnd = _buffer.indexOf('\r\n\r\n');
-        if (headerEnd == -1) return;
+      final newlineIdx = _buffer.indexOf('\n');
+      if (newlineIdx == -1) return;
 
-        final headers = _buffer.substring(0, headerEnd);
-        final match = RegExp(r'Content-Length:\s*(\d+)').firstMatch(headers);
-        if (match == null) {
-          _buffer = _buffer.substring(headerEnd + 4);
-          continue;
-        }
-        _contentLength = int.parse(match.group(1)!);
-        _buffer = _buffer.substring(headerEnd + 4);
-      }
+      final line = _buffer.substring(0, newlineIdx);
+      _buffer = _buffer.substring(newlineIdx + 1);
 
-      if (_buffer.length < _contentLength!) return;
-
-      final body = _buffer.substring(0, _contentLength);
-      _buffer = _buffer.substring(_contentLength!);
-      _contentLength = null;
-
-      _handleMessage(body);
+      if (line.trim().isEmpty) continue;
+      _handleMessage(line);
     }
   }
 
@@ -372,6 +438,39 @@ class _McpClient {
       } else {
         completer.complete(json['result']! as Map<String, Object?>);
       }
+    }
+  }
+}
+
+/// Delete DB and temp files using Node.js fs.
+void _deleteDbFiles() {
+  final fs = requireModule('fs') as JSObject;
+  final unlinkSync = fs['unlinkSync']! as JSFunction;
+  final existsSync = fs['existsSync']! as JSFunction;
+  final readdirSync = fs['readdirSync']! as JSFunction;
+
+  // Delete known DB files
+  for (final file in [
+    '.too_many_cooks.db',
+    '.too_many_cooks.db-wal',
+    '.too_many_cooks.db-shm',
+  ]) {
+    final exists =
+        (existsSync.callAsFunction(fs, file.toJS) as JSBoolean?)?.toDart ??
+        false;
+    if (exists) {
+      unlinkSync.callAsFunction(fs, file.toJS);
+    }
+  }
+
+  // Delete any .test_*.db files and .mjs temp files
+  final files = (readdirSync.callAsFunction(fs, '.'.toJS)! as JSArray).toDart;
+  for (final file in files) {
+    final fileName = (file! as JSString).toDart;
+    final isTestDb = fileName.startsWith('.test_') && fileName.contains('.db');
+    final isTempMjs = fileName.endsWith('.mjs');
+    if (isTestDb || isTempMjs) {
+      unlinkSync.callAsFunction(fs, fileName.toJS);
     }
   }
 }
