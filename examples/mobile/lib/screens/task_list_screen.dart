@@ -135,15 +135,15 @@ RNViewElement _buildHeader(
   style: AppStyles.header,
   children: [
     text('TaskFlow', style: AppStyles.headerTitle),
+    touchableOpacity(
+      onPress: onTimerPress,
+      style: _styles.timerButton,
+      child: text('Timer', style: _styles.timerIcon),
+    ),
     view(
-      style: {'flexDirection': 'row', 'alignItems': 'center', 'gap': 16},
+      style: {'flexDirection': 'row', 'alignItems': 'center', 'gap': 12},
       children: [
         text('Hi, $userName', style: AppStyles.headerUserName),
-        touchableOpacity(
-          onPress: onTimerPress,
-          style: _styles.timerButton,
-          child: text('⏱', style: _styles.timerIcon),
-        ),
         touchableOpacity(
           onPress: onLogout,
           child: text('Logout', style: AppStyles.logoutText),
@@ -395,14 +395,19 @@ final _styles = _TaskListStyles();
 
 class _TaskListStyles {
   Map<String, Object?> get timerButton => {
-    'paddingHorizontal': AppSpacing.md,
+    'paddingHorizontal': AppSpacing.lg,
     'paddingVertical': AppSpacing.sm,
     'backgroundColor': AppColors.accentPrimary,
-    'borderRadius': AppSpacing.sm,
+    'borderRadius': AppSpacing.md,
+    'minWidth': 44,
+    'minHeight': 36,
+    'alignItems': 'center',
+    'justifyContent': 'center',
   };
 
   Map<String, Object?> get timerIcon => {
-    'fontSize': 20,
+    'fontSize': 18,
     'color': '#ffffff',
+    'textAlign': 'center',
   };
 }

@@ -15,11 +15,11 @@ import 'package:test/test.dart';
 
 import 'test_helpers.dart';
 
-/// Helper to click the timer button (⏱) in task list header
+/// Helper to click the timer button in task list header
 void _clickTimerButton(TestRenderResult result) {
   final allButtons = result.container.querySelectorAll('button');
   for (final btn in allButtons) {
-    if (btn.textContent.contains('⏱')) {
+    if (btn.textContent.contains('Timer')) {
       fireClick(btn);
       return;
     }
