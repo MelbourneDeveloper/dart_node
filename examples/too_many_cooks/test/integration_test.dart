@@ -157,7 +157,7 @@ void main() {
       }
     });
 
-    test('status shows correct counts', () async {
+    test('status shows correct counts including messages', () async {
       final agents = await _registerAgents(client, 5);
 
       // Acquire locks
@@ -181,13 +181,40 @@ void main() {
         });
       }
 
-      // Check status
+      // Send messages between agents
+      for (var i = 0; i < agents.length; i++) {
+        final sender = agents[i];
+        final recipient = agents[(i + 1) % agents.length];
+        await client.callTool('message', {
+          'action': 'send',
+          'agent_name': sender.name,
+          'agent_key': sender.key,
+          'to_agent': recipient.name,
+          'content': 'Test msg from ${sender.name}',
+        });
+      }
+
+      // Check status - MUST include messages!
       final statusJson =
           jsonDecode(await client.callTool('status', {}))
               as Map<String, Object?>;
       expect((statusJson['agents']! as List).length, equals(5));
       expect((statusJson['locks']! as List).length, equals(5));
       expect((statusJson['plans']! as List).length, equals(5));
+      // CRITICAL: Status MUST return messages!
+      expect(statusJson.containsKey('messages'), isTrue,
+          reason: 'Status response MUST include messages field');
+      expect((statusJson['messages']! as List).length, equals(5),
+          reason: 'Status MUST return all 5 messages sent');
+
+      // Verify message structure
+      final msgs = statusJson['messages']! as List;
+      final firstMsg = msgs.first as Map<String, Object?>;
+      expect(firstMsg.containsKey('id'), isTrue);
+      expect(firstMsg.containsKey('from_agent'), isTrue);
+      expect(firstMsg.containsKey('to_agent'), isTrue);
+      expect(firstMsg.containsKey('content'), isTrue);
+      expect(firstMsg.containsKey('created_at'), isTrue);
     });
 
     test('agents release locks concurrently', () async {
@@ -448,22 +475,21 @@ void _deleteDbFiles() {
   final unlinkSync = fs['unlinkSync']! as JSFunction;
   final existsSync = fs['existsSync']! as JSFunction;
   final readdirSync = fs['readdirSync']! as JSFunction;
+  final home = _getHome();
+  final dbDir = '$home/.too_many_cooks';
 
-  // Delete known DB files
-  for (final file in [
-    '.too_many_cooks.db',
-    '.too_many_cooks.db-wal',
-    '.too_many_cooks.db-shm',
-  ]) {
+  // Delete DB files in ~/.too_many_cooks/
+  for (final file in ['data.db', 'data.db-wal', 'data.db-shm']) {
+    final path = '$dbDir/$file';
     final exists =
-        (existsSync.callAsFunction(fs, file.toJS) as JSBoolean?)?.toDart ??
-        false;
+        (existsSync.callAsFunction(fs, path.toJS) as JSBoolean?)?.toDart ??
+            false;
     if (exists) {
-      unlinkSync.callAsFunction(fs, file.toJS);
+      unlinkSync.callAsFunction(fs, path.toJS);
     }
   }
 
-  // Delete any .test_*.db files and .mjs temp files
+  // Delete any .test_*.db files and .mjs temp files in current directory
   final files = (readdirSync.callAsFunction(fs, '.'.toJS)! as JSArray).toDart;
   for (final file in files) {
     final fileName = (file! as JSString).toDart;
@@ -473,4 +499,13 @@ void _deleteDbFiles() {
       unlinkSync.callAsFunction(fs, fileName.toJS);
     }
   }
+}
+
+@JS('process')
+external JSObject get _process;
+
+String _getHome() {
+  final env = _process['env']! as JSObject;
+  final home = env['HOME'] as JSString?;
+  return home?.toDart ?? '/tmp';
 }

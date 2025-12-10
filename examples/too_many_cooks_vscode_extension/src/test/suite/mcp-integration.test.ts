@@ -65,14 +65,12 @@ suite('MCP Integration - UI Verification', function () {
       vscode.ConfigurationTarget.Global
     );
 
-    // Clean DB for fresh state
-    for (const f of [
-      '.too_many_cooks.db',
-      '.too_many_cooks.db-wal',
-      '.too_many_cooks.db-shm',
-    ]) {
+    // Clean DB for fresh state - uses shared db in home directory
+    const homeDir = process.env.HOME ?? '/tmp';
+    const dbDir = path.join(homeDir, '.too_many_cooks');
+    for (const f of ['data.db', 'data.db-wal', 'data.db-shm']) {
       try {
-        fs.unlinkSync(f);
+        fs.unlinkSync(path.join(dbDir, f));
       } catch {
         /* ignore */
       }
@@ -458,24 +456,33 @@ suite('MCP Integration - UI Verification', function () {
     await waitForConnection();
     await api.refreshStatus();
 
-    // Data restored
+    // Data restored - INCLUDING MESSAGES!
     assert.strictEqual(api.getAgentCount(), 2, '2 agents restored');
     assert.strictEqual(api.getLockCount(), 2, '2 locks restored');
     assert.strictEqual(api.getPlans().length, 1, '1 plan restored');
+    assert.strictEqual(api.getMessages().length, 3, '3 messages restored');
 
     // Trees restored with correct labels
     const agentsTree = api.getAgentsTreeSnapshot();
     const locksTree = api.getLocksTreeSnapshot();
     const plansTree = api.getPlansTreeSnapshot();
+    const messagesTree = api.getMessagesTreeSnapshot();
 
     dumpTree('AGENTS after reconnect', agentsTree);
     dumpTree('LOCKS after reconnect', locksTree);
     dumpTree('PLANS after reconnect', plansTree);
+    dumpTree('MESSAGES after reconnect', messagesTree);
 
     assert.ok(api.findAgentInTree('agent-1'), 'agent-1 restored in tree');
     assert.ok(api.findAgentInTree('agent-2'), 'agent-2 restored in tree');
     assert.ok(api.findLockInTree('/src/main.ts'), '/src/main.ts lock restored in tree');
     assert.ok(api.findLockInTree('/src/types.ts'), '/src/types.ts lock restored in tree');
     assert.ok(api.findPlanInTree('agent-1'), 'agent-1 plan restored in tree');
+
+    // CRITICAL: Messages MUST be restored after reconnect!
+    assert.ok(api.findMessageInTree('Starting work'), 'First message restored in tree');
+    assert.ok(api.findMessageInTree('Acknowledged'), 'Second message restored in tree');
+    assert.ok(api.findMessageInTree('Done with main'), 'Third message restored in tree');
+    assert.strictEqual(api.getMessageTreeItemCount(), 3, '3 messages in tree after reconnect');
   });
 });

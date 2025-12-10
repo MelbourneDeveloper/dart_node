@@ -16,7 +16,7 @@ const statusInputSchema = <String, Object?>{
 /// Tool config for status.
 const statusToolConfig = (
   title: 'Status',
-  description: 'Get system overview: agents, locks, plans',
+  description: 'Get system overview: agents, locks, plans, messages',
   inputSchema: statusInputSchema,
   outputSchema: null,
   annotations: null,
@@ -57,11 +57,24 @@ ToolCallback createStatusHandler(TooManyCooksDb db, Logger logger) =>
           .map(_planJson)
           .join(',');
 
+      // Get messages
+      final messagesResult = db.listAllMessages();
+      if (messagesResult case Error(:final error)) {
+        return _errorResult(error);
+      }
+      final messages = (messagesResult as Success<List<Message>, DbError>)
+          .value
+          .map(_messageJson)
+          .join(',');
+
       log.debug('Status queried');
 
       return (
         content: <Object>[
-          textContent('{"agents":[$agents],"locks":[$locks],"plans":[$plans]}'),
+          textContent(
+            '{"agents":[$agents],"locks":[$locks],'
+            '"plans":[$plans],"messages":[$messages]}',
+          ),
         ],
         isError: false,
       );
@@ -81,6 +94,13 @@ String _planJson(AgentPlan p) => '{"agent_name":"${p.agentName}",'
     '"goal":"${_escapeJson(p.goal)}",'
     '"current_task":"${_escapeJson(p.currentTask)}",'
     '"updated_at":${p.updatedAt}}';
+
+String _messageJson(Message m) => '{"id":"${m.id}",'
+    '"from_agent":"${m.fromAgent}",'
+    '"to_agent":"${m.toAgent}",'
+    '"content":"${_escapeJson(m.content)}",'
+    '"created_at":${m.createdAt}'
+    '${m.readAt != null ? ',"read_at":${m.readAt}' : ''}}';
 
 String _escapeJson(String s) =>
     s.replaceAll(r'\', r'\\').replaceAll('"', r'\"').replaceAll('\n', r'\n');

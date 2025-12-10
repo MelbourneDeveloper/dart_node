@@ -57,6 +57,14 @@ export interface StatusResponse {
     current_task: string;
     updated_at: number;
   }>;
+  messages: Array<{
+    id: string;
+    from_agent: string;
+    to_agent: string;
+    content: string;
+    created_at: number;
+    read_at?: number;
+  }>;
 }
 
 /** Notification event from server. */

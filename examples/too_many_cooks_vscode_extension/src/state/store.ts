@@ -32,7 +32,6 @@ function log(message: string): void {
   if (output) {
     output.appendLine(`[${timestamp}] [Store] ${message}`);
   }
-  console.log(`[Too Many Cooks Store] ${message}`);
 }
 
 export class Store {
@@ -76,7 +75,10 @@ export class Store {
 
       this.client.on('error', (err) => {
         log(`Client error: ${err}`);
-        console.error('MCP client error:', err);
+      });
+
+      this.client.on('log', (message) => {
+        log(`[MCP Server] ${message.trim()}`);
       });
 
       log('Calling client.start()...');
@@ -156,6 +158,18 @@ export class Store {
         goal: p.goal,
         currentTask: p.current_task,
         updatedAt: p.updated_at,
+      })
+    );
+
+    // Update messages
+    messages.value = status.messages.map(
+      (m): Message => ({
+        id: m.id,
+        fromAgent: m.from_agent,
+        toAgent: m.to_agent,
+        content: m.content,
+        createdAt: m.created_at,
+        readAt: m.read_at,
       })
     );
   }

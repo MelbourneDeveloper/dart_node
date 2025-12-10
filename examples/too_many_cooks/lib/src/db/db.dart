@@ -99,6 +99,7 @@ typedef TooManyCooksDb = ({
   updatePlan,
   Result<AgentPlan?, DbError> Function(String agentName) getPlan,
   Result<List<AgentPlan>, DbError> Function() listPlans,
+  Result<List<Message>, DbError> Function() listAllMessages,
   Result<void, DbError> Function() close,
 });
 
@@ -187,6 +188,7 @@ TooManyCooksDb _createDbOps(
       _updatePlan(db, log, name, key, goal, task, config.maxPlanLength),
   getPlan: (name) => _getPlan(db, log, name),
   listPlans: () => _listPlans(db, log),
+  listAllMessages: () => _listAllMessages(db, log),
   close: () {
     log.info('Closing database');
     return switch (db.close()) {
@@ -735,6 +737,33 @@ Result<List<AgentPlan>, DbError> _listPlans(Database db, Logger log) {
                 goal: r['goal']! as String,
                 currentTask: r['current_task']! as String,
                 updatedAt: r['updated_at']! as int,
+              ),
+            )
+            .toList(),
+      ),
+      Error(:final error) => Error((code: errDatabase, message: error)),
+    },
+    Error(:final error) => Error((code: errDatabase, message: error)),
+  };
+}
+
+Result<List<Message>, DbError> _listAllMessages(Database db, Logger log) {
+  log.trace('Listing all messages');
+  final stmtResult = db.prepare(
+    'SELECT * FROM messages ORDER BY created_at DESC',
+  );
+  return switch (stmtResult) {
+    Success(:final value) => switch (value.all()) {
+      Success(:final value) => Success(
+        value
+            .map(
+              (r) => (
+                id: r['id']! as String,
+                fromAgent: r['from_agent']! as String,
+                toAgent: r['to_agent']! as String,
+                content: r['content']! as String,
+                createdAt: r['created_at']! as int,
+                readAt: r['read_at'] as int?,
               ),
             )
             .toList(),
