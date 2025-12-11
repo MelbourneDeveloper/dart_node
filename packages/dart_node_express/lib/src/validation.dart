@@ -1,4 +1,7 @@
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+
+import 'package:nadz/nadz.dart';
 
 import 'async_handler.dart';
 import 'request.dart';
@@ -42,8 +45,10 @@ class _AndValidator<T> extends Validator<T> {
   @override
   ValidationResult<T> validate(dynamic value) {
     final firstResult = first.validate(value);
-    if (firstResult is Invalid<T>) return firstResult;
-    return second.validate((firstResult as Valid<T>).value);
+    return switch (firstResult) {
+      Invalid() => firstResult,
+      Valid(:final value) => second.validate(value),
+    };
   }
 }
 
@@ -285,13 +290,15 @@ class Schema<T> extends Validator<T> {
       });
     }
 
-    Map<String, dynamic> map;
-    if (value is Map<String, dynamic>) {
-      map = value;
-    } else if (value is JSObject) {
-      // Convert JS object to Dart map
-      map = (value.dartify() as Map).cast<String, dynamic>();
-    } else {
+    final map = switch (value) {
+      final Map<String, dynamic> m => m,
+      final JSObject jsObj => switch (jsObj.dartify()) {
+        final Map m => m.cast<String, dynamic>(),
+        _ => null,
+      },
+      _ => null,
+    };
+    if (map == null) {
       return const Invalid({
         'body': ['must be an object'],
       });
@@ -330,18 +337,18 @@ class Schema<T> extends Validator<T> {
 // Validation Middleware
 // ============================================================================
 
-/// Storage for validated bodies (keyed by request object identity via hash)
-final _validatedBodies = <int, Object>{};
+/// Key for storing validated body in request context
+const _validatedBodyKey = '__validated_body__';
 
 /// Create middleware that validates request body
-JSFunction validateBody<T>(Schema<T> schema) {
+JSFunction validateBody<T extends Object>(Schema<T> schema) {
   return ((Request req, Response res, JSNextFunction next) {
     final result = schema.validate(req.body);
 
     switch (result) {
       case Valid(:final value):
-        // Store validated data keyed by request identity
-        _validatedBodies[(req as JSObject).hashCode] = value as Object;
+        // Store validated data in request context
+        req[_validatedBodyKey] = value.jsify();
         next();
       case Invalid(:final errors):
         res.status(400);
@@ -351,11 +358,12 @@ JSFunction validateBody<T>(Schema<T> schema) {
 }
 
 /// Get validated body from request (use after validateBody middleware)
-T getValidatedBody<T>(Request req) {
-  final value = _validatedBodies[(req as JSObject).hashCode];
-  return value == null
-      ? throw StateError(
-          'No validated body found. Did you use validateBody middleware?',
-        )
-      : value as T;
+Result<T, String> getValidatedBody<T>(Request req) {
+  final value = req[_validatedBodyKey]?.dartify();
+  return switch (value) {
+    final T v => Success(v),
+    _ => const Error(
+      'No validated body found. Did you use validateBody middleware?',
+    ),
+  };
 }

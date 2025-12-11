@@ -17,9 +17,11 @@ MANDATORY: TOO MANY COOKS
 - Use async/await. Do not use `.then`
 - NO DUPLICATION. Move files, code elements instead of copying them. Search for elements before adding them. HIGHEST PRIORITY. PRIORITIZE THIS OVER ALL ELSE!!
 - Prefer typedef records with named fields instead of classes for data (structural typing). This mimics Typescript better
+- Shoot for 100% test coverage on each package with HIGH LEVEL, MEANINGFUL tests. Avoid unit tests and mocking.
 - Return Result<T,E> from the nadz library for any function that could throw an exception. NO THROWING EXCEPTIONS.
 - Don't make consecutive log calls. Use string interpolation
 - Avoid casting!!! [! `as` `late`] are all ILLEGAL!!! U
+- Don't break tests into groups. Break them into files instead!!
 - Use pattern matching switch expressions or ternaries. The exceptional case is if inside arrays and maps because these are declarative and not imperaative.
 - All packages MUST have austerity installed for linting and nadz for Result<T,E> types
 - Do not expose `JSObject` or `JSAny` etc in the public APIs. Put types over everything. The library packages are supposed to put a TYPED layer over these

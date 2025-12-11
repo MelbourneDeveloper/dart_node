@@ -95,7 +95,7 @@ packages:
       path: "../dart_node_core"
       relative: true
     source: path
-    version: "0.2.0-beta"
+    version: "0.9.0-beta"
   file:
     dependency: transitive
     description:

@@ -13,7 +13,10 @@ ReactElement labelEl(String text) =>
 
 /// Extract input value from event
 JSString getInputValue(JSAny event) {
-  final obj = event as JSObject;
+  final obj = switch (event) {
+    final JSObject o => o,
+    _ => throw StateError('Event is not an object'),
+  };
   final target = obj['target'];
   return switch (target) {
     final JSObject t => switch (t['value']) {

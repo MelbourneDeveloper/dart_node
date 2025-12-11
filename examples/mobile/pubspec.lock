@@ -34,7 +34,7 @@ packages:
     source: hosted
     version: "2.13.0"
   austerity:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: austerity
       sha256: e81f52faa46859ed080ad6c87de3409b379d162c083151d6286be6eb7b71f816
@@ -95,21 +95,21 @@ packages:
       path: "../../packages/dart_node_core"
       relative: true
     source: path
-    version: "0.2.0-beta"
+    version: "0.9.0-beta"
   dart_node_react:
     dependency: "direct main"
     description:
       path: "../../packages/dart_node_react"
       relative: true
     source: path
-    version: "0.2.0-beta"
+    version: "0.9.0-beta"
   dart_node_react_native:
     dependency: "direct main"
     description:
       path: "../../packages/dart_node_react_native"
       relative: true
     source: path
-    version: "0.2.0-beta"
+    version: "0.9.0-beta"
   file:
     dependency: transitive
     description:

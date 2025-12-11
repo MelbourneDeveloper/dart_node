@@ -62,6 +62,22 @@
         {
           "text": "dart_node_ws",
           "url": "/docs/websockets/"
+        },
+        {
+          "text": "dart_node_better_sqlite3",
+          "url": "/docs/sqlite/"
+        },
+        {
+          "text": "dart_node_mcp",
+          "url": "/docs/mcp/"
+        },
+        {
+          "text": "dart_logging",
+          "url": "/docs/logging/"
+        },
+        {
+          "text": "reflux",
+          "url": "/docs/reflux/"
         }
       ]
     }
