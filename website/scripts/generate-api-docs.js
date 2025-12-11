@@ -80,10 +80,7 @@ const PACKAGE_DOCS = {
   dart_logging: [
     { name: 'Dart logging package', url: 'https://pub.dev/packages/logging' },
   ],
-  reflux: [
-    { name: 'Redux Documentation', url: 'https://redux.js.org/' },
-    { name: 'Redux Core Concepts', url: 'https://redux.js.org/introduction/core-concepts' },
-  ],
+  reflux: [],
 };
 
 // Maps element name patterns to doc generators
