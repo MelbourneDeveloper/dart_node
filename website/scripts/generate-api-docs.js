@@ -442,6 +442,26 @@ description: Complete API documentation for all dart_node packages
     <h3>dart_node_ws</h3>
     <p>WebSocket bindings for real-time communication.</p>
   </a>
+
+  <a href="/api/dart_node_better_sqlite3/" class="feature-card">
+    <h3>dart_node_better_sqlite3</h3>
+    <p>SQLite bindings using better-sqlite3 for Node.js.</p>
+  </a>
+
+  <a href="/api/dart_node_mcp/" class="feature-card">
+    <h3>dart_node_mcp</h3>
+    <p>Model Context Protocol (MCP) bindings for AI tool integration.</p>
+  </a>
+
+  <a href="/api/dart_logging/" class="feature-card">
+    <h3>dart_logging</h3>
+    <p>Logging utilities for Dart applications.</p>
+  </a>
+
+  <a href="/api/dart_node_statecore/" class="feature-card">
+    <h3>dart_node_statecore</h3>
+    <p>Redux-style state management for Dart.</p>
+  </a>
 </div>
 `;
   fs.writeFileSync(path.join(API_OUTPUT_DIR, 'index.md'), content);
