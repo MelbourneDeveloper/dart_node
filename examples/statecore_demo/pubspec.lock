@@ -95,35 +95,35 @@ packages:
       path: "../../packages/dart_logging"
       relative: true
     source: path
-    version: "1.0.0"
+    version: "0.9.0-beta"
   dart_node_core:
     dependency: transitive
     description:
       path: "../../packages/dart_node_core"
       relative: true
     source: path
-    version: "0.2.0-beta"
+    version: "0.9.0-beta"
   dart_node_react:
     dependency: "direct main"
     description:
       path: "../../packages/dart_node_react"
       relative: true
     source: path
-    version: "0.2.0-beta"
+    version: "0.9.0-beta"
   dart_node_react_native:
     dependency: "direct main"
     description:
       path: "../../packages/dart_node_react_native"
       relative: true
     source: path
-    version: "0.2.0-beta"
+    version: "0.9.0-beta"
   dart_node_statecore:
     dependency: "direct main"
     description:
       path: "../../packages/dart_node_statecore"
       relative: true
     source: path
-    version: "0.1.0-beta"
+    version: "0.9.0-beta"
   file:
     dependency: transitive
     description:

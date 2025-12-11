@@ -95,14 +95,14 @@ packages:
       path: "../dart_node_core"
       relative: true
     source: path
-    version: "0.2.0-beta"
+    version: "0.9.0-beta"
   dart_node_express:
     dependency: "direct main"
     description:
       path: "../dart_node_express"
       relative: true
     source: path
-    version: "0.2.0-beta"
+    version: "0.9.0-beta"
   file:
     dependency: transitive
     description:
