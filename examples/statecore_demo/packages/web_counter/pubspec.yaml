@@ -1,0 +1,18 @@
+name: web_counter
+description: Web counter app using React and shared counter_state
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  austerity: ^1.3.0
+  counter_state:
+    path: ../counter_state
+  dart_node_react:
+    path: ../../../../packages/dart_node_react
+  nadz: ^0.0.7-beta
+
+dev_dependencies:
+  test: ^1.25.0

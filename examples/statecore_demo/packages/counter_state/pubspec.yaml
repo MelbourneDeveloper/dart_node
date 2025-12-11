@@ -1,0 +1,18 @@
+name: counter_state
+description: Pure Dart counter state logic - shared across Flutter and web
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  austerity: ^1.3.0
+  dart_logging:
+    path: ../../../../packages/dart_logging
+  dart_node_statecore:
+    path: ../../../../packages/dart_node_statecore
+  nadz: ^0.0.7-beta
+
+dev_dependencies:
+  test: ^1.25.0
