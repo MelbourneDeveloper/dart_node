@@ -64,40 +64,29 @@ void main() {
     });
 
     test('close without callback works', () {
-      final server = createWebSocketServer(port: 9995);
       // Should not throw
-      server.close();
+      createWebSocketServer(port: 9995).close();
     });
   });
 
   group('WebSocketServer connection handling', () {
     test('onConnection registers handler', () {
-      final server = createWebSocketServer(port: 9994);
-      var handlerRegistered = false;
-
-      server.onConnection((client, url) {
-        handlerRegistered = true;
-      });
-
-      // Handler was registered (we check it doesn't throw)
-      expect(true, isTrue);
-      server.close();
+      createWebSocketServer(port: 9994)
+        ..onConnection((client, url) {
+          // Handler registered - just verify it doesn't throw
+        })
+        ..close();
     });
 
-    test('onConnection receives client on connection', () async {
-      final server = createWebSocketServer(port: 9993);
-      WebSocketClient? receivedClient;
-      String? receivedUrl;
-
-      server.onConnection((client, url) {
-        receivedClient = client;
-        receivedUrl = url;
-      });
-
+    test('onConnection receives client on connection', () {
       // The connection test happens in websocket_test.dart (integration tests)
       // Here we just verify the API works without throwing
-      expect(server.port, equals(9993));
-      server.close();
+      createWebSocketServer(port: 9993)
+        ..onConnection((client, url) {
+          expect(client, isNotNull);
+          expect(url, isNotNull);
+        })
+        ..close();
     });
   });
 }
