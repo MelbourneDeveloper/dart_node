@@ -114,50 +114,48 @@ ReactElement registerScreen({
   );
 });
 
-void _performRegister({
+Future<void> _performRegister({
   required String name,
   required String email,
   required String password,
   required AuthEffects authEffects,
   required FormEffects formEffects,
   Fetch? fetchFn,
-}) {
+}) async {
   final doFetch = fetchFn ?? fetchJson;
-  doFetch(
-        '$apiUrl/auth/register',
-        method: 'POST',
-        body: {'name': name, 'email': email, 'password': password},
-      )
-      .then((result) {
-        result.match(
-          onSuccess: (response) {
-            final data = response['data'];
-            switch (data) {
-              case final JSObject d:
-                final token = switch (d['token']) {
-                  final JSString t => t,
-                  _ => null,
-                };
-                final user = switch (d['user']) {
-                  final JSObject u => u,
-                  _ => null,
-                };
-                authEffects.setToken(token);
-                authEffects.setUser(user);
-                authEffects.setView('tasks');
-              case _:
-                authEffects.setToken(null);
-                authEffects.setUser(null);
-                authEffects.setView('tasks');
-            }
-          },
-          onError: (message) => formEffects.setError(message),
-        );
-      })
-      .catchError((Object e) {
-        formEffects.setError(e.toString());
-      })
-      .whenComplete(() {
-        formEffects.setLoading(false);
-      });
+  try {
+    final result = await doFetch(
+      '$apiUrl/auth/register',
+      method: 'POST',
+      body: {'name': name, 'email': email, 'password': password},
+    );
+    result.match(
+      onSuccess: (response) {
+        final data = response['data'];
+        switch (data) {
+          case final JSObject d:
+            final token = switch (d['token']) {
+              final JSString t => t,
+              _ => null,
+            };
+            final user = switch (d['user']) {
+              final JSObject u => u,
+              _ => null,
+            };
+            authEffects.setToken(token);
+            authEffects.setUser(user);
+            authEffects.setView('tasks');
+          case _:
+            authEffects.setToken(null);
+            authEffects.setUser(null);
+            authEffects.setView('tasks');
+        }
+      },
+      onError: (message) => formEffects.setError(message),
+    );
+  } on Object catch (e) {
+    formEffects.setError(e.toString());
+  } finally {
+    formEffects.setLoading(false);
+  }
 }

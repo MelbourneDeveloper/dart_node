@@ -1,4 +1,13 @@
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+
+/// JS binding to convert any value to string using JavaScript's String()
+@JS('String')
+external JSString _jsString(JSAny? value);
+
+/// JS binding to serialize a value to JSON string using JSON.stringify()
+@JS('JSON.stringify')
+external JSString _jsStringify(JSAny? value);
 
 /// WebSocket connection ready states as defined by the WebSocket API.
 ///
@@ -45,14 +54,35 @@ typedef CloseEventData = ({
   String reason,
 });
 
+/// WebSocket message data container.
+///
+/// Messages from the WebSocket can be either string or binary data.
+/// Use `text` for text messages or `bytes` for binary data.
+typedef WebSocketMessage = ({
+  /// The raw string content (if the message is text)
+  String? text,
+
+  /// The raw bytes (if the message is binary)
+  List<int>? bytes,
+});
+
+/// WebSocket error data container.
+typedef WebSocketError = ({
+  /// The error message
+  String message,
+
+  /// The error code (if available)
+  String? code,
+});
+
 /// WebSocket message handler
-typedef MessageHandler = void Function(JSAny data);
+typedef MessageHandler = void Function(WebSocketMessage message);
 
 /// WebSocket close handler
 typedef CloseHandler = void Function(CloseEventData data);
 
 /// WebSocket error handler
-typedef ErrorHandler = void Function(JSAny error);
+typedef ErrorHandler = void Function(WebSocketError error);
 
 /// WebSocket connection handler
 typedef ConnectionHandler = void Function(WebSocketClient client);
@@ -122,8 +152,11 @@ class WebSocketClient {
   /// Sends a string message through the WebSocket.
   void send(String message) => _ws.send(message.toJS);
 
-  /// Sends a JSON-serializable map through the WebSocket.
-  void sendJson(Map<String, Object?> data) => _ws.send(data.jsify()!);
+  /// Sends a JSON-serializable map through the WebSocket as a JSON string.
+  void sendJson(Map<String, Object?> data) {
+    final jsonStr = _jsStringify(data.jsify());
+    _ws.send(jsonStr);
+  }
 
   /// Closes the WebSocket connection.
   ///
@@ -135,8 +168,19 @@ class WebSocketClient {
   bool get isOpen => _ws.readyState == WebSocketReadyState.open.value;
 
   /// Registers a handler for incoming messages
-  void onMessage(MessageHandler handler) =>
-      _ws.on('message', ((JSAny data) => handler(data)).toJS);
+  void onMessage(MessageHandler handler) => _ws.on(
+    'message',
+    ((JSAny data) => handler(_extractMessage(data))).toJS,
+  );
+
+  WebSocketMessage _extractMessage(JSAny data) {
+    // For Node.js Buffer and other objects, use JS String() function
+    final str = _jsString(data).toDart;
+    return (text: str.isNotEmpty ? str : null, bytes: null);
+  }
+
+  /// Converts a JSAny to string by calling JavaScript's String() function.
+  String _jsAnyToString(JSAny data) => _jsString(data).toDart;
 
   /// Registers a handler for connection close events
   void onClose(CloseHandler handler) => _ws.on(
@@ -150,10 +194,28 @@ class WebSocketClient {
   String _extractCloseReason(JSAny? reason) => switch (reason) {
     null => '',
     final JSString s => s.toDart,
-    _ => reason.toString(),
+    final JSAny data => _jsAnyToString(data),
   };
 
   /// Registers a handler for error events
-  void onError(ErrorHandler handler) =>
-      _ws.on('error', ((JSAny error) => handler(error)).toJS);
+  void onError(ErrorHandler handler) => _ws.on(
+    'error',
+    ((JSAny error) => handler(_extractError(error))).toJS,
+  );
+
+  WebSocketError _extractError(JSAny error) {
+    final obj = switch (error) {
+      final JSObject o => o,
+      _ => null,
+    };
+    final message = switch (obj?['message']) {
+      final JSString s => s.toDart,
+      _ => error.toString(),
+    };
+    final code = switch (obj?['code']) {
+      final JSString s => s.toDart,
+      _ => null,
+    };
+    return (message: message, code: code);
+  }
 }

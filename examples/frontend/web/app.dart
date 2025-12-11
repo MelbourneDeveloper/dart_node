@@ -84,32 +84,33 @@ ReactElement _buildTaskManager(
 
     // Fetch tasks on mount
     useEffect(() {
-      unawaited(
-        doFetch('$apiUrl/tasks', token: token)
-            .then((result) {
-              result.match(
-                onSuccess: (response) {
-                  switch (response['data']) {
-                    case final JSArray tasks:
-                      final taskList = <JSTask>[
-                        for (final item in tasks.toDart)
-                          if (item case final JSObject task)
-                            JSTask.fromJS(task),
-                      ];
-                      tasksState.set(taskList);
-                      errorState.set(null);
-                    default:
-                      tasksState.set(<JSTask>[]);
-                  }
-                },
-                onError: errorState.set,
-              );
-            })
-            .catchError((Object e) {
-              errorState.set(e.toString());
-            })
-            .whenComplete(() => loadingState.set(false)),
-      );
+      Future<void> loadTasks() async {
+        try {
+          final result = await doFetch('$apiUrl/tasks', token: token);
+          result.match(
+            onSuccess: (response) {
+              switch (response['data']) {
+                case final JSArray tasks:
+                  final taskList = <JSTask>[
+                    for (final item in tasks.toDart)
+                      if (item case final JSObject task) JSTask.fromJS(task),
+                  ];
+                  tasksState.set(taskList);
+                  errorState.set(null);
+                default:
+                  tasksState.set(<JSTask>[]);
+              }
+            },
+            onError: errorState.set,
+          );
+        } on Object catch (e) {
+          errorState.set(e.toString());
+        } finally {
+          loadingState.set(false);
+        }
+      }
+
+      unawaited(loadTasks());
       return null;
     }, []);
 
@@ -136,80 +137,73 @@ ReactElement _buildTaskManager(
       return () => ws?.close();
     }, [token]);
 
-    void addTask() {
+    Future<void> addTask() async {
       switch (newTaskState.value.trim().isEmpty) {
         case true:
           return;
         case false:
           errorState.set(null);
-          unawaited(
-            doFetch(
-              '$apiUrl/tasks',
-              method: 'POST',
-              token: token,
-              body: {
-                'title': newTaskState.value,
-                'description': descState.value,
-              },
-            ).then((result) {
-              result.match(
-                onSuccess: (response) {
-                  switch (response['data']) {
-                    case final JSObject created:
-                      final newTask = JSTask.fromJS(created);
-                      tasksState.setWithUpdater(
-                        (prev) => addTaskIfNotExists(prev, newTask),
-                      );
-                      newTaskState.set('');
-                      descState.set('');
-                    default:
-                      errorState.set('Invalid task payload');
-                  }
-                },
-                onError: errorState.set,
-              );
-            }),
+          final result = await doFetch(
+            '$apiUrl/tasks',
+            method: 'POST',
+            token: token,
+            body: {
+              'title': newTaskState.value,
+              'description': descState.value,
+            },
           );
-      }
-    }
-
-    void toggleTask(String id, bool completed) {
-      unawaited(
-        doFetch(
-          '$apiUrl/tasks/$id',
-          method: 'PUT',
-          token: token,
-          body: {'completed': !completed},
-        ).then((result) {
           result.match(
             onSuccess: (response) {
               switch (response['data']) {
-                case final JSObject updatedTask:
+                case final JSObject created:
+                  final newTask = JSTask.fromJS(created);
                   tasksState.setWithUpdater(
-                    (prev) => updateTaskById(prev, JSTask.fromJS(updatedTask)),
+                    (prev) => addTaskIfNotExists(prev, newTask),
                   );
+                  newTaskState.set('');
+                  descState.set('');
                 default:
                   errorState.set('Invalid task payload');
               }
             },
             onError: errorState.set,
           );
-        }),
+      }
+    }
+
+    Future<void> toggleTask(String id, bool completed) async {
+      final result = await doFetch(
+        '$apiUrl/tasks/$id',
+        method: 'PUT',
+        token: token,
+        body: {'completed': !completed},
+      );
+      result.match(
+        onSuccess: (response) {
+          switch (response['data']) {
+            case final JSObject updatedTask:
+              tasksState.setWithUpdater(
+                (prev) => updateTaskById(prev, JSTask.fromJS(updatedTask)),
+              );
+            default:
+              errorState.set('Invalid task payload');
+          }
+        },
+        onError: errorState.set,
       );
     }
 
-    void deleteTask(String id) {
-      unawaited(
-        doFetch('$apiUrl/tasks/$id', method: 'DELETE', token: token).then((
-          result,
-        ) {
-          result.match(
-            onSuccess: (_) {
-              tasksState.setWithUpdater((prev) => removeTaskById(prev, id));
-            },
-            onError: errorState.set,
-          );
-        }),
+    Future<void> deleteTask(String id) async {
+      final result = await doFetch(
+        '$apiUrl/tasks/$id',
+        method: 'DELETE',
+        token: token,
+      );
+      result.match(
+        onSuccess: (_) {
+          tasksState.setWithUpdater((prev) => removeTaskById(prev, id));
+        },
+        onError: errorState.set,
       );
     }
 

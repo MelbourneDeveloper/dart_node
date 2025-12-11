@@ -17,6 +17,7 @@ MANDATORY: TOO MANY COOKS
 - Use async/await. Do not use `.then`
 - NO DUPLICATION. Move files, code elements instead of copying them. Search for elements before adding them. HIGHEST PRIORITY. PRIORITIZE THIS OVER ALL ELSE!!
 - Prefer typedef records with named fields instead of classes for data (structural typing). This mimics Typescript better
+- Shoot for 100% test coverage on each package with HIGH LEVEL, MEANINGFUL tests. Avoid unit tests and mocking.
 - Return Result<T,E> from the nadz library for any function that could throw an exception. NO THROWING EXCEPTIONS.
 - Don't make consecutive log calls. Use string interpolation
 - Avoid casting!!! [! `as` `late`] are all ILLEGAL!!! U

@@ -13,6 +13,7 @@ dependencies:
     path: ../dart_node_core
   dart_node_react:
     path: ../dart_node_react
+  nadz: ^0.0.7-beta
 
 dev_dependencies:
   lints: ^5.0.0
