@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0-beta
+
+- Version bump for upcoming release
+
 ## 0.2.0-beta
 
 - Add WebSocket support via dart_node_ws package

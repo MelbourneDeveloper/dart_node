@@ -27,6 +27,7 @@ sealed class Fault {
 
 /// Represents a fault caused by an [Exception]
 final class ExceptionFault extends Fault {
+  /// Creates an [ExceptionFault] with the given [exception] and [stackTrace]
   const ExceptionFault(this.exception, StackTrace stackTrace)
     : super._internal(stackTrace);
 
@@ -36,6 +37,7 @@ final class ExceptionFault extends Fault {
 
 /// Represents a fault caused by an [Error]
 final class ErrorFault extends Fault {
+  /// Creates an [ErrorFault] with the given [error] and [stackTrace]
   const ErrorFault(this.error, StackTrace stackTrace)
     : super._internal(stackTrace);
 
@@ -45,6 +47,7 @@ final class ErrorFault extends Fault {
 
 /// Represents a fault with a text message
 final class MessageFault extends Fault {
+  /// Creates a [MessageFault] with the given [text] and [stackTrace]
   const MessageFault(this.text, StackTrace stackTrace)
     : super._internal(stackTrace);
 
@@ -54,6 +57,7 @@ final class MessageFault extends Fault {
 
 /// Represents an unknown fault type
 final class UnknownFault extends Fault {
+  /// Creates an [UnknownFault] with the given [object] and [stackTrace]
   const UnknownFault(this.object, StackTrace stackTrace)
     : super._internal(stackTrace);
 
@@ -245,6 +249,7 @@ extension LoggingContextExtensions on LoggingContext {
     }
   }
 
+  /// Initializes all transports in the logging context
   Future<void> initialize() async {
     for (final transport in transports) {
       unawaited(transport.initialize());
@@ -283,6 +288,7 @@ Logger createLogger(LoggingContext context) => (
 
 /// Pino-style extensions for Logger
 extension LoggerExtensions on Logger {
+  /// Logs a trace-level message
   void trace(
     String message, {
     Map<String, dynamic>? structuredData,
@@ -294,6 +300,7 @@ extension LoggerExtensions on Logger {
     tags: tags,
   );
 
+  /// Logs a debug-level message
   void debug(
     String message, {
     Map<String, dynamic>? structuredData,
@@ -305,6 +312,7 @@ extension LoggerExtensions on Logger {
     tags: tags,
   );
 
+  /// Logs an info-level message
   void info(
     String message, {
     Map<String, dynamic>? structuredData,
@@ -316,6 +324,7 @@ extension LoggerExtensions on Logger {
     tags: tags,
   );
 
+  /// Logs a warning-level message
   void warn(
     String message, {
     Map<String, dynamic>? structuredData,
@@ -327,6 +336,7 @@ extension LoggerExtensions on Logger {
     tags: tags,
   );
 
+  /// Logs an error-level message
   void error(
     String message, {
     Map<String, dynamic>? structuredData,
@@ -338,6 +348,7 @@ extension LoggerExtensions on Logger {
     tags: tags,
   );
 
+  /// Logs a fatal-level message
   void fatal(
     String message, {
     Map<String, dynamic>? structuredData,

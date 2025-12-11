@@ -5,9 +5,10 @@ import 'dart:js_interop_unsafe';
 export 'package:shared/js_types/js_types.dart';
 
 /// API configuration - reads from global set by build preamble
-String get apiUrl =>
-    (globalContext['__API_URL__'] as JSString?)?.toDart ??
-    'http://localhost:3000';
+String get apiUrl => switch (globalContext['__API_URL__']) {
+  final JSString s => s.toDart,
+  _ => 'http://localhost:3000',
+};
 
 /// WebSocket URL - derives from API URL (port 3001)
 String get wsUrl {

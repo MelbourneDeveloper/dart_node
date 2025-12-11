@@ -32,6 +32,10 @@ const PACKAGES = [
   'dart_node_react',
   'dart_node_react_native',
   'dart_node_ws',
+  'dart_node_better_sqlite3',
+  'dart_node_mcp',
+  'dart_logging',
+  'reflux',
 ];
 
 // Base URLs for external documentation
@@ -65,6 +69,18 @@ const PACKAGE_DOCS = {
     { name: 'ws (WebSocket) npm', url: 'https://github.com/websockets/ws' },
     { name: 'WebSocket API (MDN)', url: 'https://developer.mozilla.org/en-US/docs/Web/API/WebSocket' },
   ],
+  dart_node_better_sqlite3: [
+    { name: 'better-sqlite3 npm', url: 'https://github.com/WiseLibs/better-sqlite3' },
+    { name: 'better-sqlite3 API', url: 'https://github.com/WiseLibs/better-sqlite3/blob/master/docs/api.md' },
+  ],
+  dart_node_mcp: [
+    { name: 'Model Context Protocol', url: 'https://modelcontextprotocol.io/' },
+    { name: 'MCP Specification', url: 'https://spec.modelcontextprotocol.io/' },
+  ],
+  dart_logging: [
+    { name: 'Dart logging package', url: 'https://pub.dev/packages/logging' },
+  ],
+  reflux: [],
 };
 
 // Maps element name patterns to doc generators
@@ -422,6 +438,26 @@ description: Complete API documentation for all dart_node packages
   <a href="/api/dart_node_ws/" class="feature-card">
     <h3>dart_node_ws</h3>
     <p>WebSocket bindings for real-time communication.</p>
+  </a>
+
+  <a href="/api/dart_node_better_sqlite3/" class="feature-card">
+    <h3>dart_node_better_sqlite3</h3>
+    <p>SQLite bindings using better-sqlite3 for Node.js.</p>
+  </a>
+
+  <a href="/api/dart_node_mcp/" class="feature-card">
+    <h3>dart_node_mcp</h3>
+    <p>Model Context Protocol (MCP) bindings for AI tool integration.</p>
+  </a>
+
+  <a href="/api/dart_logging/" class="feature-card">
+    <h3>dart_logging</h3>
+    <p>Logging utilities for Dart applications.</p>
+  </a>
+
+  <a href="/api/reflux/" class="feature-card">
+    <h3>reflux</h3>
+    <p>Redux-style state management for Dart.</p>
   </a>
 </div>
 `;

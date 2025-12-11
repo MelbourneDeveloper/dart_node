@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{{testName}}</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .counter-app { max-width: 400px; margin: 0 auto; text-align: center; }
+    .counter-display { font-size: 3rem; margin: 20px 0; }
+    .controls, .actions, .step-control { margin: 10px 0; }
+    .btn { cursor: pointer; padding: 0.5rem 1rem; margin: 0 5px; border: 1px solid #ccc; border-radius: 4px; }
+    .btn.primary { background: #4CAF50; color: white; border-color: #4CAF50; }
+    .btn.danger { background: #f44336; color: white; border-color: #f44336; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .stats { margin-top: 20px; color: #666; }
+  </style>
+  <script src="packages/test/dart.js"></script>
+  {{testScript}}
+</head>
+<body></body>
+</html>

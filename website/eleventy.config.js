@@ -1,8 +1,26 @@
 import syntaxHighlight from "@11ty/eleventy-plugin-syntaxhighlight";
 import pluginRss from "@11ty/eleventy-plugin-rss";
 import eleventyNavigationPlugin from "@11ty/eleventy-navigation";
+import markdownIt from "markdown-it";
+import markdownItAnchor from "markdown-it-anchor";
 
 export default function(eleventyConfig) {
+  // Configure markdown-it with anchor plugin for header IDs
+  const mdOptions = {
+    html: true,
+    breaks: false,
+    linkify: true
+  };
+
+  const mdAnchorOptions = {
+    permalink: markdownItAnchor.permalink.headerLink(),
+    slugify: (s) => s.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
+    level: [1, 2, 3, 4]
+  };
+
+  const md = markdownIt(mdOptions).use(markdownItAnchor, mdAnchorOptions);
+  eleventyConfig.setLibrary("md", md);
+
   // Plugins
   eleventyConfig.addPlugin(syntaxHighlight);
   eleventyConfig.addPlugin(pluginRss);

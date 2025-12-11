@@ -10,9 +10,8 @@ import 'package:nadz/nadz.dart';
 /// A prepared SQL statement.
 typedef Statement = ({
   /// Execute and return all rows.
-  Result<List<Map<String, Object?>>, String> Function([
-    List<Object?>? params,
-  ]) all,
+  Result<List<Map<String, Object?>>, String> Function([List<Object?>? params])
+  all,
 
   /// Execute and return first row or null.
   Result<Map<String, Object?>?, String> Function([List<Object?>? params]) get,
@@ -23,10 +22,10 @@ typedef Statement = ({
 
 /// Create a Statement from a JS object.
 Statement createStatement(JSObject jsStmt) => (
-      all: ([params]) => _stmtAll(jsStmt, params),
-      get: ([params]) => _stmtGet(jsStmt, params),
-      run: ([params]) => _stmtRun(jsStmt, params),
-    );
+  all: ([params]) => _stmtAll(jsStmt, params),
+  get: ([params]) => _stmtGet(jsStmt, params),
+  run: ([params]) => _stmtRun(jsStmt, params),
+);
 
 JSAny? _jsifyParam(Object? p) => p.jsify();
 

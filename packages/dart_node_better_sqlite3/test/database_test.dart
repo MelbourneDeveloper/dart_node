@@ -417,8 +417,7 @@ void main() {
       final selectStmt = (selectResult as Success<Statement, String>).value;
       final getResult = selectStmt.get();
       expect(getResult, isA<Success<Map<String, Object?>?, String>>());
-      final row =
-          (getResult as Success<Map<String, Object?>?, String>).value;
+      final row = (getResult as Success<Map<String, Object?>?, String>).value;
       expect(row!['balance'], 200);
     });
 
@@ -433,8 +432,7 @@ void main() {
       final selectStmt = (selectResult as Success<Statement, String>).value;
       final getResult = selectStmt.get();
       expect(getResult, isA<Success<Map<String, Object?>?, String>>());
-      final row =
-          (getResult as Success<Map<String, Object?>?, String>).value;
+      final row = (getResult as Success<Map<String, Object?>?, String>).value;
       expect(row!['balance'], 100);
     });
   });

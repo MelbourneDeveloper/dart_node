@@ -5,12 +5,12 @@ This is a project for Dart packages to be consumed on Node for building node-bas
 MANDATORY: TOO MANY COOKS
  - check your messages regularly
  - lock files with too many cooks before editing, and unlock afterwards
- - do not edit files that other have locked up
+ - do not edit files that others have locked up
  - always signal your intent to other agents
- - If you are coordinator, keep doling out orders until the grande scheme has been achieved
- - If you are not coordinator, DOT NOT STOP and keep asking for something to do
+ - If you are coordinator, keep delegating until the grande scheme has been achieved
+ - If you are not coordinator, don't stop and keep asking for something to do
  - Routinely clean up expired locks
- - Don't ever stop and if you find yourself with nothing to do, check someone else's plan and help them
+ - If you find yourself with nothing to do, check someone else's plan and help them
 
 # Rules
 - All Dart. Absolutely minimal JS
@@ -20,6 +20,7 @@ MANDATORY: TOO MANY COOKS
 - Return Result<T,E> from the nadz library for any function that could throw an exception. NO THROWING EXCEPTIONS.
 - Don't make consecutive log calls. Use string interpolation
 - Avoid casting!!! [! `as` `late`] are all ILLEGAL!!! U
+- Don't break tests into groups. Break them into files instead!!
 - Use pattern matching switch expressions or ternaries. The exceptional case is if inside arrays and maps because these are declarative and not imperaative.
 - All packages MUST have austerity installed for linting and nadz for Result<T,E> types
 - Do not expose `JSObject` or `JSAny` etc in the public APIs. Put types over everything. The library packages are supposed to put a TYPED layer over these

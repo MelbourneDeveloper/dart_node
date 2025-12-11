@@ -1,21 +1,35 @@
 # dart_node_react
 
-React bindings for Dart. Build React web applications entirely in Dart with full type safety and familiar React patterns.
+React bindings for Dart. Build React web apps entirely in Dart.
 
-Write your entire stack in Dart: React web apps, React Native mobile apps with Expo, and Node.js Express backends.
+## Getting Started
 
-## Package Architecture
+```dart
+import 'package:dart_node_react/dart_node_react.dart';
 
-```mermaid
-graph TD
-    B[dart_node_express] --> A[dart_node_core]
-    C[dart_node_ws] --> A
-    D[dart_node_react] --> A
-    E[dart_node_react_native] --> D
-    B -.-> F[express npm]
-    C -.-> G[ws npm]
-    D -.-> H[react npm]
-    E -.-> I[react-native npm]
+void main() {
+  final app = div(
+    props: {'className': 'app'},
+    children: [
+      h1(children: ['Hello from Dart!']),
+      button(
+        props: {'onClick': () => print('Clicked!')},
+        children: ['Click me'],
+      ),
+    ],
+  );
+
+  render(app, querySelector('#root'));
+}
 ```
 
-Part of the [dart_node](https://github.com/MelbourneDeveloper/dart_node) package family.
+## Run
+
+```bash
+dart compile js -o app.js lib/main.dart
+# Serve with your preferred static server
+```
+
+## Part of dart_node
+
+[GitHub](https://github.com/MelbourneDeveloper/dart_node)

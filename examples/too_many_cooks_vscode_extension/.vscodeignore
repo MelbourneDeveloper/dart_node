@@ -8,6 +8,7 @@ test-fixtures/**
 tsconfig.json
 *.sh
 .too_many_cooks.db*
+out/test/**
 # Include production dependencies, exclude dev dependencies
 node_modules/**
 !node_modules/@preact/**

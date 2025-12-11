@@ -53,7 +53,11 @@ void main(List<String> args) {
   print('Publishing order: ${publishOrder.join(' -> ')}');
 }
 
-void _preparePackage(Directory packagesDir, String packageName, String version) {
+void _preparePackage(
+  Directory packagesDir,
+  String packageName,
+  String version,
+) {
   final pubspecFile = File('${packagesDir.path}/$packageName/pubspec.yaml');
   if (!pubspecFile.existsSync()) {
     print('Error: $packageName/pubspec.yaml not found');
@@ -88,7 +92,11 @@ void _preparePackage(Directory packagesDir, String packageName, String version) 
   print('$packageName: ${changes.join(", ")}');
 }
 
-String _switchToPubDevDependency(String content, String depName, String version) {
+String _switchToPubDevDependency(
+  String content,
+  String depName,
+  String version,
+) {
   // Match path dependency format
   final pathPattern = RegExp(
     '$depName:\\s*\\n\\s*path:\\s*[^\\n]+',

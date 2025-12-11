@@ -9,16 +9,28 @@ extension type BrowserWebSocket(JSObject _) implements JSObject {
   external void send(String data);
   external int get readyState;
 
-  JSFunction? get onopen => this['onopen'] as JSFunction?;
+  JSFunction? get onopen => switch (this['onopen']) {
+    final JSFunction f => f,
+    _ => null,
+  };
   set onopen(JSFunction? handler) => this['onopen'] = handler;
 
-  JSFunction? get onmessage => this['onmessage'] as JSFunction?;
+  JSFunction? get onmessage => switch (this['onmessage']) {
+    final JSFunction f => f,
+    _ => null,
+  };
   set onmessage(JSFunction? handler) => this['onmessage'] = handler;
 
-  JSFunction? get onclose => this['onclose'] as JSFunction?;
+  JSFunction? get onclose => switch (this['onclose']) {
+    final JSFunction f => f,
+    _ => null,
+  };
   set onclose(JSFunction? handler) => this['onclose'] = handler;
 
-  JSFunction? get onerror => this['onerror'] as JSFunction?;
+  JSFunction? get onerror => switch (this['onerror']) {
+    final JSFunction f => f,
+    _ => null,
+  };
   set onerror(JSFunction? handler) => this['onerror'] = handler;
 }
 
@@ -29,7 +41,10 @@ extension type MessageEvent(JSObject _) implements JSObject {
 
 /// Create a new WebSocket connection
 BrowserWebSocket createWebSocket(String url) {
-  final wsCtor = globalContext['WebSocket']! as JSFunction;
+  final wsCtor = switch (globalContext['WebSocket']) {
+    final JSFunction f => f,
+    _ => throw StateError('WebSocket not available'),
+  };
   return BrowserWebSocket(wsCtor.callAsConstructor<JSObject>(url.toJS));
 }
 
@@ -47,16 +62,10 @@ BrowserWebSocket? connectWebSocket({
     }).toJS
     ..onmessage = ((MessageEvent event) {
       final data = event.data;
-      switch (data.isA<JSString>()) {
-        case true:
-          final message = data.dartify() as String?;
-          switch (message) {
-            case final String m:
-              handleWebSocketMessage(m, onTaskEvent);
-            case null:
-              break;
-          }
-        case false:
+      switch (data) {
+        case final JSString jsStr:
+          handleWebSocketMessage(jsStr.toDart, onTaskEvent);
+        case _:
           break;
       }
     }).toJS
@@ -75,8 +84,17 @@ void handleWebSocketMessage(
   String message,
   void Function(JSObject) onTaskEvent,
 ) {
-  final json = globalContext['JSON']! as JSObject;
-  final parseFn = json['parse']! as JSFunction;
-  final parsed = parseFn.callAsFunction(null, message.toJS)! as JSObject;
+  final json = switch (globalContext['JSON']) {
+    final JSObject o => o,
+    _ => throw StateError('JSON not available'),
+  };
+  final parseFn = switch (json['parse']) {
+    final JSFunction f => f,
+    _ => throw StateError('JSON.parse not available'),
+  };
+  final parsed = switch (parseFn.callAsFunction(null, message.toJS)) {
+    final JSObject o => o,
+    _ => throw StateError('Failed to parse JSON'),
+  };
   onTaskEvent(parsed);
 }

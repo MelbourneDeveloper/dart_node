@@ -95,14 +95,14 @@ packages:
       path: "../dart_node_core"
       relative: true
     source: path
-    version: "0.2.0-beta"
+    version: "0.9.0-beta"
   dart_node_react:
     dependency: "direct main"
     description:
       path: "../dart_node_react"
       relative: true
     source: path
-    version: "0.2.0-beta"
+    version: "0.9.0-beta"
   file:
     dependency: transitive
     description:
@@ -192,7 +192,7 @@ packages:
     source: hosted
     version: "2.0.0"
   nadz:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: nadz
       sha256: "749586d5d9c94c3660f85c4fa41979345edd5179ef221d6ac9127f36ca1674f8"

@@ -197,7 +197,8 @@ String? _searchEntryPoints(String exampleDir, List<String> remaining) {
   // Get output name from entry point (bin/server.dart -> bin/server.js)
   final entryRelative = entryPoint.replaceFirst('$exampleDir/', '');
   final outputPath = entryRelative.replaceAll('.dart', '.js');
-  final outputDir = '$buildDir/${outputPath.contains('/') ? outputPath.substring(0, outputPath.lastIndexOf('/')) : ''}';
+  final outputDir =
+      '$buildDir/${outputPath.contains('/') ? outputPath.substring(0, outputPath.lastIndexOf('/')) : ''}';
   Directory(outputDir).createSync(recursive: true);
   final outputName = outputPath.split('/').last;
   final tempOutput = '$outputDir/temp_$outputName';
