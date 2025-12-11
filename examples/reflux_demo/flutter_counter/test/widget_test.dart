@@ -24,7 +24,7 @@ void main() {
       (tester) async {
     await tester.pumpWidget(const CounterApp());
 
-    expect(find.text('Statecore Counter'), findsOneWidget);
+    expect(find.text('Reflux Counter'), findsOneWidget);
     expect(_countText('0'), findsOneWidget);
     expect(_incrementBtn(), findsOneWidget);
     expect(_decrementBtn(), findsOneWidget);

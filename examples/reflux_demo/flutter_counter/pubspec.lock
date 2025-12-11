@@ -67,7 +67,7 @@ packages:
   dart_logging:
     dependency: transitive
     description:
-      path: "../../../../packages/dart_logging"
+      path: "../../../packages/dart_logging"
       relative: true
     source: path
     version: "0.9.0-beta"
@@ -172,7 +172,7 @@ packages:
   reflux:
     dependency: "direct main"
     description:
-      path: "../../../../packages/reflux"
+      path: "../../../packages/reflux"
       relative: true
     source: path
     version: "0.9.0-beta"

@@ -5,7 +5,6 @@ A counter app demonstrating **shared state logic** between Flutter and React web
 ## Project Structure
 
 ```
-packages/
 ├── counter_state/       # SHARED: Pure Dart state management
 │   └── lib/counter_state.dart
 ├── flutter_counter/     # Flutter app
@@ -20,14 +19,14 @@ packages/
 ## Running the Flutter App
 
 ```bash
-cd packages/flutter_counter
+cd flutter_counter
 flutter run
 ```
 
 ## Running the Web App
 
 ```bash
-cd packages/web_counter
+cd web_counter
 
 # Compile Dart to JS
 dart compile js web/app.dart -o web/build/app.js
@@ -43,11 +42,11 @@ open http://localhost:8080/web/
 
 ```bash
 # Flutter tests
-cd packages/flutter_counter
+cd flutter_counter
 flutter test
 
 # Web tests
-cd packages/web_counter
+cd web_counter
 dart test -p chrome
 ```
 

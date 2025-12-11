@@ -73,6 +73,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
+  counter_state:
+    dependency: "direct main"
+    description:
+      path: "../counter_state"
+      relative: true
+    source: path
+    version: "1.0.0"
   coverage:
     dependency: transitive
     description:
@@ -90,9 +97,23 @@ packages:
     source: hosted
     version: "3.0.7"
   dart_logging:
+    dependency: transitive
+    description:
+      path: "../../../packages/dart_logging"
+      relative: true
+    source: path
+    version: "0.9.0-beta"
+  dart_node_core:
+    dependency: transitive
+    description:
+      path: "../../../packages/dart_node_core"
+      relative: true
+    source: path
+    version: "0.9.0-beta"
+  dart_node_react:
     dependency: "direct main"
     description:
-      path: "../../../../packages/dart_logging"
+      path: "../../../packages/dart_node_react"
       relative: true
     source: path
     version: "0.9.0-beta"
@@ -225,9 +246,9 @@ packages:
     source: hosted
     version: "2.2.0"
   reflux:
-    dependency: "direct main"
+    dependency: transitive
     description:
-      path: "../../../../packages/reflux"
+      path: "../../../packages/reflux"
       relative: true
     source: path
     version: "0.9.0-beta"

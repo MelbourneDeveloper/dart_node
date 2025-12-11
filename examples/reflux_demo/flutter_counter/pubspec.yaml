@@ -13,7 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
   reflux:
-    path: ../../../../packages/reflux
+    path: ../../../packages/reflux
 
 dev_dependencies:
   flutter_test:

@@ -11,7 +11,7 @@ dependencies:
   counter_state:
     path: ../counter_state
   dart_node_react:
-    path: ../../../../packages/dart_node_react
+    path: ../../../packages/dart_node_react
   nadz: ^0.0.7-beta
 
 dev_dependencies:
