@@ -1,11 +1,13 @@
 /// Tests for dart_node_ws library types and APIs.
 ///
-/// These tests run in JS environment to get coverage for the actual library.
-@TestOn('js')
+/// These tests run in Node.js environment to get coverage for the library.
+@TestOn('node')
 library;
 
 import 'package:dart_node_ws/dart_node_ws.dart';
 import 'package:test/test.dart';
+
+//TODO: we need actual web socket server/client interaction tests here.
 
 void main() {
   group('WebSocketReadyState', () {

@@ -1,7 +1,7 @@
 /// Tests for dart_node_express library types and APIs.
 ///
-/// These tests run in JS environment to get coverage for the actual library.
-@TestOn('js')
+/// These tests run in Node.js environment to get coverage for the library.
+@TestOn('node')
 library;
 
 import 'dart:js_interop';

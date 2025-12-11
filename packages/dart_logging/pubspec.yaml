@@ -1,6 +1,6 @@
 name: dart_logging
 description: A logging framework with structured logging, child loggers, and console output.
-version: 1.0.0
+version: 0.9.0-beta
 
 environment:
   sdk: ^3.7.2
