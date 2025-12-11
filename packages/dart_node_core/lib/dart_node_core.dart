@@ -4,3 +4,4 @@ library;
 export 'src/extensions.dart';
 export 'src/interop.dart';
 export 'src/node.dart';
+export 'src/retry.dart';
