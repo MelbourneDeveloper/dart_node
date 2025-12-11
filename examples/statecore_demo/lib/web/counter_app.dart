@@ -95,5 +95,5 @@ ReactElement counterApp({Store<CounterState>? store}) => createElement(
 /// Hook to force re-render
 void Function() _useForceUpdate() {
   final state = useState(0);
-  return () => state.set(state.value + 1);
+  return () => state.setWithUpdater((prev) => prev + 1);
 }
