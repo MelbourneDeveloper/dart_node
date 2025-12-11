@@ -83,4 +83,90 @@ void main() {
     expect(ref1.current, equals('hello'));
     expect(ref2.current, isNull);
   });
+
+  test('useRef stores complex Dart objects correctly', () {
+    final complexRefComponent = registerFunctionComponent((props) {
+      final counterRef = useRef<_Counter>();
+      final forceUpdate = useState(0);
+
+      if (counterRef.current == null) {
+        counterRef.current = _Counter();
+      }
+
+      return div(
+        children: [
+          pEl(
+            'Count: ${counterRef.current!.value}',
+            props: {'data-testid': 'count'},
+          ),
+          button(
+            text: 'Increment',
+            props: {'data-testid': 'increment'},
+            onClick: () {
+              counterRef.current!.increment();
+              forceUpdate.set(forceUpdate.value + 1);
+            },
+          ),
+        ],
+      );
+    });
+
+    final result = render(fc(complexRefComponent));
+
+    expect(result.getByTestId('count').textContent, equals('Count: 0'));
+
+    fireClick(result.getByTestId('increment'));
+    expect(result.getByTestId('count').textContent, equals('Count: 1'));
+
+    fireClick(result.getByTestId('increment'));
+    expect(result.getByTestId('count').textContent, equals('Count: 2'));
+
+    fireClick(result.getByTestId('increment'));
+    expect(result.getByTestId('count').textContent, equals('Count: 3'));
+
+    result.unmount();
+  });
+
+  test('useRef preserves object identity across renders', () {
+    _Counter? capturedCounter;
+
+    final identityComponent = registerFunctionComponent((props) {
+      final counterRef = useRef<_Counter>();
+      final forceUpdate = useState(0);
+
+      if (counterRef.current == null) {
+        counterRef.current = _Counter();
+      }
+
+      capturedCounter = counterRef.current;
+
+      return div(
+        children: [
+          pEl('Value: ${counterRef.current!.value}'),
+          button(
+            text: 'Re-render',
+            props: {'data-testid': 'rerender'},
+            onClick: () => forceUpdate.set(forceUpdate.value + 1),
+          ),
+        ],
+      );
+    });
+
+    final result = render(fc(identityComponent));
+    final firstCounter = capturedCounter;
+    expect(firstCounter, isNotNull);
+
+    fireClick(result.getByTestId('rerender'));
+    expect(capturedCounter, same(firstCounter), reason: 'Object identity lost');
+
+    fireClick(result.getByTestId('rerender'));
+    expect(capturedCounter, same(firstCounter), reason: 'Object identity lost');
+
+    result.unmount();
+  });
+}
+
+final class _Counter {
+  int value = 0;
+  void increment() => value++;
 }

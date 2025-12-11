@@ -119,6 +119,62 @@ void _assertFullState(
 }
 
 void main() {
+  test('app works without externally provided store', () async {
+    // This tests the real app scenario where no store is passed
+    final r = render(counterApp());
+
+    // Initial state
+    expect(r.container.querySelector('.count')!.textContent, '0');
+    expect(r.container.textContent, contains('History: 1 entries'));
+
+    // Click increment - this is where the bug manifests
+    fireClick(_getIncrementBtn(r));
+    await waitForText(r, 'History: 2 entries');
+    expect(
+      r.container.querySelector('.count')!.textContent,
+      '1',
+      reason: 'Count should be 1 after increment',
+    );
+
+    // Click again to verify store persists across renders
+    fireClick(_getIncrementBtn(r));
+    await waitForText(r, 'History: 3 entries');
+    expect(
+      r.container.querySelector('.count')!.textContent,
+      '2',
+      reason: 'Count should be 2 after second increment',
+    );
+
+    // Continue to verify the store state is truly preserved
+    fireClick(_getIncrementBtn(r));
+    await waitForText(r, 'History: 4 entries');
+    expect(
+      r.container.querySelector('.count')!.textContent,
+      '3',
+      reason: 'Count should be 3 after third increment',
+    );
+
+    // Verify decrement works (proves store is functional)
+    fireClick(_getDecrementBtn(r));
+    await waitForText(r, 'History: 5 entries');
+    expect(
+      r.container.querySelector('.count')!.textContent,
+      '2',
+      reason: 'Count should be 2 after decrement',
+    );
+
+    // Verify undo works (proves history is preserved in store)
+    fireClick(_getUndoBtn(r));
+    await waitForText(r, 'History: 4 entries');
+    expect(
+      r.container.querySelector('.count')!.textContent,
+      '3',
+      reason: 'Count should be 3 after undo',
+    );
+
+    r.unmount();
+  });
+
   test('full user journey: increment, decrement, step change, undo, reset',
       () async {
     final store = createCounterStore();
@@ -579,7 +635,7 @@ void main() {
       canUndo: true,
       min: 0,
       max: 10,
-      avg: '5.0',
+      avg: '5.6',
     );
 
     r.unmount();

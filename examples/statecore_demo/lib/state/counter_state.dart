@@ -80,7 +80,7 @@ CounterState counterReducer(CounterState state, Action action) {
         step: step,
         history: [...history, count - step],
       ),
-    Reset() => initialState(),
+    Reset() => (count: 0, step: step, history: [0]),
     SetStep(:final step) => (
         count: count,
         step: step,
