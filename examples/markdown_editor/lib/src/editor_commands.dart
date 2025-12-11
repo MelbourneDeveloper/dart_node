@@ -73,8 +73,10 @@ void saveSelection() {
   if (count > 0) {
     final getRangeAt = selection['getRangeAt'];
     if (getRangeAt != null && getRangeAt.isA<JSFunction>()) {
-      final range = (getRangeAt as JSFunction)
-          .callAsFunction(selection, 0.toJS);
+      final range = (getRangeAt as JSFunction).callAsFunction(
+        selection,
+        0.toJS,
+      );
       if (range != null && range.isA<JSObject>()) {
         // Save the common ancestor container to focus later
         final container = (range as JSObject)['commonAncestorContainer'];

@@ -73,22 +73,22 @@ CounterState counterReducer(CounterState state, Action action) {
 
   return switch (action) {
     Increment() => (
-        count: count + step,
-        step: step,
-        history: [...history, count + step],
-      ),
+      count: count + step,
+      step: step,
+      history: [...history, count + step],
+    ),
     Decrement() => (
-        count: count - step,
-        step: step,
-        history: [...history, count - step],
-      ),
+      count: count - step,
+      step: step,
+      history: [...history, count - step],
+    ),
     Reset() => (count: 0, step: step, history: [0]),
     SetStep(:final step) => (count: count, step: step, history: history),
     Undo() when history.length > 1 => (
-        count: history[history.length - 2],
-        step: step,
-        history: history.sublist(0, history.length - 1),
-      ),
+      count: history[history.length - 2],
+      step: step,
+      history: history.sublist(0, history.length - 1),
+    ),
     _ => state,
   };
 }
@@ -113,17 +113,14 @@ final selectCanUndo = createSelector1(
 );
 
 /// Memoized selector that calculates history statistics.
-final selectHistoryStats = createSelector1(
-  selectHistory,
-  (history) {
-    if (history.isEmpty) return (min: 0, max: 0, avg: 0.0);
-    return (
-      min: history.reduce((a, b) => a < b ? a : b),
-      max: history.reduce((a, b) => a > b ? a : b),
-      avg: history.reduce((a, b) => a + b) / history.length,
-    );
-  },
-);
+final selectHistoryStats = createSelector1(selectHistory, (history) {
+  if (history.isEmpty) return (min: 0, max: 0, avg: 0.0);
+  return (
+    min: history.reduce((a, b) => a < b ? a : b),
+    max: history.reduce((a, b) => a > b ? a : b),
+    avg: history.reduce((a, b) => a + b) / history.length,
+  );
+});
 
 // =============================================================================
 // Middleware - logging for debugging
@@ -131,20 +128,21 @@ final selectHistoryStats = createSelector1(
 
 /// Middleware that logs all actions and state changes using dart_logging.
 Middleware<CounterState> loggerMiddleware(Logger logger) =>
-    (api) => (next) => (action) {
-      final before = api.getState();
-      next(action);
-      final after = api.getState();
-      final actionName = action.runtimeType.toString();
-      logger.debug(
-        '[$actionName] ${before.count} -> ${after.count}',
-        structuredData: {
-          'action': actionName,
-          'before': before.count,
-          'after': after.count,
-        },
-      );
-    };
+    (api) =>
+        (next) => (action) {
+          final before = api.getState();
+          next(action);
+          final after = api.getState();
+          final actionName = action.runtimeType.toString();
+          logger.debug(
+            '[$actionName] ${before.count} -> ${after.count}',
+            structuredData: {
+              'action': actionName,
+              'before': before.count,
+              'after': after.count,
+            },
+          );
+        };
 
 // =============================================================================
 // Store Factory - creates a configured store
@@ -155,6 +153,7 @@ Store<CounterState> createCounterStore({Logger? logger}) =>
     createStore<CounterState>(
       counterReducer,
       initialState(),
-      enhancer:
-          logger != null ? applyMiddleware([loggerMiddleware(logger)]) : null,
+      enhancer: logger != null
+          ? applyMiddleware([loggerMiddleware(logger)])
+          : null,
     );

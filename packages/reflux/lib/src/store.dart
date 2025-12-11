@@ -37,10 +37,9 @@ Store<S> createStore<S>(
   Reducer<S> reducer,
   S preloadedState, {
   StoreEnhancer<S>? enhancer,
-}) =>
-    enhancer != null
-        ? enhancer(_createStoreImpl, reducer, preloadedState)
-        : _createStoreImpl(reducer, preloadedState);
+}) => enhancer != null
+    ? enhancer(_createStoreImpl, reducer, preloadedState)
+    : _createStoreImpl(reducer, preloadedState);
 
 Store<S> _createStoreImpl<S>(Reducer<S> reducer, S preloadedState) =>
     _StoreImpl(reducer, preloadedState);

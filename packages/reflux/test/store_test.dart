@@ -42,6 +42,7 @@ void main() {
         if (action is InitAction) initCalled = true;
         return state;
       }
+
       createStore(reducer, (count: 0));
       expect(initCalled, isTrue);
     });
@@ -76,6 +77,7 @@ void main() {
         }
         return state;
       }
+
       store = createStore(badReducer, (count: 0));
       expect(
         () => store.dispatch(const BadAction()),
@@ -129,6 +131,7 @@ void main() {
         }
         return state;
       }
+
       store = createStore(badReducer, (count: 0));
       expect(
         () => store.dispatch(const BadAction()),

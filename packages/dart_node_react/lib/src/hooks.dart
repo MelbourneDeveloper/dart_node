@@ -380,6 +380,7 @@ void useDebugValue<T>(T value, [String Function(T)? format]) {
     };
     return format!(dartValue).toJS;
   }
+
   final jsFormat = (format != null) ? jsFormatFn.toJS : null;
 
   _reactUseDebugValue(jsValue, jsFormat);

@@ -20,7 +20,10 @@ T Function(T) compose<T>(List<T Function(T)> functions) {
   if (functions.isEmpty) return (arg) => arg;
   if (functions.length == 1) return functions.first;
 
-  return functions.reduce((a, b) => (arg) => a(b(arg)));
+  return functions.reduce(
+    (a, b) =>
+        (arg) => a(b(arg)),
+  );
 }
 
 /// Composes functions with different input/output types.

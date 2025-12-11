@@ -130,27 +130,42 @@ JSFunction _jsonParser() {
 void _startHttpServer(WebSocketServer wsServer) {
   express()
     ..use(_jsonParser())
-    ..get('/health', handler((req, res) {
-      res.jsonMap({'status': 'ok', 'wsPort': wsPort});
-    }))
-    ..get('/echo/:message', handler((req, res) {
-      final message = req.params['message'].toString();
-      res.jsonMap({'echo': message});
-    }))
-    ..post('/json', handler((req, res) {
-      final body = req.body;
-      res.jsonMap({'received': body.dartify(), 'success': true});
-    }))
-    ..get('/error', asyncHandler((req, res) async {
-      await Future<void>.value();
-      throw const NotFoundError('Test error');
-    }))
-    ..get('/status/:code', handler((req, res) {
-      final code = int.tryParse(req.params['code'].toString()) ?? 200;
-      res
-        ..status(code)
-        ..jsonMap({'statusCode': code});
-    }))
+    ..get(
+      '/health',
+      handler((req, res) {
+        res.jsonMap({'status': 'ok', 'wsPort': wsPort});
+      }),
+    )
+    ..get(
+      '/echo/:message',
+      handler((req, res) {
+        final message = req.params['message'].toString();
+        res.jsonMap({'echo': message});
+      }),
+    )
+    ..post(
+      '/json',
+      handler((req, res) {
+        final body = req.body;
+        res.jsonMap({'received': body.dartify(), 'success': true});
+      }),
+    )
+    ..get(
+      '/error',
+      asyncHandler((req, res) async {
+        await Future<void>.value();
+        throw const NotFoundError('Test error');
+      }),
+    )
+    ..get(
+      '/status/:code',
+      handler((req, res) {
+        final code = int.tryParse(req.params['code'].toString()) ?? 200;
+        res
+          ..status(code)
+          ..jsonMap({'statusCode': code});
+      }),
+    )
     ..postWithMiddleware('/validated', [
       validateBody(_testSchema),
       handler((req, res) {
@@ -177,10 +192,7 @@ void _startHttpServer(WebSocketServer wsServer) {
 typedef TestUserData = ({String name, int age});
 
 /// Test validation schema
-final _testSchema = schema<TestUserData>(
-  {
-    'name': string().minLength(1).maxLength(100),
-    'age': int_().min(0).max(150),
-  },
-  (map) => (name: map['name']! as String, age: map['age']! as int),
-);
+final _testSchema = schema<TestUserData>({
+  'name': string().minLength(1).maxLength(100),
+  'age': int_().min(0).max(150),
+}, (map) => (name: map['name']! as String, age: map['age']! as int));

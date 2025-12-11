@@ -13,15 +13,14 @@ Finder _resetBtn() => find.widgetWithText(ElevatedButton, 'Reset');
 
 /// Finds text with large font (the count display).
 Finder _countText(String text) => find.byWidgetPredicate(
-      (widget) =>
-          widget is Text &&
-          widget.data == text &&
-          widget.style?.fontSize == 72,
-    );
+  (widget) =>
+      widget is Text && widget.data == text && widget.style?.fontSize == 72,
+);
 
 void main() {
-  testWidgets('initial state shows count 0 and correct UI elements',
-      (tester) async {
+  testWidgets('initial state shows count 0 and correct UI elements', (
+    tester,
+  ) async {
     await tester.pumpWidget(const CounterApp());
 
     expect(find.text('Reflux Counter'), findsOneWidget);

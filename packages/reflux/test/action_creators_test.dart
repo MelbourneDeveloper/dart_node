@@ -101,10 +101,7 @@ void main() {
       final dispatched = <Action>[];
       void dispatch(Action action) => dispatched.add(action);
 
-      final dispatchSetValue = createDispatcherWith(
-        SetValue.new,
-        dispatch,
-      );
+      final dispatchSetValue = createDispatcherWith(SetValue.new, dispatch);
       dispatchSetValue(42);
 
       expect(dispatched.length, equals(1));

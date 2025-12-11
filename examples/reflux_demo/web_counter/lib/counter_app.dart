@@ -23,73 +23,82 @@ String _getSelectValue(SyntheticEvent e) {
 /// The main counter app component for web.
 /// Uses createElement directly for proper React event handling.
 ReactElement counterApp({Store<CounterState>? store}) => createElement(
-      ((JSAny props) {
-        // Create store on first render, or use provided one
-        final storeRef = useRef<Store<CounterState>?>();
-        if (storeRef.current == null) {
-          storeRef.current = store ?? createCounterStore();
-        }
-        final s = storeRef.current!;
+  ((JSAny props) {
+    // Create store on first render, or use provided one
+    final storeRef = useRef<Store<CounterState>?>();
+    if (storeRef.current == null) {
+      storeRef.current = store ?? createCounterStore();
+    }
+    final s = storeRef.current!;
 
-        // Force re-render on state change
-        final forceUpdate = _useForceUpdate();
-        useEffect(() {
-          final unsubscribe = s.subscribe(forceUpdate);
-          return unsubscribe;
-        }, []);
+    // Force re-render on state change
+    final forceUpdate = _useForceUpdate();
+    useEffect(() {
+      final unsubscribe = s.subscribe(forceUpdate);
+      return unsubscribe;
+    }, []);
 
-        final state = s.getState();
-        final canUndo = selectCanUndo(state);
-        final stats = selectHistoryStats(state);
+    final state = s.getState();
+    final canUndo = selectCanUndo(state);
+    final stats = selectHistoryStats(state);
 
-        return $div(className: 'counter-app') >> [
+    return $div(className: 'counter-app') >>
+        [
           $h1 >> 'Reflux Counter',
-          $div(className: 'counter-display') >> [
-            $span(className: 'count') >> '${state.count}',
-          ],
-          $div(className: 'controls') >> [
-            $button(
-              className: 'btn',
-              onClick: () => s.dispatch(const Decrement()),
-            ) >> '-${state.step}',
-            $button(
-              className: 'btn primary',
-              onClick: () => s.dispatch(const Increment()),
-            ) >> '+${state.step}',
-          ],
-          $div(className: 'step-control') >> [
-            $label() >> 'Step: ',
-            $select(
-              value: '${state.step}',
-              onChange: (e) {
-                final val = int.tryParse(_getSelectValue(e)) ?? 1;
-                s.dispatch(SetStep(val));
-              },
-            ) >> [
-              $option(key: '1', value: '1') >> '1',
-              $option(key: '5', value: '5') >> '5',
-              $option(key: '10', value: '10') >> '10',
-            ],
-          ],
-          $div(className: 'actions') >> [
-            $button(
-              className: 'btn',
-              disabled: !canUndo,
-              onClick: () => s.dispatch(const Undo()),
-            ) >> 'Undo',
-            $button(
-              className: 'btn danger',
-              onClick: () => s.dispatch(const Reset()),
-            ) >> 'Reset',
-          ],
-          $div(className: 'stats') >> [
-            $p() >> 'History: ${state.history.length} entries',
-            $p() >> 'Min: ${stats.min} | Max: ${stats.max}',
-            $p() >> 'Avg: ${stats.avg.toStringAsFixed(1)}',
-          ],
+          $div(className: 'counter-display') >>
+              [$span(className: 'count') >> '${state.count}'],
+          $div(className: 'controls') >>
+              [
+                $button(
+                      className: 'btn',
+                      onClick: () => s.dispatch(const Decrement()),
+                    ) >>
+                    '-${state.step}',
+                $button(
+                      className: 'btn primary',
+                      onClick: () => s.dispatch(const Increment()),
+                    ) >>
+                    '+${state.step}',
+              ],
+          $div(className: 'step-control') >>
+              [
+                $label() >> 'Step: ',
+                $select(
+                      value: '${state.step}',
+                      onChange: (e) {
+                        final val = int.tryParse(_getSelectValue(e)) ?? 1;
+                        s.dispatch(SetStep(val));
+                      },
+                    ) >>
+                    [
+                      $option(key: '1', value: '1') >> '1',
+                      $option(key: '5', value: '5') >> '5',
+                      $option(key: '10', value: '10') >> '10',
+                    ],
+              ],
+          $div(className: 'actions') >>
+              [
+                $button(
+                      className: 'btn',
+                      disabled: !canUndo,
+                      onClick: () => s.dispatch(const Undo()),
+                    ) >>
+                    'Undo',
+                $button(
+                      className: 'btn danger',
+                      onClick: () => s.dispatch(const Reset()),
+                    ) >>
+                    'Reset',
+              ],
+          $div(className: 'stats') >>
+              [
+                $p() >> 'History: ${state.history.length} entries',
+                $p() >> 'Min: ${stats.min} | Max: ${stats.max}',
+                $p() >> 'Avg: ${stats.avg.toStringAsFixed(1)}',
+              ],
         ];
-      }).toJS,
-    );
+  }).toJS,
+);
 
 /// Hook to force re-render
 void Function() _useForceUpdate() {

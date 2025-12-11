@@ -484,10 +484,10 @@ void main() {
 
   group('Validation - Schema', () {
     test('schema validates object', () {
-      final testSchema = schema<({String name, int age})>(
-        {'name': string(), 'age': int_()},
-        (m) => (name: m['name'] as String, age: m['age'] as int),
-      );
+      final testSchema = schema<({String name, int age})>({
+        'name': string(),
+        'age': int_(),
+      }, (m) => (name: m['name'] as String, age: m['age'] as int));
 
       final result = testSchema.validate({'name': 'John', 'age': 30});
       expect(result, isA<Valid<({String name, int age})>>());
@@ -497,20 +497,19 @@ void main() {
     });
 
     test('schema rejects null', () {
-      final testSchema = schema<({String name})>(
-        {'name': string()},
-        (m) => (name: m['name'] as String),
-      );
+      final testSchema = schema<({String name})>({
+        'name': string(),
+      }, (m) => (name: m['name'] as String));
 
       final result = testSchema.validate(null);
       expect(result, isA<Invalid>());
     });
 
     test('schema collects field errors', () {
-      final testSchema = schema<({String name, int age})>(
-        {'name': string().minLength(3), 'age': int_().min(18)},
-        (m) => (name: m['name'] as String, age: m['age'] as int),
-      );
+      final testSchema = schema<({String name, int age})>({
+        'name': string().minLength(3),
+        'age': int_().min(18),
+      }, (m) => (name: m['name'] as String, age: m['age'] as int));
 
       final result = testSchema.validate({'name': 'Jo', 'age': 10});
       expect(result, isA<Invalid>());
@@ -549,10 +548,9 @@ void main() {
 
   group('validateBody middleware', () {
     test('creates JS function', () {
-      final testSchema = schema<({String name})>(
-        {'name': string()},
-        (m) => (name: m['name'] as String),
-      );
+      final testSchema = schema<({String name})>({
+        'name': string(),
+      }, (m) => (name: m['name'] as String));
       final middleware = validateBody(testSchema);
       expect(middleware, isA<JSFunction>());
     });

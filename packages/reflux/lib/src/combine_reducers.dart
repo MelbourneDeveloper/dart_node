@@ -41,23 +41,22 @@ typedef SliceDefinition<S, K> = ({
 Reducer<S> combineReducers<S>({
   required S initialState,
   required List<SliceDefinition<S, dynamic>> slices,
-}) =>
-    (state, action) {
-      var hasChanged = false;
-      var nextState = state;
+}) => (state, action) {
+  var hasChanged = false;
+  var nextState = state;
 
-      for (final slice in slices) {
-        final previousSliceState = slice.selector(nextState);
-        final nextSliceState = slice.reducer(previousSliceState, action);
+  for (final slice in slices) {
+    final previousSliceState = slice.selector(nextState);
+    final nextSliceState = slice.reducer(previousSliceState, action);
 
-        if (!identical(previousSliceState, nextSliceState)) {
-          hasChanged = true;
-          nextState = slice.updater(nextState, nextSliceState);
-        }
-      }
+    if (!identical(previousSliceState, nextSliceState)) {
+      hasChanged = true;
+      nextState = slice.updater(nextState, nextSliceState);
+    }
+  }
 
-      return hasChanged ? nextState : state;
-    };
+  return hasChanged ? nextState : state;
+};
 
 /// A simpler way to combine reducers using a Map-based state.
 ///
@@ -73,21 +72,19 @@ Reducer<S> combineReducers<S>({
 /// ```
 Reducer<Map<String, Object?>> combineReducersMap(
   Map<String, Reducer<Object?>> reducers,
-) =>
-    (state, action) {
-      var hasChanged = false;
-      final nextState = <String, Object?>{};
+) => (state, action) {
+  var hasChanged = false;
+  final nextState = <String, Object?>{};
 
-      for (final entry in reducers.entries) {
-        final key = entry.key;
-        final reducer = entry.value;
-        final previousStateForKey = state[key];
-        final nextStateForKey = reducer(previousStateForKey, action);
+  for (final entry in reducers.entries) {
+    final key = entry.key;
+    final reducer = entry.value;
+    final previousStateForKey = state[key];
+    final nextStateForKey = reducer(previousStateForKey, action);
 
-        nextState[key] = nextStateForKey;
-        hasChanged =
-            hasChanged || !identical(previousStateForKey, nextStateForKey);
-      }
+    nextState[key] = nextStateForKey;
+    hasChanged = hasChanged || !identical(previousStateForKey, nextStateForKey);
+  }
 
-      return hasChanged ? nextState : state;
-    };
+  return hasChanged ? nextState : state;
+};

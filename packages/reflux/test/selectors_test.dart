@@ -169,8 +169,9 @@ void main() {
       final numbers = [1, 2, 3];
       final state = (numbers: numbers, filter: '');
 
-      selector..select(state)
-      ..select(state);
+      selector
+        ..select(state)
+        ..select(state);
       expect(computeCount, equals(1));
 
       selector
@@ -195,12 +196,14 @@ void main() {
       final numbers = [1, 2, 3];
       final state = (numbers: numbers, filter: 'test');
 
-      selector..select(state)
-      ..select(state);
+      selector
+        ..select(state)
+        ..select(state);
       expect(computeCount, equals(1));
 
-      selector..resetCache()
-      ..select(state);
+      selector
+        ..resetCache()
+        ..select(state);
       expect(computeCount, equals(2));
     });
   });

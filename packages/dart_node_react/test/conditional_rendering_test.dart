@@ -2,8 +2,7 @@
 @TestOn('js')
 library;
 
-import 'package:dart_node_react/dart_node_react.dart'
-    hide RenderResult, render;
+import 'package:dart_node_react/dart_node_react.dart' hide RenderResult, render;
 import 'package:dart_node_react/src/testing_library.dart';
 import 'package:test/test.dart';
 

@@ -157,8 +157,9 @@ void main() {
 
       expect(result.container.querySelector('.dialog-overlay'), isNull);
 
-      final linkBtn =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final linkBtn = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final linkButton = linkBtn.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),
@@ -177,8 +178,9 @@ void main() {
     test('link dialog can be closed with Cancel', () async {
       final result = render(EditorApp());
 
-      final linkBtn =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final linkBtn = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final linkButton = linkBtn.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),
@@ -199,8 +201,9 @@ void main() {
     test('link dialog can be closed by clicking overlay', () async {
       final result = render(EditorApp());
 
-      final linkBtn =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final linkBtn = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final linkButton = linkBtn.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),
@@ -220,8 +223,9 @@ void main() {
     test('link dialog accepts URL input and retains focus', () async {
       final result = render(EditorApp());
 
-      final linkBtn =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final linkBtn = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final linkButton = linkBtn.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),
@@ -250,8 +254,9 @@ void main() {
     test('clicking Insert in link dialog closes it', () async {
       final result = render(EditorApp());
 
-      final linkBtn =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final linkBtn = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final linkButton = linkBtn.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),
@@ -274,8 +279,9 @@ void main() {
     test('link dialog shows empty fields for new link', () async {
       final result = render(EditorApp());
 
-      final linkBtn =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final linkBtn = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final linkButton = linkBtn.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),
@@ -297,69 +303,73 @@ void main() {
       result.unmount();
     });
 
-    test('link dialog insert button calls applyLink and closes dialog',
-        () async {
-      final result = render(EditorApp());
+    test(
+      'link dialog insert button calls applyLink and closes dialog',
+      () async {
+        final result = render(EditorApp());
 
-      // Get link button
-      final linkBtns =
-          result.container.querySelectorAll('.toolbar-btn').toList();
-      final linkButton = linkBtns.firstWhere(
-        (btn) => btn.textContent.contains('🔗'),
-        orElse: () => throw StateError('Link button not found'),
-      );
+        // Get link button
+        final linkBtns = result.container
+            .querySelectorAll('.toolbar-btn')
+            .toList();
+        final linkButton = linkBtns.firstWhere(
+          (btn) => btn.textContent.contains('🔗'),
+          orElse: () => throw StateError('Link button not found'),
+        );
 
-      // Focus the editor and add text
-      final editorContent = result.container.querySelector('.editor-content');
-      expect(editorContent, isNotNull);
+        // Focus the editor and add text
+        final editorContent = result.container.querySelector('.editor-content');
+        expect(editorContent, isNotNull);
 
-      // Set content via innerHTML and focus
-      setEditorContent(editorContent!, 'Click here for more info');
-      focusElement(editorContent);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+        // Set content via innerHTML and focus
+        setEditorContent(editorContent!, 'Click here for more info');
+        focusElement(editorContent);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      // Select all the text
-      selectAllInEditor(editorContent);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+        // Select all the text
+        selectAllInEditor(editorContent);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      // Open dialog - mousedown saves selection, click opens dialog
-      fireMouseDown(linkButton);
-      fireClick(linkButton);
-      await waitForText(result, 'Insert Link');
+        // Open dialog - mousedown saves selection, click opens dialog
+        fireMouseDown(linkButton);
+        fireClick(linkButton);
+        await waitForText(result, 'Insert Link');
 
-      // VERIFY: Dialog is open
-      expect(
-        result.container.querySelector('.dialog-overlay'),
-        isNotNull,
-        reason: 'Dialog should be open',
-      );
+        // VERIFY: Dialog is open
+        expect(
+          result.container.querySelector('.dialog-overlay'),
+          isNotNull,
+          reason: 'Dialog should be open',
+        );
 
-      // Enter URL and submit
-      final inputs = result.container.querySelectorAll('.dialog-input');
-      await userType(inputs[0], 'https://example.com/test');
-      fireClick(result.container.querySelector('.btn-primary')!);
+        // Enter URL and submit
+        final inputs = result.container.querySelectorAll('.dialog-input');
+        await userType(inputs[0], 'https://example.com/test');
+        fireClick(result.container.querySelector('.btn-primary')!);
 
-      await Future<void>.delayed(const Duration(milliseconds: 150));
+        await Future<void>.delayed(const Duration(milliseconds: 150));
 
-      // VERIFY: Dialog closed after clicking Insert
-      expect(
-        result.container.querySelector('.dialog-overlay'),
-        isNull,
-        reason: 'Dialog should close after inserting link',
-      );
+        // VERIFY: Dialog closed after clicking Insert
+        expect(
+          result.container.querySelector('.dialog-overlay'),
+          isNull,
+          reason: 'Dialog should close after inserting link',
+        );
 
-      // Note: execCommand('createLink') behavior varies by browser/test env
-      // The core functionality (selection save/restore, dialog flow) is tested
+        // Note: execCommand('createLink') behavior varies by browser/test env
+        // The core functionality (selection save/restore, dialog flow) is tested
 
-      result.unmount();
-    });
+        result.unmount();
+      },
+    );
 
     test('clicking existing link and opening dialog shows URL', () async {
       final result = render(EditorApp());
 
       // Get link button
-      final linkBtns =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final linkBtns = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final linkButton = linkBtns.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),

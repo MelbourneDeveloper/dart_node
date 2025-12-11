@@ -168,10 +168,8 @@ class WebSocketClient {
   bool get isOpen => _ws.readyState == WebSocketReadyState.open.value;
 
   /// Registers a handler for incoming messages
-  void onMessage(MessageHandler handler) => _ws.on(
-    'message',
-    ((JSAny data) => handler(_extractMessage(data))).toJS,
-  );
+  void onMessage(MessageHandler handler) =>
+      _ws.on('message', ((JSAny data) => handler(_extractMessage(data))).toJS);
 
   WebSocketMessage _extractMessage(JSAny data) {
     // For Node.js Buffer and other objects, use JS String() function
@@ -198,10 +196,8 @@ class WebSocketClient {
   };
 
   /// Registers a handler for error events
-  void onError(ErrorHandler handler) => _ws.on(
-    'error',
-    ((JSAny error) => handler(_extractError(error))).toJS,
-  );
+  void onError(ErrorHandler handler) =>
+      _ws.on('error', ((JSAny error) => handler(_extractError(error))).toJS);
 
   WebSocketError _extractError(JSAny error) {
     final obj = switch (error) {

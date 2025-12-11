@@ -30,8 +30,7 @@ StoreEnhancer<S> composeEnhancers<S>(List<StoreEnhancer<S>> enhancers) {
     for (var i = enhancers.length - 1; i >= 0; i--) {
       final enhancer = enhancers[i];
       final prevCreateStore = currentCreateStore;
-      currentCreateStore =
-          (r, s) => enhancer(prevCreateStore, r, s);
+      currentCreateStore = (r, s) => enhancer(prevCreateStore, r, s);
     }
     return currentCreateStore(reducer, preloadedState);
   };
@@ -49,9 +48,7 @@ StoreEnhancer<S> composeEnhancers<S>(List<StoreEnhancer<S>> enhancers) {
 ///   return _TimestampStore(store);
 /// });
 /// ```
-StoreEnhancer<S> createEnhancer<S>(
-  Store<S> Function(Store<S> store) enhance,
-) =>
+StoreEnhancer<S> createEnhancer<S>(Store<S> Function(Store<S> store) enhance) =>
     (createStore, reducer, preloadedState) {
       final store = createStore(reducer, preloadedState);
       return enhance(store);
@@ -80,21 +77,20 @@ StoreEnhancer<S> devToolsEnhancer<S>({
   String name = 'Store',
   void Function(Action action, S prevState, S nextState)? onAction,
   bool enabled = true,
-}) =>
-    (createStore, reducer, preloadedState) {
-      if (!enabled) return createStore(reducer, preloadedState);
+}) => (createStore, reducer, preloadedState) {
+  if (!enabled) return createStore(reducer, preloadedState);
 
-      S wrappedReducer(S state, Action action) {
-        final prevState = state;
-        final nextState = reducer(state, action);
+  S wrappedReducer(S state, Action action) {
+    final prevState = state;
+    final nextState = reducer(state, action);
 
-        onAction?.call(action, prevState, nextState);
+    onAction?.call(action, prevState, nextState);
 
-        return nextState;
-      }
+    return nextState;
+  }
 
-      return createStore(wrappedReducer, preloadedState);
-    };
+  return createStore(wrappedReducer, preloadedState);
+};
 
 /// Time travel enhancer that allows rewinding and replaying actions.
 ///
@@ -123,29 +119,29 @@ final class TimeTravelEnhancer<S> {
 
   /// The store enhancer function.
   StoreEnhancer<S> get enhancer => (createStore, reducer, preloadedState) {
-        S wrappedReducer(S state, Action action) {
-          if (_isTimeTraveling) return state;
+    S wrappedReducer(S state, Action action) {
+      if (_isTimeTraveling) return state;
 
-          final nextState = reducer(state, action);
+      final nextState = reducer(state, action);
 
-          // Record state in history
-          if (_currentIndex < _history.length - 1) {
-            // We've time traveled and are now making new changes
-            // Truncate future history
-            _history.removeRange(_currentIndex + 1, _history.length);
-          }
-          _history.add(nextState);
-          _currentIndex = _history.length - 1;
+      // Record state in history
+      if (_currentIndex < _history.length - 1) {
+        // We've time traveled and are now making new changes
+        // Truncate future history
+        _history.removeRange(_currentIndex + 1, _history.length);
+      }
+      _history.add(nextState);
+      _currentIndex = _history.length - 1;
 
-          return nextState;
-        }
+      return nextState;
+    }
 
-        _store = createStore(wrappedReducer, preloadedState);
-        _history.add(preloadedState);
-        _currentIndex = 0;
+    _store = createStore(wrappedReducer, preloadedState);
+    _history.add(preloadedState);
+    _currentIndex = 0;
 
-        return _TimeTravelStore(this, _store!);
-      };
+    return _TimeTravelStore(this, _store!);
+  };
 
   /// Returns the current history of states.
   List<S> get history => List.unmodifiable(_history);

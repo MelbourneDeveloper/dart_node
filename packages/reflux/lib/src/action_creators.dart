@@ -54,7 +54,8 @@ Map<String, void Function()> bindActionCreators(
 void Function() createDispatcher<A extends Action>(
   A Function() actionCreator,
   void Function(Action) dispatch,
-) => () => dispatch(actionCreator());
+) =>
+    () => dispatch(actionCreator());
 
 /// Creates a dispatcher function for an action with a parameter.
 ///
@@ -69,4 +70,5 @@ void Function() createDispatcher<A extends Action>(
 void Function(P) createDispatcherWith<A extends Action, P>(
   A Function(P) actionCreator,
   void Function(Action) dispatch,
-) => (param) => dispatch(actionCreator(param));
+) =>
+    (param) => dispatch(actionCreator(param));

@@ -40,22 +40,18 @@ void main() {
             return createStore(reducer, preloadedState);
           };
 
-      createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: composeEnhancers([enhancer1(), enhancer2()]),
-      );
+      createStore(counterReducer, (
+        count: 0,
+      ), enhancer: composeEnhancers([enhancer1(), enhancer2()]));
 
       // Enhancers compose right to left, but execute left to right
       expect(log, equals(['enhancer1', 'enhancer2']));
     });
 
     test('handles empty enhancers list', () {
-      final store = createStore<CounterState>(
-        counterReducer,
-        (count: 0),
-        enhancer: composeEnhancers([]),
-      )..dispatch(const Increment());
+      final store = createStore<CounterState>(counterReducer, (
+        count: 0,
+      ), enhancer: composeEnhancers([]))..dispatch(const Increment());
       expect(store.getState().count, equals(1));
     });
 
@@ -68,11 +64,9 @@ void main() {
             return createStore(reducer, preloadedState);
           };
 
-      createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: composeEnhancers([enhancer()]),
-      );
+      createStore(counterReducer, (
+        count: 0,
+      ), enhancer: composeEnhancers([enhancer()]));
 
       expect(called, isTrue);
     });
@@ -98,14 +92,14 @@ void main() {
       final logs = <(String, int, int)>[];
 
       createStore<CounterState>(
-        counterReducer,
-        (count: 0),
-        enhancer: devToolsEnhancer(
-          onAction: (action, prev, next) {
-            logs.add((action.runtimeType.toString(), prev.count, next.count));
-          },
-        ),
-      )
+          counterReducer,
+          (count: 0),
+          enhancer: devToolsEnhancer(
+            onAction: (action, prev, next) {
+              logs.add((action.runtimeType.toString(), prev.count, next.count));
+            },
+          ),
+        )
         ..dispatch(const Increment())
         ..dispatch(const Increment());
 
@@ -135,11 +129,7 @@ void main() {
     test('records state history', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
 
-      createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      )
+      createStore(counterReducer, (count: 0), enhancer: timeTravel.enhancer)
         ..dispatch(const Increment())
         ..dispatch(const Increment());
 
@@ -152,13 +142,10 @@ void main() {
     test('can undo', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
 
-      final store = createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      )
-        ..dispatch(const Increment())
-        ..dispatch(const Increment());
+      final store =
+          createStore(counterReducer, (count: 0), enhancer: timeTravel.enhancer)
+            ..dispatch(const Increment())
+            ..dispatch(const Increment());
       expect(store.getState().count, equals(2));
 
       timeTravel.undo();
@@ -171,13 +158,10 @@ void main() {
     test('can redo', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
 
-      final store = createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      )
-        ..dispatch(const Increment())
-        ..dispatch(const Increment());
+      final store =
+          createStore(counterReducer, (count: 0), enhancer: timeTravel.enhancer)
+            ..dispatch(const Increment())
+            ..dispatch(const Increment());
 
       timeTravel
         ..undo()
@@ -194,14 +178,11 @@ void main() {
     test('can jumpTo specific index', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
 
-      final store = createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      )
-        ..dispatch(const Increment())
-        ..dispatch(const Increment())
-        ..dispatch(const Increment());
+      final store =
+          createStore(counterReducer, (count: 0), enhancer: timeTravel.enhancer)
+            ..dispatch(const Increment())
+            ..dispatch(const Increment())
+            ..dispatch(const Increment());
 
       timeTravel.jumpTo(1);
       expect(store.getState().count, equals(1));
@@ -213,11 +194,7 @@ void main() {
     test('throws on invalid index', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
 
-      createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      );
+      createStore(counterReducer, (count: 0), enhancer: timeTravel.enhancer);
 
       expect(() => timeTravel.jumpTo(-1), throwsA(isA<RangeError>()));
       expect(() => timeTravel.jumpTo(100), throwsA(isA<RangeError>()));
@@ -230,8 +207,8 @@ void main() {
         counterReducer,
         (count: 0),
         enhancer: timeTravel.enhancer,
-      // After InitAction, we have 2 entries: initial + INIT result
-      // We can undo back to initial
+        // After InitAction, we have 2 entries: initial + INIT result
+        // We can undo back to initial
       ).dispatch(const Increment());
       final canUndoAfterIncrement = timeTravel.canUndo;
       expect(canUndoAfterIncrement, isTrue);
@@ -251,14 +228,11 @@ void main() {
     test('truncates future history on new dispatch after undo', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
 
-      final store = createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      )
-        ..dispatch(const Increment()) // count: 1
-        ..dispatch(const Increment()) // count: 2
-        ..dispatch(const Increment()); // count: 3
+      final store =
+          createStore(counterReducer, (count: 0), enhancer: timeTravel.enhancer)
+            ..dispatch(const Increment()) // count: 1
+            ..dispatch(const Increment()) // count: 2
+            ..dispatch(const Increment()); // count: 3
 
       timeTravel
         ..undo() // back to count: 2
@@ -273,11 +247,7 @@ void main() {
     test('reset clears history', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
 
-      createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      )
+      createStore(counterReducer, (count: 0), enhancer: timeTravel.enhancer)
         ..dispatch(const Increment())
         ..dispatch(const Increment());
 

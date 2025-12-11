@@ -75,10 +75,12 @@ abstract final class Children {
 
     final result = _childrenMap(children, jsMapper.toJS);
     return result?.toDart
-        .map((e) => switch (e) {
-          final JSObject o => ReactElement.fromJS(o),
-          _ => throw StateError('Invalid child element'),
-        })
+        .map(
+          (e) => switch (e) {
+            final JSObject o => ReactElement.fromJS(o),
+            _ => throw StateError('Invalid child element'),
+          },
+        )
         .toList();
   }
 
@@ -143,13 +145,13 @@ abstract final class Children {
   /// ```
   ///
   /// See: https://react.dev/reference/react/Children#children-toarray
-  static List<ReactElement> toArray(JSAny? children) => _childrenToArray(
-    children,
-  )
-      .toDart
-      .map((e) => switch (e) {
-        final JSObject o => ReactElement.fromJS(o),
-        _ => throw StateError('Invalid child element'),
-      })
-      .toList();
+  static List<ReactElement> toArray(JSAny? children) =>
+      _childrenToArray(children).toDart
+          .map(
+            (e) => switch (e) {
+              final JSObject o => ReactElement.fromJS(o),
+              _ => throw StateError('Invalid child element'),
+            },
+          )
+          .toList();
 }

@@ -29,9 +29,9 @@ final class Unknown extends Action {
 
 // Reducers
 int counterReducer(int state, Action action) => switch (action) {
-      Increment() => state + 1,
-      _ => state,
-    };
+  Increment() => state + 1,
+  _ => state,
+};
 
 List<String> todosReducer(List<String> state, Action action) =>
     switch (action) {
@@ -40,20 +40,19 @@ List<String> todosReducer(List<String> state, Action action) =>
     };
 
 SliceDefinition<AppState, dynamic> counterSlice() => (
-      selector: (AppState s) => s.counter,
-      updater: (AppState s, v) => (counter: v as int, todos: s.todos),
-      reducer: (state, Action action) => counterReducer(state as int, action),
-      initialState: 0,
-    );
+  selector: (AppState s) => s.counter,
+  updater: (AppState s, v) => (counter: v as int, todos: s.todos),
+  reducer: (state, Action action) => counterReducer(state as int, action),
+  initialState: 0,
+);
 
 SliceDefinition<AppState, dynamic> todosSlice() => (
-      selector: (AppState s) => s.todos,
-      updater: (AppState s, v) =>
-          (counter: s.counter, todos: v as List<String>),
-      reducer: (state, Action action) =>
-          todosReducer(state as List<String>, action),
-      initialState: <String>[],
-    );
+  selector: (AppState s) => s.todos,
+  updater: (AppState s, v) => (counter: s.counter, todos: v as List<String>),
+  reducer: (state, Action action) =>
+      todosReducer(state as List<String>, action),
+  initialState: <String>[],
+);
 
 void main() {
   group('combineReducers', () {
@@ -115,10 +114,10 @@ void main() {
         },
       });
 
-      final store = createStore(
-        reducer,
-        <String, Object?>{'counter': 0, 'todos': <String>[]},
-      )..dispatch(const Increment());
+      final store = createStore(reducer, <String, Object?>{
+        'counter': 0,
+        'todos': <String>[],
+      })..dispatch(const Increment());
       expect(store.getState()['counter'], equals(1));
 
       store.dispatch(const AddTodo('Test'));

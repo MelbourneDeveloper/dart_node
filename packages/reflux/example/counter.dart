@@ -29,19 +29,20 @@ CounterState counterReducer(CounterState state, Action action) =>
 
 // Logging middleware using dart_logging
 Middleware<CounterState> loggerMiddleware(Logger logger) =>
-    (api) => (next) => (action) {
-      final before = api.getState().count;
-      next(action);
-      final after = api.getState().count;
-      logger.debug(
-        '${action.runtimeType}: $before -> $after',
-        structuredData: {
-          'action': action.runtimeType.toString(),
-          'before': before,
-          'after': after,
-        },
-      );
-    };
+    (api) =>
+        (next) => (action) {
+          final before = api.getState().count;
+          next(action);
+          final after = api.getState().count;
+          logger.debug(
+            '${action.runtimeType}: $before -> $after',
+            structuredData: {
+              'action': action.runtimeType.toString(),
+              'before': before,
+              'after': after,
+            },
+          );
+        };
 
 void main() {
   final context = createLoggingContext(

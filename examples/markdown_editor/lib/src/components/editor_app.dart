@@ -45,55 +45,62 @@ ReactElement EditorApp() => createElement(
       onBlock: applyBlock,
       onLink: applyLink,
       onToggleMode: () {
-        modeState.setWithUpdater((current) => switch (current) {
-          EditorMode.wysiwyg => EditorMode.markdown,
-          EditorMode.markdown => EditorMode.wysiwyg,
-        });
+        modeState.setWithUpdater(
+          (current) => switch (current) {
+            EditorMode.wysiwyg => EditorMode.markdown,
+            EditorMode.markdown => EditorMode.wysiwyg,
+          },
+        );
       },
     );
 
     final htmlContent = markdownToHtml(contentState.value);
     final wordCount = _countWords(contentState.value);
 
-    return $div(className: 'app') >> [
-      _buildHeader(),
-      $main(className: 'main-content') >> [
-        $div(className: 'editor-container') >> [
-          buildToolbar(
-            mode: modeState.value,
-            callbacks: callbacks,
-            onShowLinkDialog: openLinkDialog,
-            onSaveSelection: handleSaveSelection,
+    return $div(className: 'app') >>
+        [
+          _buildHeader(),
+          $main(className: 'main-content') >>
+              [
+                $div(className: 'editor-container') >>
+                    [
+                      buildToolbar(
+                        mode: modeState.value,
+                        callbacks: callbacks,
+                        onShowLinkDialog: openLinkDialog,
+                        onSaveSelection: handleSaveSelection,
+                      ),
+                      _buildEditorWrapper(
+                        mode: modeState.value,
+                        content: contentState.value,
+                        htmlContent: htmlContent,
+                        onContentChange: contentState.set,
+                      ),
+                      _buildStatusBar(
+                        wordCount: wordCount,
+                        mode: modeState.value,
+                      ),
+                    ],
+              ],
+          _buildFooter(),
+          buildLinkDialog(
+            isOpen: linkDialogOpen.value,
+            onClose: () => linkDialogOpen.set(false),
+            initialUrl: linkUrlState.value,
+            initialText: linkTextState.value,
+            onInsert: (url, text) {
+              applyLink(url, text);
+              linkDialogOpen.set(false);
+            },
           ),
-          _buildEditorWrapper(
-            mode: modeState.value,
-            content: contentState.value,
-            htmlContent: htmlContent,
-            onContentChange: contentState.set,
-          ),
-          _buildStatusBar(wordCount: wordCount, mode: modeState.value),
-        ],
-      ],
-      _buildFooter(),
-      buildLinkDialog(
-        isOpen: linkDialogOpen.value,
-        onClose: () => linkDialogOpen.set(false),
-        initialUrl: linkUrlState.value,
-        initialText: linkTextState.value,
-        onInsert: (url, text) {
-          applyLink(url, text);
-          linkDialogOpen.set(false);
-        },
-      ),
-    ];
+        ];
   }).toJS,
 );
 
 ReactElement _buildHeader() =>
     $header(className: 'header') >>
-    ($div(className: 'header-content') >> [
-      $span(className: 'logo') >> 'Markdown Editor',
-    ]);
+    ($div(className: 'header-content') >>
+        [$span(className: 'logo') >> 'Markdown Editor']);
 
 ReactElement _buildEditorWrapper({
   required EditorMode mode,
@@ -101,7 +108,8 @@ ReactElement _buildEditorWrapper({
   required String htmlContent,
   required void Function(String) onContentChange,
 }) =>
-    $div(className: 'editor-wrapper') >> [
+    $div(className: 'editor-wrapper') >>
+    [
       switch (mode) {
         EditorMode.wysiwyg => buildEditorArea(
           htmlContent: htmlContent,
@@ -118,12 +126,14 @@ ReactElement _buildStatusBar({
   required int wordCount,
   required EditorMode mode,
 }) =>
-    $div(className: 'status-bar') >> [
+    $div(className: 'status-bar') >>
+    [
       $span() >> '$wordCount words',
-      $span() >> switch (mode) {
-        EditorMode.wysiwyg => 'Formatted View',
-        EditorMode.markdown => 'Markdown View',
-      },
+      $span() >>
+          switch (mode) {
+            EditorMode.wysiwyg => 'Formatted View',
+            EditorMode.markdown => 'Markdown View',
+          },
     ];
 
 ReactElement _buildFooter() =>

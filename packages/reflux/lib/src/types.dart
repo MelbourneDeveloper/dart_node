@@ -86,17 +86,16 @@ typedef Unsubscribe = void Function();
 
 /// A store enhancer is a higher-order function that composes a store creator
 /// to return a new enhanced store creator.
-typedef StoreEnhancer<S> = Store<S> Function(
-  StoreCreator<S> createStore,
-  Reducer<S> reducer,
-  S preloadedState,
-);
+typedef StoreEnhancer<S> =
+    Store<S> Function(
+      StoreCreator<S> createStore,
+      Reducer<S> reducer,
+      S preloadedState,
+    );
 
 /// A store creator function.
-typedef StoreCreator<S> = Store<S> Function(
-  Reducer<S> reducer,
-  S preloadedState,
-);
+typedef StoreCreator<S> =
+    Store<S> Function(Reducer<S> reducer, S preloadedState);
 
 /// An action creator is a function that creates an action.
 typedef ActionCreator<A extends Action> = A Function();

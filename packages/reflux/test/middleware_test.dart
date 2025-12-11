@@ -32,7 +32,8 @@ void main() {
       final log = <String>[];
 
       Middleware<CounterState> loggerMiddleware() =>
-          (api) => (next) => (action) {
+          (api) =>
+              (next) => (action) {
                 final actionName = switch (action) {
                   Increment() => 'INCREMENT',
                   _ => 'UNKNOWN',
@@ -58,14 +59,16 @@ void main() {
       final log = <String>[];
 
       Middleware<CounterState> middleware1() =>
-          (api) => (next) => (action) {
+          (api) =>
+              (next) => (action) {
                 log.add('m1 before');
                 next(action);
                 log.add('m1 after');
               };
 
       Middleware<CounterState> middleware2() =>
-          (api) => (next) => (action) {
+          (api) =>
+              (next) => (action) {
                 log.add('m2 before');
                 next(action);
                 log.add('m2 after');
@@ -85,7 +88,8 @@ void main() {
       int? capturedState;
 
       Middleware<CounterState> stateCapture() =>
-          (api) => (next) => (action) {
+          (api) =>
+              (next) => (action) {
                 next(action);
                 capturedState = api.getState().count;
               };
@@ -100,7 +104,8 @@ void main() {
 
     test('middleware can dispatch new actions', () {
       Middleware<CounterState> doubleMiddleware() =>
-          (api) => (next) => (action) {
+          (api) =>
+              (next) => (action) {
                 next(action);
                 if (action is Double) {
                   api.dispatch(const Increment());
@@ -120,7 +125,8 @@ void main() {
 
     test('middleware can prevent action from reaching reducer', () {
       Middleware<CounterState> blockMiddleware() =>
-          (api) => (next) => (action) {
+          (api) =>
+              (next) => (action) {
                 if (action is! Blocked) next(action);
               };
 
@@ -147,11 +153,9 @@ void main() {
     test('middleware store preserves subscribe functionality', () {
       var called = false;
 
-      createStore<CounterState>(
-        counterReducer,
-        (count: 0),
-        enhancer: applyMiddleware<CounterState>([]),
-      )
+      createStore<CounterState>(counterReducer, (
+          count: 0,
+        ), enhancer: applyMiddleware<CounterState>([]))
         ..subscribe(() => called = true)
         ..dispatch(const Increment());
       expect(called, isTrue);
@@ -164,13 +168,12 @@ void main() {
             _ => state,
           };
 
-      final store = createStore<CounterState>(
-        counterReducer,
-        (count: 0),
-        enhancer: applyMiddleware<CounterState>([]),
-      )
-        ..replaceReducer(doubleReducer)
-        ..dispatch(const Increment());
+      final store =
+          createStore<CounterState>(counterReducer, (
+              count: 0,
+            ), enhancer: applyMiddleware<CounterState>([]))
+            ..replaceReducer(doubleReducer)
+            ..dispatch(const Increment());
       expect(store.getState().count, equals(2));
     });
   });

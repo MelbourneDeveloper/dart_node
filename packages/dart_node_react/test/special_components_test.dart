@@ -34,10 +34,7 @@ void main() {
 
     final result = render(fc(strictComponent));
 
-    expect(
-      result.getByTestId('content').textContent,
-      equals('Strict content'),
-    );
+    expect(result.getByTestId('content').textContent, equals('Strict content'));
 
     result.unmount();
   });

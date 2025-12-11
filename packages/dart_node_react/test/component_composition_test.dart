@@ -2,8 +2,7 @@
 @TestOn('js')
 library;
 
-import 'package:dart_node_react/dart_node_react.dart'
-    hide RenderResult, render;
+import 'package:dart_node_react/dart_node_react.dart' hide RenderResult, render;
 import 'package:dart_node_react/src/testing_library.dart';
 import 'package:test/test.dart';
 
@@ -24,10 +23,7 @@ void main() {
 
     final result = render(fc(parent));
 
-    expect(
-      result.getByTestId('greeting').textContent,
-      equals('Hello, World!'),
-    );
+    expect(result.getByTestId('greeting').textContent, equals('Hello, World!'));
 
     result.unmount();
   });
@@ -74,10 +70,7 @@ void main() {
 
     final result = render(fc(parent));
 
-    expect(
-      result.getByTestId('grandchild').textContent,
-      equals('GrandChild'),
-    );
+    expect(result.getByTestId('grandchild').textContent, equals('GrandChild'));
 
     result.unmount();
   });

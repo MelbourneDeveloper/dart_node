@@ -147,10 +147,7 @@ ReactElement _buildTaskManager(
             '$apiUrl/tasks',
             method: 'POST',
             token: token,
-            body: {
-              'title': newTaskState.value,
-              'description': descState.value,
-            },
+            body: {'title': newTaskState.value, 'description': descState.value},
           );
           result.match(
             onSuccess: (response) {

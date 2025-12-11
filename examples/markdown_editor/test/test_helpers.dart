@@ -48,8 +48,7 @@ void selectTextInEditor(DomNode element, int start, int end) {
   final addRange = selection['addRange'];
 
   if (setStart != null && setStart.isA<JSFunction>()) {
-    (setStart as JSFunction)
-        .callAsFunction(range, firstChild, start.toJS);
+    (setStart as JSFunction).callAsFunction(range, firstChild, start.toJS);
   }
   if (setEnd != null && setEnd.isA<JSFunction>()) {
     (setEnd as JSFunction).callAsFunction(range, firstChild, end.toJS);
@@ -121,8 +120,10 @@ void selectAllInEditor(DomNode element) {
 
   if (selectNodeContentsFunc != null &&
       selectNodeContentsFunc.isA<JSFunction>()) {
-    (selectNodeContentsFunc as JSFunction)
-        .callAsFunction(range, element.jsNode);
+    (selectNodeContentsFunc as JSFunction).callAsFunction(
+      range,
+      element.jsNode,
+    );
   }
   if (removeAllRanges != null && removeAllRanges.isA<JSFunction>()) {
     (removeAllRanges as JSFunction).callAsFunction(selection);

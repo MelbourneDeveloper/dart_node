@@ -44,15 +44,18 @@ StoreEnhancer<S> applyMiddleware<S>(List<Middleware<S>> middlewares) =>
     };
 
 Never _throwingDispatch(Action action) => throw StateError(
-      'Dispatching while constructing middleware is not allowed.',
-    );
+  'Dispatching while constructing middleware is not allowed.',
+);
 
 /// Composes middleware transform functions from right to left.
 MiddlewareTransform _composeMiddleware(List<MiddlewareTransform> chain) {
   if (chain.isEmpty) return (next) => next;
   if (chain.length == 1) return chain.first;
 
-  return chain.reduce((a, b) => (next) => a(b(next)));
+  return chain.reduce(
+    (a, b) =>
+        (next) => a(b(next)),
+  );
 }
 
 /// A store wrapper that uses the middleware-enhanced dispatch.

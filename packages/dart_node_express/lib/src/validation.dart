@@ -362,6 +362,8 @@ Result<T, String> getValidatedBody<T>(Request req) {
   final value = req[_validatedBodyKey]?.dartify();
   return switch (value) {
     final T v => Success(v),
-    _ => const Error('No validated body found. Did you use validateBody middleware?'),
+    _ => const Error(
+      'No validated body found. Did you use validateBody middleware?',
+    ),
   };
 }

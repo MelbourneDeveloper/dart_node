@@ -57,56 +57,64 @@ ReactElement buildLinkDialog({
       }
     }
 
-    return $div(className: 'dialog-overlay', onClick: onClose) >> [
-      createElement(
-        'div'.toJS,
-        createProps({
-          'className': 'dialog',
-          'onClick': ((JSObject e) {
-            (e['stopPropagation']! as JSFunction).callAsFunction(e);
-          }).toJS,
-        }),
+    return $div(className: 'dialog-overlay', onClick: onClose) >>
         [
-          $div(className: 'dialog-header') >> 'Insert Link',
-          $div(className: 'dialog-body') >> [
-            $div(className: 'form-group') >> [
-              $label() >> 'URL',
-              createElement(
-                'input'.toJS,
-                createProps({
-                  'type': 'url',
-                  'className': 'dialog-input',
-                  'placeholder': 'https://example.com',
-                  'value': urlState.value,
-                  'onChange': handleUrlChange.toJS,
-                  'onKeyDown': handleKeyDown.toJS,
-                  'autoFocus': true,
-                }),
-              ),
-            ],
-            $div(className: 'form-group') >> [
-              $label() >> 'Display Text (optional)',
-              createElement(
-                'input'.toJS,
-                createProps({
-                  'type': 'text',
-                  'className': 'dialog-input',
-                  'placeholder': 'Link text',
-                  'value': textState.value,
-                  'onChange': handleTextChange.toJS,
-                  'onKeyDown': handleKeyDown.toJS,
-                }),
-              ),
-            ],
-          ],
-          $div(className: 'dialog-footer') >> [
-            $button(className: 'btn btn-secondary', onClick: onClose) >>
-                'Cancel',
-            $button(className: 'btn btn-primary', onClick: handleSubmit) >>
-                'Insert',
-          ],
-        ].toJS,
-      ),
-    ];
+          createElement(
+            'div'.toJS,
+            createProps({
+              'className': 'dialog',
+              'onClick': ((JSObject e) {
+                (e['stopPropagation']! as JSFunction).callAsFunction(e);
+              }).toJS,
+            }),
+            [
+              $div(className: 'dialog-header') >> 'Insert Link',
+              $div(className: 'dialog-body') >>
+                  [
+                    $div(className: 'form-group') >>
+                        [
+                          $label() >> 'URL',
+                          createElement(
+                            'input'.toJS,
+                            createProps({
+                              'type': 'url',
+                              'className': 'dialog-input',
+                              'placeholder': 'https://example.com',
+                              'value': urlState.value,
+                              'onChange': handleUrlChange.toJS,
+                              'onKeyDown': handleKeyDown.toJS,
+                              'autoFocus': true,
+                            }),
+                          ),
+                        ],
+                    $div(className: 'form-group') >>
+                        [
+                          $label() >> 'Display Text (optional)',
+                          createElement(
+                            'input'.toJS,
+                            createProps({
+                              'type': 'text',
+                              'className': 'dialog-input',
+                              'placeholder': 'Link text',
+                              'value': textState.value,
+                              'onChange': handleTextChange.toJS,
+                              'onKeyDown': handleKeyDown.toJS,
+                            }),
+                          ),
+                        ],
+                  ],
+              $div(className: 'dialog-footer') >>
+                  [
+                    $button(className: 'btn btn-secondary', onClick: onClose) >>
+                        'Cancel',
+                    $button(
+                          className: 'btn btn-primary',
+                          onClick: handleSubmit,
+                        ) >>
+                        'Insert',
+                  ],
+            ].toJS,
+          ),
+        ];
   }).toJS,
 );

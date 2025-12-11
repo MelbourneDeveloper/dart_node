@@ -321,9 +321,7 @@ final class ResettableSelector<S, R> {
 ///   ),
 /// );
 /// ```
-Selector<S, R> createStructuredSelector<S, R>(
-  R Function(S state) compute,
-) {
+Selector<S, R> createStructuredSelector<S, R>(R Function(S state) compute) {
   R? lastResult;
   S? lastState;
   var hasCache = false;
