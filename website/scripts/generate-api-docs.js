@@ -32,6 +32,10 @@ const PACKAGES = [
   'dart_node_react',
   'dart_node_react_native',
   'dart_node_ws',
+  'dart_node_better_sqlite3',
+  'dart_node_mcp',
+  'dart_logging',
+  'dart_node_statecore',
 ];
 
 // Base URLs for external documentation
@@ -64,6 +68,21 @@ const PACKAGE_DOCS = {
   dart_node_ws: [
     { name: 'ws (WebSocket) npm', url: 'https://github.com/websockets/ws' },
     { name: 'WebSocket API (MDN)', url: 'https://developer.mozilla.org/en-US/docs/Web/API/WebSocket' },
+  ],
+  dart_node_better_sqlite3: [
+    { name: 'better-sqlite3 npm', url: 'https://github.com/WiseLibs/better-sqlite3' },
+    { name: 'better-sqlite3 API', url: 'https://github.com/WiseLibs/better-sqlite3/blob/master/docs/api.md' },
+  ],
+  dart_node_mcp: [
+    { name: 'Model Context Protocol', url: 'https://modelcontextprotocol.io/' },
+    { name: 'MCP Specification', url: 'https://spec.modelcontextprotocol.io/' },
+  ],
+  dart_logging: [
+    { name: 'Dart logging package', url: 'https://pub.dev/packages/logging' },
+  ],
+  dart_node_statecore: [
+    { name: 'Redux Documentation', url: 'https://redux.js.org/' },
+    { name: 'Redux Core Concepts', url: 'https://redux.js.org/introduction/core-concepts' },
   ],
 };
 
