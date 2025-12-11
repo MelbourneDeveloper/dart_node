@@ -9,7 +9,7 @@ examples/
 ├── shared/            → Common types (User, Task)
 ├── mobile/            → React Native app (Expo)
 ├── markdown_editor/   → Rich text editor demo
-├── statecore_demo/    → State management demo
+├── reflux_demo/       → State management demo
 └── too_many_cooks/    → Multi-agent coordination
 ```
 

@@ -11,5 +11,5 @@ Typed Dart bindings for Node.js libraries.
 | `dart_node_ws` | WebSocket bindings |
 | `dart_node_better_sqlite3` | better-sqlite3 bindings |
 | `dart_node_mcp` | Model Context Protocol SDK bindings |
-| `dart_node_statecore` | Redux-style state management |
+| `reflux` | Redux-style state management |
 | `dart_logging` | Structured logging framework |

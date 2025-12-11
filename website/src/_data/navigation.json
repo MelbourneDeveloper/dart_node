@@ -76,8 +76,8 @@
           "url": "/docs/logging/"
         },
         {
-          "text": "dart_node_statecore",
-          "url": "/docs/statecore/"
+          "text": "reflux",
+          "url": "/docs/reflux/"
         }
       ]
     }

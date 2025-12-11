@@ -17,7 +17,7 @@ Write your entire stack in Dart: React web apps, React Native mobile apps with E
 | [dart_node_react_native](packages/dart_node_react_native) | React Native bindings |
 | [dart_node_mcp](packages/dart_node_mcp) | MCP server bindings |
 | [dart_node_better_sqlite3](packages/dart_node_better_sqlite3) | SQLite3 bindings |
-| [dart_node_statecore](packages/dart_node_statecore) | Redux-style state management |
+| [reflux](packages/reflux) | Redux-style state management |
 | [dart_logging](packages/dart_logging) | Structured logging |
 
 ## Quick Start

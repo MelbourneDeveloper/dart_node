@@ -1,0 +1,24 @@
+name: flutter_counter
+description: Flutter counter app using shared counter_state
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  counter_state:
+    path: ../counter_state
+  cupertino_icons: ^1.0.8
+  flutter:
+    sdk: flutter
+  reflux:
+    path: ../../../../packages/reflux
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

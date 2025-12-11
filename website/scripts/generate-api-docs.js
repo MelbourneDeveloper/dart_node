@@ -35,7 +35,7 @@ const PACKAGES = [
   'dart_node_better_sqlite3',
   'dart_node_mcp',
   'dart_logging',
-  'dart_node_statecore',
+  'reflux',
 ];
 
 // Base URLs for external documentation
@@ -80,7 +80,7 @@ const PACKAGE_DOCS = {
   dart_logging: [
     { name: 'Dart logging package', url: 'https://pub.dev/packages/logging' },
   ],
-  dart_node_statecore: [
+  reflux: [
     { name: 'Redux Documentation', url: 'https://redux.js.org/' },
     { name: 'Redux Core Concepts', url: 'https://redux.js.org/introduction/core-concepts' },
   ],
@@ -458,8 +458,8 @@ description: Complete API documentation for all dart_node packages
     <p>Logging utilities for Dart applications.</p>
   </a>
 
-  <a href="/api/dart_node_statecore/" class="feature-card">
-    <h3>dart_node_statecore</h3>
+  <a href="/api/reflux/" class="feature-card">
+    <h3>reflux</h3>
     <p>Redux-style state management for Dart.</p>
   </a>
 </div>
