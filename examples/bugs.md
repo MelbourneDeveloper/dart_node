@@ -1,0 +1,1 @@
+- Most messages sit with the status of "Unread". I don't know if that's because the agents are not reading it, or the VSIX is not showing the correct status
