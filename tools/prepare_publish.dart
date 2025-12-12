@@ -4,18 +4,34 @@ import 'dart:io';
 /// Package dependency graph - order matters for publishing
 /// Packages with no dependencies must be published first
 const packageDeps = <String, List<String>>{
+  // Tier 1 - no internal dependencies
+  'dart_logging': [],
   'dart_node_core': [],
+  'dart_jsx': [],
+  // Tier 2 - depends on tier 1
+  'reflux': ['dart_logging'],
   'dart_node_express': ['dart_node_core'],
   'dart_node_ws': ['dart_node_core'],
+  'dart_node_better_sqlite3': ['dart_node_core'],
+  'dart_node_mcp': ['dart_node_core'],
+  // Tier 3 - depends on tier 2
   'dart_node_react': ['dart_node_core'],
   'dart_node_react_native': ['dart_node_core', 'dart_node_react'],
 };
 
 /// Publishing order based on dependency graph (topological sort)
 const publishOrder = [
+  // Tier 1
+  'dart_logging',
   'dart_node_core',
+  'dart_jsx',
+  // Tier 2
+  'reflux',
   'dart_node_express',
   'dart_node_ws',
+  'dart_node_better_sqlite3',
+  'dart_node_mcp',
+  // Tier 3
   'dart_node_react',
   'dart_node_react_native',
 ];

@@ -8,28 +8,33 @@ on:
 
 env:
   MIN_COVERAGE: ${{ vars.MIN_COVERAGE }}
-  ALL_PACKAGES: >-
+  # Tier 1 - no internal dependencies
+  TIER1_PACKAGES: >-
+    packages/dart_logging
     packages/dart_node_core
+    packages/dart_jsx
+  # Tier 2 - depends on tier 1
+  TIER2_PACKAGES: >-
+    packages/reflux
     packages/dart_node_express
+    packages/dart_node_ws
+    packages/dart_node_better_sqlite3
+    packages/dart_node_mcp
     packages/dart_node_react
     packages/dart_node_react_native
-    packages/dart_node_ws
-    packages/dart_node_mcp
-    packages/dart_node_better_sqlite3
-    packages/dart_logging
-    packages/reflux
-    packages/dart_jsx
-  ALL_EXAMPLES: >-
-    examples/shared
-    examples/backend
-    examples/frontend
+  # Examples
+  EXAMPLES: >-
     examples/mobile
     examples/too_many_cooks
     examples/jsx_demo
+  # Examples that need build step (no coverage)
+  BUILD_EXAMPLES: >-
+    examples/backend
+    examples/frontend
 
 jobs:
-  setup:
-    name: Setup & Lint
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +48,7 @@ jobs:
 
       - name: Get all dependencies
         run: |
-          for dir in $ALL_PACKAGES $ALL_EXAMPLES tools/build; do
+          for dir in $TIER1_PACKAGES $TIER2_PACKAGES $EXAMPLES $BUILD_EXAMPLES examples/shared tools/build; do
             echo "::group::$dir"
             cd $dir && dart pub get && cd - > /dev/null
             echo "::endgroup::"
@@ -52,104 +57,80 @@ jobs:
       - name: Check formatting
         run: |
           dart format --set-exit-if-changed packages/
-          for dir in $ALL_EXAMPLES tools/build; do
-            dart format --set-exit-if-changed $dir
-          done
+          dart format --set-exit-if-changed examples/
+          dart format --set-exit-if-changed tools/build
 
       - name: Analyze
         run: |
-          for dir in $ALL_PACKAGES $ALL_EXAMPLES tools/build; do
+          for dir in $TIER1_PACKAGES $TIER2_PACKAGES $EXAMPLES $BUILD_EXAMPLES examples/shared tools/build; do
             echo "::group::Analyzing $dir"
             cd $dir && dart analyze --no-fatal-warnings && cd - > /dev/null
             echo "::endgroup::"
           done
 
-  test-packages:
-    name: Test Packages
-    needs: setup
+  test-tier1:
+    name: Test Tier 1 (Core)
+    needs: lint
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        package:
-          - { dir: packages/dart_node_core, name: dart_node_core }
-          - { dir: packages/dart_node_express, name: dart_node_express }
-          - { dir: packages/dart_node_react, name: dart_node_react }
-          - { dir: packages/dart_node_react_native, name: dart_node_react_native }
-          - { dir: packages/dart_node_ws, name: dart_node_ws }
-          - { dir: packages/dart_node_mcp, name: dart_node_mcp }
-          - { dir: packages/dart_node_better_sqlite3, name: dart_node_better_sqlite3 }
-          - { dir: packages/dart_logging, name: dart_logging }
-          - { dir: packages/reflux, name: reflux }
-          - { dir: packages/dart_jsx, name: dart_jsx }
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-
-      - name: Get dependencies
-        run: cd ${{ matrix.package.dir }} && dart pub get
 
       - name: Activate coverage tool
         run: dart pub global activate coverage
-
-      - uses: ./.github/actions/test-coverage
-        with:
-          working-directory: ${{ matrix.package.dir }}
-          min-coverage: ${{ env.MIN_COVERAGE }}
-          name: ${{ matrix.package.name }}
-
-  test-examples:
-    name: Test Examples
-    needs: setup
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        example:
-          - { dir: examples/mobile, name: mobile, coverage: true }
-          - { dir: examples/too_many_cooks, name: too_many_cooks, coverage: true }
-          - { dir: examples/jsx_demo, name: jsx_demo, coverage: true }
-          - { dir: examples/backend, name: backend, coverage: false, needs_build: true }
-          - { dir: examples/frontend, name: frontend, coverage: false, needs_build: true, platform: chrome }
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
 
       - name: Get dependencies
         run: |
-          cd examples/shared && dart pub get && cd -
-          cd ${{ matrix.example.dir }} && dart pub get && cd -
-          cd tools/build && dart pub get
+          for dir in $TIER1_PACKAGES; do
+            cd $dir && dart pub get && cd - > /dev/null
+          done
+
+      - name: Test all tier 1 packages in parallel
+        run: ./tools/test_parallel.sh $MIN_COVERAGE $TIER1_PACKAGES
+
+  test-tier2:
+    name: Test Tier 2 (Dependent Packages)
+    needs: test-tier1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
 
       - name: Activate coverage tool
-        if: matrix.example.coverage
         run: dart pub global activate coverage
 
-      - name: Install Node dependencies
-        if: matrix.example.needs_build
-        working-directory: examples/backend
-        run: npm install
+      - name: Get dependencies
+        run: |
+          for dir in $TIER1_PACKAGES $TIER2_PACKAGES; do
+            cd $dir && dart pub get && cd - > /dev/null
+          done
 
-      - name: Build
-        if: matrix.example.needs_build
-        run: dart run tools/build/build.dart ${{ matrix.example.name }}
+      - name: Test all tier 2 packages in parallel
+        run: ./tools/test_parallel.sh $MIN_COVERAGE $TIER2_PACKAGES
 
-      - name: Test with coverage
-        if: matrix.example.coverage
-        uses: ./.github/actions/test-coverage
-        with:
-          working-directory: ${{ matrix.example.dir }}
-          min-coverage: ${{ env.MIN_COVERAGE }}
-          name: ${{ matrix.example.name }}
+  test-examples:
+    name: Test Examples
+    needs: test-tier2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
 
-      - name: Test without coverage
-        if: ${{ !matrix.example.coverage }}
-        working-directory: ${{ matrix.example.dir }}
-        run: dart test ${{ matrix.example.platform && format('-p {0}', matrix.example.platform) || '' }}
+      - name: Activate coverage tool
+        run: dart pub global activate coverage
+
+      - name: Get dependencies
+        run: |
+          for dir in $TIER1_PACKAGES $TIER2_PACKAGES examples/shared $EXAMPLES tools/build; do
+            cd $dir && dart pub get && cd - > /dev/null
+          done
+
+      - name: Test all examples in parallel
+        run: ./tools/test_parallel.sh $MIN_COVERAGE $EXAMPLES
 
   build:
-    name: Build All
-    needs: [test-packages, test-examples]
+    name: Build
+    needs: test-examples
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -157,7 +138,7 @@ jobs:
 
       - name: Get all dependencies
         run: |
-          for dir in $ALL_PACKAGES $ALL_EXAMPLES tools/build; do
+          for dir in $TIER1_PACKAGES $TIER2_PACKAGES examples/shared $EXAMPLES $BUILD_EXAMPLES tools/build; do
             cd $dir && dart pub get && cd - > /dev/null
           done
 
@@ -165,10 +146,16 @@ jobs:
         working-directory: examples/backend
         run: npm install
 
-      - name: Build all targets
+      - name: Build and test build examples
         run: |
           for target in backend frontend mobile; do
             echo "::group::Building $target"
             dart run tools/build/build.dart $target
             echo "::endgroup::"
           done
+          echo "::group::Testing backend"
+          cd examples/backend && dart test
+          echo "::endgroup::"
+          echo "::group::Testing frontend"
+          cd examples/frontend && dart test -p chrome
+          echo "::endgroup::"
