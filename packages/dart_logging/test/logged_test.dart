@@ -10,10 +10,7 @@ void main() {
       minimumLogLevel: LogLevel.trace,
     );
 
-    final result = await context.logged(
-      Future.value(42),
-      'test action',
-    );
+    final result = await context.logged(Future.value(42), 'test action');
 
     expect(result, 42);
     expect(messages.length, 2);
@@ -75,11 +72,12 @@ void main() {
     await context.logged(
       Future.value(100),
       'formatted action',
-      resultFormatter: (result, elapsed) => (
-        message: 'Got $result',
-        structuredData: {'elapsed': elapsed},
-        level: LogLevel.info,
-      ),
+      resultFormatter:
+          (result, elapsed) => (
+            message: 'Got $result',
+            structuredData: {'elapsed': elapsed},
+            level: LogLevel.info,
+          ),
     );
 
     expect(messages.length, 2);

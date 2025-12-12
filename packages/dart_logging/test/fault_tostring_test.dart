@@ -29,10 +29,7 @@ void main() {
   });
 
   test('UnknownFault toString returns correct format', () {
-    final fault = Fault.fromObjectAndStackTrace(
-      42,
-      StackTrace.current,
-    );
+    final fault = Fault.fromObjectAndStackTrace(42, StackTrace.current);
     expect(fault.toString(), equals('Unknown: 42'));
   });
 }

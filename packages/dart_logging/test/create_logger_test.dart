@@ -53,9 +53,6 @@ void main() {
 
     final logger = createLogger(context);
 
-    expect(
-      () => logger.child({'key': 'value'}),
-      throwsA(isA<StateError>()),
-    );
+    expect(() => logger.child({'key': 'value'}), throwsA(isA<StateError>()));
   });
 }
