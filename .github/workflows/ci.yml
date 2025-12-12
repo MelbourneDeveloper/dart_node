@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -12,7 +10,6 @@ env:
   TIER1_PACKAGES: >-
     packages/dart_logging
     packages/dart_node_core
-    # packages/dart_jsx
   # Tier 2 - depends on tier 1
   TIER2_PACKAGES: >-
     packages/reflux
@@ -26,7 +23,6 @@ env:
   EXAMPLES: >-
     examples/mobile
     examples/too_many_cooks
-    # examples/jsx_demo
   # Examples that need build step (no coverage)
   BUILD_EXAMPLES: >-
     examples/backend
