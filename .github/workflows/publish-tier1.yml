@@ -42,8 +42,8 @@ jobs:
           dart pub get
           dart pub publish --force
 
-      - name: Publish reflux
+      - name: Publish dart_jsx
         run: |
-          cd packages/reflux
+          cd packages/dart_jsx
           dart pub get
           dart pub publish --force

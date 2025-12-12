@@ -1,4 +1,4 @@
-name: Publish Tier 2 (Express, WS, SQLite, MCP)
+name: Publish Tier 2 (Reflux, Express, WS, SQLite, MCP)
 
 on:
   schedule:
@@ -62,6 +62,14 @@ jobs:
             exit 0
           fi
 
+          # Check dart_logging is published (needed for reflux)
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/dart_logging/versions/$VERSION")
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "dart_logging $VERSION not yet available, skipping this run"
+            echo "SKIP=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
           echo "Tier 1 packages available, proceeding with tier 2"
           echo "SKIP=false" >> $GITHUB_OUTPUT
 
@@ -84,6 +92,13 @@ jobs:
       - name: Prepare packages for publishing
         if: steps.version.outputs.SKIP != 'true' && steps.check.outputs.SKIP != 'true' && steps.already.outputs.SKIP != 'true'
         run: dart tools/prepare_publish.dart ${{ steps.version.outputs.VERSION }}
+
+      - name: Publish reflux
+        if: steps.version.outputs.SKIP != 'true' && steps.check.outputs.SKIP != 'true' && steps.already.outputs.SKIP != 'true'
+        run: |
+          cd packages/reflux
+          dart pub get
+          dart pub publish --force
 
       - name: Publish dart_node_express
         if: steps.version.outputs.SKIP != 'true' && steps.check.outputs.SKIP != 'true' && steps.already.outputs.SKIP != 'true'

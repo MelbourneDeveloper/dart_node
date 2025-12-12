@@ -6,104 +6,169 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  MIN_COVERAGE: 80
+  ALL_PACKAGES: >-
+    packages/dart_node_core
+    packages/dart_node_express
+    packages/dart_node_react
+    packages/dart_node_react_native
+    packages/dart_node_ws
+    packages/dart_node_mcp
+    packages/dart_node_better_sqlite3
+    packages/dart_logging
+    packages/reflux
+    packages/dart_jsx
+  ALL_EXAMPLES: >-
+    examples/shared
+    examples/backend
+    examples/frontend
+    examples/mobile
+    examples/too_many_cooks
+    examples/jsx_demo
+
 jobs:
-  ci:
-    name: CI
+  setup:
+    name: Setup & Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
 
-      - name: Setup Dart
-        uses: dart-lang/setup-dart@v1
-        with:
-          sdk: stable
+      - name: Install cspell
+        run: npm install -g cspell
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      - name: Spell check
+        run: cspell "**/*.md" "**/*.dart" "**/*.ts" --no-progress
 
-      - name: Get dependencies
+      - name: Get all dependencies
         run: |
-          cd packages/dart_node_core && dart pub get
-          cd ../dart_node_express && dart pub get
-          cd ../dart_node_react && dart pub get
-          cd ../dart_node_react_native && dart pub get
-          cd ../dart_node_ws && dart pub get
-          cd ../../examples/shared && dart pub get
-          cd ../backend && dart pub get
-          cd ../frontend && dart pub get
-          cd ../mobile && dart pub get
-          cd ../../tools/build && dart pub get
+          for dir in $ALL_PACKAGES $ALL_EXAMPLES tools/build; do
+            echo "::group::$dir"
+            cd $dir && dart pub get && cd - > /dev/null
+            echo "::endgroup::"
+          done
 
       - name: Check formatting
         run: |
-          dart format --set-exit-if-changed packages/dart_node_core
-          dart format --set-exit-if-changed packages/dart_node_express
-          dart format --set-exit-if-changed packages/dart_node_react
-          dart format --set-exit-if-changed packages/dart_node_react_native
-          dart format --set-exit-if-changed packages/dart_node_ws
-          dart format --set-exit-if-changed examples/backend
-          dart format --set-exit-if-changed examples/frontend
-          dart format --set-exit-if-changed examples/mobile
-          dart format --set-exit-if-changed examples/shared
-          dart format --set-exit-if-changed tools/build
+          dart format --set-exit-if-changed packages/
+          for dir in $ALL_EXAMPLES tools/build; do
+            dart format --set-exit-if-changed $dir
+          done
 
       - name: Analyze
         run: |
-          cd packages/dart_node_core && dart analyze --no-fatal-warnings
-          cd ../dart_node_express && dart analyze --no-fatal-warnings
-          cd ../dart_node_react && dart analyze --no-fatal-warnings
-          cd ../dart_node_react_native && dart analyze --no-fatal-warnings
-          cd ../dart_node_ws && dart analyze --no-fatal-warnings
-          cd ../../examples/backend && dart analyze --no-fatal-warnings
-          cd ../frontend && dart analyze --no-fatal-warnings
-          cd ../mobile && dart analyze --no-fatal-warnings
-          cd ../shared && dart analyze --no-fatal-warnings
-          cd ../../tools/build && dart analyze --no-fatal-warnings
+          for dir in $ALL_PACKAGES $ALL_EXAMPLES tools/build; do
+            echo "::group::Analyzing $dir"
+            cd $dir && dart analyze --no-fatal-warnings && cd - > /dev/null
+            echo "::endgroup::"
+          done
+
+  test-packages:
+    name: Test Packages
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - { dir: packages/dart_node_core, name: dart_node_core }
+          - { dir: packages/dart_node_express, name: dart_node_express }
+          - { dir: packages/dart_node_react, name: dart_node_react }
+          - { dir: packages/dart_node_react_native, name: dart_node_react_native }
+          - { dir: packages/dart_node_ws, name: dart_node_ws }
+          - { dir: packages/dart_node_mcp, name: dart_node_mcp }
+          - { dir: packages/dart_node_better_sqlite3, name: dart_node_better_sqlite3 }
+          - { dir: packages/dart_logging, name: dart_logging }
+          - { dir: packages/reflux, name: reflux }
+          - { dir: packages/dart_jsx, name: dart_jsx }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Get dependencies
+        run: cd ${{ matrix.package.dir }} && dart pub get
+
+      - name: Activate coverage tool
+        run: dart pub global activate coverage
+
+      - uses: ./.github/actions/test-coverage
+        with:
+          working-directory: ${{ matrix.package.dir }}
+          min-coverage: ${{ env.MIN_COVERAGE }}
+          name: ${{ matrix.package.name }}
+
+  test-examples:
+    name: Test Examples
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        example:
+          - { dir: examples/mobile, name: mobile, coverage: true }
+          - { dir: examples/too_many_cooks, name: too_many_cooks, coverage: true }
+          - { dir: examples/jsx_demo, name: jsx_demo, coverage: true }
+          - { dir: examples/backend, name: backend, coverage: false, needs_build: true }
+          - { dir: examples/frontend, name: frontend, coverage: false, needs_build: true, platform: chrome }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Get dependencies
+        run: |
+          cd examples/shared && dart pub get && cd -
+          cd ${{ matrix.example.dir }} && dart pub get && cd -
+          cd tools/build && dart pub get
+
+      - name: Activate coverage tool
+        if: matrix.example.coverage
+        run: dart pub global activate coverage
+
+      - name: Install Node dependencies
+        if: matrix.example.needs_build
+        working-directory: examples/backend
+        run: npm install
+
+      - name: Build
+        if: matrix.example.needs_build
+        run: dart run tools/build/build.dart ${{ matrix.example.name }}
+
+      - name: Test with coverage
+        if: matrix.example.coverage
+        uses: ./.github/actions/test-coverage
+        with:
+          working-directory: ${{ matrix.example.dir }}
+          min-coverage: ${{ env.MIN_COVERAGE }}
+          name: ${{ matrix.example.name }}
+
+      - name: Test without coverage
+        if: ${{ !matrix.example.coverage }}
+        working-directory: ${{ matrix.example.dir }}
+        run: dart test ${{ matrix.example.platform && format('-p {0}', matrix.example.platform) || '' }}
+
+  build:
+    name: Build All
+    needs: [test-packages, test-examples]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Get all dependencies
+        run: |
+          for dir in $ALL_PACKAGES $ALL_EXAMPLES tools/build; do
+            cd $dir && dart pub get && cd - > /dev/null
+          done
 
       - name: Install Node dependencies
         working-directory: examples/backend
         run: npm install
 
-      - name: Build backend
-        run: dart run tools/build/build.dart backend
-
-      - name: Test backend
-        working-directory: examples/backend
-        run: dart test
-
-      - name: Test frontend
-        working-directory: examples/frontend
-        run: dart test -p chrome
-
-      - name: Test mobile with coverage
-        working-directory: examples/mobile
+      - name: Build all targets
         run: |
-          dart test --coverage=coverage
-          dart pub global activate coverage
-          dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
-          COVERAGE=$(awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' coverage/lcov.info)
-          echo "Mobile coverage: ${COVERAGE}%"
-          if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
-            echo "Coverage ${COVERAGE}% is below 90% threshold"
-            exit 1
-          fi
-
-      - name: Test react package with coverage
-        working-directory: packages/dart_node_react
-        run: |
-          dart test --coverage=coverage
-          dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
-          COVERAGE=$(awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' coverage/lcov.info)
-          echo "React package coverage: ${COVERAGE}%"
-          if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ] || [ "$(echo "$COVERAGE < 75" | bc -l)" -eq 1 ]; then
-            echo "Coverage ${COVERAGE}% is below 75% threshold"
-            exit 1
-          fi
-
-      - name: Build frontend
-        run: dart run tools/build/build.dart frontend
-
-      - name: Build mobile
-        run: dart run tools/build/build.dart mobile
+          for target in backend frontend mobile; do
+            echo "::group::Building $target"
+            dart run tools/build/build.dart $target
+            echo "::endgroup::"
+          done
