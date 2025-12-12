@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  MIN_COVERAGE: 80
+  MIN_COVERAGE: ${{ vars.MIN_COVERAGE }}
   ALL_PACKAGES: >-
     packages/dart_node_core
     packages/dart_node_express
