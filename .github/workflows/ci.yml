@@ -50,6 +50,16 @@ jobs:
             fi
           done
 
+      - name: Install npm dependencies
+        run: |
+          for dir in packages/* examples/*; do
+            if [ -d "$dir" ] && [ -f "$dir/package.json" ]; then
+              echo "::group::npm install $dir"
+              cd $dir && npm install && cd - > /dev/null
+              echo "::endgroup::"
+            fi
+          done
+
       - name: Spell check
         run: cspell "**/*.md" "**/*.dart" "**/*.ts" --no-progress
 
