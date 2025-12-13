@@ -5,3 +5,7 @@
 - Initial beta release
 - Typed Dart bindings for better-sqlite3 npm package
 - Synchronous SQLite3 access with WAL mode
+
+## 0.8.0-beta
+
+- Early release

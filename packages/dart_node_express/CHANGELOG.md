@@ -4,6 +4,10 @@
 
 - Version bump for upcoming release
 
+## 0.8.0
+
+- Early release
+
 ## 0.2.0-beta
 
 - Add WebSocket support integration with dart_node_ws
