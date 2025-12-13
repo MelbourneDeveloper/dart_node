@@ -23,6 +23,12 @@ BROWSER_PACKAGES="dart_node_react frontend"
 # TypeScript/npm packages use npm test
 NPM_PACKAGES="too_many_cooks_vscode_extension"
 
+# Packages that need build before test (have build.sh)
+BUILD_FIRST_PACKAGES="too_many_cooks"
+
+# VM packages that don't need coverage (integration tests with subprocesses)
+VM_NO_COVERAGE_PACKAGES="too_many_cooks"
+
 is_node_package() {
   local name=$(basename "$1")
   [[ " $NODE_PACKAGES " =~ " $name " ]]
@@ -41,6 +47,16 @@ is_npm_package() {
 is_node_interop_package() {
   local name=$(basename "$1")
   [[ " $NODE_INTEROP_PACKAGES " =~ " $name " ]]
+}
+
+needs_build_first() {
+  local name=$(basename "$1")
+  [[ " $BUILD_FIRST_PACKAGES " =~ " $name " ]]
+}
+
+is_vm_no_coverage() {
+  local name=$(basename "$1")
+  [[ " $VM_NO_COVERAGE_PACKAGES " =~ " $name " ]]
 }
 
 check_coverage() {
@@ -62,6 +78,12 @@ for dir in "$@"; do
   name=$(basename "$dir")
   (
     cd "$ROOT_DIR/$dir"
+
+    # Build first if needed (e.g., too_many_cooks compiles server to JS)
+    if needs_build_first "$dir" && [ -f "build.sh" ]; then
+      echo "Building $name before tests..."
+      ./build.sh
+    fi
 
     if is_npm_package "$dir"; then
       # TypeScript/npm package
@@ -87,6 +109,10 @@ for dir in "$@"; do
       # Browser package - no coverage
       dart test -p chrome
       echo "$name: browser tests passed"
+    elif is_vm_no_coverage "$dir"; then
+      # VM package - tests only, no coverage (e.g., integration tests with subprocesses)
+      dart test
+      echo "$name: VM tests passed (no coverage - integration tests)"
     else
       # VM package - standard dart test with coverage
       dart test --coverage=coverage
