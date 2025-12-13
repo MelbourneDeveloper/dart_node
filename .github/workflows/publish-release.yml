@@ -31,6 +31,43 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/Release/}" >> $GITHUB_OUTPUT
 
+      - name: Validate changelogs have version entries
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          # Escape dots for regex matching (1.2.3 -> 1\.2\.3)
+          VERSION_ESCAPED=$(echo "$VERSION" | sed 's/\./\\./g')
+          PACKAGES=(
+            "dart_logging"
+            "dart_node_core"
+            "dart_node_coverage"
+            "reflux"
+            "dart_node_express"
+            "dart_node_ws"
+            "dart_node_better_sqlite3"
+            "dart_node_mcp"
+            "dart_node_react"
+            "dart_node_react_native"
+          )
+          MISSING=()
+          for pkg in "${PACKAGES[@]}"; do
+            CHANGELOG="packages/$pkg/CHANGELOG.md"
+            if [[ ! -f "$CHANGELOG" ]]; then
+              echo "::error::Missing CHANGELOG.md for $pkg"
+              MISSING+=("$pkg (no CHANGELOG.md)")
+              continue
+            fi
+            # Check for ## X.Y.Z or ## X.Y.Z-prerelease header
+            if ! grep -qE "^## $VERSION_ESCAPED\b" "$CHANGELOG"; then
+              echo "::error::$pkg/CHANGELOG.md missing entry for version $VERSION"
+              MISSING+=("$pkg")
+            fi
+          done
+          if [[ ${#MISSING[@]} -gt 0 ]]; then
+            echo "::error::Changelogs missing version $VERSION: ${MISSING[*]}"
+            exit 1
+          fi
+          echo "All changelogs have entries for version $VERSION"
+
       - name: Setup Dart
         uses: ./.github/actions/setup
         with:
