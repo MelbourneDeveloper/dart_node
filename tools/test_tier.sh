@@ -62,6 +62,10 @@ for dir in "$@"; do
       echo "$name: npm tests passed"
     elif is_node_package "$dir"; then
       # Node.js package - use dart_node_coverage
+      # Install npm dependencies if package.json exists
+      if [ -f "package.json" ]; then
+        npm install
+      fi
       dart run "$COVERAGE_CLI"
       check_coverage "$name" "coverage/lcov.info"
     elif is_browser_package "$dir"; then
