@@ -8,7 +8,8 @@ environment:
 
 dependencies:
   austerity: ^1.3.0
-  dart_logging: 0.11.0-beta
+  dart_logging:
+    path: ../dart_logging
   nadz: ^0.0.7-beta
 
 dev_dependencies:
