@@ -1,20 +1,145 @@
 name: Publish Tier 1
 
 on:
-  workflow_run:
-    workflows: ["Release"]
-    types: [completed]
+  push:
+    tags:
+      - 'Release/[0-9]+.[0-9]+.[0-9]+*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 0.11.0-beta)'
+        required: true
+        type: string
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
   id-token: write
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate tag is on main (tag push only)
+        if: github.event_name == 'push'
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor ${{ github.sha }} origin/main; then
+            echo "::error::Release tag must be created from main branch!"
+            exit 1
+          fi
+
+      - name: Extract version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "VERSION=${GITHUB_REF#refs/tags/Release/}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate changelogs have version entries
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          # Escape dots for regex matching (1.2.3 -> 1\.2\.3)
+          VERSION_ESCAPED=$(echo "$VERSION" | sed 's/\./\\./g')
+          PACKAGES=(
+            "dart_logging"
+            "dart_node_core"
+            "dart_node_coverage"
+            "reflux"
+            "dart_node_express"
+            "dart_node_ws"
+            "dart_node_better_sqlite3"
+            "dart_node_mcp"
+            "dart_node_react"
+            "dart_node_react_native"
+          )
+          MISSING=()
+          for pkg in "${PACKAGES[@]}"; do
+            CHANGELOG="packages/$pkg/CHANGELOG.md"
+            if [[ ! -f "$CHANGELOG" ]]; then
+              echo "::error::Missing CHANGELOG.md for $pkg"
+              MISSING+=("$pkg (no CHANGELOG.md)")
+              continue
+            fi
+            # Check for ## X.Y.Z or ## X.Y.Z-prerelease header
+            if ! grep -qE "^## $VERSION_ESCAPED\b" "$CHANGELOG"; then
+              echo "::error::$pkg/CHANGELOG.md missing entry for version $VERSION"
+              MISSING+=("$pkg")
+            fi
+          done
+          if [[ ${#MISSING[@]} -gt 0 ]]; then
+            echo "::error::Changelogs missing version $VERSION: ${MISSING[*]}"
+            exit 1
+          fi
+          echo "All changelogs have entries for version $VERSION"
+
+      - name: Setup Dart
+        uses: ./.github/actions/setup
+        with:
+          dart-version: ${{ vars.DART_VERSION }}
+
+      - name: Prepare for publishing (switch to pub.dev deps)
+        run: dart run tools/prepare_publish.dart ${{ steps.version.outputs.VERSION }}
+
+      - name: Create release branch and commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b release/${{ steps.version.outputs.VERSION }}
+          git add -A
+          git commit -m "chore: prepare release ${{ steps.version.outputs.VERSION }} with pub.dev dependencies"
+          git push origin release/${{ steps.version.outputs.VERSION }}
+
+      - name: Create PR to main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --title "Release ${{ steps.version.outputs.VERSION }}" \
+            --body "## Release ${{ steps.version.outputs.VERSION }}
+
+          This PR is auto-created from the release tag.
+
+          **Do not merge yet!** Publishing happens in tier workflows (tier1 → tier2 → tier3).
+
+          After tier3 completes, dependencies will be switched back to local and this PR will be updated.
+
+          ### Publishing Tiers
+          - Tier 1: dart_logging, dart_node_core, dart_node_coverage (this workflow)
+          - Tier 2: reflux, dart_node_express, dart_node_ws, dart_node_better_sqlite3, dart_node_mcp
+          - Tier 3: dart_node_react, dart_node_react_native" \
+            --base main \
+            --head release/${{ steps.version.outputs.VERSION }}
+
   publish:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    uses: ./.github/workflows/_publish-packages.yml
-    with:
-      tier: 1
-      packages: "dart_logging dart_node_core"
-      environment: pub.dev-tier1
-    secrets: inherit
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment: pub.dev-tier1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout release branch
+        run: |
+          git fetch origin "release/${{ needs.prepare.outputs.version }}"
+          git checkout "release/${{ needs.prepare.outputs.version }}"
+
+      - uses: ./.github/actions/setup
+        with:
+          dart-version: ${{ vars.DART_VERSION }}
+
+      - name: Publish packages
+        run: |
+          chmod +x .github/scripts/publish-packages.sh
+          .github/scripts/publish-packages.sh "${{ needs.prepare.outputs.version }}" dart_logging dart_node_core dart_node_coverage

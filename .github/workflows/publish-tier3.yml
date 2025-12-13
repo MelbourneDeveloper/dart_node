@@ -1,9 +1,12 @@
 name: Publish Tier 3
 
 on:
-  workflow_run:
-    workflows: ["Publish Tier 2"]
-    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 0.11.0-beta)'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -11,10 +14,23 @@ permissions:
 
 jobs:
   publish:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    uses: ./.github/workflows/_publish-packages.yml
-    with:
-      tier: 3
-      packages: "dart_node_react dart_node_react_native"
-      environment: pub.dev-tier3
-    secrets: inherit
+    runs-on: ubuntu-latest
+    environment: pub.dev-tier3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout release branch
+        run: |
+          git fetch origin "release/${{ inputs.version }}"
+          git checkout "release/${{ inputs.version }}"
+
+      - uses: ./.github/actions/setup
+        with:
+          dart-version: ${{ vars.DART_VERSION }}
+
+      - name: Publish packages
+        run: |
+          chmod +x .github/scripts/publish-packages.sh
+          .github/scripts/publish-packages.sh "${{ inputs.version }}" dart_node_react dart_node_react_native

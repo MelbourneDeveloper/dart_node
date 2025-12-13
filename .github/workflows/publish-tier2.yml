@@ -1,9 +1,12 @@
 name: Publish Tier 2
 
 on:
-  workflow_run:
-    workflows: ["Publish Tier 1"]
-    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 0.11.0-beta)'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -11,10 +14,23 @@ permissions:
 
 jobs:
   publish:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    uses: ./.github/workflows/_publish-packages.yml
-    with:
-      tier: 2
-      packages: "reflux dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_mcp"
-      environment: pub.dev-tier2
-    secrets: inherit
+    runs-on: ubuntu-latest
+    environment: pub.dev-tier2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout release branch
+        run: |
+          git fetch origin "release/${{ inputs.version }}"
+          git checkout "release/${{ inputs.version }}"
+
+      - uses: ./.github/actions/setup
+        with:
+          dart-version: ${{ vars.DART_VERSION }}
+
+      - name: Publish packages
+        run: |
+          chmod +x .github/scripts/publish-packages.sh
+          .github/scripts/publish-packages.sh "${{ inputs.version }}" reflux dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_mcp
