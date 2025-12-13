@@ -12,33 +12,30 @@ export class MessageTreeItem extends vscode.TreeItem {
     label: string,
     description: string | undefined,
     collapsibleState: vscode.TreeItemCollapsibleState,
-    public readonly message?: Message,
-    public readonly isDetail?: boolean
+    public readonly message?: Message
   ) {
     super(label, collapsibleState);
     this.description = description;
     this.iconPath = this.getIcon();
     this.contextValue = message ? 'message' : undefined;
 
-    if (message && !isDetail) {
+    if (message) {
       this.tooltip = this.createTooltip(message);
     }
   }
 
-  private getIcon(): vscode.ThemeIcon {
+  private getIcon(): vscode.ThemeIcon | undefined {
     if (!this.message) {
       return new vscode.ThemeIcon('mail');
     }
-    if (this.message.toAgent === '*') {
-      return new vscode.ThemeIcon('broadcast');
-    }
+    // Status icon: unread = yellow circle, read = none
     if (this.message.readAt === undefined) {
       return new vscode.ThemeIcon(
-        'mail-read',
+        'circle-filled',
         new vscode.ThemeColor('charts.yellow')
       );
     }
-    return new vscode.ThemeIcon('mail');
+    return undefined;
   }
 
   private createTooltip(msg: Message): vscode.MarkdownString {
@@ -112,9 +109,9 @@ export class MessagesTreeProvider
   }
 
   getChildren(element?: MessageTreeItem): MessageTreeItem[] {
-    // If expanding a message, show its details
-    if (element?.message) {
-      return this.createMessageDetails(element.message);
+    // No children - flat list
+    if (element) {
+      return [];
     }
 
     const allMessages = messages.value;
@@ -134,85 +131,20 @@ export class MessagesTreeProvider
       (a, b) => b.createdAt - a.createdAt
     );
 
+    // Single row per message: "from → to | time | content"
     return sorted.map((msg) => {
-      const isBroadcast = msg.toAgent === '*';
-      const target = isBroadcast ? 'all' : msg.toAgent;
+      const target = msg.toAgent === '*' ? 'all' : msg.toAgent;
       const relativeTime = this.getRelativeTime(msg.createdAt);
-      const preview =
-        msg.content.length > 25
-          ? msg.content.substring(0, 25) + '...'
-          : msg.content;
+      const status = msg.readAt === undefined ? 'unread' : '';
+      const statusPart = status ? ` [${status}]` : '';
 
       return new MessageTreeItem(
-        `${msg.fromAgent} → ${target}`,
-        `${relativeTime} | ${preview}`,
-        vscode.TreeItemCollapsibleState.Collapsed,
+        `${msg.fromAgent} → ${target} | ${relativeTime}${statusPart}`,
+        msg.content,
+        vscode.TreeItemCollapsibleState.None,
         msg
       );
     });
-  }
-
-  private createMessageDetails(msg: Message): MessageTreeItem[] {
-    const details: MessageTreeItem[] = [];
-    const sentDate = new Date(msg.createdAt);
-
-    // Full content (may span multiple lines)
-    details.push(
-      new MessageTreeItem(
-        '📝 Content',
-        msg.content,
-        vscode.TreeItemCollapsibleState.None,
-        msg,
-        true
-      )
-    );
-
-    // Timestamps
-    details.push(
-      new MessageTreeItem(
-        '📅 Sent',
-        sentDate.toLocaleString(),
-        vscode.TreeItemCollapsibleState.None,
-        msg,
-        true
-      )
-    );
-
-    if (msg.readAt) {
-      const readDate = new Date(msg.readAt);
-      details.push(
-        new MessageTreeItem(
-          '✅ Read',
-          readDate.toLocaleString(),
-          vscode.TreeItemCollapsibleState.None,
-          msg,
-          true
-        )
-      );
-    } else {
-      details.push(
-        new MessageTreeItem(
-          '⏳ Status',
-          'Unread',
-          vscode.TreeItemCollapsibleState.None,
-          msg,
-          true
-        )
-      );
-    }
-
-    // Message ID
-    details.push(
-      new MessageTreeItem(
-        '🔑 ID',
-        msg.id,
-        vscode.TreeItemCollapsibleState.None,
-        msg,
-        true
-      )
-    );
-
-    return details;
   }
 
   private getRelativeTime(timestamp: number): string {

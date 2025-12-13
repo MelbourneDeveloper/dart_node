@@ -630,8 +630,8 @@ ORDER BY created_at DESC''';
   final stmtResult = db.prepare(sql);
   return switch (stmtResult) {
     Success(:final value) => switch (value.all([agentName])) {
-      Success(:final value) => Success(
-        value
+      Success(:final value) => () {
+        final messageList = value
             .map(
               (r) => (
                 id: r['id']! as String,
@@ -642,12 +642,50 @@ ORDER BY created_at DESC''';
                 readAt: r['read_at'] as int?,
               ),
             )
-            .toList(),
+            .toList();
+        // Auto-mark fetched messages as read (agent proved identity with key)
+        _autoMarkRead(db, log, agentName, messageList);
+        return Success<List<Message>, DbError>(messageList);
+      }(),
+      Error(:final error) => Error<List<Message>, DbError>(
+        (code: errDatabase, message: error),
       ),
-      Error(:final error) => Error((code: errDatabase, message: error)),
     },
-    Error(:final error) => Error((code: errDatabase, message: error)),
+    Error(:final error) => Error<List<Message>, DbError>(
+      (code: errDatabase, message: error),
+    ),
   };
+}
+
+void _autoMarkRead(
+  Database db,
+  Logger log,
+  String agentName,
+  List<Message> messageList,
+) {
+  final unreadIds = messageList
+      .where((m) => m.readAt == null)
+      .map((m) => m.id)
+      .toList();
+  if (unreadIds.isEmpty) return;
+
+  final now = _now();
+  final stmtResult = db.prepare('''
+    UPDATE messages SET read_at = ?
+    WHERE id = ? AND (to_agent = ? OR to_agent = '*') AND read_at IS NULL
+  ''');
+  if (stmtResult case Error(:final error)) {
+    log.warn('Failed to auto-mark messages read: $error');
+    return;
+  }
+  final stmt = (stmtResult as Success<Statement, String>).value;
+  for (final id in unreadIds) {
+    final result = stmt.run([now, id, agentName]);
+    if (result case Error(:final error)) {
+      log.warn('Failed to mark message $id as read: $error');
+    }
+  }
+  log.debug('Auto-marked ${unreadIds.length} messages as read for $agentName');
 }
 
 Result<void, DbError> _markRead(

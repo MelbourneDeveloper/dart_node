@@ -115,7 +115,7 @@ class JsxParser {
   final String _source;
   int _pos = 0;
 
-  String get _remaining => _source.substring(_pos);
+  String get _remaining => _pos >= _source.length ? '' : _source.substring(_pos);
   bool get _isEof => _pos >= _source.length;
   String get _currentChar => _isEof ? '' : _source[_pos];
 
@@ -245,9 +245,10 @@ class JsxParser {
     final attrs = <JsxAttribute>[];
     while (!_isEof && _currentChar != '>' && !_remaining.startsWith('/>')) {
       _skipWhitespace();
-      final result = _shouldParseAttribute()
-          ? _parseAttribute()
-          : Success<JsxAttribute?, String>(null);
+      if (!_shouldParseAttribute()) break;
+
+      final posBefore = _pos;
+      final result = _parseAttribute();
 
       final shouldContinue = result.match(
         onSuccess: (attr) {
@@ -258,6 +259,11 @@ class JsxParser {
       );
       if (!shouldContinue) {
         return result.match(onSuccess: (_) => Success(attrs), onError: Error.new);
+      }
+
+      // Detect infinite loop - invalid char that can't be parsed
+      if (_pos == posBefore) {
+        return Error('Unexpected character "$_currentChar" at position $_pos');
       }
     }
     return Success(attrs);
@@ -278,6 +284,9 @@ class JsxParser {
   Result<JsxAttribute, String> _parseSpreadAttribute() {
     _pos += 4; // consume '{...'
     final expr = _parseBalancedExpression('}');
+    if (_isEof || _currentChar != '}') {
+      return Error('Unclosed spread attribute at position $_pos');
+    }
     _pos++; // consume '}'
     return Success(JsxSpreadAttribute(expr));
   }
@@ -324,6 +333,9 @@ class JsxParser {
   Result<JsxAttribute, String> _parseExpressionAttribute(String name) {
     _pos++; // consume '{'
     final expr = _parseBalancedExpression('}');
+    if (_isEof || _currentChar != '}') {
+      return Error('Unclosed expression in attribute $name at position $_pos');
+    }
     _pos++; // consume '}'
     return Success(JsxExpressionAttribute(name, expr));
   }
@@ -358,6 +370,9 @@ class JsxParser {
   Result<JsxNode, String> _parseExpressionNode() {
     _pos++; // consume '{'
     final expr = _parseBalancedExpression('}');
+    if (_isEof || _currentChar != '}') {
+      return Error('Unclosed expression at position $_pos');
+    }
     _pos++; // consume '}'
     return Success(JsxExpression(expr.trim()));
   }

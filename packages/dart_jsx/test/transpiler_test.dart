@@ -1242,10 +1242,7 @@ final nav = <nav className="menu">
     final parser = JsxParser('<div>{expr</div>');
     final result = parser.parse();
 
-    expect(result.isSuccess, isTrue);
-    final element = (result as Success<JsxNode, String>).value as JsxElement;
-    final expr = element.children.first as JsxExpression;
-    expect(expr.expression, equals('expr'));
+    expect(result.isSuccess, isFalse);
   });
 
   test('parses unicode characters in text content', () {
@@ -1337,9 +1334,7 @@ final nav = <nav className="menu">
     final parser = JsxParser('<div@invalid>Content</div@invalid>');
     final result = parser.parse();
 
-    expect(result.isSuccess, isTrue);
-    final element = (result as Success<JsxNode, String>).value as JsxElement;
-    expect(element.tagName, equals('div'));
+    expect(result.isSuccess, isFalse);
   });
 
   test('parses nested fragments correctly', () {
@@ -1446,8 +1441,6 @@ final nav = <nav className="menu">
     final parser = JsxParser('<br /');
     final result = parser.parse();
 
-    expect(result.isSuccess, isTrue);
-    final element = (result as Success<JsxNode, String>).value as JsxElement;
-    expect(element.tagName, equals('br'));
+    expect(result.isSuccess, isFalse);
   });
 }
