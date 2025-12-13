@@ -1,14 +1,16 @@
 name: Publish Tier 3 (React Packages)
 
+# TEMPORARILY DISABLED
 on:
-  schedule:
-    # Runs 40 minutes after tier 1 (20 mins after tier 2)
-    - cron: '40 * * * *'
   workflow_dispatch:
     inputs:
       version:
         description: 'Version to publish (e.g., 0.2.0-beta)'
         required: true
+  # workflow_run:
+  #   workflows: ["Publish Tier 2 (Reflux, Express, WS, SQLite, MCP)"]
+  #   types:
+  #     - completed
 
 permissions:
   contents: read
@@ -17,7 +19,10 @@ permissions:
 jobs:
   check-and-publish:
     runs-on: ubuntu-latest
-    environment: pub.dev
+    # Use environment with 20-minute wait timer (configure in repo settings)
+    # Wait timer doesn't consume billable minutes
+    environment: pub.dev-tier3
+    if: github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout

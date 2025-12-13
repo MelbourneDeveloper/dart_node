@@ -2,6 +2,29 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "test: current package with coverage",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart"
+      ],
+      "options": {
+        "cwd": "${fileDirname}/.."
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": ["$dart"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "detail": "Run tests with coverage for the current package (Ctrl+Shift+T)"
+    },
+    {
       "label": "build-backend",
       "type": "shell",
       "command": "dart",
@@ -74,6 +97,118 @@
       "args": ["test"],
       "options": {
         "cwd": "${workspaceFolder}/examples/backend"
+      },
+      "group": "test",
+      "problemMatcher": ["$dart"]
+    },
+    {
+      "label": "coverage: current package",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart"
+      ],
+      "options": {
+        "cwd": "${fileDirname}/.."
+      },
+      "group": "test",
+      "problemMatcher": ["$dart"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "coverage: dart_node_core",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/packages/dart_node_core"
+      },
+      "group": "test",
+      "problemMatcher": ["$dart"]
+    },
+    {
+      "label": "coverage: dart_node_express",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/packages/dart_node_express"
+      },
+      "group": "test",
+      "problemMatcher": ["$dart"]
+    },
+    {
+      "label": "coverage: dart_node_ws",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/packages/dart_node_ws"
+      },
+      "group": "test",
+      "problemMatcher": ["$dart"]
+    },
+    {
+      "label": "coverage: dart_node_better_sqlite3",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/packages/dart_node_better_sqlite3"
+      },
+      "group": "test",
+      "problemMatcher": ["$dart"]
+    },
+    {
+      "label": "coverage: dart_node_mcp",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/packages/dart_node_mcp"
+      },
+      "group": "test",
+      "problemMatcher": ["$dart"]
+    },
+    {
+      "label": "coverage: dart_node_react_native",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/packages/dart_node_react_native"
+      },
+      "group": "test",
+      "problemMatcher": ["$dart"]
+    },
+    {
+      "label": "coverage: all node packages",
+      "type": "shell",
+      "command": "for pkg in dart_node_core dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_mcp dart_node_react_native; do echo \"=== $pkg ===\"; cd packages/$pkg && dart run ../dart_node_coverage/bin/coverage.dart && cd ../..; done",
+      "options": {
+        "cwd": "${workspaceFolder}"
       },
       "group": "test",
       "problemMatcher": ["$dart"]

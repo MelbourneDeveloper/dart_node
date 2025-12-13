@@ -6,10 +6,14 @@ library;
 
 import 'dart:js_interop';
 
+import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:dart_node_express/dart_node_express.dart';
 import 'package:test/test.dart';
 
 void main() {
+  setUp(initCoverage);
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
+
   group('express()', () {
     test('creates an Express application', () {
       final app = express();

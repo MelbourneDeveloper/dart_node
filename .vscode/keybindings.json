@@ -1,0 +1,14 @@
+[
+  {
+    "key": "ctrl+shift+t",
+    "command": "workbench.action.tasks.runTask",
+    "args": "test: current package with coverage",
+    "when": "editorTextFocus && resourceExtname == '.dart'"
+  },
+  {
+    "key": "ctrl+shift+alt+t",
+    "command": "workbench.action.tasks.runTask",
+    "args": "coverage: all node packages",
+    "when": "editorTextFocus"
+  }
+]

@@ -13,4 +13,6 @@ dependencies:
   node_preamble: ^2.0.2
 
 dev_dependencies:
+  dart_node_coverage:
+    path: ../dart_node_coverage
   test: ^1.24.0

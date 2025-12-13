@@ -1,9 +1,13 @@
 // Pure Dart callback tests - import only types and callbacks
 // to avoid JS interop
+import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:dart_node_mcp/src/types.dart';
 import 'package:test/test.dart';
 
 void main() {
+  setUp(initCoverage);
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
+
   group('ToolCallback', () {
     test('can be defined with correct signature', () {
       Future<CallToolResult> callback(

@@ -34,3 +34,5 @@ examples/too_many_cooks_vscode_extension/.vscode-test/vscode-darwin-arm64-1.106.
 *.vsix
 
 examples/too_many_cooks_vscode_extension/.vscode-test/
+
+examples/reflux_demo/flutter_counter/test/failures/

@@ -1,3 +1,4 @@
+import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:test/test.dart';
@@ -8,6 +9,9 @@ import 'package:test/test.dart';
 /// These tests verify type correctness and API contracts that can be checked
 /// in a pure Dart environment.
 void main() {
+  setUp(initCoverage);
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
+
   group('End-to-end workflow types', () {
     test('complete server setup workflow compiles', () {
       // This test verifies that the complete workflow type-checks

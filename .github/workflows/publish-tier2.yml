@@ -1,15 +1,16 @@
 name: Publish Tier 2 (Reflux, Express, WS, SQLite, MCP)
 
+# TEMPORARILY DISABLED
 on:
-  schedule:
-    # Runs 20 minutes after tier 1 would typically complete
-    # Adjust cron as needed - this runs at :20 past each hour
-    - cron: '20 * * * *'
   workflow_dispatch:
     inputs:
       version:
         description: 'Version to publish (e.g., 0.2.0-beta)'
         required: true
+  # workflow_run:
+  #   workflows: ["Publish Tier 1 (Core Packages)"]
+  #   types:
+  #     - completed
 
 permissions:
   contents: read
@@ -18,7 +19,10 @@ permissions:
 jobs:
   check-and-publish:
     runs-on: ubuntu-latest
-    environment: pub.dev
+    # Use environment with 20-minute wait timer (configure in repo settings)
+    # Wait timer doesn't consume billable minutes
+    environment: pub.dev-tier2
+    if: github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout

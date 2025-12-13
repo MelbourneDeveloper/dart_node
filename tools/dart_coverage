@@ -1,0 +1,18 @@
+#!/bin/bash
+# Wrapper script that replaces 'dart' command for coverage
+# Usage: dart_coverage test [args...]
+#
+# This script intercepts 'dart test' calls and runs our coverage CLI instead
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+COVERAGE_CLI="$ROOT_DIR/packages/dart_node_coverage/bin/coverage.dart"
+
+# If first arg is "test", run coverage CLI
+if [ "$1" = "test" ]; then
+  shift  # Remove "test" from args
+  exec dart run "$COVERAGE_CLI" "$@"
+else
+  # For non-test commands, pass through to real dart
+  exec dart "$@"
+fi

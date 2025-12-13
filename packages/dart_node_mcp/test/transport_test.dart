@@ -1,10 +1,14 @@
 // Transport factory tests - these verify the factory functions exist
 // but actual Transport creation requires Node.js runtime
+import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:test/test.dart';
 
 void main() {
+  setUp(initCoverage);
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
+
   group('createStdioServerTransport', () {
     test('function exists and can be called', () {
       expect(createStdioServerTransport, isA<Function>());

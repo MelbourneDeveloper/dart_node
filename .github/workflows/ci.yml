@@ -6,19 +6,25 @@ on:
 
 env:
   MIN_COVERAGE: ${{ vars.MIN_COVERAGE }}
-  # Tier 1 - no internal dependencies
+  # Tier 1 - no internal dependencies (VM tests with coverage)
   TIER1_PACKAGES: >-
     packages/dart_logging
+  # Tier 1 Node.js packages (coverage via dart_node_coverage)
+  TIER1_NODE_PACKAGES: >-
     packages/dart_node_core
-  # Tier 2 - depends on tier 1
+  # Tier 2 - depends on tier 1 (VM tests with coverage)
   TIER2_PACKAGES: >-
     packages/reflux
+  # Tier 2 Node.js packages (coverage via dart_node_coverage)
+  TIER2_NODE_PACKAGES: >-
     packages/dart_node_express
     packages/dart_node_ws
     packages/dart_node_better_sqlite3
     packages/dart_node_mcp
-    packages/dart_node_react
     packages/dart_node_react_native
+  # Tier 2 Browser packages (run on Chrome, no Node.js coverage)
+  TIER2_BROWSER_PACKAGES: >-
+    packages/dart_node_react
   # Examples
   EXAMPLES: >-
     examples/mobile
@@ -44,7 +50,7 @@ jobs:
 
       - name: Get all dependencies
         run: |
-          for dir in $TIER1_PACKAGES $TIER2_PACKAGES $EXAMPLES $BUILD_EXAMPLES examples/shared tools/build; do
+          for dir in packages/dart_node_coverage $TIER1_PACKAGES $TIER1_NODE_PACKAGES $TIER2_PACKAGES $TIER2_NODE_PACKAGES $TIER2_BROWSER_PACKAGES $EXAMPLES $BUILD_EXAMPLES examples/shared tools/build; do
             echo "::group::$dir"
             cd $dir && dart pub get && cd - > /dev/null
             echo "::endgroup::"
@@ -58,7 +64,7 @@ jobs:
 
       - name: Analyze
         run: |
-          for dir in $TIER1_PACKAGES $TIER2_PACKAGES $EXAMPLES $BUILD_EXAMPLES examples/shared tools/build; do
+          for dir in packages/dart_node_coverage $TIER1_PACKAGES $TIER1_NODE_PACKAGES $TIER2_PACKAGES $TIER2_NODE_PACKAGES $TIER2_BROWSER_PACKAGES $EXAMPLES $BUILD_EXAMPLES examples/shared tools/build; do
             echo "::group::Analyzing $dir"
             cd $dir && dart analyze --no-fatal-warnings && cd - > /dev/null
             echo "::endgroup::"
@@ -77,12 +83,29 @@ jobs:
 
       - name: Get dependencies
         run: |
-          for dir in $TIER1_PACKAGES; do
+          for dir in $TIER1_PACKAGES $TIER1_NODE_PACKAGES; do
             cd $dir && dart pub get && cd - > /dev/null
           done
 
-      - name: Test all tier 1 packages in parallel
+      - name: Test tier 1 VM packages with coverage
         run: ./tools/test_parallel.sh $MIN_COVERAGE $TIER1_PACKAGES
+
+      - name: Test tier 1 Node.js packages with coverage
+        run: |
+          cd packages/dart_node_coverage && dart pub get && cd - > /dev/null
+          for dir in $TIER1_NODE_PACKAGES; do
+            echo "::group::Testing $dir with coverage"
+            cd $dir
+            dart run ../../packages/dart_node_coverage/bin/coverage.dart
+            COVERAGE=$(awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' coverage/lcov.info)
+            echo "$(basename $dir) coverage: ${COVERAGE}%"
+            if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ] || [ "$(echo "$COVERAGE < $MIN_COVERAGE" | bc -l)" -eq 1 ]; then
+              echo "Coverage ${COVERAGE}% is below ${MIN_COVERAGE}% threshold"
+              exit 1
+            fi
+            cd - > /dev/null
+            echo "::endgroup::"
+          done
 
   test-tier2:
     name: Test Tier 2 (Dependent Packages)
@@ -97,12 +120,37 @@ jobs:
 
       - name: Get dependencies
         run: |
-          for dir in $TIER1_PACKAGES $TIER2_PACKAGES; do
+          cd packages/dart_node_coverage && dart pub get && cd - > /dev/null
+          for dir in $TIER1_PACKAGES $TIER1_NODE_PACKAGES $TIER2_PACKAGES $TIER2_NODE_PACKAGES $TIER2_BROWSER_PACKAGES; do
             cd $dir && dart pub get && cd - > /dev/null
           done
 
-      - name: Test all tier 2 packages in parallel
+      - name: Test tier 2 VM packages with coverage
         run: ./tools/test_parallel.sh $MIN_COVERAGE $TIER2_PACKAGES
+
+      - name: Test tier 2 Node.js packages with coverage
+        run: |
+          for dir in $TIER2_NODE_PACKAGES; do
+            echo "::group::Testing $dir with coverage"
+            cd $dir
+            dart run ../../packages/dart_node_coverage/bin/coverage.dart
+            COVERAGE=$(awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' coverage/lcov.info)
+            echo "$(basename $dir) coverage: ${COVERAGE}%"
+            if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ] || [ "$(echo "$COVERAGE < $MIN_COVERAGE" | bc -l)" -eq 1 ]; then
+              echo "Coverage ${COVERAGE}% is below ${MIN_COVERAGE}% threshold"
+              exit 1
+            fi
+            cd - > /dev/null
+            echo "::endgroup::"
+          done
+
+      - name: Test tier 2 Browser packages on Chrome
+        run: |
+          for dir in $TIER2_BROWSER_PACKAGES; do
+            echo "::group::Testing $dir on Chrome"
+            cd $dir && dart test -p chrome && cd - > /dev/null
+            echo "::endgroup::"
+          done
 
   test-examples:
     name: Test Examples
@@ -117,7 +165,7 @@ jobs:
 
       - name: Get dependencies
         run: |
-          for dir in $TIER1_PACKAGES $TIER2_PACKAGES examples/shared $EXAMPLES tools/build; do
+          for dir in $TIER1_PACKAGES $TIER1_NODE_PACKAGES $TIER2_PACKAGES $TIER2_NODE_PACKAGES $TIER2_BROWSER_PACKAGES examples/shared $EXAMPLES tools/build; do
             cd $dir && dart pub get && cd - > /dev/null
           done
 
@@ -134,7 +182,7 @@ jobs:
 
       - name: Get all dependencies
         run: |
-          for dir in $TIER1_PACKAGES $TIER2_PACKAGES examples/shared $EXAMPLES $BUILD_EXAMPLES tools/build; do
+          for dir in $TIER1_PACKAGES $TIER1_NODE_PACKAGES $TIER2_PACKAGES $TIER2_NODE_PACKAGES $TIER2_BROWSER_PACKAGES examples/shared $EXAMPLES $BUILD_EXAMPLES tools/build; do
             cd $dir && dart pub get && cd - > /dev/null
           done
 

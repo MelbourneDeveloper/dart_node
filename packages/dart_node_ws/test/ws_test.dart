@@ -4,12 +4,16 @@
 @TestOn('node')
 library;
 
+import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:dart_node_ws/dart_node_ws.dart';
 import 'package:test/test.dart';
 
 //TODO: we need actual web socket server/client interaction tests here.
 
 void main() {
+  setUp(initCoverage);
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
+
   group('WebSocketReadyState', () {
     test('connecting has value 0', () {
       expect(WebSocketReadyState.connecting.value, equals(0));

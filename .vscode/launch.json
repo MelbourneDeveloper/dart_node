@@ -2,6 +2,18 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Run Tests with Coverage",
+      "type": "dart",
+      "request": "launch",
+      "customTool": "${workspaceFolder}/tools/dart_coverage",
+      "customToolReplacesArgs": 0,
+      "templateFor": "",
+      "codeLens": {
+        "for": ["run-test", "run-test-file"],
+        "title": "Run with Coverage"
+      }
+    },
+    {
       "name": "Backend: Build & Run",
       "type": "node",
       "request": "launch",
@@ -57,12 +69,72 @@
       "request": "launch",
       "program": "${workspaceFolder}/examples/backend/test/server_test.dart",
       "cwd": "${workspaceFolder}/examples/backend"
+    },
+    {
+      "name": "Coverage: Current Package",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "dart run ${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart",
+      "cwd": "${fileDirname}/.."
+    },
+    {
+      "name": "Coverage: dart_node_core",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "dart run ${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart",
+      "cwd": "${workspaceFolder}/packages/dart_node_core"
+    },
+    {
+      "name": "Coverage: dart_node_express",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "dart run ${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart",
+      "cwd": "${workspaceFolder}/packages/dart_node_express"
+    },
+    {
+      "name": "Coverage: dart_node_ws",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "dart run ${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart",
+      "cwd": "${workspaceFolder}/packages/dart_node_ws"
+    },
+    {
+      "name": "Coverage: dart_node_better_sqlite3",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "dart run ${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart",
+      "cwd": "${workspaceFolder}/packages/dart_node_better_sqlite3"
+    },
+    {
+      "name": "Coverage: dart_node_mcp",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "dart run ${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart",
+      "cwd": "${workspaceFolder}/packages/dart_node_mcp"
+    },
+    {
+      "name": "Coverage: dart_node_react_native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "dart run ${workspaceFolder}/packages/dart_node_coverage/bin/coverage.dart",
+      "cwd": "${workspaceFolder}/packages/dart_node_react_native"
     }
   ],
   "compounds": [
     {
       "name": "Full Stack: Backend + Frontend",
       "configurations": ["Backend: Build & Run", "Frontend: Build & Serve"]
+    },
+    {
+      "name": "Coverage: All Node Packages",
+      "configurations": [
+        "Coverage: dart_node_core",
+        "Coverage: dart_node_express",
+        "Coverage: dart_node_ws",
+        "Coverage: dart_node_better_sqlite3",
+        "Coverage: dart_node_mcp",
+        "Coverage: dart_node_react_native"
+      ]
     }
   ]
 }

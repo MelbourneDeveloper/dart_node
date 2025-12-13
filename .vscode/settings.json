@@ -1,0 +1,30 @@
+{
+  "dart.runPubGetOnPubspecChanges": "prompt",
+  "dart.testInvocationMode": "implementationThenName",
+  "dart.cliConsole": "terminal",
+  "dart.debugExternalPackageLibraries": false,
+  "dart.debugSdkLibraries": false,
+
+  "dart.env": {
+    "DART_NODE_COVERAGE": "1"
+  },
+
+  "testing.automaticallyOpenPeekView": "failureVisible",
+  "testing.defaultGutterClickAction": "run",
+
+  "files.exclude": {
+    "**/coverage/": false
+  },
+  "files.watcherExclude": {
+    "**/coverage/**": true,
+    "**/build/**": true,
+    "**/.dart_tool/**": true
+  },
+
+  "editor.formatOnSave": true,
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "Dart-Code.dart-code",
+    "editor.rulers": [80]
+  }
+}

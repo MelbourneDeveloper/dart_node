@@ -5,6 +5,7 @@ import 'dart:js_interop';
 
 import 'package:dart_node_better_sqlite3/dart_node_better_sqlite3.dart';
 import 'package:dart_node_core/dart_node_core.dart';
+import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:nadz/nadz.dart';
 import 'package:test/test.dart';
 
@@ -26,6 +27,9 @@ void _deleteIfExists(String path) {
 }
 
 void main() {
+  setUp(initCoverage);
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
+
   group('openDatabase', () {
     test('opens in-memory database', () {
       final result = openDatabase(':memory:');

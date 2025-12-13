@@ -89,6 +89,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.7"
+  dart_node_coverage:
+    dependency: "direct dev"
+    description:
+      path: "../dart_node_coverage"
+      relative: true
+    source: path
+    version: "0.1.0"
   file:
     dependency: transitive
     description:

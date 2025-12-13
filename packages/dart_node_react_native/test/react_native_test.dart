@@ -2,10 +2,14 @@
 /// Actual React Native runtime requires Expo/RN environment.
 library;
 
+import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:dart_node_react_native/dart_node_react_native.dart';
 import 'package:test/test.dart';
 
 void main() {
+  setUp(initCoverage);
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
+
   group('component element types', () {
     test('RNViewElement type exists', () {
       RNViewElement? element;
