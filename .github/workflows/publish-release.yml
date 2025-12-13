@@ -47,7 +47,7 @@ jobs:
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
         with:
-          sdk: stable
+          sdk: ${{ vars.DART_VERSION }}
 
       - name: Create release branch
         run: |
