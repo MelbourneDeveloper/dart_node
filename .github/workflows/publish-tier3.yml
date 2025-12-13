@@ -1,102 +1,20 @@
-name: Publish Tier 3 (React Packages)
+name: Publish Tier 3
 
-# TEMPORARILY DISABLED
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to publish (e.g., 0.2.0-beta)'
-        required: true
-  # workflow_run:
-  #   workflows: ["Publish Tier 2 (Reflux, Express, WS, SQLite, MCP)"]
-  #   types:
-  #     - completed
+  workflow_run:
+    workflows: ["Publish Tier 2"]
+    types: [completed]
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
-  check-and-publish:
-    runs-on: ubuntu-latest
-    # Use environment with 20-minute wait timer (configure in repo settings)
-    # Wait timer doesn't consume billable minutes
-    environment: pub.dev-tier3
-    if: github.event_name == 'workflow_dispatch'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Dart
-        uses: dart-lang/setup-dart@v1
-        with:
-          sdk: stable
-
-      - name: Get latest release version
-        id: version
-        run: |
-          if [ -n "${{ github.event.inputs.version }}" ]; then
-            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            LATEST_TAG=$(git tag -l 'Release/*' --sort=-v:refname | head -n1)
-            if [ -z "$LATEST_TAG" ]; then
-              echo "No Release tags found, skipping"
-              echo "SKIP=true" >> $GITHUB_OUTPUT
-              exit 0
-            fi
-            VERSION="${LATEST_TAG#Release/}"
-            echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Check if tier 2 packages are available
-        if: steps.version.outputs.SKIP != 'true'
-        id: check
-        run: |
-          VERSION="${{ steps.version.outputs.VERSION }}"
-
-          # Check dart_node_express is published (tier 2 indicator)
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/dart_node_express/versions/$VERSION")
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "dart_node_express $VERSION not yet available, skipping this run"
-            echo "SKIP=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          echo "Tier 2 packages available, proceeding with tier 3"
-          echo "SKIP=false" >> $GITHUB_OUTPUT
-
-      - name: Check if tier 3 already published
-        if: steps.version.outputs.SKIP != 'true' && steps.check.outputs.SKIP != 'true'
-        id: already
-        run: |
-          VERSION="${{ steps.version.outputs.VERSION }}"
-
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/dart_node_react/versions/$VERSION")
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "dart_node_react $VERSION already published, skipping"
-            echo "SKIP=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          echo "SKIP=false" >> $GITHUB_OUTPUT
-
-      - name: Prepare packages for publishing
-        if: steps.version.outputs.SKIP != 'true' && steps.check.outputs.SKIP != 'true' && steps.already.outputs.SKIP != 'true'
-        run: dart tools/prepare_publish.dart ${{ steps.version.outputs.VERSION }}
-
-      - name: Publish dart_node_react
-        if: steps.version.outputs.SKIP != 'true' && steps.check.outputs.SKIP != 'true' && steps.already.outputs.SKIP != 'true'
-        run: |
-          cd packages/dart_node_react
-          dart pub get
-          dart pub publish --force
-
-      - name: Publish dart_node_react_native
-        if: steps.version.outputs.SKIP != 'true' && steps.check.outputs.SKIP != 'true' && steps.already.outputs.SKIP != 'true'
-        run: |
-          cd packages/dart_node_react_native
-          dart pub get
-          dart pub publish --force
+  publish:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    uses: ./.github/workflows/_publish-packages.yml
+    with:
+      tier: 3
+      packages: "dart_node_react dart_node_react_native"
+      environment: pub.dev-tier3
+    secrets: inherit

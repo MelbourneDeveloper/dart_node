@@ -4,9 +4,17 @@ import 'dart:io';
 const version = '0.2.0-beta';
 
 const packageDeps = <String, List<String>>{
+  // Tier 1 - no internal deps
+  'dart_logging': [],
   'dart_node_core': [],
+  'dart_jsx': [],
+  // Tier 2 - depends on tier 1
+  'reflux': ['dart_logging'],
   'dart_node_express': ['dart_node_core'],
   'dart_node_ws': ['dart_node_core'],
+  'dart_node_better_sqlite3': ['dart_node_core'],
+  'dart_node_mcp': ['dart_node_core'],
+  // Tier 3 - depends on tier 1
   'dart_node_react': ['dart_node_core'],
   'dart_node_react_native': ['dart_node_core', 'dart_node_react'],
 };

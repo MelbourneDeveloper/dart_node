@@ -8,12 +8,12 @@ environment:
   sdk: ^3.10.0
 
 dependencies:
-  austerity: ^1.3.0
+  austerity: 1.3.0
   dart_node_core:
     path: ../dart_node_core
   dart_node_express:
     path: ../dart_node_express
-  nadz: ^0.0.7-beta
+  nadz: 0.0.7-beta
 
 dev_dependencies:
   dart_node_coverage:

@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'Release/[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  validate-and-prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+      branch: ${{ steps.branch.outputs.NAME }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate branch is main
+        id: branch
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor ${{ github.sha }} origin/main; then
+            echo "::error::Release tag must be created from main branch!"
+            exit 1
+          fi
+          BRANCH=$(git branch -r --contains ${{ github.sha }} | grep -E 'origin/(main|master)' | head -1 | sed 's/.*origin\///')
+          if [ -z "$BRANCH" ]; then
+            echo "::error::Tag must be created from main branch"
+            exit 1
+          fi
+          echo "NAME=$BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/Release/}" >> $GITHUB_OUTPUT
+
+      - name: Checkout main branch
+        run: git checkout main
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Create release branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b release/${{ steps.version.outputs.VERSION }}
+
+      - name: Set package versions
+        run: dart tools/prepare_publish.dart ${{ steps.version.outputs.VERSION }}
+
+      - name: Commit and push
+        run: |
+          git add -A
+          git commit -m "chore: prepare release ${{ steps.version.outputs.VERSION }}"
+          git push origin release/${{ steps.version.outputs.VERSION }}
+
+      - name: Create PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --title "Release ${{ steps.version.outputs.VERSION }}" \
+            --body "## Release ${{ steps.version.outputs.VERSION }}
+
+          This PR contains version bumps for all packages.
+
+          ### Packages Published
+          - dart_logging
+          - dart_node_core
+          - dart_jsx
+          - reflux
+          - dart_node_express
+          - dart_node_ws
+          - dart_node_better_sqlite3
+          - dart_node_mcp
+          - dart_node_react
+          - dart_node_react_native
+
+          ### Deployment Status
+          - [ ] Tier 1 (Core)
+          - [ ] Tier 2 (Reflux, Express, WS, SQLite, MCP)
+          - [ ] Tier 3 (React)" \
+            --base main \
+            --head release/${{ steps.version.outputs.VERSION }}

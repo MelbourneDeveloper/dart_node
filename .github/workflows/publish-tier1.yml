@@ -1,49 +1,19 @@
-name: Publish Tier 1 (Core Packages)
+name: Publish Tier 1
 
 on:
-  push:
-    tags:
-      - 'Release/[0-9]+.[0-9]+.[0-9]+*'
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
-  publish-core:
-    runs-on: ubuntu-latest
-    environment: pub.dev
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Dart
-        uses: dart-lang/setup-dart@v1
-        with:
-          sdk: stable
-
-      - name: Extract version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/Release/}" >> $GITHUB_OUTPUT
-
-      - name: Prepare packages for publishing
-        run: dart tools/prepare_publish.dart ${{ steps.version.outputs.VERSION }}
-
-      - name: Publish dart_logging
-        run: |
-          cd packages/dart_logging
-          dart pub get
-          dart pub publish --force
-
-      - name: Publish dart_node_core
-        run: |
-          cd packages/dart_node_core
-          dart pub get
-          dart pub publish --force
-
-      - name: Publish dart_jsx
-        run: |
-          cd packages/dart_jsx
-          dart pub get
-          dart pub publish --force
+  publish:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    uses: ./.github/workflows/_publish-packages.yml
+    with:
+      tier: 1
+      packages: "dart_logging dart_node_core dart_jsx"
+    secrets: inherit

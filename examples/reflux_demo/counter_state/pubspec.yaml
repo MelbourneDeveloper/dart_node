@@ -7,10 +7,10 @@ environment:
   sdk: ^3.10.0
 
 dependencies:
-  austerity: ^1.3.0
+  austerity: 1.3.0
   dart_logging:
     path: ../../../packages/dart_logging
-  nadz: ^0.0.7-beta
+  nadz: 0.0.7-beta
   reflux:
     path: ../../../packages/reflux
 

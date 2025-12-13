@@ -1,0 +1,52 @@
+name: Publish Packages
+
+on:
+  workflow_call:
+    inputs:
+      tier:
+        description: 'Tier number (1, 2, or 3)'
+        required: true
+        type: number
+      packages:
+        description: 'Space-separated list of package names'
+        required: true
+        type: string
+      environment:
+        description: 'GitHub environment name (for wait timer)'
+        required: false
+        type: string
+        default: 'pub.dev'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Get version from branch
+        id: version
+        run: |
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          VERSION="${BRANCH#release/}"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set package versions
+        run: dart tools/prepare_publish.dart ${{ steps.version.outputs.VERSION }}
+
+      - name: Publish packages
+        run: |
+          for pkg in ${{ inputs.packages }}; do
+            echo "::group::Publishing $pkg"
+            cd packages/$pkg
+            dart pub get
+            dart pub publish --force
+            cd ../..
+            echo "::endgroup::"
+          done
