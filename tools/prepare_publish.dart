@@ -7,7 +7,6 @@ const packageDeps = <String, List<String>>{
   // Tier 1 - no internal dependencies
   'dart_logging': [],
   'dart_node_core': [],
-  'dart_jsx': [],
   // Tier 2 - depends on tier 1
   'reflux': ['dart_logging'],
   'dart_node_express': ['dart_node_core'],
@@ -24,7 +23,6 @@ const publishOrder = [
   // Tier 1
   'dart_logging',
   'dart_node_core',
-  'dart_jsx',
   // Tier 2
   'reflux',
   'dart_node_express',
