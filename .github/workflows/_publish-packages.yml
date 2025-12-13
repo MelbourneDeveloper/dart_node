@@ -25,41 +25,34 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Find release branch
-        id: branch
+      - name: Get version from triggering tag
+        id: version
         run: |
-          # Find the most recent release branch
-          git fetch origin 'refs/heads/release/*:refs/remotes/origin/release/*'
-          RELEASE_BRANCH=$(git branch -r --list 'origin/release/*' --sort=-committerdate | head -1 | sed 's/.*origin\///')
-          if [ -z "$RELEASE_BRANCH" ]; then
-            echo "::error::No release branch found"
+          git fetch --tags
+          TAG=$(git tag --points-at ${{ github.event.workflow_run.head_sha }} | grep '^Release/' | head -1)
+          if [ -z "$TAG" ]; then
+            echo "::error::No Release tag found at commit ${{ github.event.workflow_run.head_sha }}"
             exit 1
           fi
-          echo "BRANCH=$RELEASE_BRANCH" >> $GITHUB_OUTPUT
-          echo "Found release branch: $RELEASE_BRANCH"
+          VERSION="${TAG#Release/}"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "Found tag: $TAG, version: $VERSION"
 
       - name: Checkout release branch
-        run: git checkout ${{ steps.branch.outputs.BRANCH }}
+        run: |
+          BRANCH="release/${{ steps.version.outputs.VERSION }}"
+          git fetch origin "$BRANCH"
+          git checkout "$BRANCH"
 
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
-
-      - name: Get version from branch
-        id: version
-        run: |
-          BRANCH="${{ steps.branch.outputs.BRANCH }}"
-          VERSION="${BRANCH#release/}"
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
 
       - name: Verify prerequisite packages on pub.dev
         if: inputs.tier > 1
