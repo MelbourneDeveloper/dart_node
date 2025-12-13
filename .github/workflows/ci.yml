@@ -33,6 +33,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
+        with:
+          dart-version: ${{ vars.DART_VERSION }}
 
       - name: Install tools
         run: |

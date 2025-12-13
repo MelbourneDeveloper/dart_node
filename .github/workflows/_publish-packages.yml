@@ -52,7 +52,7 @@ jobs:
 
       - uses: dart-lang/setup-dart@v1
         with:
-          sdk: stable
+          sdk: ${{ vars.DART_VERSION }}
 
       - name: Verify prerequisite packages on pub.dev
         if: inputs.tier > 1
