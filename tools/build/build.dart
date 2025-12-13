@@ -187,11 +187,7 @@ String? _searchEntryPoints(String exampleDir, List<String> remaining) {
     );
   }
 
-  // Transpile JSX files before compilation
-  final jsxResult = _transpileJsxFiles(exampleDir);
-  return !jsxResult.isSuccess
-      ? jsxResult
-      : _compileToJs(exampleDir, entryPoint, target, buildDir);
+  return _compileToJs(exampleDir, entryPoint, target, buildDir);
 }
 
 ({bool isSuccess, String message}) _compileToJs(
@@ -253,44 +249,3 @@ String? _searchEntryPoints(String exampleDir, List<String> remaining) {
   return (isSuccess: true, message: 'Build successful');
 }
 
-({bool isSuccess, String message}) _transpileJsxFiles(String exampleDir) {
-  final dir = Directory(exampleDir);
-  final jsxFiles = dir
-      .listSync(recursive: true)
-      .whereType<File>()
-      .where((f) => f.path.endsWith('.jsx'))
-      .toList();
-
-  final hasJsxFiles = jsxFiles.isNotEmpty;
-  if (!hasJsxFiles) {
-    return (isSuccess: true, message: 'No JSX files to transpile');
-  }
-
-  print('  Transpiling ${jsxFiles.length} JSX file(s)...');
-
-  for (final file in jsxFiles) {
-    final result = _transpileJsxFile(file.path);
-    if (!result.isSuccess) return result;
-  }
-
-  return (isSuccess: true, message: 'JSX transpilation complete');
-}
-
-({bool isSuccess, String message}) _transpileJsxFile(String inputPath) {
-  final outputPath = inputPath.replaceAll('.jsx', '.g.dart');
-  final projectRoot = Directory.current.path;
-
-  final result = Process.runSync('dart', [
-    'run',
-    '$projectRoot/packages/dart_jsx/bin/jsx.dart',
-    inputPath,
-    outputPath,
-  ]);
-
-  return result.exitCode != 0
-      ? (
-          isSuccess: false,
-          message: 'JSX transpilation failed for $inputPath:\n${result.stderr}',
-        )
-      : (isSuccess: true, message: 'Transpiled $inputPath');
-}

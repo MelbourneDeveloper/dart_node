@@ -1,38 +1,7 @@
 // ignore_for_file: avoid_print
 import 'dart:io';
 
-/// Package dependency graph - order matters for publishing
-/// Packages with no dependencies must be published first
-const packageDeps = <String, List<String>>{
-  // Tier 1 - no internal dependencies
-  'dart_logging': [],
-  'dart_node_core': [],
-  // Tier 2 - depends on tier 1
-  'reflux': ['dart_logging'],
-  'dart_node_express': ['dart_node_core'],
-  'dart_node_ws': ['dart_node_core'],
-  'dart_node_better_sqlite3': ['dart_node_core'],
-  'dart_node_mcp': ['dart_node_core'],
-  // Tier 3 - depends on tier 2
-  'dart_node_react': ['dart_node_core'],
-  'dart_node_react_native': ['dart_node_core', 'dart_node_react'],
-};
-
-/// Publishing order based on dependency graph (topological sort)
-const publishOrder = [
-  // Tier 1
-  'dart_logging',
-  'dart_node_core',
-  // Tier 2
-  'reflux',
-  'dart_node_express',
-  'dart_node_ws',
-  'dart_node_better_sqlite3',
-  'dart_node_mcp',
-  // Tier 3
-  'dart_node_react',
-  'dart_node_react_native',
-];
+import 'lib/packages.dart';
 
 void main(List<String> args) {
   if (args.isEmpty) {
@@ -54,20 +23,32 @@ void main(List<String> args) {
   }
 
   final scriptDir = File(Platform.script.toFilePath()).parent;
-  final repoRoot = scriptDir.parent;
-  final packagesDir = Directory('${repoRoot.path}/packages');
+  final repoRoot = scriptDir.parent.path;
+  final packagesDir = Directory('$repoRoot/packages');
+
+  // Validate all packages have configs
+  final unconfigured = validatePackageConfigs(repoRoot);
+  if (unconfigured.isNotEmpty) {
+    print('Warning: Packages without config (will be skipped):');
+    for (final pkg in unconfigured) {
+      print('  - $pkg');
+    }
+    print('Add them to tools/lib/packages.dart if they should be published.\n');
+  }
 
   print('Preparing packages for publishing version $version\n');
 
-  for (final packageName in publishOrder) {
-    _preparePackage(packagesDir, packageName, version);
+  final packages = getPublishablePackages();
+  for (final pkg in packages) {
+    _preparePackage(repoRoot, packagesDir, pkg.name, version);
   }
 
   print('\nAll packages prepared for publishing!');
-  print('Publishing order: ${publishOrder.join(' -> ')}');
+  print('Publishing order: ${packages.map((p) => p.name).join(' -> ')}');
 }
 
 void _preparePackage(
+  String repoRoot,
   Directory packagesDir,
   String packageName,
   String version,
@@ -96,7 +77,7 @@ void _preparePackage(
   }
 
   // 3. Update interdependencies to pub.dev versions
-  final deps = packageDeps[packageName] ?? [];
+  final deps = getInternalDependencies(repoRoot, packageName);
   for (final dep in deps) {
     content = _switchToPubDevDependency(content, dep, version);
     changes.add('$dep -> $version');
