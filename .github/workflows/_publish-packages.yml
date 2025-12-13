@@ -61,29 +61,30 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
 
-      - name: Verify previous tier (Tier 2+)
-        if: inputs.tier >= 2
+      - name: Verify prerequisite packages on pub.dev
+        if: inputs.tier > 1
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
-          # Tier 2 needs dart_node_core from Tier 1
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/dart_node_core/versions/$VERSION")
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "::error::dart_node_core $VERSION not available on pub.dev. Tier 1 must complete first."
-            exit 1
-          fi
-          echo "✓ dart_node_core $VERSION verified on pub.dev"
 
-      - name: Verify previous tier (Tier 3)
-        if: inputs.tier >= 3
-        run: |
-          VERSION="${{ steps.version.outputs.VERSION }}"
-          # Tier 3 needs dart_node_express from Tier 2
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/dart_node_express/versions/$VERSION")
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "::error::dart_node_express $VERSION not available on pub.dev. Tier 2 must complete first."
-            exit 1
+          # Tier 2 needs dart_node_core and dart_logging
+          if [ "${{ inputs.tier }}" = "2" ]; then
+            PREREQS="dart_node_core dart_logging"
           fi
-          echo "✓ dart_node_express $VERSION verified on pub.dev"
+
+          # Tier 3 needs dart_node_express (tier 2 indicator)
+          if [ "${{ inputs.tier }}" = "3" ]; then
+            PREREQS="dart_node_express"
+          fi
+
+          for pkg in $PREREQS; do
+            echo "Checking $pkg $VERSION on pub.dev..."
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/$pkg/versions/$VERSION")
+            if [ "$HTTP_CODE" != "200" ]; then
+              echo "::error::$pkg $VERSION not available on pub.dev yet"
+              exit 1
+            fi
+            echo "$pkg $VERSION is available"
+          done
 
       - name: Publish packages
         run: |
