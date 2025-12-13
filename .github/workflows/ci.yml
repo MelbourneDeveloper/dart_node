@@ -19,13 +19,13 @@ env:
     packages/dart_node_react
   TIER3: >-
     examples/backend
-    examples/flutter_counter
     examples/frontend
     examples/markdown_editor
     examples/mobile
+    examples/reflux_demo/flutter_counter
+    examples/reflux_demo/web_counter
     examples/too_many_cooks
     examples/too_many_cooks_vscode_extension
-    examples/web_counter
 
 jobs:
   ci:
