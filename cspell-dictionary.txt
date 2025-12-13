@@ -48,6 +48,10 @@ cspell
 eleventy
 jsified
 Pino
+genhtml
+instrumenter
+Instrumenter
+tcov
 
 # React/React Native
 useState
