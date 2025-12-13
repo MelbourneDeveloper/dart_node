@@ -1,0 +1,59 @@
+name: Finalize Release
+
+on:
+  workflow_run:
+    workflows: ["Publish Tier 3"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get version from triggering tag
+        id: version
+        run: |
+          git fetch --tags
+          TAG=$(git tag --points-at ${{ github.event.workflow_run.head_sha }} | grep '^Release/' | head -1)
+          if [ -z "$TAG" ]; then
+            echo "::error::No Release tag found at commit ${{ github.event.workflow_run.head_sha }}"
+            exit 1
+          fi
+          VERSION="${TAG#Release/}"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Found tag: $TAG, version: $VERSION"
+
+      - name: Checkout release branch
+        run: |
+          BRANCH="release/${{ steps.version.outputs.VERSION }}"
+          git fetch origin "$BRANCH"
+          git checkout "$BRANCH"
+
+      - name: Setup Dart
+        uses: ./.github/actions/setup
+        with:
+          dart-version: ${{ vars.DART_VERSION }}
+
+      - name: Switch dependencies to local
+        run: dart run tools/switch_deps.dart local
+
+      - name: Commit local dependencies to release branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: switch to local dependencies after publish"
+            git push origin release/${{ steps.version.outputs.VERSION }}
+          fi

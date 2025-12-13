@@ -16,4 +16,5 @@ jobs:
     with:
       tier: 1
       packages: "dart_logging dart_node_core"
+      environment: pub.dev-tier1
     secrets: inherit
