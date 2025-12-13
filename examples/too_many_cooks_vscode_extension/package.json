@@ -2,7 +2,7 @@
   "name": "too-many-cooks",
   "displayName": "Too Many Cooks",
   "description": "Visualize multi-agent coordination - see file locks, messages, and plans across AI agents working on your codebase",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "Nimblesite",
   "license": "MIT",
   "icon": "media/icons/chef-128.png",
