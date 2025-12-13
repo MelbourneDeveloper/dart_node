@@ -71,11 +71,12 @@ const _packageConfigs = <String, PackageConfig>{
     tier: 3,
     testPlatform: TestPlatform.node,
   ),
-  // Tier 1 - no internal dependencies
+  // Non-published packages (local dev dependency only)
   'dart_node_coverage': PackageConfig(
     name: 'dart_node_coverage',
-    tier: 1,
+    tier: 0,
     testPlatform: TestPlatform.vm,
+    publish: false,
   ),
 };
 

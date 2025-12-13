@@ -54,7 +54,6 @@ jobs:
           PACKAGES=(
             "dart_logging"
             "dart_node_core"
-            "dart_node_coverage"
             "reflux"
             "dart_node_express"
             "dart_node_ws"
@@ -115,7 +114,7 @@ jobs:
           After tier3 completes, dependencies will be switched back to local and this PR will be updated.
 
           ### Publishing Tiers
-          - Tier 1: dart_logging, dart_node_core, dart_node_coverage (this workflow)
+          - Tier 1: dart_logging, dart_node_core (this workflow)
           - Tier 2: reflux, dart_node_express, dart_node_ws, dart_node_better_sqlite3, dart_node_mcp
           - Tier 3: dart_node_react, dart_node_react_native" \
             --base main \
@@ -142,4 +141,4 @@ jobs:
       - name: Publish packages
         run: |
           chmod +x .github/scripts/publish-packages.sh
-          .github/scripts/publish-packages.sh "${{ needs.prepare.outputs.version }}" dart_logging dart_node_core dart_node_coverage
+          .github/scripts/publish-packages.sh "${{ needs.prepare.outputs.version }}" dart_logging dart_node_core
