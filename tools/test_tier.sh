@@ -12,10 +12,10 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 COVERAGE_CLI="$ROOT_DIR/packages/dart_node_coverage/bin/coverage.dart"
 
 # Node.js packages use dart_node_coverage
-NODE_PACKAGES="dart_node_core dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_react_native"
+NODE_PACKAGES="dart_node_core dart_node_express dart_node_ws dart_node_better_sqlite3"
 
 # Node.js interop packages - tests run but no coverage (pure JS interop)
-NODE_INTEROP_PACKAGES="dart_node_mcp"
+NODE_INTEROP_PACKAGES="dart_node_mcp dart_node_react_native"
 
 # Browser packages use dart test -p chrome (no coverage)
 BROWSER_PACKAGES="dart_node_react frontend"
