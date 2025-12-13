@@ -15,5 +15,5 @@ jobs:
     uses: ./.github/workflows/_publish-packages.yml
     with:
       tier: 1
-      packages: "dart_logging dart_node_core dart_jsx"
+      packages: "dart_logging dart_node_core"
     secrets: inherit
