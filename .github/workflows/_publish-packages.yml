@@ -17,14 +17,37 @@ on:
         type: string
         default: 'pub.dev'
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0
+
+      - name: Find release branch
+        id: branch
+        run: |
+          # Find the most recent release branch
+          git fetch origin 'refs/heads/release/*:refs/remotes/origin/release/*'
+          RELEASE_BRANCH=$(git branch -r --list 'origin/release/*' --sort=-committerdate | head -1 | sed 's/.*origin\///')
+          if [ -z "$RELEASE_BRANCH" ]; then
+            echo "::error::No release branch found"
+            exit 1
+          fi
+          echo "BRANCH=$RELEASE_BRANCH" >> $GITHUB_OUTPUT
+          echo "Found release branch: $RELEASE_BRANCH"
+
+      - name: Checkout release branch
+        run: git checkout ${{ steps.branch.outputs.BRANCH }}
 
       - uses: dart-lang/setup-dart@v1
         with:
@@ -33,17 +56,47 @@ jobs:
       - name: Get version from branch
         id: version
         run: |
-          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          BRANCH="${{ steps.branch.outputs.BRANCH }}"
           VERSION="${BRANCH#release/}"
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
 
-      - name: Set package versions
-        run: dart tools/prepare_publish.dart ${{ steps.version.outputs.VERSION }}
+      - name: Verify previous tier (Tier 2+)
+        if: inputs.tier >= 2
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          # Tier 2 needs dart_node_core from Tier 1
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/dart_node_core/versions/$VERSION")
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::dart_node_core $VERSION not available on pub.dev. Tier 1 must complete first."
+            exit 1
+          fi
+          echo "✓ dart_node_core $VERSION verified on pub.dev"
+
+      - name: Verify previous tier (Tier 3)
+        if: inputs.tier >= 3
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          # Tier 3 needs dart_node_express from Tier 2
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/dart_node_express/versions/$VERSION")
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::dart_node_express $VERSION not available on pub.dev. Tier 2 must complete first."
+            exit 1
+          fi
+          echo "✓ dart_node_express $VERSION verified on pub.dev"
 
       - name: Publish packages
         run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
           for pkg in ${{ inputs.packages }}; do
             echo "::group::Publishing $pkg"
+            # Skip if already published
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/$pkg/versions/$VERSION")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "⏭ $pkg $VERSION already published, skipping"
+              echo "::endgroup::"
+              continue
+            fi
             cd packages/$pkg
             dart pub get
             dart pub publish --force
