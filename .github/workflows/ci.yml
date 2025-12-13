@@ -6,55 +6,52 @@ on:
 
 env:
   MIN_COVERAGE: ${{ vars.MIN_COVERAGE }}
-  # Tier 1 - no internal dependencies (VM tests with coverage)
-  TIER1_PACKAGES: >-
+  TIER1: >-
     packages/dart_logging
-  # Tier 1 Node.js packages (coverage via dart_node_coverage)
-  TIER1_NODE_PACKAGES: >-
     packages/dart_node_core
-  # Tier 2 - depends on tier 1 (VM tests with coverage)
-  TIER2_PACKAGES: >-
+  TIER2: >-
     packages/reflux
-  # Tier 2 Node.js packages (coverage via dart_node_coverage)
-  TIER2_NODE_PACKAGES: >-
     packages/dart_node_express
     packages/dart_node_ws
     packages/dart_node_better_sqlite3
     packages/dart_node_mcp
     packages/dart_node_react_native
-  # Tier 2 Browser packages (run on Chrome, no Node.js coverage)
-  TIER2_BROWSER_PACKAGES: >-
     packages/dart_node_react
-  # Examples
-  EXAMPLES: >-
+  TIER3: >-
+    examples/backend
+    examples/flutter_counter
+    examples/frontend
+    examples/markdown_editor
     examples/mobile
     examples/too_many_cooks
-  # Examples that need build step (no coverage)
-  BUILD_EXAMPLES: >-
-    examples/backend
-    examples/frontend
+    examples/too_many_cooks_vscode_extension
+    examples/web_counter
 
 jobs:
-  lint:
-    name: Lint
+  ci:
+    name: Lint, Test & Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
 
-      - name: Install cspell
-        run: npm install -g cspell
-
-      - name: Spell check
-        run: cspell "**/*.md" "**/*.dart" "**/*.ts" --no-progress
+      - name: Install tools
+        run: |
+          npm install -g cspell
+          dart pub global activate coverage
 
       - name: Get all dependencies
         run: |
-          for dir in packages/dart_node_coverage $TIER1_PACKAGES $TIER1_NODE_PACKAGES $TIER2_PACKAGES $TIER2_NODE_PACKAGES $TIER2_BROWSER_PACKAGES $EXAMPLES $BUILD_EXAMPLES examples/shared tools/build; do
-            echo "::group::$dir"
-            cd $dir && dart pub get && cd - > /dev/null
-            echo "::endgroup::"
+          for dir in packages/* examples/* tools/build; do
+            if [ -d "$dir" ] && [ -f "$dir/pubspec.yaml" ]; then
+              echo "::group::$dir"
+              cd $dir && dart pub get && cd - > /dev/null
+              echo "::endgroup::"
+            fi
           done
+
+      - name: Spell check
+        run: cspell "**/*.md" "**/*.dart" "**/*.ts" --no-progress
 
       - name: Check formatting
         run: |
@@ -64,142 +61,19 @@ jobs:
 
       - name: Analyze
         run: |
-          for dir in packages/dart_node_coverage $TIER1_PACKAGES $TIER1_NODE_PACKAGES $TIER2_PACKAGES $TIER2_NODE_PACKAGES $TIER2_BROWSER_PACKAGES $EXAMPLES $BUILD_EXAMPLES examples/shared tools/build; do
-            echo "::group::Analyzing $dir"
-            cd $dir && dart analyze --no-fatal-warnings && cd - > /dev/null
-            echo "::endgroup::"
-          done
-
-  test-tier1:
-    name: Test Tier 1 (Core)
-    needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: Activate coverage tool
-        run: dart pub global activate coverage
-
-      - name: Get dependencies
-        run: |
-          for dir in $TIER1_PACKAGES $TIER1_NODE_PACKAGES; do
-            cd $dir && dart pub get && cd - > /dev/null
-          done
-
-      - name: Test tier 1 VM packages with coverage
-        run: ./tools/test_parallel.sh $MIN_COVERAGE $TIER1_PACKAGES
-
-      - name: Test tier 1 Node.js packages with coverage
-        run: |
-          cd packages/dart_node_coverage && dart pub get && cd - > /dev/null
-          for dir in $TIER1_NODE_PACKAGES; do
-            echo "::group::Testing $dir with coverage"
-            cd $dir
-            dart run ../../packages/dart_node_coverage/bin/coverage.dart
-            COVERAGE=$(awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' coverage/lcov.info)
-            echo "$(basename $dir) coverage: ${COVERAGE}%"
-            if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ] || [ "$(echo "$COVERAGE < $MIN_COVERAGE" | bc -l)" -eq 1 ]; then
-              echo "Coverage ${COVERAGE}% is below ${MIN_COVERAGE}% threshold"
-              exit 1
+          for dir in packages/* examples/* tools/build; do
+            if [ -d "$dir" ] && [ -f "$dir/pubspec.yaml" ]; then
+              echo "::group::Analyzing $dir"
+              cd $dir && dart analyze --no-fatal-warnings && cd - > /dev/null
+              echo "::endgroup::"
             fi
-            cd - > /dev/null
-            echo "::endgroup::"
           done
 
-  test-tier2:
-    name: Test Tier 2 (Dependent Packages)
-    needs: test-tier1
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
+      - name: Test Tier 1
+        run: ./tools/test_tier.sh $MIN_COVERAGE $TIER1
 
-      - name: Activate coverage tool
-        run: dart pub global activate coverage
+      - name: Test Tier 2
+        run: ./tools/test_tier.sh $MIN_COVERAGE $TIER2
 
-      - name: Get dependencies
-        run: |
-          cd packages/dart_node_coverage && dart pub get && cd - > /dev/null
-          for dir in $TIER1_PACKAGES $TIER1_NODE_PACKAGES $TIER2_PACKAGES $TIER2_NODE_PACKAGES $TIER2_BROWSER_PACKAGES; do
-            cd $dir && dart pub get && cd - > /dev/null
-          done
-
-      - name: Test tier 2 VM packages with coverage
-        run: ./tools/test_parallel.sh $MIN_COVERAGE $TIER2_PACKAGES
-
-      - name: Test tier 2 Node.js packages with coverage
-        run: |
-          for dir in $TIER2_NODE_PACKAGES; do
-            echo "::group::Testing $dir with coverage"
-            cd $dir
-            dart run ../../packages/dart_node_coverage/bin/coverage.dart
-            COVERAGE=$(awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' coverage/lcov.info)
-            echo "$(basename $dir) coverage: ${COVERAGE}%"
-            if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ] || [ "$(echo "$COVERAGE < $MIN_COVERAGE" | bc -l)" -eq 1 ]; then
-              echo "Coverage ${COVERAGE}% is below ${MIN_COVERAGE}% threshold"
-              exit 1
-            fi
-            cd - > /dev/null
-            echo "::endgroup::"
-          done
-
-      - name: Test tier 2 Browser packages on Chrome
-        run: |
-          for dir in $TIER2_BROWSER_PACKAGES; do
-            echo "::group::Testing $dir on Chrome"
-            cd $dir && dart test -p chrome && cd - > /dev/null
-            echo "::endgroup::"
-          done
-
-  test-examples:
-    name: Test Examples
-    needs: test-tier2
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: Activate coverage tool
-        run: dart pub global activate coverage
-
-      - name: Get dependencies
-        run: |
-          for dir in $TIER1_PACKAGES $TIER1_NODE_PACKAGES $TIER2_PACKAGES $TIER2_NODE_PACKAGES $TIER2_BROWSER_PACKAGES examples/shared $EXAMPLES tools/build; do
-            cd $dir && dart pub get && cd - > /dev/null
-          done
-
-      - name: Test all examples in parallel
-        run: ./tools/test_parallel.sh $MIN_COVERAGE $EXAMPLES
-
-  build:
-    name: Build
-    needs: test-examples
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: Get all dependencies
-        run: |
-          for dir in $TIER1_PACKAGES $TIER1_NODE_PACKAGES $TIER2_PACKAGES $TIER2_NODE_PACKAGES $TIER2_BROWSER_PACKAGES examples/shared $EXAMPLES $BUILD_EXAMPLES tools/build; do
-            cd $dir && dart pub get && cd - > /dev/null
-          done
-
-      - name: Install Node dependencies
-        working-directory: examples/backend
-        run: npm install
-
-      - name: Build and test build examples
-        run: |
-          for target in backend frontend mobile; do
-            echo "::group::Building $target"
-            dart run tools/build/build.dart $target
-            echo "::endgroup::"
-          done
-          echo "::group::Testing backend"
-          cd examples/backend && dart test
-          echo "::endgroup::"
-          echo "::group::Testing frontend"
-          cd examples/frontend && dart test -p chrome
-          echo "::endgroup::"
+      - name: Test Tier 3
+        run: ./tools/test_tier.sh $MIN_COVERAGE $TIER3
