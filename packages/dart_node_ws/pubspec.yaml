@@ -1,6 +1,6 @@
 name: dart_node_ws
 description: WebSocket bindings for Dart on Node.js
-version: 0.9.0-beta
+version: 0.11.0-beta
 repository: https://github.com/MelbourneDeveloper/dart_node
 
 environment:
@@ -8,14 +8,11 @@ environment:
 
 dependencies:
   austerity: ^1.3.0
-  dart_node_core:
-    path: ../dart_node_core
-  dart_node_express:
-    path: ../dart_node_express
+  dart_node_core: 0.11.0-beta
+  dart_node_express: 0.11.0-beta
   nadz: ^0.0.7-beta
 
 dev_dependencies:
-  dart_node_coverage:
-    path: ../dart_node_coverage
+  dart_node_coverage: 0.11.0-beta
   http: ^1.2.0
   test: ^1.24.0

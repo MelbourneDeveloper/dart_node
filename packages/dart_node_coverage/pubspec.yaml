@@ -1,6 +1,6 @@
 name: dart_node_coverage
 description: Coverage collection for Dart tests running on Node.js (dart2js)
-version: 0.9.0-beta
+version: 0.11.0-beta
 repository: https://github.com/MelbourneDeveloper/dart_node
 
 environment:
