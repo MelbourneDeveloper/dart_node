@@ -17,15 +17,14 @@ env:
     packages/dart_node_mcp
     packages/dart_node_react_native
     packages/dart_node_react
+  # TIER3: Examples that can run in CI
+  # Excluded: backend (needs server), mobile (React Native), flutter_counter (Flutter SDK),
+  # too_many_cooks_vscode_extension (VSCode environment)
   TIER3: >-
-    examples/backend
     examples/frontend
     examples/markdown_editor
-    examples/mobile
-    examples/reflux_demo/flutter_counter
     examples/reflux_demo/web_counter
     examples/too_many_cooks
-    examples/too_many_cooks_vscode_extension
 
 jobs:
   ci:
