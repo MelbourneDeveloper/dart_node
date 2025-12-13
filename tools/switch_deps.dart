@@ -1,23 +1,7 @@
 // ignore_for_file: avoid_print
 import 'dart:io';
 
-const version = '0.2.0-beta';
-
-const packageDeps = <String, List<String>>{
-  // Tier 1 - no internal deps
-  'dart_logging': [],
-  'dart_node_core': [],
-  'dart_jsx': [],
-  // Tier 2 - depends on tier 1
-  'reflux': ['dart_logging'],
-  'dart_node_express': ['dart_node_core'],
-  'dart_node_ws': ['dart_node_core'],
-  'dart_node_better_sqlite3': ['dart_node_core'],
-  'dart_node_mcp': ['dart_node_core'],
-  // Tier 3 - depends on tier 1
-  'dart_node_react': ['dart_node_core'],
-  'dart_node_react_native': ['dart_node_core', 'dart_node_react'],
-};
+import 'lib/packages.dart';
 
 void main(List<String> args) {
   if (args.isEmpty || (args[0] != 'local' && args[0] != 'release')) {
@@ -29,45 +13,67 @@ void main(List<String> args) {
 
   final mode = args[0];
   final scriptDir = File(Platform.script.toFilePath()).parent;
-  final repoRoot = scriptDir.parent;
-  final packagesDir = Directory('${repoRoot.path}/packages');
+  final repoRoot = scriptDir.parent.path;
+  final packagesDir = Directory('$repoRoot/packages');
+
+  // Read version from first package's pubspec (they should all match)
+  final version = _readCurrentVersion(repoRoot);
 
   print('Switching to $mode mode...\n');
 
-  for (final entry in packageDeps.entries) {
-    final packageName = entry.key;
-    final deps = entry.value;
+  final packages = getPublishablePackages();
+  for (final pkg in packages) {
+    final deps = getInternalDependencies(repoRoot, pkg.name);
 
     if (deps.isEmpty) {
-      print('$packageName: No internal dependencies, skipping');
+      print('${pkg.name}: No internal dependencies, skipping');
       continue;
     }
 
-    final pubspecFile = File('${packagesDir.path}/$packageName/pubspec.yaml');
+    final pubspecFile = File('${packagesDir.path}/${pkg.name}/pubspec.yaml');
     if (!pubspecFile.existsSync()) {
-      print('$packageName: pubspec.yaml not found, skipping');
+      print('${pkg.name}: pubspec.yaml not found, skipping');
       continue;
     }
 
     var content = pubspecFile.readAsStringSync();
 
     for (final dep in deps) {
-      content = _switchDependency(content, dep, mode);
+      content = _switchDependency(content, dep, mode, version);
     }
 
     pubspecFile.writeAsStringSync(content);
-    print('$packageName: Updated ${deps.join(", ")}');
+    print('${pkg.name}: Updated ${deps.join(", ")}');
   }
 
   print('\nDone! Run "dart pub get" in each package to update dependencies.');
 }
 
-String _switchDependency(String content, String depName, String mode) {
+String _readCurrentVersion(String repoRoot) {
+  final packages = getPublishablePackages();
+  if (packages.isEmpty) return '0.0.0';
+
+  final pubspec = File(
+    '$repoRoot/packages/${packages.first.name}/pubspec.yaml',
+  );
+  if (!pubspec.existsSync()) return '0.0.0';
+
+  final content = pubspec.readAsStringSync();
+  final match = RegExp(r'version:\s*(\S+)').firstMatch(content);
+  return match?.group(1) ?? '0.0.0';
+}
+
+String _switchDependency(
+  String content,
+  String depName,
+  String mode,
+  String version,
+) {
   final pathPattern = RegExp(
     '$depName:\\s*\\n\\s*path:\\s*[^\\n]+',
     multiLine: true,
   );
-  final versionPattern = RegExp('$depName:\\s*\\^[^\\n]+');
+  final versionPattern = RegExp('$depName:\\s*\\^?[^\\n]+');
 
   if (mode == 'local') {
     final relativePath = '../$depName';
