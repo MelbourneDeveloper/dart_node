@@ -72,19 +72,7 @@ jobs:
             --title "Release ${{ steps.version.outputs.VERSION }}" \
             --body "## Release ${{ steps.version.outputs.VERSION }}
 
-          This PR contains version bumps for all packages.
-
-          ### Packages Published
-          - dart_logging
-          - dart_node_core
-          - dart_jsx
-          - reflux
-          - dart_node_express
-          - dart_node_ws
-          - dart_node_better_sqlite3
-          - dart_node_mcp
-          - dart_node_react
-          - dart_node_react_native
+          This PR contains version bumps.
 
           ### Deployment Status
           - [ ] Tier 1 (Core)
