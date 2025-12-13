@@ -81,13 +81,19 @@ bool _runNodeCoverage(String repoRoot, String pkg, String coverageCli) {
 
   print('\n\x1B[33mTesting\x1B[0m $pkg (Node.js + coverage)...');
 
-  var result = Process.runSync('dart', ['pub', 'get'], workingDirectory: pkgDir);
+  var result = Process.runSync('dart', [
+    'pub',
+    'get',
+  ], workingDirectory: pkgDir);
   if (result.exitCode != 0) {
     print('\x1B[31mFAIL\x1B[0m $pkg (pub get failed)');
     return false;
   }
 
-  result = Process.runSync('dart', ['run', coverageCli], workingDirectory: pkgDir);
+  result = Process.runSync('dart', [
+    'run',
+    coverageCli,
+  ], workingDirectory: pkgDir);
   if (result.exitCode != 0) {
     print('\x1B[31mFAIL\x1B[0m $pkg');
     print(result.stdout);
@@ -108,7 +114,10 @@ bool _runVmTest(String repoRoot, String pkg) {
 
   print('\n\x1B[33mTesting\x1B[0m $pkg (VM)...');
 
-  var result = Process.runSync('dart', ['pub', 'get'], workingDirectory: pkgDir);
+  var result = Process.runSync('dart', [
+    'pub',
+    'get',
+  ], workingDirectory: pkgDir);
   if (result.exitCode != 0) {
     print('\x1B[31mFAIL\x1B[0m $pkg (pub get failed)');
     return false;
@@ -135,7 +144,10 @@ bool _runBrowserTest(String repoRoot, String pkg) {
 
   print('\n\x1B[33mTesting\x1B[0m $pkg (Browser)...');
 
-  var result = Process.runSync('dart', ['pub', 'get'], workingDirectory: pkgDir);
+  var result = Process.runSync('dart', [
+    'pub',
+    'get',
+  ], workingDirectory: pkgDir);
   if (result.exitCode != 0) {
     print('\x1B[31mFAIL\x1B[0m $pkg (pub get failed)');
     return false;
@@ -156,7 +168,10 @@ bool _runBrowserTest(String repoRoot, String pkg) {
 bool _runExampleTest(String exampleDir, String name) {
   print('\n\x1B[33mTesting\x1B[0m examples/$name...');
 
-  var result = Process.runSync('dart', ['pub', 'get'], workingDirectory: exampleDir);
+  var result = Process.runSync('dart', [
+    'pub',
+    'get',
+  ], workingDirectory: exampleDir);
   if (result.exitCode != 0) {
     print('\x1B[31mFAIL\x1B[0m examples/$name (pub get failed)');
     return false;

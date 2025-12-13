@@ -248,4 +248,3 @@ String? _searchEntryPoints(String exampleDir, List<String> remaining) {
   print('  Build complete: $finalOutput');
   return (isSuccess: true, message: 'Build successful');
 }
-

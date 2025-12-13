@@ -99,12 +99,11 @@ PackageConfig? getPackageConfig(String name) => _packageConfigs[name];
 
 /// Gets all publishable packages in tier order
 List<PackageConfig> getPublishablePackages() {
-  final packages =
-      _packageConfigs.values.where((p) => p.publish).toList()
-        ..sort((a, b) {
-          final tierCmp = a.tier.compareTo(b.tier);
-          return tierCmp != 0 ? tierCmp : a.name.compareTo(b.name);
-        });
+  final packages = _packageConfigs.values.where((p) => p.publish).toList()
+    ..sort((a, b) {
+      final tierCmp = a.tier.compareTo(b.tier);
+      return tierCmp != 0 ? tierCmp : a.name.compareTo(b.name);
+    });
   return packages;
 }
 
@@ -119,13 +118,13 @@ List<PackageConfig> getPackagesByTestPlatform(TestPlatform platform) =>
 /// Reads internal dependencies from a package's pubspec.yaml
 /// Returns list of dependency names that are publishable internal packages
 List<String> getInternalDependencies(String repoRoot, String packageName) {
-  final pubspecFile =
-      File('$repoRoot/packages/$packageName/pubspec.yaml');
+  final pubspecFile = File('$repoRoot/packages/$packageName/pubspec.yaml');
   if (!pubspecFile.existsSync()) return [];
 
   final content = pubspecFile.readAsStringSync();
-  final publishablePackages =
-      getPublishablePackages().map((p) => p.name).toList();
+  final publishablePackages = getPublishablePackages()
+      .map((p) => p.name)
+      .toList();
 
   return publishablePackages
       .where((pkg) => pkg != packageName && content.contains('$pkg:'))

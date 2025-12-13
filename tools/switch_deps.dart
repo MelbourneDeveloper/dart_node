@@ -53,7 +53,9 @@ String _readCurrentVersion(String repoRoot) {
   final packages = getPublishablePackages();
   if (packages.isEmpty) return '0.0.0';
 
-  final pubspec = File('$repoRoot/packages/${packages.first.name}/pubspec.yaml');
+  final pubspec = File(
+    '$repoRoot/packages/${packages.first.name}/pubspec.yaml',
+  );
   if (!pubspec.existsSync()) return '0.0.0';
 
   final content = pubspec.readAsStringSync();
