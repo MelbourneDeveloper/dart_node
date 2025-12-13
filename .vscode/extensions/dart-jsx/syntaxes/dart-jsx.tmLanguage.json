@@ -1,0 +1,211 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Dart JSX",
+  "scopeName": "source.dart.jsx",
+  "patterns": [
+    { "include": "#jsx-element" },
+    { "include": "source.dart" }
+  ],
+  "repository": {
+    "jsx-element": {
+      "patterns": [
+        { "include": "#jsx-tag-without-attributes" },
+        { "include": "#jsx-tag-without-attributes-lowercase" },
+        { "include": "#jsx-tag-with-attributes" },
+        { "include": "#jsx-tag-with-attributes-lowercase" },
+        { "include": "#jsx-tag-self-closing" },
+        { "include": "#jsx-tag-self-closing-lowercase" },
+        { "include": "#jsx-tag-close" }
+      ]
+    },
+    "jsx-tag-without-attributes": {
+      "name": "meta.tag.without-attributes.jsx",
+      "begin": "(<)([A-Z][a-zA-Z0-9-]*)(>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.jsx" },
+        "2": { "name": "entity.name.tag.jsx support.class.component.jsx" },
+        "3": { "name": "punctuation.definition.tag.end.jsx" }
+      },
+      "end": "(</)\\2(>)",
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.jsx" },
+        "2": { "name": "entity.name.tag.jsx support.class.component.jsx" },
+        "3": { "name": "punctuation.definition.tag.end.jsx" }
+      },
+      "patterns": [
+        { "include": "#jsx-children" }
+      ]
+    },
+    "jsx-tag-without-attributes-lowercase": {
+      "name": "meta.tag.without-attributes.jsx",
+      "begin": "(<)([a-z][a-zA-Z0-9-]*)(>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.jsx" },
+        "2": { "name": "entity.name.tag.jsx" },
+        "3": { "name": "punctuation.definition.tag.end.jsx" }
+      },
+      "end": "(</)\\2(>)",
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.jsx" },
+        "2": { "name": "entity.name.tag.jsx" },
+        "3": { "name": "punctuation.definition.tag.end.jsx" }
+      },
+      "patterns": [
+        { "include": "#jsx-children" }
+      ]
+    },
+    "jsx-tag-with-attributes": {
+      "name": "meta.tag.with-attributes.jsx",
+      "begin": "(<)([A-Z][a-zA-Z0-9-]*)(?=[\\s\\n{])",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.jsx" },
+        "2": { "name": "entity.name.tag.jsx support.class.component.jsx" }
+      },
+      "end": "(</)\\2(>)",
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.jsx" },
+        "2": { "name": "entity.name.tag.jsx support.class.component.jsx" },
+        "3": { "name": "punctuation.definition.tag.end.jsx" }
+      },
+      "patterns": [
+        {
+          "begin": "\\G",
+          "end": "(>)",
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.tag.end.jsx" }
+          },
+          "patterns": [
+            { "include": "#jsx-attribute" }
+          ]
+        },
+        { "include": "#jsx-children" }
+      ]
+    },
+    "jsx-tag-with-attributes-lowercase": {
+      "name": "meta.tag.with-attributes.jsx",
+      "begin": "(<)([a-z][a-zA-Z0-9-]*)(?=[\\s\\n{])",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.jsx" },
+        "2": { "name": "entity.name.tag.jsx" }
+      },
+      "end": "(</)\\2(>)",
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.jsx" },
+        "2": { "name": "entity.name.tag.jsx" },
+        "3": { "name": "punctuation.definition.tag.end.jsx" }
+      },
+      "patterns": [
+        {
+          "begin": "\\G",
+          "end": "(>)",
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.tag.end.jsx" }
+          },
+          "patterns": [
+            { "include": "#jsx-attribute" }
+          ]
+        },
+        { "include": "#jsx-children" }
+      ]
+    },
+    "jsx-tag-self-closing": {
+      "name": "meta.tag.self-closing.jsx",
+      "begin": "(<)([A-Z][a-zA-Z0-9-]*)(?=[\\s\\n{]|/>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.jsx" },
+        "2": { "name": "entity.name.tag.jsx support.class.component.jsx" }
+      },
+      "end": "(/>)",
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.end.jsx" }
+      },
+      "patterns": [
+        { "include": "#jsx-attribute" }
+      ]
+    },
+    "jsx-tag-self-closing-lowercase": {
+      "name": "meta.tag.self-closing.jsx",
+      "begin": "(<)([a-z][a-zA-Z0-9-]*)(?=[\\s\\n{]|/>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.jsx" },
+        "2": { "name": "entity.name.tag.jsx" }
+      },
+      "end": "(/>)",
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.end.jsx" }
+      },
+      "patterns": [
+        { "include": "#jsx-attribute" }
+      ]
+    },
+    "jsx-tag-close": {
+      "name": "meta.tag.close.jsx",
+      "match": "(</)([A-Z][a-zA-Z0-9-]*|[a-z][a-zA-Z0-9-]*)(>)",
+      "captures": {
+        "1": { "name": "punctuation.definition.tag.begin.jsx" },
+        "2": { "name": "entity.name.tag.jsx support.class.component.jsx" },
+        "3": { "name": "punctuation.definition.tag.end.jsx" }
+      }
+    },
+    "jsx-attribute": {
+      "patterns": [
+        {
+          "name": "entity.other.attribute-name.jsx",
+          "match": "\\b[a-zA-Z_][a-zA-Z0-9_-]*\\b(?=\\s*=)"
+        },
+        {
+          "name": "string.quoted.double.jsx",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            { "name": "constant.character.escape.jsx", "match": "\\\\." }
+          ]
+        },
+        {
+          "name": "string.quoted.single.jsx",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            { "name": "constant.character.escape.jsx", "match": "\\\\." }
+          ]
+        },
+        { "include": "#jsx-expression" }
+      ]
+    },
+    "jsx-children": {
+      "patterns": [
+        { "include": "#jsx-element" },
+        { "include": "#jsx-expression" },
+        {
+          "name": "string.unquoted.jsx",
+          "match": "[^<>{}]+"
+        }
+      ]
+    },
+    "jsx-expression": {
+      "name": "meta.embedded.expression.jsx",
+      "begin": "\\{",
+      "beginCaptures": {
+        "0": { "name": "punctuation.section.embedded.begin.jsx" }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": { "name": "punctuation.section.embedded.end.jsx" }
+      },
+      "patterns": [
+        { "include": "#jsx-nested-braces" },
+        { "include": "source.dart" }
+      ]
+    },
+    "jsx-nested-braces": {
+      "begin": "\\{",
+      "beginCaptures": { "0": { "name": "punctuation.section.block.begin.dart" } },
+      "end": "\\}",
+      "endCaptures": { "0": { "name": "punctuation.section.block.end.dart" } },
+      "patterns": [
+        { "include": "#jsx-nested-braces" },
+        { "include": "source.dart" }
+      ]
+    }
+  }
+}

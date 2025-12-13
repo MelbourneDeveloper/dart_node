@@ -124,6 +124,7 @@ Transpiles
 Transpiling
 checkpointed
 unskip
+unconfigured
 
 # Project-specific
 christianfindlay
@@ -238,4 +239,3 @@ LTWH
 blockquotes
 Blockquotes
 strikethrough
-unconfigured

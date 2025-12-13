@@ -71,6 +71,20 @@
       "cwd": "${workspaceFolder}/examples/backend"
     },
     {
+      "name": "JSX Demo Tests (Chrome)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cd ${workspaceFolder}/examples/jsx_demo && dart test -p chrome",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Frontend Tests (Chrome)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cd ${workspaceFolder}/examples/frontend && dart test -p chrome",
+      "cwd": "${workspaceFolder}"
+    },
+    {
       "name": "Coverage: Current Package",
       "type": "node-terminal",
       "request": "launch",

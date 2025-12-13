@@ -5,6 +5,7 @@
 import * as vscode from 'vscode';
 import { effect } from '@preact/signals-core';
 import { locksByFile } from '../../state/signals';
+import type { FileLock } from '../../mcp/types';
 
 export class LockDecorationProvider implements vscode.FileDecorationProvider {
   private _onDidChangeFileDecorations = new vscode.EventEmitter<
@@ -25,6 +26,28 @@ export class LockDecorationProvider implements vscode.FileDecorationProvider {
     this._onDidChangeFileDecorations.dispose();
   }
 
+  private createLockTooltip(lock: FileLock, expired: boolean): string {
+    const lines: string[] = [];
+
+    if (expired) {
+      lines.push(`⚠️ EXPIRED LOCK`);
+      lines.push(`Was held by: ${lock.agentName}`);
+    } else {
+      lines.push(`🔒 Locked by ${lock.agentName}`);
+      const expiresIn = Math.round((lock.expiresAt - Date.now()) / 1000);
+      lines.push(`Expires in: ${expiresIn}s`);
+    }
+
+    if (lock.reason) {
+      lines.push(`Reason: ${lock.reason}`);
+    }
+
+    const acquiredDate = new Date(lock.acquiredAt);
+    lines.push(`Acquired: ${acquiredDate.toLocaleString()}`);
+
+    return lines.join('\n');
+  }
+
   provideFileDecoration(
     uri: vscode.Uri
   ): vscode.FileDecoration | undefined {
@@ -42,16 +65,18 @@ export class LockDecorationProvider implements vscode.FileDecorationProvider {
 
     if (isExpired) {
       return {
-        badge: '!',
+        badge: '⚠️',
         color: new vscode.ThemeColor('charts.red'),
-        tooltip: `Expired lock (was held by ${lock.agentName})`,
+        tooltip: this.createLockTooltip(lock, true),
       };
     }
 
+    // Show agent name initials (up to 2 chars) as badge
+    const badge = lock.agentName.substring(0, 2).toUpperCase();
     return {
-      badge: 'L',
+      badge,
       color: new vscode.ThemeColor('charts.yellow'),
-      tooltip: `Locked by ${lock.agentName}${lock.reason ? `: ${lock.reason}` : ''}`,
+      tooltip: this.createLockTooltip(lock, false),
     };
   }
 }

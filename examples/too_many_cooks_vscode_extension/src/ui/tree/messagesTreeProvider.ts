@@ -12,13 +12,15 @@ export class MessageTreeItem extends vscode.TreeItem {
     label: string,
     description: string | undefined,
     collapsibleState: vscode.TreeItemCollapsibleState,
-    public readonly message?: Message
+    public readonly message?: Message,
+    public readonly isDetail?: boolean
   ) {
     super(label, collapsibleState);
     this.description = description;
     this.iconPath = this.getIcon();
+    this.contextValue = message ? 'message' : undefined;
 
-    if (message) {
+    if (message && !isDetail) {
       this.tooltip = this.createTooltip(message);
     }
   }
@@ -110,8 +112,9 @@ export class MessagesTreeProvider
   }
 
   getChildren(element?: MessageTreeItem): MessageTreeItem[] {
-    if (element) {
-      return [];
+    // If expanding a message, show its details
+    if (element?.message) {
+      return this.createMessageDetails(element.message);
     }
 
     const allMessages = messages.value;
@@ -134,17 +137,95 @@ export class MessagesTreeProvider
     return sorted.map((msg) => {
       const isBroadcast = msg.toAgent === '*';
       const target = isBroadcast ? 'all' : msg.toAgent;
+      const relativeTime = this.getRelativeTime(msg.createdAt);
       const preview =
-        msg.content.length > 30
-          ? msg.content.substring(0, 30) + '...'
+        msg.content.length > 25
+          ? msg.content.substring(0, 25) + '...'
           : msg.content;
 
       return new MessageTreeItem(
         `${msg.fromAgent} → ${target}`,
-        preview,
-        vscode.TreeItemCollapsibleState.None,
+        `${relativeTime} | ${preview}`,
+        vscode.TreeItemCollapsibleState.Collapsed,
         msg
       );
     });
+  }
+
+  private createMessageDetails(msg: Message): MessageTreeItem[] {
+    const details: MessageTreeItem[] = [];
+    const sentDate = new Date(msg.createdAt);
+
+    // Full content (may span multiple lines)
+    details.push(
+      new MessageTreeItem(
+        '📝 Content',
+        msg.content,
+        vscode.TreeItemCollapsibleState.None,
+        msg,
+        true
+      )
+    );
+
+    // Timestamps
+    details.push(
+      new MessageTreeItem(
+        '📅 Sent',
+        sentDate.toLocaleString(),
+        vscode.TreeItemCollapsibleState.None,
+        msg,
+        true
+      )
+    );
+
+    if (msg.readAt) {
+      const readDate = new Date(msg.readAt);
+      details.push(
+        new MessageTreeItem(
+          '✅ Read',
+          readDate.toLocaleString(),
+          vscode.TreeItemCollapsibleState.None,
+          msg,
+          true
+        )
+      );
+    } else {
+      details.push(
+        new MessageTreeItem(
+          '⏳ Status',
+          'Unread',
+          vscode.TreeItemCollapsibleState.None,
+          msg,
+          true
+        )
+      );
+    }
+
+    // Message ID
+    details.push(
+      new MessageTreeItem(
+        '🔑 ID',
+        msg.id,
+        vscode.TreeItemCollapsibleState.None,
+        msg,
+        true
+      )
+    );
+
+    return details;
+  }
+
+  private getRelativeTime(timestamp: number): string {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days}d`;
+    if (hours > 0) return `${hours}h`;
+    if (minutes > 0) return `${minutes}m`;
+    return 'now';
   }
 }

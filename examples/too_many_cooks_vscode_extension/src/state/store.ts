@@ -268,4 +268,74 @@ export class Store {
     }
     return this.client.callTool(name, args);
   }
+
+  /**
+   * Force release a lock (admin operation).
+   * Uses admin tool which can delete any lock regardless of expiry.
+   */
+  async forceReleaseLock(filePath: string): Promise<void> {
+    const result = await this.callTool('admin', {
+      action: 'delete_lock',
+      file_path: filePath,
+    });
+    const parsed = JSON.parse(result);
+    if (parsed.error) {
+      throw new Error(parsed.error);
+    }
+    // Remove from local state
+    locks.value = locks.value.filter((l) => l.filePath !== filePath);
+    log(`Force released lock: ${filePath}`);
+  }
+
+  /**
+   * Delete an agent (admin operation).
+   * Requires admin_delete_agent tool on the MCP server.
+   */
+  async deleteAgent(agentName: string): Promise<void> {
+    const result = await this.callTool('admin', {
+      action: 'delete_agent',
+      agent_name: agentName,
+    });
+    const parsed = JSON.parse(result);
+    if (parsed.error) {
+      throw new Error(parsed.error);
+    }
+    // Remove from local state
+    agents.value = agents.value.filter((a) => a.agentName !== agentName);
+    plans.value = plans.value.filter((p) => p.agentName !== agentName);
+    locks.value = locks.value.filter((l) => l.agentName !== agentName);
+    log(`Deleted agent: ${agentName}`);
+  }
+
+  /**
+   * Send a message from VSCode user to an agent.
+   * Registers the sender if needed, then sends the message.
+   */
+  async sendMessage(
+    fromAgent: string,
+    toAgent: string,
+    content: string
+  ): Promise<void> {
+    // Register sender and get key
+    const registerResult = await this.callTool('register', { name: fromAgent });
+    const registerParsed = JSON.parse(registerResult);
+    if (registerParsed.error) {
+      throw new Error(registerParsed.error);
+    }
+    const agentKey = registerParsed.agent_key;
+
+    // Send the message
+    const sendResult = await this.callTool('message', {
+      action: 'send',
+      agent_name: fromAgent,
+      agent_key: agentKey,
+      to_agent: toAgent,
+      content: content,
+    });
+    const sendParsed = JSON.parse(sendResult);
+    if (sendParsed.error) {
+      throw new Error(sendParsed.error);
+    }
+    log(`Message sent from ${fromAgent} to ${toAgent}`);
+  }
 }

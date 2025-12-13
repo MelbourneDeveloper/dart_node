@@ -21,7 +21,8 @@ export class AgentTreeItem extends vscode.TreeItem {
     super(label, collapsibleState);
     this.description = description;
     this.iconPath = this.getIcon();
-    this.contextValue = itemType;
+    // Use specific contextValue for context menu targeting
+    this.contextValue = itemType === 'agent' ? 'deletableAgent' : itemType;
     if (tooltip) {
       this.tooltip = tooltip;
     }

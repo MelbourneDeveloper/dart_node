@@ -6,10 +6,9 @@
 
 import * as vscode from 'vscode';
 import { Store } from './state/store';
-import { AgentsTreeProvider } from './ui/tree/agentsTreeProvider';
-import { LocksTreeProvider } from './ui/tree/locksTreeProvider';
+import { AgentsTreeProvider, AgentTreeItem } from './ui/tree/agentsTreeProvider';
+import { LocksTreeProvider, LockTreeItem } from './ui/tree/locksTreeProvider';
 import { MessagesTreeProvider } from './ui/tree/messagesTreeProvider';
-import { PlansTreeProvider } from './ui/tree/plansTreeProvider';
 import { LockDecorationProvider } from './ui/decorations/lockDecorations';
 import { StatusBarManager } from './ui/statusBar/statusBarItem';
 import { DashboardPanel } from './ui/webview/dashboardPanel';
@@ -22,7 +21,6 @@ let statusBar: StatusBarManager | undefined;
 let agentsProvider: AgentsTreeProvider | undefined;
 let locksProvider: LocksTreeProvider | undefined;
 let messagesProvider: MessagesTreeProvider | undefined;
-let plansProvider: PlansTreeProvider | undefined;
 let lockDecorations: LockDecorationProvider | undefined;
 let outputChannel: vscode.OutputChannel | undefined;
 
@@ -86,7 +84,6 @@ export async function activate(
   agentsProvider = new AgentsTreeProvider();
   locksProvider = new LocksTreeProvider();
   messagesProvider = new MessagesTreeProvider();
-  plansProvider = new PlansTreeProvider();
 
   // Register tree views
   const agentsView = vscode.window.createTreeView('tooManyCooksAgents', {
@@ -100,11 +97,6 @@ export async function activate(
 
   const messagesView = vscode.window.createTreeView('tooManyCooksMessages', {
     treeDataProvider: messagesProvider,
-  });
-
-  const plansView = vscode.window.createTreeView('tooManyCooksPlans', {
-    treeDataProvider: plansProvider,
-    showCollapseAll: true,
   });
 
   // Create file decoration provider
@@ -165,6 +157,117 @@ export async function activate(
     }
   );
 
+  // Delete lock command - force release a lock
+  const deleteLockCmd = vscode.commands.registerCommand(
+    'tooManyCooks.deleteLock',
+    async (item: LockTreeItem | AgentTreeItem) => {
+      const filePath = item instanceof LockTreeItem
+        ? item.lock?.filePath
+        : item.filePath;
+      if (!filePath) {
+        vscode.window.showErrorMessage('No lock selected');
+        return;
+      }
+      const confirm = await vscode.window.showWarningMessage(
+        `Force release lock on ${filePath}?`,
+        { modal: true },
+        'Release'
+      );
+      if (confirm !== 'Release') return;
+      try {
+        await store?.forceReleaseLock(filePath);
+        log(`Force released lock: ${filePath}`);
+        vscode.window.showInformationMessage(`Lock released: ${filePath}`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        log(`Failed to release lock: ${msg}`);
+        vscode.window.showErrorMessage(`Failed to release lock: ${msg}`);
+      }
+    }
+  );
+
+  // Delete agent command - remove an agent from the system
+  const deleteAgentCmd = vscode.commands.registerCommand(
+    'tooManyCooks.deleteAgent',
+    async (item: AgentTreeItem) => {
+      const agentName = item.agentName;
+      if (!agentName) {
+        vscode.window.showErrorMessage('No agent selected');
+        return;
+      }
+      const confirm = await vscode.window.showWarningMessage(
+        `Remove agent "${agentName}"? This will release all their locks.`,
+        { modal: true },
+        'Remove'
+      );
+      if (confirm !== 'Remove') return;
+      try {
+        await store?.deleteAgent(agentName);
+        log(`Removed agent: ${agentName}`);
+        vscode.window.showInformationMessage(`Agent removed: ${agentName}`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        log(`Failed to remove agent: ${msg}`);
+        vscode.window.showErrorMessage(`Failed to remove agent: ${msg}`);
+      }
+    }
+  );
+
+  // Send message command
+  const sendMessageCmd = vscode.commands.registerCommand(
+    'tooManyCooks.sendMessage',
+    async (item?: AgentTreeItem) => {
+      // Get target agent (if clicked from agent context menu)
+      let toAgent = item?.agentName;
+
+      // If no target, show quick pick to select one
+      if (!toAgent) {
+        const response = await store?.callTool('status', {});
+        if (!response) {
+          vscode.window.showErrorMessage('Not connected to server');
+          return;
+        }
+        const status = JSON.parse(response);
+        const agentNames = status.agents.map(
+          (a: { agent_name: string }) => a.agent_name
+        );
+        agentNames.unshift('* (broadcast to all)');
+        toAgent = await vscode.window.showQuickPick(agentNames, {
+          placeHolder: 'Select recipient agent',
+        });
+        if (!toAgent) return;
+        if (toAgent === '* (broadcast to all)') toAgent = '*';
+      }
+
+      // Get sender name
+      const fromAgent = await vscode.window.showInputBox({
+        prompt: 'Your agent name (sender)',
+        placeHolder: 'e.g., vscode-user',
+        value: 'vscode-user',
+      });
+      if (!fromAgent) return;
+
+      // Get message content
+      const content = await vscode.window.showInputBox({
+        prompt: `Message to ${toAgent}`,
+        placeHolder: 'Enter your message...',
+      });
+      if (!content) return;
+
+      try {
+        await store?.sendMessage(fromAgent, toAgent, content);
+        vscode.window.showInformationMessage(
+          `Message sent to ${toAgent}: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`
+        );
+        log(`Message sent from ${fromAgent} to ${toAgent}: ${content}`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        log(`Failed to send message: ${msg}`);
+        vscode.window.showErrorMessage(`Failed to send message: ${msg}`);
+      }
+    }
+  );
+
   // Auto-connect on startup if configured (default: true)
   const autoConnect = config.get<boolean>('autoConnect', true);
   log(`Auto-connect: ${autoConnect}`);
@@ -196,12 +299,14 @@ export async function activate(
     agentsView,
     locksView,
     messagesView,
-    plansView,
     decorationDisposable,
     connectCmd,
     disconnectCmd,
     refreshCmd,
     dashboardCmd,
+    deleteLockCmd,
+    deleteAgentCmd,
+    sendMessageCmd,
     configListener,
     {
       dispose: () => {
@@ -210,7 +315,6 @@ export async function activate(
         agentsProvider?.dispose();
         locksProvider?.dispose();
         messagesProvider?.dispose();
-        plansProvider?.dispose();
         lockDecorations?.dispose();
       },
     }
@@ -221,7 +325,7 @@ export async function activate(
     agents: agentsProvider,
     locks: locksProvider,
     messages: messagesProvider,
-    plans: plansProvider,
+    plans: undefined,
   });
 }
 

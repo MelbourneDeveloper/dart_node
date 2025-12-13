@@ -54,6 +54,24 @@
         "command": "tooManyCooks.showDashboard",
         "title": "Show Dashboard",
         "category": "Too Many Cooks"
+      },
+      {
+        "command": "tooManyCooks.deleteLock",
+        "title": "Force Release Lock",
+        "category": "Too Many Cooks",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "tooManyCooks.deleteAgent",
+        "title": "Remove Agent",
+        "category": "Too Many Cooks",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "tooManyCooks.sendMessage",
+        "title": "Send Message",
+        "category": "Too Many Cooks",
+        "icon": "$(mail)"
       }
     ],
     "viewsContainers": {
@@ -78,10 +96,6 @@
         {
           "id": "tooManyCooksMessages",
           "name": "Messages"
-        },
-        {
-          "id": "tooManyCooksPlans",
-          "name": "Plans"
         }
       ]
     },
@@ -91,6 +105,33 @@
           "command": "tooManyCooks.refresh",
           "when": "view =~ /tooManyCooks.*/",
           "group": "navigation"
+        },
+        {
+          "command": "tooManyCooks.sendMessage",
+          "when": "view == tooManyCooksMessages",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "tooManyCooks.deleteLock",
+          "when": "view == tooManyCooksLocks && viewItem == lock",
+          "group": "inline"
+        },
+        {
+          "command": "tooManyCooks.deleteLock",
+          "when": "view == tooManyCooksAgents && viewItem == lock",
+          "group": "inline"
+        },
+        {
+          "command": "tooManyCooks.deleteAgent",
+          "when": "view == tooManyCooksAgents && viewItem == deletableAgent",
+          "group": "inline"
+        },
+        {
+          "command": "tooManyCooks.sendMessage",
+          "when": "view == tooManyCooksAgents && viewItem == deletableAgent",
+          "group": "inline"
         }
       ]
     },

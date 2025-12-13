@@ -18,6 +18,7 @@ export class LockTreeItem extends vscode.TreeItem {
     super(label, collapsibleState);
     this.description = description;
     this.iconPath = this.getIcon();
+    this.contextValue = lock ? 'lock' : (isCategory ? 'category' : undefined);
 
     if (lock) {
       this.tooltip = this.createTooltip(lock);

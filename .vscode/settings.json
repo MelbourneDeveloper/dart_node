@@ -4,6 +4,8 @@
   "dart.cliConsole": "terminal",
   "dart.debugExternalPackageLibraries": false,
   "dart.debugSdkLibraries": false,
+  "dart.lineLength": 80,
+  "dart.analysisExcludedFolders": [],
 
   "dart.env": {
     "DART_NODE_COVERAGE": "1"
@@ -13,6 +15,7 @@
   "testing.defaultGutterClickAction": "run",
 
   "files.exclude": {
+    "**/*.g.dart": false,
     "**/coverage/": false
   },
   "files.watcherExclude": {
@@ -20,11 +23,55 @@
     "**/build/**": true,
     "**/.dart_tool/**": true
   },
+  "files.associations": {
+    "*.jsx": "dart-jsx"
+  },
 
   "editor.formatOnSave": true,
   "[dart]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "Dart-Code.dart-code",
     "editor.rulers": [80]
+  },
+
+  "editor.tokenColorCustomizations": {
+    "textMateRules": [
+      {
+        "scope": "entity.name.tag.jsx",
+        "settings": {
+          "foreground": "#4EC9B0"
+        }
+      },
+      {
+        "scope": "support.class.component.jsx",
+        "settings": {
+          "foreground": "#4EC9B0"
+        }
+      },
+      {
+        "scope": "entity.other.attribute-name.jsx",
+        "settings": {
+          "foreground": "#9CDCFE"
+        }
+      },
+      {
+        "scope": "punctuation.definition.tag.jsx",
+        "settings": {
+          "foreground": "#808080"
+        }
+      },
+      {
+        "scope": "punctuation.section.embedded.begin.jsx",
+        "settings": {
+          "foreground": "#FFD700"
+        }
+      },
+      {
+        "scope": "punctuation.section.embedded.end.jsx",
+        "settings": {
+          "foreground": "#FFD700"
+        }
+      }
+    ]
   }
 }

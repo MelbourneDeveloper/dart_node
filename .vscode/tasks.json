@@ -25,6 +25,26 @@
       "detail": "Run tests with coverage for the current package (Ctrl+Shift+T)"
     },
     {
+      "label": "transpile-jsx",
+      "type": "shell",
+      "command": "dart",
+      "args": [
+        "run",
+        "${workspaceFolder}/packages/dart_jsx/bin/jsx.dart",
+        "${file}",
+        "${fileDirname}/${fileBasenameNoExtension}.g.dart"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "build-backend",
       "type": "shell",
       "command": "dart",
@@ -97,6 +117,28 @@
       "args": ["test"],
       "options": {
         "cwd": "${workspaceFolder}/examples/backend"
+      },
+      "group": "test",
+      "problemMatcher": ["$dart"]
+    },
+    {
+      "label": "test-jsx-demo",
+      "type": "shell",
+      "command": "dart",
+      "args": ["test", "-p", "chrome"],
+      "options": {
+        "cwd": "${workspaceFolder}/examples/jsx_demo"
+      },
+      "group": "test",
+      "problemMatcher": ["$dart"]
+    },
+    {
+      "label": "test-frontend",
+      "type": "shell",
+      "command": "dart",
+      "args": ["test", "-p", "chrome"],
+      "options": {
+        "cwd": "${workspaceFolder}/examples/frontend"
       },
       "group": "test",
       "problemMatcher": ["$dart"]

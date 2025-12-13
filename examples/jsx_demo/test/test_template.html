@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{{testName}}</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <style>
+    .counter { padding: 20px; }
+    .value { font-size: 2em; margin: 10px 0; }
+    .buttons { display: flex; gap: 10px; margin: 10px 0; }
+    .btn-inc, .btn-dec, .btn-reset { padding: 10px 20px; cursor: pointer; }
+    .tabs-container { padding: 20px; }
+    .tab-buttons { display: flex; gap: 5px; margin-bottom: 10px; }
+    .tab-btn { padding: 10px 20px; cursor: pointer; border: 1px solid #ccc; background: #f5f5f5; }
+    .tab-btn.active { background: #007bff; color: white; border-color: #007bff; }
+    .tab-content { padding: 20px; border: 1px solid #ccc; }
+    .app { padding: 20px; }
+  </style>
+  <script>
+    window.dartCallback = function(dartFn) {
+      return function() { return dartFn.apply(null, arguments); };
+    };
+  </script>
+  <script src="packages/test/dart.js"></script>
+  {{testScript}}
+</head>
+<body></body>
+</html>

@@ -101,6 +101,10 @@ typedef TooManyCooksDb = ({
   Result<List<AgentPlan>, DbError> Function() listPlans,
   Result<List<Message>, DbError> Function() listAllMessages,
   Result<void, DbError> Function() close,
+  // Admin operations (no auth required - for VSCode extension)
+  Result<void, DbError> Function(String filePath) adminDeleteLock,
+  Result<void, DbError> Function(String agentName) adminDeleteAgent,
+  Result<AgentRegistration, DbError> Function(String agentName) adminResetKey,
 });
 
 /// Create database instance with retry policy.
@@ -199,6 +203,9 @@ TooManyCooksDb _createDbOps(
       Error(:final error) => Error((code: errDatabase, message: error)),
     };
   },
+  adminDeleteLock: (path) => _adminDeleteLock(db, log, path),
+  adminDeleteAgent: (name) => _adminDeleteAgent(db, log, name),
+  adminResetKey: (name) => _adminResetKey(db, log, name),
 );
 
 extension type _Crypto(JSObject _) implements JSObject {
@@ -780,6 +787,105 @@ Result<List<Message>, DbError> _listAllMessages(Database db, Logger log) {
             )
             .toList(),
       ),
+      Error(:final error) => Error((code: errDatabase, message: error)),
+    },
+    Error(:final error) => Error((code: errDatabase, message: error)),
+  };
+}
+
+// === Admin Operations (no auth required) ===
+
+Result<void, DbError> _adminDeleteLock(
+  Database db,
+  Logger log,
+  String filePath,
+) {
+  log.warn('Admin deleting lock on $filePath');
+  final stmtResult = db.prepare('DELETE FROM locks WHERE file_path = ?');
+  return switch (stmtResult) {
+    Success(:final value) => switch (value.run([filePath])) {
+      Success(:final value) when value.changes == 0 => const Error((
+        code: errNotFound,
+        message: 'Lock not found',
+      )),
+      Success() => const Success(null),
+      Error(:final error) => Error((code: errDatabase, message: error)),
+    },
+    Error(:final error) => Error((code: errDatabase, message: error)),
+  };
+}
+
+Result<void, DbError> _adminDeleteAgent(
+  Database db,
+  Logger log,
+  String agentName,
+) {
+  log.warn('Admin deleting agent $agentName');
+  // Delete agent's locks, messages, plans, then identity
+  final deleteLocks = db.prepare('DELETE FROM locks WHERE agent_name = ?');
+  final deleteMessages = db.prepare(
+    'DELETE FROM messages WHERE from_agent = ? OR to_agent = ?',
+  );
+  final deletePlans = db.prepare('DELETE FROM plans WHERE agent_name = ?');
+  final deleteIdentity = db.prepare(
+    'DELETE FROM identity WHERE agent_name = ?',
+  );
+
+  // Check all prepared successfully
+  for (final stmtResult in [deleteLocks, deleteMessages, deletePlans]) {
+    if (stmtResult case Error(:final error)) {
+      return Error((code: errDatabase, message: error));
+    }
+  }
+  if (deleteIdentity case Error(:final error)) {
+    return Error((code: errDatabase, message: error));
+  }
+
+  // Run the deletes
+  final locksStmt = (deleteLocks as Success<Statement, String>).value;
+  final msgsStmt = (deleteMessages as Success<Statement, String>).value;
+  final plansStmt = (deletePlans as Success<Statement, String>).value;
+  final idStmt = (deleteIdentity as Success<Statement, String>).value;
+
+  if (locksStmt.run([agentName]) case Error(:final error)) {
+    return Error((code: errDatabase, message: error));
+  }
+  if (msgsStmt.run([agentName, agentName]) case Error(:final error)) {
+    return Error((code: errDatabase, message: error));
+  }
+  if (plansStmt.run([agentName]) case Error(:final error)) {
+    return Error((code: errDatabase, message: error));
+  }
+
+  return switch (idStmt.run([agentName])) {
+    Success(:final value) when value.changes == 0 => const Error((
+      code: errNotFound,
+      message: 'Agent not found',
+    )),
+    Success() => const Success(null),
+    Error(:final error) => Error((code: errDatabase, message: error)),
+  };
+}
+
+Result<AgentRegistration, DbError> _adminResetKey(
+  Database db,
+  Logger log,
+  String agentName,
+) {
+  log.warn('Admin resetting key for agent $agentName');
+  final newKey = _generateKey();
+  final now = _now();
+  final stmtResult = db.prepare('''
+    UPDATE identity SET agent_key = ?, last_active = ?
+    WHERE agent_name = ?
+  ''');
+  return switch (stmtResult) {
+    Success(:final value) => switch (value.run([newKey, now, agentName])) {
+      Success(:final value) when value.changes == 0 => const Error((
+        code: errNotFound,
+        message: 'Agent not found',
+      )),
+      Success() => Success((agentName: agentName, agentKey: newKey)),
       Error(:final error) => Error((code: errDatabase, message: error)),
     },
     Error(:final error) => Error((code: errDatabase, message: error)),

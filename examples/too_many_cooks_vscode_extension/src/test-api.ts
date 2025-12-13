@@ -84,7 +84,7 @@ export interface TreeProviders {
   agents: AgentsTreeProvider;
   locks: LocksTreeProvider;
   messages: MessagesTreeProvider;
-  plans: PlansTreeProvider;
+  plans?: PlansTreeProvider;
 }
 
 // Global log storage for testing
@@ -141,9 +141,11 @@ function buildMessagesSnapshot(providers: TreeProviders): TreeItemSnapshot[] {
 
 /** Build plans tree snapshot */
 function buildPlansSnapshot(providers: TreeProviders): TreeItemSnapshot[] {
-  const items = providers.plans.getChildren() ?? [];
+  const plansProvider = providers.plans;
+  if (!plansProvider) return [];
+  const items = plansProvider.getChildren() ?? [];
   return items.map(item => toSnapshot(item, () => {
-    const children = providers.plans.getChildren(item) ?? [];
+    const children = plansProvider.getChildren(item) ?? [];
     return children.map(child => toSnapshot(child));
   }));
 }
@@ -202,6 +204,7 @@ export function createTestAPI(store: Store, providers: TreeProviders): TestAPI {
     },
     getPlanTreeItemCount: () => {
       // Count only items with actual plans (not "No plans" placeholder)
+      if (!providers.plans) return 0;
       const items = providers.plans.getChildren() ?? [];
       return items.filter((item) => item.plan !== undefined).length;
     },
