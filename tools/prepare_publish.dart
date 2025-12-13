@@ -101,7 +101,7 @@ void _preparePackage(
   final deps = packageDeps[packageName] ?? [];
   for (final dep in deps) {
     content = _switchToPubDevDependency(content, dep, version);
-    changes.add('$dep -> ^$version');
+    changes.add('$dep -> $version');
   }
 
   pubspecFile.writeAsStringSync(content);
@@ -119,10 +119,10 @@ String _switchToPubDevDependency(
     multiLine: true,
   );
 
-  // Match existing version dependency format
-  final versionPattern = RegExp('$depName:\\s*\\^[^\\n]+');
+  // Match existing version dependency format (with or without caret)
+  final versionPattern = RegExp('$depName:\\s*\\^?[^\\n]+');
 
-  final replacement = '$depName: ^$version';
+  final replacement = '$depName: $version';
 
   if (pathPattern.hasMatch(content)) {
     return content.replaceFirst(pathPattern, replacement);
