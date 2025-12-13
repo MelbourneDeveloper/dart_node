@@ -1,5 +1,6 @@
 name: Publish Tier 3
 
+# TEMPORARILY DISABLED
 on:
   workflow_run:
     workflows: ["Publish Tier 2"]
