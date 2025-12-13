@@ -12,7 +12,10 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 COVERAGE_CLI="$ROOT_DIR/packages/dart_node_coverage/bin/coverage.dart"
 
 # Node.js packages use dart_node_coverage
-NODE_PACKAGES="dart_node_core dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_mcp dart_node_react_native"
+NODE_PACKAGES="dart_node_core dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_react_native"
+
+# Node.js interop packages - tests run but no coverage (pure JS interop)
+NODE_INTEROP_PACKAGES="dart_node_mcp"
 
 # Browser packages use dart test -p chrome (no coverage)
 BROWSER_PACKAGES="dart_node_react frontend"
@@ -33,6 +36,11 @@ is_browser_package() {
 is_npm_package() {
   local name=$(basename "$1")
   [[ " $NPM_PACKAGES " =~ " $name " ]]
+}
+
+is_node_interop_package() {
+  local name=$(basename "$1")
+  [[ " $NODE_INTEROP_PACKAGES " =~ " $name " ]]
 }
 
 check_coverage() {
@@ -60,6 +68,13 @@ for dir in "$@"; do
       npm install
       npm test
       echo "$name: npm tests passed"
+    elif is_node_interop_package "$dir"; then
+      # Node.js interop package - tests only, no coverage (pure JS interop)
+      if [ -f "package.json" ]; then
+        npm install
+      fi
+      dart test
+      echo "$name: interop tests passed (no coverage - JS interop package)"
     elif is_node_package "$dir"; then
       # Node.js package - use dart_node_coverage
       # Install npm dependencies if package.json exists
