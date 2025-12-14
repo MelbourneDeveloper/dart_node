@@ -5,6 +5,7 @@ node_modules/
 .dart_tool/
 
 coverage/
+logs/
 
 # Generated JS files from dart compile js
 *.js.deps

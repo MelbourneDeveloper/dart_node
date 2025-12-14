@@ -148,16 +148,16 @@ void main() {
     });
 
     test('child logger includes parent bindings', () {
-      final childLogger = logger.child({'requestId': 'abc-123'});
-      childLogger.info('test message');
+      logger.child({'requestId': 'abc-123'}).info('test message');
 
       expect(capturedMessages, hasLength(1));
       expect(capturedMessages.first.structuredData, {'requestId': 'abc-123'});
     });
 
     test('child logger merges bindings with structuredData', () {
-      final childLogger = logger.child({'requestId': 'abc-123'});
-      childLogger.info('test', structuredData: {'userId': '456'});
+      logger
+          .child({'requestId': 'abc-123'})
+          .info('test', structuredData: {'userId': '456'});
 
       expect(capturedMessages.first.structuredData, {
         'requestId': 'abc-123',
@@ -166,16 +166,15 @@ void main() {
     });
 
     test('structuredData overrides bindings with same key', () {
-      final childLogger = logger.child({'key': 'binding-value'});
-      childLogger.info('test', structuredData: {'key': 'override-value'});
+      logger
+          .child({'key': 'binding-value'})
+          .info('test', structuredData: {'key': 'override-value'});
 
       expect(capturedMessages.first.structuredData, {'key': 'override-value'});
     });
 
     test('nested child loggers accumulate bindings', () {
-      final child1 = logger.child({'level1': 'a'});
-      final child2 = child1.child({'level2': 'b'});
-      child2.info('test');
+      logger.child({'level1': 'a'}).child({'level2': 'b'}).info('test');
 
       expect(capturedMessages.first.structuredData, {
         'level1': 'a',
@@ -184,8 +183,7 @@ void main() {
     });
 
     test('parent logger is not affected by child', () {
-      final childLogger = logger.child({'childKey': 'childValue'});
-      childLogger.info('child message');
+      logger.child({'childKey': 'childValue'}).info('child message');
       logger.info('parent message');
 
       expect(capturedMessages[0].structuredData, {'childKey': 'childValue'});
@@ -227,7 +225,7 @@ void main() {
   group('LogTransport', () {
     test('logTransport creates transport with defaults', () {
       var called = false;
-      final transport = logTransport((_, __) => called = true);
+      final transport = logTransport((_, _) => called = true);
 
       expect(transport.initialize, isNotNull);
 

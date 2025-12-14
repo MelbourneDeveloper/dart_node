@@ -33,7 +33,8 @@ void main() {
     test('ImageContent with base64 data', () {
       const content = (
         type: 'image',
-        data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==',
+        data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklE'
+            'QVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==',
         mimeType: 'image/png',
       );
 
@@ -318,7 +319,8 @@ void main() {
             role: 'user',
             content: {
               'type': 'text',
-              'text': 'Complex\nmultiline\ntext\nwith\nspecial\nchars: @#\$%^&*()',
+              'text':
+                  'Complex\nmultiline\ntext\nwith\nspecial\nchars: @#\$%^&*()',
             },
           ),
         ],
@@ -344,9 +346,6 @@ void main() {
     });
 
     test('resource with very long URI', () {
-      final longPath = List.generate(50, (i) => 'segment$i').join('/');
-      final uri = 'file:///$longPath/file.txt';
-
       const content = (
         type: 'resource',
         uri: 'file:///very/long/path/to/resource/file.txt',
@@ -358,7 +357,7 @@ void main() {
     });
 
     test('content with empty strings', () {
-      final content = (
+      const content = (
         type: 'text',
         text: '',
       );
@@ -423,7 +422,12 @@ void main() {
 
         return (
           contents: <Object>[
-            {'type': 'resource', 'uri': uri, 'text': 'content', 'mimeType': null},
+            {
+              'type': 'resource',
+              'uri': uri,
+              'text': 'content',
+              'mimeType': null,
+            },
           ],
         );
       }

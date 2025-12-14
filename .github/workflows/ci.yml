@@ -6,25 +6,6 @@ on:
 
 env:
   MIN_COVERAGE: ${{ vars.MIN_COVERAGE }}
-  TIER1: >-
-    packages/dart_logging
-    packages/dart_node_core
-  TIER2: >-
-    packages/reflux
-    packages/dart_node_express
-    packages/dart_node_ws
-    packages/dart_node_better_sqlite3
-    packages/dart_node_mcp
-    packages/dart_node_react_native
-    packages/dart_node_react
-  # TIER3: Examples that can run in CI
-  # Excluded: backend (needs server), mobile (React Native), flutter_counter (Flutter SDK),
-  # too_many_cooks_vscode_extension (VSCode environment)
-  TIER3: >-
-    examples/frontend
-    examples/markdown_editor
-    examples/reflux_demo/web_counter
-    examples/too_many_cooks
 
 jobs:
   ci:
@@ -81,10 +62,10 @@ jobs:
           done
 
       - name: Test Tier 1
-        run: ./tools/test_tier.sh $MIN_COVERAGE $TIER1
+        run: ./tools/test.sh --ci --tier 1
 
       - name: Test Tier 2
-        run: ./tools/test_tier.sh $MIN_COVERAGE $TIER2
+        run: ./tools/test.sh --ci --tier 2
 
       - name: Test Tier 3
-        run: ./tools/test_tier.sh $MIN_COVERAGE $TIER3
+        run: ./tools/test.sh --ci --tier 3

@@ -1731,12 +1731,12 @@ void main() {
     });
 
     test('creates nested elements with >> operator', () {
-      final component = registerFunctionComponent((props) {
-        return $div(props: {'data-testid': 'container'}) >> [
+      final component = registerFunctionComponent(
+        (props) => $div(spread: {'data-testid': 'container'}) >> [
           $h1 >> 'Title',
           $p() >> 'Content',
-        ];
-      });
+        ],
+      );
 
       final result = render(fc(component));
       final container = result.getByTestId('container');
@@ -1745,11 +1745,12 @@ void main() {
       result.unmount();
     });
 
-    test('\$div with className creates element', () {
-      final component = registerFunctionComponent((props) {
-        return $div(className: 'my-class', props: {'data-testid': 'styled'}) >>
-            'Styled';
-      });
+    test(r'$div with className creates element', () {
+      final component = registerFunctionComponent(
+        (props) =>
+            $div(className: 'my-class', spread: {'data-testid': 'styled'}) >>
+            'Styled',
+      );
 
       final result = render(fc(component));
       final el = result.getByTestId('styled');
@@ -1757,14 +1758,14 @@ void main() {
       result.unmount();
     });
 
-    test('\$button with onClick handler works', () {
+    test(r'$button with onClick handler works', () {
       final component = registerFunctionComponent((props) {
         final count = useState(0);
         return $div() >> [
-          $span(props: {'data-testid': 'count'}) >> 'Count: ${count.value}',
+          $span(spread: {'data-testid': 'count'}) >> 'Count: ${count.value}',
           $button(
             onClick: () => count.set(count.value + 1),
-            props: {'data-testid': 'btn'},
+            spread: {'data-testid': 'btn'},
           ) >>
               'Click',
         ];
@@ -1777,7 +1778,7 @@ void main() {
       result.unmount();
     });
 
-    test('\$input with onChange handler works', () {
+    test(r'$input with onChange handler works', () {
       final component = registerFunctionComponent((props) {
         final text = useState('');
         return $div() >> [
@@ -1791,9 +1792,9 @@ void main() {
                 if (value case final JSString s) text.set(s.toDart);
               }
             },
-            props: {'data-testid': 'input'},
+            spread: {'data-testid': 'input'},
           ),
-          $span(props: {'data-testid': 'output'}) >> 'Value: ${text.value}',
+          $span(spread: {'data-testid': 'output'}) >> 'Value: ${text.value}',
         ];
       });
 
@@ -1807,14 +1808,14 @@ void main() {
       result.unmount();
     });
 
-    test('\$ul and \$li create lists', () {
-      final component = registerFunctionComponent((props) {
-        return $ul(props: {'data-testid': 'list'}) >> [
+    test(r'$ul and $li create lists', () {
+      final component = registerFunctionComponent(
+        (props) => $ul(spread: {'data-testid': 'list'}) >> [
           $li() >> 'Item 1',
           $li() >> 'Item 2',
           $li() >> 'Item 3',
-        ];
-      });
+        ],
+      );
 
       final result = render(fc(component));
       final list = result.getByTestId('list');
@@ -1824,13 +1825,13 @@ void main() {
       result.unmount();
     });
 
-    test('\$fragment groups elements without wrapper', () {
-      final component = registerFunctionComponent((props) {
-        return $fragment >> [
+    test(r'$fragment groups elements without wrapper', () {
+      final component = registerFunctionComponent(
+        (props) => $fragment >> [
           $h1 >> 'First',
           $h2 >> 'Second',
-        ];
-      });
+        ],
+      );
 
       final result = render(fc(component));
       expect(result.container.textContent, contains('First'));
@@ -1844,10 +1845,10 @@ void main() {
         return $div() >> [
           $button(
             onClick: () => show.set(!show.value),
-            props: {'data-testid': 'toggle'},
+            spread: {'data-testid': 'toggle'},
           ) >>
               'Toggle',
-          if (show.value) $p(props: {'data-testid': 'content'}) >> 'Visible',
+          if (show.value) $p(spread: {'data-testid': 'content'}) >> 'Visible',
         ];
       });
 
@@ -1859,9 +1860,9 @@ void main() {
     });
 
     test('numeric children are converted to string', () {
-      final component = registerFunctionComponent((props) {
-        return $span(props: {'data-testid': 'num'}) >> 42;
-      });
+      final component = registerFunctionComponent(
+        (props) => $span(spread: {'data-testid': 'num'}) >> 42,
+      );
 
       final result = render(fc(component));
       expect(result.getByTestId('num').textContent, equals('42'));
@@ -1871,7 +1872,7 @@ void main() {
     test('El elements can be used as children', () {
       final component = registerFunctionComponent((props) {
         final child = $span() >> 'Inner';
-        return $div(props: {'data-testid': 'outer'}) >> child;
+        return $div(spread: {'data-testid': 'outer'}) >> child;
       });
 
       final result = render(fc(component));
@@ -1879,27 +1880,28 @@ void main() {
       result.unmount();
     });
 
-    test('\$a creates anchor with href', () {
-      final component = registerFunctionComponent((props) {
-        return $a(href: 'https://example.com', props: {'data-testid': 'link'}) >>
-            'Click me';
-      });
+    test(r'$a creates anchor with href', () {
+      final component = registerFunctionComponent(
+        (props) =>
+            $a(href: 'https://example.com', spread: {'data-testid': 'link'}) >>
+            'Click me',
+      );
 
       final result = render(fc(component));
       final link = result.getByTestId('link');
       expect(link.textContent, equals('Click me'));
-      expect((link as JSObject)['href'], isNotNull);
+      expect(link.getAttribute('href'), isNotNull);
       result.unmount();
     });
 
     test('semantic elements work correctly', () {
-      final component = registerFunctionComponent((props) {
-        return $main(props: {'data-testid': 'main'}) >> [
+      final component = registerFunctionComponent(
+        (props) => $main(spread: {'data-testid': 'main'}) >> [
           $header() >> [$h1 >> 'Header'],
           $section() >> [$p() >> 'Section content'],
           $footer() >> [$span() >> 'Footer'],
-        ];
-      });
+        ],
+      );
 
       final result = render(fc(component));
       final mainEl = result.getByTestId('main');

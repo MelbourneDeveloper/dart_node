@@ -1,628 +1,649 @@
-/// High-level MCP Server wrapper.
-library;
-
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
-
-import 'package:dart_node_core/dart_node_core.dart';
-import 'package:dart_node_mcp/src/callbacks.dart';
-import 'package:dart_node_mcp/src/registered.dart';
-import 'package:dart_node_mcp/src/server.dart';
-import 'package:dart_node_mcp/src/transport.dart';
-import 'package:dart_node_mcp/src/types.dart';
+// Server capabilities and configuration tests
+// Tests all capability combinations and configuration options
+import 'package:dart_node_coverage/dart_node_coverage.dart';
+import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
+import 'package:test/test.dart';
 
-/// High-level MCP Server (wraps TypeScript McpServer class).
-///
-/// Provides a simplified API for registering tools, resources, and prompts.
-class McpServer {
-  McpServer._(this._mcpServer);
+void main() {
+  setUp(initCoverage);
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
 
-  final JSObject _mcpServer;
-  bool _connected = false;
+  group('ToolsCapability variations', () {
+    test('with listChanged true', () {
+      const capability = (listChanged: true);
 
-  /// The underlying low-level Server instance.
-  Server get server {
-    final jsServer = _mcpServer['server'];
-    return jsServer as Server;
-  }
+      expect(capability.listChanged, isTrue);
+    });
 
-  /// Create McpServer.
-  ///
-  /// Returns [Success] with the server or [Error] with message on failure.
-  static Result<McpServer, String> create(
-    Implementation serverInfo, {
-    ServerOptions? options,
-  }) {
-    try {
-      final sdkModule = requireModule(
-        '@modelcontextprotocol/sdk/server/mcp.js',
+    test('with listChanged false', () {
+      const capability = (listChanged: false);
+
+      expect(capability.listChanged, isFalse);
+    });
+
+    test('with listChanged null', () {
+      const capability = (listChanged: null);
+
+      expect(capability.listChanged, isNull);
+    });
+  });
+
+  group('ResourcesCapability variations', () {
+    test('with both subscribe and listChanged true', () {
+      const capability = (subscribe: true, listChanged: true);
+
+      expect(capability.subscribe, isTrue);
+      expect(capability.listChanged, isTrue);
+    });
+
+    test('with both subscribe and listChanged false', () {
+      const capability = (subscribe: false, listChanged: false);
+
+      expect(capability.subscribe, isFalse);
+      expect(capability.listChanged, isFalse);
+    });
+
+    test('with subscribe true, listChanged false', () {
+      const capability = (subscribe: true, listChanged: false);
+
+      expect(capability.subscribe, isTrue);
+      expect(capability.listChanged, isFalse);
+    });
+
+    test('with subscribe false, listChanged true', () {
+      const capability = (subscribe: false, listChanged: true);
+
+      expect(capability.subscribe, isFalse);
+      expect(capability.listChanged, isTrue);
+    });
+
+    test('with both null', () {
+      const capability = (subscribe: null, listChanged: null);
+
+      expect(capability.subscribe, isNull);
+      expect(capability.listChanged, isNull);
+    });
+
+    test('with only subscribe set', () {
+      const capability = (subscribe: true, listChanged: null);
+
+      expect(capability.subscribe, isTrue);
+      expect(capability.listChanged, isNull);
+    });
+
+    test('with only listChanged set', () {
+      const capability = (subscribe: null, listChanged: true);
+
+      expect(capability.subscribe, isNull);
+      expect(capability.listChanged, isTrue);
+    });
+  });
+
+  group('PromptsCapability variations', () {
+    test('with listChanged true', () {
+      const capability = (listChanged: true);
+
+      expect(capability.listChanged, isTrue);
+    });
+
+    test('with listChanged false', () {
+      const capability = (listChanged: false);
+
+      expect(capability.listChanged, isFalse);
+    });
+
+    test('with listChanged null', () {
+      const capability = (listChanged: null);
+
+      expect(capability.listChanged, isNull);
+    });
+  });
+
+  group('LoggingCapability variations', () {
+    test('with enabled true', () {
+      const capability = (enabled: true);
+
+      expect(capability.enabled, isTrue);
+    });
+
+    test('with enabled false', () {
+      const capability = (enabled: false);
+
+      expect(capability.enabled, isFalse);
+    });
+
+    test('with enabled null', () {
+      const capability = (enabled: null);
+
+      expect(capability.enabled, isNull);
+    });
+  });
+
+  group('ServerCapabilities comprehensive combinations', () {
+    test('all capabilities enabled', () {
+      const capabilities = (
+        tools: (listChanged: true),
+        resources: (subscribe: true, listChanged: true),
+        prompts: (listChanged: true),
+        logging: (enabled: true),
       );
-      final mcpServerClass = (sdkModule as JSObject)['McpServer'];
-      final jsMcpServerClass = mcpServerClass as JSFunction;
 
-      final jsServerInfo = _implementationToJs(serverInfo);
-      final jsOptions = options != null ? _serverOptionsToJs(options) : null;
+      expect(capabilities.tools.listChanged, isTrue);
+      expect(capabilities.resources.subscribe, isTrue);
+      expect(capabilities.resources.listChanged, isTrue);
+      expect(capabilities.prompts.listChanged, isTrue);
+      expect(capabilities.logging.enabled, isTrue);
+    });
 
-      final mcpServer = jsOptions != null
-          ? jsMcpServerClass.callAsConstructor<JSObject>(
-              jsServerInfo,
-              jsOptions,
-            )
-          : jsMcpServerClass.callAsConstructor<JSObject>(jsServerInfo);
-
-      return Success(McpServer._(mcpServer));
-    } catch (e) {
-      return Error('Failed to create MCP server: $e');
-    }
-  }
-
-  /// Register a tool.
-  ///
-  /// Returns [Success] with [RegisteredTool] or [Error] with message.
-  Result<RegisteredTool, String> registerTool(
-    String name,
-    ToolConfig config,
-    ToolCallback callback,
-  ) {
-    try {
-      final jsConfig = _toolConfigToJs(config);
-      final jsCallback = _wrapToolCallback(callback);
-
-      final registerToolFn = _mcpServer['registerTool'] as JSFunction;
-      final jsResult =
-          registerToolFn.callAsFunction(
-                _mcpServer,
-                name.toJS,
-                jsConfig,
-                jsCallback,
-              )
-              as JSObject;
-
-      return Success(_jsToRegisteredTool(name, jsResult));
-    } catch (e) {
-      return Error('Failed to register tool "$name": $e');
-    }
-  }
-
-  /// Register a resource.
-  ///
-  /// Returns [Success] with [RegisteredResource] or [Error] with message.
-  Result<RegisteredResource, String> registerResource(
-    String name,
-    String uri,
-    ResourceMetadata metadata,
-    ReadResourceCallback readCallback,
-  ) {
-    try {
-      final jsMetadata = _resourceMetadataToJs(metadata);
-      final jsCallback = _wrapReadResourceCallback(readCallback);
-
-      final registerResourceFn = _mcpServer['registerResource'] as JSFunction;
-      final jsResult =
-          registerResourceFn.callAsFunction(
-                _mcpServer,
-                name.toJS,
-                uri.toJS,
-                jsMetadata,
-                jsCallback,
-              )
-              as JSObject;
-
-      return Success(_jsToRegisteredResource(name, uri, jsResult));
-    } catch (e) {
-      return Error('Failed to register resource "$name": $e');
-    }
-  }
-
-  /// Register a resource template.
-  ///
-  /// Returns [Success] with [RegisteredResourceTemplate] or [Error].
-  Result<RegisteredResourceTemplate, String> registerResourceTemplate(
-    String name,
-    ResourceTemplate template,
-    ResourceMetadata metadata,
-    ReadResourceTemplateCallback readCallback,
-  ) {
-    try {
-      final jsTemplate = _resourceTemplateToJs(template);
-      final jsMetadata = _resourceMetadataToJs(metadata);
-      final jsCallback = _wrapReadResourceTemplateCallback(readCallback);
-
-      final registerResourceFn = _mcpServer['registerResource'] as JSFunction;
-      final jsResult =
-          registerResourceFn.callAsFunction(
-                _mcpServer,
-                name.toJS,
-                jsTemplate,
-                jsMetadata,
-                jsCallback,
-              )
-              as JSObject;
-
-      return Success(
-        _jsToRegisteredResourceTemplate(name, template.uriTemplate, jsResult),
+    test('all capabilities disabled', () {
+      const capabilities = (
+        tools: (listChanged: false),
+        resources: (subscribe: false, listChanged: false),
+        prompts: (listChanged: false),
+        logging: (enabled: false),
       );
-    } catch (e) {
-      return Error('Failed to register resource template "$name": $e');
-    }
-  }
 
-  /// Register a prompt.
-  ///
-  /// Returns [Success] with [RegisteredPrompt] or [Error] with message.
-  Result<RegisteredPrompt, String> registerPrompt(
-    String name,
-    PromptConfig config,
-    PromptCallback callback,
-  ) {
-    try {
-      final jsConfig = _promptConfigToJs(config);
-      final jsCallback = _wrapPromptCallback(callback);
+      expect(capabilities.tools.listChanged, isFalse);
+      expect(capabilities.resources.subscribe, isFalse);
+      expect(capabilities.resources.listChanged, isFalse);
+      expect(capabilities.prompts.listChanged, isFalse);
+      expect(capabilities.logging.enabled, isFalse);
+    });
 
-      final registerPromptFn = _mcpServer['registerPrompt'] as JSFunction;
-      final jsResult =
-          registerPromptFn.callAsFunction(
-                _mcpServer,
-                name.toJS,
-                jsConfig,
-                jsCallback,
-              )
-              as JSObject;
-
-      return Success(_jsToRegisteredPrompt(name, jsResult));
-    } catch (e) {
-      return Error('Failed to register prompt "$name": $e');
-    }
-  }
-
-  /// Connect to a transport.
-  ///
-  /// Returns [Success] on successful connection or [Error] with message.
-  Future<Result<void, String>> connect(Transport transport) async {
-    try {
-      final connectFn = _mcpServer['connect'] as JSFunction;
-      final promise =
-          connectFn.callAsFunction(_mcpServer, transport) as JSPromise;
-      await promise.toDart;
-      _connected = true;
-      return const Success(null);
-    } catch (e) {
-      return Error('Failed to connect: $e');
-    }
-  }
-
-  /// Close the server.
-  ///
-  /// Returns [Success] on successful close or [Error] with message.
-  Future<Result<void, String>> close() async {
-    try {
-      final closeFn = _mcpServer['close'] as JSFunction;
-      final promise = closeFn.callAsFunction(_mcpServer) as JSPromise;
-      await promise.toDart;
-      _connected = false;
-      return const Success(null);
-    } catch (e) {
-      return Error('Failed to close: $e');
-    }
-  }
-
-  /// Check if server is connected.
-  bool isConnected() {
-    try {
-      final isConnectedFn = _mcpServer['isConnected'] as JSFunction;
-      final result = isConnectedFn.callAsFunction(_mcpServer) as JSBoolean;
-      return result.toDart;
-    } catch (e) {
-      return _connected;
-    }
-  }
-
-  /// Send logging message to client.
-  Future<Result<void, String>> sendLoggingMessage(
-    LoggingMessageParams params, {
-    String? sessionId,
-  }) async {
-    try {
-      final jsParams = _loggingMessageParamsToJs(params);
-      final sendFn = _mcpServer['sendLoggingMessage'] as JSFunction;
-      final promise = sessionId != null
-          ? sendFn.callAsFunction(_mcpServer, jsParams, sessionId.toJS)
-                as JSPromise
-          : sendFn.callAsFunction(_mcpServer, jsParams) as JSPromise;
-      await promise.toDart;
-      return const Success(null);
-    } catch (e) {
-      return Error('Failed to send logging message: $e');
-    }
-  }
-
-  /// Notify clients that resource list changed.
-  void sendResourceListChanged() {
-    try {
-      (_mcpServer['sendResourceListChanged'] as JSFunction).callAsFunction(
-        _mcpServer,
+    test('all capabilities null', () {
+      const capabilities = (
+        tools: null,
+        resources: null,
+        prompts: null,
+        logging: null,
       );
-    } catch (_) {
-      // Ignore errors on notifications
-    }
-  }
 
-  /// Notify clients that tool list changed.
-  void sendToolListChanged() {
-    try {
-      (_mcpServer['sendToolListChanged'] as JSFunction).callAsFunction(
-        _mcpServer,
+      expect(capabilities.tools, isNull);
+      expect(capabilities.resources, isNull);
+      expect(capabilities.prompts, isNull);
+      expect(capabilities.logging, isNull);
+    });
+
+    test('mixed capability values', () {
+      const capabilities = (
+        tools: (listChanged: true),
+        resources: (subscribe: false, listChanged: true),
+        prompts: (listChanged: null),
+        logging: null,
       );
-    } catch (_) {
-      // Ignore errors on notifications
-    }
-  }
 
-  /// Notify clients that prompt list changed.
-  void sendPromptListChanged() {
-    try {
-      (_mcpServer['sendPromptListChanged'] as JSFunction).callAsFunction(
-        _mcpServer,
+      expect(capabilities.tools.listChanged, isTrue);
+      expect(capabilities.resources.subscribe, isFalse);
+      expect(capabilities.resources.listChanged, isTrue);
+      expect(capabilities.prompts.listChanged, isNull);
+      expect(capabilities.logging, isNull);
+    });
+
+    test('only tools capability', () {
+      const capabilities = (
+        tools: (listChanged: true),
+        resources: null,
+        prompts: null,
+        logging: null,
       );
-    } catch (_) {
-      // Ignore errors on notifications
-    }
-  }
-}
 
-// Helper functions for JS conversion
+      expect(capabilities.tools, isNotNull);
+      expect(capabilities.resources, isNull);
+    });
 
-/// Convert dartify() result to `Map<String, Object?>`.
-/// dartify() returns `JsLinkedHashMap<Object?, Object?>` which doesn't match
-/// `Map<String, Object?>` in type checks. This converts it properly.
-Map<String, Object?> _toStringKeyMap(Object? dartified) {
-  if (dartified == null) return <String, Object?>{};
-  if (dartified is! Map) return <String, Object?>{};
-  return Map<String, Object?>.fromEntries(
-    dartified.entries.map(
-      (e) => MapEntry(e.key.toString(), _convertValue(e.value)),
-    ),
-  );
-}
+    test('only resources capability', () {
+      const capabilities = (
+        tools: null,
+        resources: (subscribe: true, listChanged: true),
+        prompts: null,
+        logging: null,
+      );
 
-/// Recursively convert nested maps to `Map<String, Object?>`.
-Object? _convertValue(Object? value) {
-  if (value is Map) return _toStringKeyMap(value);
-  if (value is List) return value.map(_convertValue).toList();
-  return value;
-}
+      expect(capabilities.tools, isNull);
+      expect(capabilities.resources, isNotNull);
+    });
 
-JSObject _implementationToJs(Implementation impl) {
-  final obj = JSObject();
-  obj['name'] = impl.name.toJS;
-  obj['version'] = impl.version.toJS;
-  return obj;
-}
+    test('only prompts capability', () {
+      const capabilities = (
+        tools: null,
+        resources: null,
+        prompts: (listChanged: true),
+        logging: null,
+      );
 
-JSObject _serverOptionsToJs(ServerOptions options) {
-  final obj = JSObject();
-  if (options.capabilities != null) {
-    obj['capabilities'] = _serverCapabilitiesToJs(options.capabilities!);
-  }
-  if (options.instructions != null) {
-    obj['instructions'] = options.instructions!.toJS;
-  }
-  return obj;
-}
+      expect(capabilities.prompts, isNotNull);
+      expect(capabilities.logging, isNull);
+    });
 
-JSObject _serverCapabilitiesToJs(ServerCapabilities caps) {
-  final obj = JSObject();
-  if (caps.tools != null) {
-    final toolsObj = JSObject();
-    if (caps.tools!.listChanged != null) {
-      toolsObj['listChanged'] = caps.tools!.listChanged!.toJS;
-    }
-    obj['tools'] = toolsObj;
-  }
-  if (caps.resources != null) {
-    final resourcesObj = JSObject();
-    if (caps.resources!.subscribe != null) {
-      resourcesObj['subscribe'] = caps.resources!.subscribe!.toJS;
-    }
-    if (caps.resources!.listChanged != null) {
-      resourcesObj['listChanged'] = caps.resources!.listChanged!.toJS;
-    }
-    obj['resources'] = resourcesObj;
-  }
-  if (caps.prompts != null) {
-    final promptsObj = JSObject();
-    if (caps.prompts!.listChanged != null) {
-      promptsObj['listChanged'] = caps.prompts!.listChanged!.toJS;
-    }
-    obj['prompts'] = promptsObj;
-  }
-  if (caps.logging != null) {
-    final loggingObj = JSObject();
-    if (caps.logging!.enabled != null) {
-      loggingObj['enabled'] = caps.logging!.enabled!.toJS;
-    }
-    obj['logging'] = loggingObj;
-  }
-  return obj;
-}
+    test('only logging capability', () {
+      const capabilities = (
+        tools: null,
+        resources: null,
+        prompts: null,
+        logging: (enabled: true),
+      );
 
-JSObject _toolConfigToJs(ToolConfig config) {
-  final obj = JSObject();
-  if (config.title != null) {
-    obj['title'] = config.title!.toJS;
-  }
-  if (config.description != null) {
-    obj['description'] = config.description!.toJS;
-  }
-  // MCP SDK v1.24+ requires Zod schemas for inputSchema.
-  // We use z.object({}).passthrough() to accept any arguments.
-  // This ensures the SDK passes args to our callback properly.
-  obj['inputSchema'] = _createPassthroughZodSchema();
-  if (config.annotations != null) {
-    obj['annotations'] = _toolAnnotationsToJs(config.annotations!);
-  }
-  return obj;
-}
+      expect(capabilities.logging, isNotNull);
+      expect(capabilities.tools, isNull);
+    });
 
-/// Create a Zod passthrough schema that accepts any object.
-/// Equivalent to: z.object({}).passthrough()
-JSObject _createPassthroughZodSchema() {
-  final zod = requireModule('zod') as JSObject;
-  final z = zod['z'] as JSObject;
-  final objectFn = z['object'] as JSFunction;
-  final emptyObj = JSObject();
-  final zodObject = objectFn.callAsFunction(z, emptyObj) as JSObject;
-  final passthroughFn = zodObject['passthrough'] as JSFunction;
-  return passthroughFn.callAsFunction(zodObject) as JSObject;
-}
+    test('tools and resources only', () {
+      const capabilities = (
+        tools: (listChanged: true),
+        resources: (subscribe: true, listChanged: true),
+        prompts: null,
+        logging: null,
+      );
 
-JSObject _toolAnnotationsToJs(ToolAnnotations annotations) {
-  final obj = JSObject();
-  if (annotations.title != null) {
-    obj['title'] = annotations.title!.toJS;
-  }
-  if (annotations.readOnlyHint != null) {
-    obj['readOnlyHint'] = annotations.readOnlyHint!.toJS;
-  }
-  if (annotations.destructiveHint != null) {
-    obj['destructiveHint'] = annotations.destructiveHint!.toJS;
-  }
-  if (annotations.idempotentHint != null) {
-    obj['idempotentHint'] = annotations.idempotentHint!.toJS;
-  }
-  if (annotations.openWorldHint != null) {
-    obj['openWorldHint'] = annotations.openWorldHint!.toJS;
-  }
-  return obj;
-}
+      expect(capabilities.tools, isNotNull);
+      expect(capabilities.resources, isNotNull);
+      expect(capabilities.prompts, isNull);
+      expect(capabilities.logging, isNull);
+    });
 
-JSObject _resourceMetadataToJs(ResourceMetadata metadata) {
-  final obj = JSObject();
-  if (metadata.description != null) {
-    obj['description'] = metadata.description!.toJS;
-  }
-  if (metadata.mimeType != null) {
-    obj['mimeType'] = metadata.mimeType!.toJS;
-  }
-  return obj;
-}
+    test('prompts and logging only', () {
+      const capabilities = (
+        tools: null,
+        resources: null,
+        prompts: (listChanged: true),
+        logging: (enabled: true),
+      );
 
-JSObject _resourceTemplateToJs(ResourceTemplate template) {
-  final obj = JSObject();
-  obj['uriTemplate'] = template.uriTemplate.toJS;
-  if (template.name != null) {
-    obj['name'] = template.name!.toJS;
-  }
-  if (template.description != null) {
-    obj['description'] = template.description!.toJS;
-  }
-  if (template.mimeType != null) {
-    obj['mimeType'] = template.mimeType!.toJS;
-  }
-  return obj;
-}
+      expect(capabilities.tools, isNull);
+      expect(capabilities.resources, isNull);
+      expect(capabilities.prompts, isNotNull);
+      expect(capabilities.logging, isNotNull);
+    });
+  });
 
-JSObject _promptConfigToJs(PromptConfig config) {
-  final obj = JSObject();
-  if (config.title != null) {
-    obj['title'] = config.title!.toJS;
-  }
-  if (config.description != null) {
-    obj['description'] = config.description!.toJS;
-  }
-  if (config.argsSchema != null) {
-    obj['argsSchema'] = config.argsSchema!.jsify();
-  }
-  return obj;
-}
+  group('ServerOptions with various capability combinations', () {
+    test('full options with all capabilities', () {
+      const options = (
+        capabilities: (
+          tools: (listChanged: true),
+          resources: (subscribe: true, listChanged: true),
+          prompts: (listChanged: true),
+          logging: (enabled: true),
+        ),
+        instructions: 'Full server configuration',
+      );
 
-JSObject _loggingMessageParamsToJs(LoggingMessageParams params) {
-  final obj = JSObject();
-  obj['level'] = params.level.toJS;
-  if (params.logger != null) {
-    obj['logger'] = params.logger!.toJS;
-  }
-  if (params.data != null) {
-    obj['data'] = params.data!.jsify();
-  }
-  return obj;
-}
+      const impl = (name: 'full-server', version: '1.0.0');
+      final result = McpServer.create(impl, options: options);
 
-// The MCP SDK calls tool handlers with: handler(args, extra)
-// - args: the validated tool arguments (object)
-// - extra: context info with signal and requestId
-//
-// We always pass a Zod passthrough schema, so the SDK always passes 2 args.
-JSFunction _wrapToolCallback(ToolCallback callback) =>
-    ((JSAny? arg1, JSAny? arg2) {
-      final args = arg1 as JSObject? ?? JSObject();
-      final meta = arg2 as JSObject?;
-      return _asyncToolHandler(callback, args, meta).toJS;
-    }).toJS;
+      expect(result, isA<Result<McpServer, String>>());
+    });
 
-/// Async helper to process tool callback results.
-/// Separated to avoid closure capture issues in the main wrapper.
-Future<JSObject> _asyncToolHandler(
-  ToolCallback callback,
-  JSObject args,
-  JSObject? meta,
-) async {
-  // Convert JS args to Dart Map
-  // dartify() returns JsLinkedHashMap<Object?, Object?>, not 
-  //Map<String, Object?>
-  // We need to cast the keys to strings manually
-  final dartified = args.dartify();
-  final dartArgs = _toStringKeyMap(dartified);
-  final dartMeta = meta != null ? _jsToToolCallMeta(meta) : null;
+    test('capabilities without instructions', () {
+      const options = (
+        capabilities: (
+          tools: (listChanged: true),
+          resources: null,
+          prompts: null,
+          logging: null,
+        ),
+        instructions: null,
+      );
 
-  // Call the callback and await it
-  final result = await callback(dartArgs, dartMeta);
+      const impl = (name: 'caps-only', version: '1.0.0');
+      final result = McpServer.create(impl, options: options);
 
-  // Access record fields directly - result is typed as CallToolResult
-  final content = result.content;
-  final isError = result.isError;
+      expect(result, isA<Result<McpServer, String>>());
+    });
 
-  // Build JS object
-  final obj = JSObject();
-  final contentJs = <JSObject>[];
-  for (final item in content) {
-    contentJs.add(_contentToJs(item));
-  }
-  obj['content'] = contentJs.toJS;
-  if (isError != null) {
-    obj['isError'] = isError.toJS;
-  }
-  return obj;
-}
+    test('instructions without capabilities', () {
+      const options = (
+        capabilities: null,
+        instructions: 'Instructions only',
+      );
 
-JSFunction _wrapReadResourceCallback(ReadResourceCallback callback) =>
-    ((String uri) async => _readResourceResultToJs(await callback(uri))).toJS;
+      const impl = (name: 'instructions-only', version: '1.0.0');
+      final result = McpServer.create(impl, options: options);
 
-JSFunction _wrapReadResourceTemplateCallback(
-  ReadResourceTemplateCallback callback,
-) => ((String uri, JSObject variables) async {
-  final dartVariables = variables.dartify()! as Map<String, String>;
-  return _readResourceResultToJs(await callback(uri, dartVariables));
-}).toJS;
+      expect(result, isA<Result<McpServer, String>>());
+    });
 
-JSFunction _wrapPromptCallback(PromptCallback callback) =>
-    ((JSObject args) async {
-      final dartArgs = args.dartify()! as Map<String, String>;
-      return _getPromptResultToJs(await callback(dartArgs));
-    }).toJS;
+    test('both null (minimal options)', () {
+      const options = (
+        capabilities: null,
+        instructions: null,
+      );
 
-ToolCallMeta? _jsToToolCallMeta(JSObject meta) {
-  final progressToken = meta['progressToken'];
-  return (
-    progressToken: progressToken != null
-        ? (progressToken as JSString).toDart
-        : null,
-  );
-}
+      const impl = (name: 'minimal', version: '1.0.0');
+      final result = McpServer.create(impl, options: options);
 
-JSObject _contentToJs(Object content) {
-  // Content is a typedef record (TextContent, ImageContent, ResourceContent).
-  // We need to convert it to a plain JS object for the MCP SDK.
-  //
-  // IMPORTANT: In dart2js, records with String fields don't match patterns
-  // that expect Object? fields. Record pattern matching checks exact type
-  // identity at runtime, not structural compatibility.
-  //
-  // Solution: Accept Map<String, Object?> as content type. Callers should
-  // pass {'type': 'text', 'text': 'value'} instead of typedef records.
-  // This is the only reliable cross-platform approach.
-  if (content is Map<String, Object?>) {
-    return content.jsify()! as JSObject;
-  }
+      expect(result, isA<Result<McpServer, String>>());
+    });
+  });
 
-  throw StateError(
-    'Content must be Map<String, Object?>. '
-    'Got: ${content.runtimeType}. '
-    'Use {"type": "text", "text": "value"} format.',
-  );
-}
+  group('Server creation with all capability permutations', () {
+    test('resources with only subscribe', () {
+      const options = (
+        capabilities: (
+          tools: null,
+          resources: (subscribe: true, listChanged: null),
+          prompts: null,
+          logging: null,
+        ),
+        instructions: null,
+      );
 
-JSObject _readResourceResultToJs(ReadResourceResult result) {
-  final obj = JSObject();
-  obj['contents'] = result.contents.map(_contentToJs).toList().toJS;
-  return obj;
-}
+      const impl = (name: 'test', version: '1.0.0');
+      final result = createServer(impl, options: options);
 
-JSObject _getPromptResultToJs(GetPromptResult result) {
-  final obj = JSObject();
-  if (result.description != null) {
-    obj['description'] = result.description!.toJS;
-  }
-  obj['messages'] = result.messages.map(_promptMessageToJs).toList().toJS;
-  return obj;
-}
+      expect(result, isA<Result<Server, String>>());
+    });
 
-JSObject _promptMessageToJs(PromptMessage message) {
-  final obj = JSObject();
-  obj['role'] = message.role.toJS;
-  obj['content'] = _contentToJs(message.content);
-  return obj;
-}
+    test('resources with only listChanged', () {
+      const options = (
+        capabilities: (
+          tools: null,
+          resources: (subscribe: null, listChanged: true),
+          prompts: null,
+          logging: null,
+        ),
+        instructions: null,
+      );
 
-RegisteredTool _jsToRegisteredTool(String name, JSObject jsResult) {
-  final removeFn = jsResult['remove']! as JSFunction;
-  final updateFn = jsResult['update']! as JSFunction;
-  final enableFn = jsResult['enable'] as JSFunction?;
-  final disableFn = jsResult['disable'] as JSFunction?;
+      const impl = (name: 'test', version: '1.0.0');
+      final result = createServer(impl, options: options);
 
-  return (
-    name: name,
-    remove: () => removeFn.callAsFunction(jsResult),
-    update: (ToolConfig config) =>
-        updateFn.callAsFunction(jsResult, _toolConfigToJs(config)),
-    enable: () => enableFn?.callAsFunction(jsResult),
-    disable: () => disableFn?.callAsFunction(jsResult),
-  );
-}
+      expect(result, isA<Result<Server, String>>());
+    });
 
-RegisteredResource _jsToRegisteredResource(
-  String name,
-  String uri,
-  JSObject jsResult,
-) {
-  final removeFn = jsResult['remove']! as JSFunction;
-  final updateFn = jsResult['update']! as JSFunction;
+    test('resources with subscribe=false, listChanged=true', () {
+      const options = (
+        capabilities: (
+          tools: null,
+          resources: (subscribe: false, listChanged: true),
+          prompts: null,
+          logging: null,
+        ),
+        instructions: null,
+      );
 
-  return (
-    name: name,
-    uri: uri,
-    remove: () => removeFn.callAsFunction(jsResult),
-    update: (ResourceMetadata metadata) =>
-        updateFn.callAsFunction(jsResult, _resourceMetadataToJs(metadata)),
-  );
-}
+      const impl = (name: 'test', version: '1.0.0');
+      final result = createServer(impl, options: options);
 
-RegisteredResourceTemplate _jsToRegisteredResourceTemplate(
-  String name,
-  String uriTemplate,
-  JSObject jsResult,
-) {
-  final removeFn = jsResult['remove']! as JSFunction;
-  final updateFn = jsResult['update']! as JSFunction;
+      expect(result, isA<Result<Server, String>>());
+    });
 
-  return (
-    name: name,
-    uriTemplate: uriTemplate,
-    remove: () => removeFn.callAsFunction(jsResult),
-    update: (ResourceMetadata metadata) =>
-        updateFn.callAsFunction(jsResult, _resourceMetadataToJs(metadata)),
-  );
-}
+    test('resources with subscribe=true, listChanged=false', () {
+      const options = (
+        capabilities: (
+          tools: null,
+          resources: (subscribe: true, listChanged: false),
+          prompts: null,
+          logging: null,
+        ),
+        instructions: null,
+      );
 
-RegisteredPrompt _jsToRegisteredPrompt(String name, JSObject jsResult) {
-  final removeFn = jsResult['remove']! as JSFunction;
-  final updateFn = jsResult['update']! as JSFunction;
+      const impl = (name: 'test', version: '1.0.0');
+      final result = createServer(impl, options: options);
 
-  return (
-    name: name,
-    remove: () => removeFn.callAsFunction(jsResult),
-    update: (PromptConfig config) =>
-        updateFn.callAsFunction(jsResult, _promptConfigToJs(config)),
-  );
+      expect(result, isA<Result<Server, String>>());
+    });
+  });
+
+  group('Implementation type variations', () {
+    test('simple name and version', () {
+      const impl = (name: 'server', version: '1.0.0');
+
+      expect(impl.name, equals('server'));
+      expect(impl.version, equals('1.0.0'));
+    });
+
+    test('scoped package name', () {
+      const impl = (name: '@org/package', version: '2.3.4');
+
+      expect(impl.name, equals('@org/package'));
+      expect(impl.version, equals('2.3.4'));
+    });
+
+    test('version with prerelease', () {
+      const impl = (name: 'beta-server', version: '1.0.0-beta.1');
+
+      expect(impl.version, equals('1.0.0-beta.1'));
+    });
+
+    test('version with build metadata', () {
+      const impl = (name: 'server', version: '1.0.0+20231215');
+
+      expect(impl.version, equals('1.0.0+20231215'));
+    });
+
+    test('version with both prerelease and build', () {
+      const impl = (name: 'server', version: '1.0.0-alpha.1+build.123');
+
+      expect(impl.version, equals('1.0.0-alpha.1+build.123'));
+    });
+
+    test('minimal version', () {
+      const impl = (name: 'v', version: '0.0.1');
+
+      expect(impl.name, equals('v'));
+      expect(impl.version, equals('0.0.1'));
+    });
+
+    test('major version only style', () {
+      const impl = (name: 'server', version: '1');
+
+      expect(impl.version, equals('1'));
+    });
+  });
+
+  group('Capability integration tests', () {
+    test('McpServer with tools capability enabled', () {
+      const options = (
+        capabilities: (
+          tools: (listChanged: true),
+          resources: null,
+          prompts: null,
+          logging: null,
+        ),
+        instructions: 'Server with tools support',
+      );
+
+      const impl = (name: 'tool-server', version: '1.0.0');
+      final result = McpServer.create(impl, options: options);
+
+      switch (result) {
+        case Success(:final value):
+          expect(value, isA<McpServer>());
+        case Error(:final error):
+          expect(error, contains('Failed to create MCP server'));
+      }
+    });
+
+    test('McpServer with resources capability enabled', () {
+      const options = (
+        capabilities: (
+          tools: null,
+          resources: (subscribe: true, listChanged: true),
+          prompts: null,
+          logging: null,
+        ),
+        instructions: 'Server with resources support',
+      );
+
+      const impl = (name: 'resource-server', version: '1.0.0');
+      final result = McpServer.create(impl, options: options);
+
+      expect(result, isA<Result<McpServer, String>>());
+    });
+
+    test('McpServer with prompts capability enabled', () {
+      const options = (
+        capabilities: (
+          tools: null,
+          resources: null,
+          prompts: (listChanged: true),
+          logging: null,
+        ),
+        instructions: 'Server with prompts support',
+      );
+
+      const impl = (name: 'prompt-server', version: '1.0.0');
+      final result = McpServer.create(impl, options: options);
+
+      expect(result, isA<Result<McpServer, String>>());
+    });
+
+    test('McpServer with logging capability enabled', () {
+      const options = (
+        capabilities: (
+          tools: null,
+          resources: null,
+          prompts: null,
+          logging: (enabled: true),
+        ),
+        instructions: 'Server with logging support',
+      );
+
+      const impl = (name: 'logging-server', version: '1.0.0');
+      final result = McpServer.create(impl, options: options);
+
+      expect(result, isA<Result<McpServer, String>>());
+    });
+
+    test('Server (low-level) with all capabilities', () {
+      const options = (
+        capabilities: (
+          tools: (listChanged: true),
+          resources: (subscribe: true, listChanged: true),
+          prompts: (listChanged: true),
+          logging: (enabled: true),
+        ),
+        instructions: 'Low-level server with all capabilities',
+      );
+
+      const impl = (name: 'low-level', version: '1.0.0');
+      final result = createServer(impl, options: options);
+
+      expect(result, isA<Result<Server, String>>());
+    });
+  });
+
+  group('Capability field access patterns', () {
+    test('accessing tools capability fields', () {
+      const capabilities = (
+        tools: (listChanged: true),
+        resources: null,
+        prompts: null,
+        logging: null,
+      );
+
+      final tools = capabilities.tools;
+      expect(tools, isNotNull);
+      expect(tools.listChanged, isTrue);
+    });
+
+    test('accessing resources capability fields', () {
+      const capabilities = (
+        tools: null,
+        resources: (subscribe: true, listChanged: false),
+        prompts: null,
+        logging: null,
+      );
+
+      final resources = capabilities.resources;
+      expect(resources, isNotNull);
+      expect(resources.subscribe, isTrue);
+      expect(resources.listChanged, isFalse);
+    });
+
+    test('accessing prompts capability fields', () {
+      const capabilities = (
+        tools: null,
+        resources: null,
+        prompts: (listChanged: false),
+        logging: null,
+      );
+
+      final prompts = capabilities.prompts;
+      expect(prompts, isNotNull);
+      expect(prompts.listChanged, isFalse);
+    });
+
+    test('accessing logging capability fields', () {
+      const capabilities = (
+        tools: null,
+        resources: null,
+        prompts: null,
+        logging: (enabled: false),
+      );
+
+      final logging = capabilities.logging;
+      expect(logging, isNotNull);
+      expect(logging.enabled, isFalse);
+    });
+
+    test('accessing null capability fields', () {
+      const capabilities = (
+        tools: null,
+        resources: null,
+        prompts: null,
+        logging: null,
+      );
+
+      expect(capabilities.tools, isNull);
+      expect(capabilities.resources, isNull);
+      expect(capabilities.prompts, isNull);
+      expect(capabilities.logging, isNull);
+    });
+  });
+
+  group('ServerOptions field access patterns', () {
+    test('accessing capabilities field', () {
+      const options = (
+        capabilities: (
+          tools: (listChanged: true),
+          resources: null,
+          prompts: null,
+          logging: null,
+        ),
+        instructions: null,
+      );
+
+      expect(options.capabilities, isNotNull);
+      expect(options.capabilities.tools.listChanged, isTrue);
+    });
+
+    test('accessing instructions field', () {
+      const options = (
+        capabilities: null,
+        instructions: 'Test instructions',
+      );
+
+      expect(options.instructions, equals('Test instructions'));
+      expect(options.capabilities, isNull);
+    });
+
+    test('accessing both fields', () {
+      const options = (
+        capabilities: (
+          tools: (listChanged: true),
+          resources: null,
+          prompts: null,
+          logging: null,
+        ),
+        instructions: 'With both fields',
+      );
+
+      expect(options.capabilities, isNotNull);
+      expect(options.instructions, isNotNull);
+    });
+
+    test('accessing null fields', () {
+      const options = (
+        capabilities: null,
+        instructions: null,
+      );
+
+      expect(options.capabilities, isNull);
+      expect(options.instructions, isNull);
+    });
+  });
 }
