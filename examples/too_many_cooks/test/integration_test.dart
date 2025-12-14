@@ -7,7 +7,6 @@ import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
 import 'package:dart_node_core/dart_node_core.dart';
-import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -28,10 +27,7 @@ void main() {
     });
 
     // Clean up after ALL tests complete so we don't pollute the shared DB
-    tearDownAll(() {
-      _deleteDbFiles();
-      writeCoverageFile('coverage/coverage.json');
-    });
+    tearDownAll(_deleteDbFiles);
 
     test('5 agents register concurrently', () async {
       final registerFutures = List.generate(
