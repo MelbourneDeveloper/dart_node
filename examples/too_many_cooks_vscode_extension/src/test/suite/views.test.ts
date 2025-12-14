@@ -65,16 +65,8 @@ suite('Views', () => {
     }
   });
 
-  test('Plans view is accessible', async () => {
-    await openTooManyCooksPanel();
-
-    try {
-      await vscode.commands.executeCommand('tooManyCooksPlans.focus');
-    } catch {
-      // View focus may not work in test environment
-    }
-  });
 });
+// Note: Plans are now shown under agents in the Agents tree, not as a separate view
 
 /**
  * UI Bug Fix Tests
@@ -287,5 +279,44 @@ suite('UI Bug Fixes', function () {
       undefined,
       'BUG FIX: Message should be auto-marked read after first fetch'
     );
+  });
+
+  test('BROADCAST: Messages to "*" appear in tree as "all"', async function () {
+    this.timeout(15000);
+    const api = getTestAPI();
+
+    // Send a broadcast message
+    await api.callTool('message', {
+      action: 'send',
+      agent_name: agentName,
+      agent_key: agentKey,
+      to_agent: '*',
+      content: 'Broadcast test message to everyone',
+    });
+
+    // Wait for message to appear in tree
+    await waitForCondition(
+      () => api.findMessageInTree('Broadcast test') !== undefined,
+      'broadcast message to appear in tree',
+      5000
+    );
+
+    // Find the broadcast message
+    const msgItem = api.findMessageInTree('Broadcast test');
+    assert.ok(msgItem, 'Broadcast message MUST appear in tree');
+
+    // PROOF: The label contains "all" (not "*")
+    assert.ok(
+      msgItem.label.includes('→ all'),
+      `Broadcast messages should show "→ all" in label, got: ${msgItem.label}`
+    );
+
+    // Content should be in description
+    assert.ok(
+      msgItem.description?.includes('Broadcast test'),
+      `Description should contain message content, got: ${msgItem.description}`
+    );
+
+    console.log(`BROADCAST TEST PASSED: ${msgItem.label}`);
   });
 });

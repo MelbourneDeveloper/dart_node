@@ -1,0 +1,454 @@
+/**
+ * Coverage Tests
+ * Tests specifically designed to cover untested code paths.
+ */
+
+import * as assert from 'assert';
+import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+import {
+  waitForExtensionActivation,
+  waitForConnection,
+  waitForCondition,
+  getTestAPI,
+} from '../test-helpers';
+
+const SERVER_PATH = path.resolve(
+  __dirname,
+  '../../../../too_many_cooks/build/bin/server_node.js'
+);
+
+/**
+ * Lock Decorations Coverage Tests
+ */
+suite('Lock Decorations Coverage', function () {
+  const testId = Date.now();
+  const agentName = `lock-decor-test-${testId}`;
+  let agentKey: string;
+
+  suiteSetup(async function () {
+    this.timeout(60000);
+    if (!fs.existsSync(SERVER_PATH)) {
+      this.skip();
+      return;
+    }
+    await waitForExtensionActivation();
+    const config = vscode.workspace.getConfiguration('tooManyCooks');
+    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
+
+    const api = getTestAPI();
+    await api.disconnect();
+    await api.connect();
+    await waitForConnection();
+
+    const result = await api.callTool('register', { name: agentName });
+    agentKey = JSON.parse(result).agent_key;
+  });
+
+  suiteTeardown(async () => {
+    const api = getTestAPI();
+    await api.disconnect();
+  });
+
+  test('File decoration shows lock badge for active locks', async function () {
+    this.timeout(15000);
+    const api = getTestAPI();
+
+    // Acquire a lock
+    await api.callTool('lock', {
+      action: 'acquire',
+      file_path: '/test/decor/active.ts',
+      agent_name: agentName,
+      agent_key: agentKey,
+      reason: 'Testing active lock decoration',
+    });
+
+    await waitForCondition(
+      () => api.findLockInTree('/test/decor/active.ts') !== undefined,
+      'Lock to appear',
+      5000
+    );
+
+    // Verify lock is in the state
+    const locks = api.getLocks();
+    const ourLock = locks.find(l => l.filePath === '/test/decor/active.ts');
+    assert.ok(ourLock, 'Lock should be in state');
+    assert.strictEqual(ourLock.agentName, agentName, 'Lock should be owned by test agent');
+    assert.ok(ourLock.reason, 'Lock should have reason');
+
+    // The decoration provider is triggered by the lock signal
+    // We can't directly test the decoration visually, but we verify the lock state
+    assert.ok(ourLock.expiresAt > Date.now(), 'Lock should not be expired');
+  });
+
+  test('Lock with reason shows in tooltip', async function () {
+    this.timeout(10000);
+    const api = getTestAPI();
+
+    // The lock from previous test should still exist
+    const lockItem = api.findLockInTree('/test/decor/active.ts');
+    assert.ok(lockItem, 'Lock should still exist');
+    assert.ok(
+      lockItem.description?.includes(agentName),
+      `Lock description should include agent name, got: ${lockItem.description}`
+    );
+  });
+});
+
+/**
+ * Store Error Handling Coverage Tests
+ */
+suite('Store Error Handling Coverage', function () {
+  const testId = Date.now();
+  const agentName = `store-error-test-${testId}`;
+  let agentKey: string;
+
+  suiteSetup(async function () {
+    this.timeout(60000);
+    if (!fs.existsSync(SERVER_PATH)) {
+      this.skip();
+      return;
+    }
+    await waitForExtensionActivation();
+    const config = vscode.workspace.getConfiguration('tooManyCooks');
+    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
+
+    const api = getTestAPI();
+    await api.disconnect();
+    await api.connect();
+    await waitForConnection();
+
+    const result = await api.callTool('register', { name: agentName });
+    agentKey = JSON.parse(result).agent_key;
+  });
+
+  suiteTeardown(async () => {
+    const api = getTestAPI();
+    await api.disconnect();
+  });
+
+  test('forceReleaseLock works on existing lock', async function () {
+    this.timeout(15000);
+    const api = getTestAPI();
+
+    // Create a lock to force release
+    await api.callTool('lock', {
+      action: 'acquire',
+      file_path: '/test/force/release.ts',
+      agent_name: agentName,
+      agent_key: agentKey,
+      reason: 'Will be force released',
+    });
+
+    await waitForCondition(
+      () => api.findLockInTree('/test/force/release.ts') !== undefined,
+      'Lock to appear',
+      5000
+    );
+
+    // Force release using store method (covers store.forceReleaseLock)
+    await api.forceReleaseLock('/test/force/release.ts');
+
+    await waitForCondition(
+      () => api.findLockInTree('/test/force/release.ts') === undefined,
+      'Lock to disappear',
+      5000
+    );
+
+    assert.strictEqual(
+      api.findLockInTree('/test/force/release.ts'),
+      undefined,
+      'Lock should be removed after force release'
+    );
+  });
+
+  test('deleteAgent removes agent and associated data', async function () {
+    this.timeout(15000);
+    const api = getTestAPI();
+
+    // Create a new agent to delete
+    const deleteAgentName = `to-delete-${testId}`;
+    const regResult = await api.callTool('register', { name: deleteAgentName });
+    const deleteAgentKey = JSON.parse(regResult).agent_key;
+
+    // Give agent a lock and plan
+    await api.callTool('lock', {
+      action: 'acquire',
+      file_path: '/test/delete/agent.ts',
+      agent_name: deleteAgentName,
+      agent_key: deleteAgentKey,
+      reason: 'Will be deleted with agent',
+    });
+
+    await api.callTool('plan', {
+      action: 'update',
+      agent_name: deleteAgentName,
+      agent_key: deleteAgentKey,
+      goal: 'Will be deleted',
+      current_task: 'Waiting to be deleted',
+    });
+
+    await waitForCondition(
+      () => api.findAgentInTree(deleteAgentName) !== undefined,
+      'Agent to appear',
+      5000
+    );
+
+    // Delete using store method (covers store.deleteAgent)
+    await api.deleteAgent(deleteAgentName);
+
+    await waitForCondition(
+      () => api.findAgentInTree(deleteAgentName) === undefined,
+      'Agent to disappear',
+      5000
+    );
+
+    assert.strictEqual(
+      api.findAgentInTree(deleteAgentName),
+      undefined,
+      'Agent should be gone after delete'
+    );
+    assert.strictEqual(
+      api.findLockInTree('/test/delete/agent.ts'),
+      undefined,
+      'Agent lock should also be gone'
+    );
+  });
+
+  test('sendMessage creates message in state', async function () {
+    this.timeout(15000);
+    const api = getTestAPI();
+
+    // Create receiver agent
+    const receiverName = `receiver-${testId}`;
+    await api.callTool('register', { name: receiverName });
+
+    // Send message using store method (covers store.sendMessage)
+    // This method auto-registers sender and sends message
+    const senderName = `store-sender-${testId}`;
+    await api.sendMessage(senderName, receiverName, 'Test message via store.sendMessage');
+
+    await waitForCondition(
+      () => api.findMessageInTree('Test message via store') !== undefined,
+      'Message to appear',
+      5000
+    );
+
+    const msgItem = api.findMessageInTree('Test message via store');
+    assert.ok(msgItem, 'Message should appear in tree');
+    assert.ok(msgItem.label.includes(senderName), 'Message should show sender');
+    assert.ok(msgItem.label.includes(receiverName), 'Message should show receiver');
+  });
+});
+
+/**
+ * Extension Commands Coverage Tests
+ */
+suite('Extension Commands Coverage', function () {
+  suiteSetup(async function () {
+    this.timeout(60000);
+    await waitForExtensionActivation();
+  });
+
+  test('refresh command works when connected', async function () {
+    this.timeout(30000);
+    if (!fs.existsSync(SERVER_PATH)) {
+      this.skip();
+      return;
+    }
+
+    const api = getTestAPI();
+    const config = vscode.workspace.getConfiguration('tooManyCooks');
+    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
+
+    await api.disconnect();
+    await api.connect();
+    await waitForConnection();
+
+    // Execute refresh command
+    await vscode.commands.executeCommand('tooManyCooks.refresh');
+
+    // Should not throw and state should be valid
+    assert.ok(api.isConnected(), 'Should still be connected after refresh');
+  });
+
+  test('connect command succeeds with valid server', async function () {
+    this.timeout(30000);
+    if (!fs.existsSync(SERVER_PATH)) {
+      this.skip();
+      return;
+    }
+
+    const api = getTestAPI();
+    await api.disconnect();
+
+    // Execute connect command
+    await vscode.commands.executeCommand('tooManyCooks.connect');
+
+    await waitForCondition(
+      () => api.isConnected(),
+      'Connection to establish',
+      10000
+    );
+
+    assert.ok(api.isConnected(), 'Should be connected after connect command');
+  });
+
+  test('deleteLock command is registered', async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(
+      commands.includes('tooManyCooks.deleteLock'),
+      'deleteLock command should be registered'
+    );
+  });
+
+  test('deleteAgent command is registered', async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(
+      commands.includes('tooManyCooks.deleteAgent'),
+      'deleteAgent command should be registered'
+    );
+  });
+
+  test('sendMessage command is registered', async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(
+      commands.includes('tooManyCooks.sendMessage'),
+      'sendMessage command should be registered'
+    );
+  });
+});
+
+/**
+ * Tree Provider Edge Cases
+ */
+suite('Tree Provider Edge Cases', function () {
+  const testId = Date.now();
+  const agentName = `edge-case-${testId}`;
+  let agentKey: string;
+
+  suiteSetup(async function () {
+    this.timeout(60000);
+    if (!fs.existsSync(SERVER_PATH)) {
+      this.skip();
+      return;
+    }
+    await waitForExtensionActivation();
+    const config = vscode.workspace.getConfiguration('tooManyCooks');
+    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
+
+    const api = getTestAPI();
+    await api.disconnect();
+    await api.connect();
+    await waitForConnection();
+
+    const result = await api.callTool('register', { name: agentName });
+    agentKey = JSON.parse(result).agent_key;
+  });
+
+  suiteTeardown(async () => {
+    const api = getTestAPI();
+    await api.disconnect();
+  });
+
+  test('Messages tree handles read messages correctly', async function () {
+    this.timeout(15000);
+    const api = getTestAPI();
+
+    // Create receiver
+    const receiverName = `edge-receiver-${testId}`;
+    const regResult = await api.callTool('register', { name: receiverName });
+    const receiverKey = JSON.parse(regResult).agent_key;
+
+    // Send message
+    await api.callTool('message', {
+      action: 'send',
+      agent_name: agentName,
+      agent_key: agentKey,
+      to_agent: receiverName,
+      content: 'Edge case message',
+    });
+
+    await waitForCondition(
+      () => api.findMessageInTree('Edge case') !== undefined,
+      'Message to appear',
+      5000
+    );
+
+    // Fetch messages to mark as read
+    await api.callTool('message', {
+      action: 'get',
+      agent_name: receiverName,
+      agent_key: receiverKey,
+    });
+
+    // Refresh to get updated read status
+    await api.refreshStatus();
+
+    // Verify message exists (may or may not be unread depending on timing)
+    const msgItem = api.findMessageInTree('Edge case');
+    assert.ok(msgItem, 'Message should still appear after being read');
+  });
+
+  test('Agents tree shows summary counts correctly', async function () {
+    this.timeout(15000);
+    const api = getTestAPI();
+
+    // Add a lock for the agent
+    await api.callTool('lock', {
+      action: 'acquire',
+      file_path: '/edge/case/file.ts',
+      agent_name: agentName,
+      agent_key: agentKey,
+      reason: 'Edge case lock',
+    });
+
+    await waitForCondition(
+      () => api.findLockInTree('/edge/case/file.ts') !== undefined,
+      'Lock to appear',
+      5000
+    );
+
+    const agentItem = api.findAgentInTree(agentName);
+    assert.ok(agentItem, 'Agent should be in tree');
+    // Agent description should include lock count
+    assert.ok(
+      agentItem.description?.includes('lock'),
+      `Agent description should mention locks, got: ${agentItem.description}`
+    );
+  });
+
+  test('Plans appear correctly as agent children', async function () {
+    this.timeout(15000);
+    const api = getTestAPI();
+
+    // Update plan
+    await api.callTool('plan', {
+      action: 'update',
+      agent_name: agentName,
+      agent_key: agentKey,
+      goal: 'Edge case goal',
+      current_task: 'Testing edge cases',
+    });
+
+    // Wait for plan to appear
+    await waitForCondition(
+      () => {
+        const agent = api.findAgentInTree(agentName);
+        return agent?.children?.some(c => c.label.includes('Edge case goal')) ?? false;
+      },
+      'Plan to appear under agent',
+      5000
+    );
+
+    const agentItem = api.findAgentInTree(agentName);
+    assert.ok(agentItem?.children, 'Agent should have children');
+    const planChild = agentItem?.children?.find(c => c.label.includes('Goal:'));
+    assert.ok(planChild, 'Agent should have plan child');
+    assert.ok(
+      planChild?.label.includes('Edge case goal'),
+      `Plan child should contain goal, got: ${planChild?.label}`
+    );
+  });
+});

@@ -26,7 +26,6 @@ import type { AgentDetails as AgentDetailsType } from './state/signals';
 import type { AgentsTreeProvider, AgentTreeItem } from './ui/tree/agentsTreeProvider';
 import type { LocksTreeProvider } from './ui/tree/locksTreeProvider';
 import type { MessagesTreeProvider } from './ui/tree/messagesTreeProvider';
-import type { PlansTreeProvider } from './ui/tree/plansTreeProvider';
 
 /** Serializable tree item for test assertions - proves what appears in UI */
 export interface TreeItemSnapshot {
@@ -57,6 +56,11 @@ export interface TestAPI {
   isConnected(): boolean;
   callTool(name: string, args: Record<string, unknown>): Promise<string>;
 
+  // Admin operations (for coverage of store.ts methods)
+  forceReleaseLock(filePath: string): Promise<void>;
+  deleteAgent(agentName: string): Promise<void>;
+  sendMessage(fromAgent: string, toAgent: string, content: string): Promise<void>;
+
   // Tree view queries - these prove what APPEARS in the UI
   getAgentTreeItems(): AgentTreeItem[];
   getAgentTreeChildren(agentName: string): AgentTreeItem[];
@@ -84,7 +88,6 @@ export interface TreeProviders {
   agents: AgentsTreeProvider;
   locks: LocksTreeProvider;
   messages: MessagesTreeProvider;
-  plans?: PlansTreeProvider;
 }
 
 // Global log storage for testing
@@ -139,15 +142,34 @@ function buildMessagesSnapshot(providers: TreeProviders): TreeItemSnapshot[] {
   return items.map(item => toSnapshot(item));
 }
 
-/** Build plans tree snapshot */
+/** Build plans tree snapshot - plans are shown as children under agents */
 function buildPlansSnapshot(providers: TreeProviders): TreeItemSnapshot[] {
-  const plansProvider = providers.plans;
-  if (!plansProvider) return [];
-  const items = plansProvider.getChildren() ?? [];
-  return items.map(item => toSnapshot(item, () => {
-    const children = plansProvider.getChildren(item) ?? [];
-    return children.map(child => toSnapshot(child));
-  }));
+  // Plans now appear as children under agents, not in a separate tree
+  // Return a flat list of plan items found under agents
+  const plansFromAgents: TreeItemSnapshot[] = [];
+  const agentItems = providers.agents.getChildren() ?? [];
+  for (const agent of agentItems) {
+    const children = providers.agents.getChildren(agent) ?? [];
+    for (const child of children) {
+      // Plan items have label starting with "Goal:"
+      if (typeof child.label === 'string' && child.label.startsWith('Goal:')) {
+        // Create a plan snapshot with agent name as label and task as description
+        const desc = typeof child.description === 'string' ? child.description : undefined;
+        plansFromAgents.push({
+          label: agent.agentName ?? '',
+          description: desc,
+          children: [
+            { label: child.label as string },
+            ...(desc ? [{ label: desc }] : []),
+          ],
+        });
+      }
+    }
+  }
+  if (plansFromAgents.length === 0) {
+    return [{ label: 'No plans' }];
+  }
+  return plansFromAgents;
 }
 
 /** Search tree items recursively for a label match */
@@ -182,6 +204,11 @@ export function createTestAPI(store: Store, providers: TreeProviders): TestAPI {
     isConnected: () => store.isConnected(),
     callTool: (name, args) => store.callTool(name, args),
 
+    // Admin operations (for coverage)
+    forceReleaseLock: (filePath) => store.forceReleaseLock(filePath),
+    deleteAgent: (agentName) => store.deleteAgent(agentName),
+    sendMessage: (fromAgent, toAgent, content) => store.sendMessage(fromAgent, toAgent, content),
+
     // Tree view queries - these query the ACTUAL tree provider state
     getAgentTreeItems: () => providers.agents.getChildren() ?? [],
     getAgentTreeChildren: (agentName: string) => {
@@ -203,10 +230,18 @@ export function createTestAPI(store: Store, providers: TreeProviders): TestAPI {
       return items.filter((item) => item.message !== undefined).length;
     },
     getPlanTreeItemCount: () => {
-      // Count only items with actual plans (not "No plans" placeholder)
-      if (!providers.plans) return 0;
-      const items = providers.plans.getChildren() ?? [];
-      return items.filter((item) => item.plan !== undefined).length;
+      // Count plans shown as children under agents (Goal: items)
+      let count = 0;
+      const agentItems = providers.agents.getChildren() ?? [];
+      for (const agent of agentItems) {
+        const children = providers.agents.getChildren(agent) ?? [];
+        for (const child of children) {
+          if (typeof child.label === 'string' && child.label.startsWith('Goal:')) {
+            count++;
+          }
+        }
+      }
+      return count;
     },
 
     // Full tree snapshots - PROOF of what's displayed in UI

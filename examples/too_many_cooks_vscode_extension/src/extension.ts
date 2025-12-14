@@ -325,7 +325,6 @@ export async function activate(
     agents: agentsProvider,
     locks: locksProvider,
     messages: messagesProvider,
-    plans: undefined,
   });
 }
 
