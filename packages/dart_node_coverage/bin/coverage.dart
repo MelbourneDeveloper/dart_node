@@ -193,9 +193,15 @@ Future<Result<void, String>> _runTests(String packageDir) async {
   final useNodePlatform =
       testConfig.existsSync() && testConfig.readAsStringSync().contains('node');
 
-  final testArgs = useNodePlatform
-      ? const ['test', '-p', 'node']
-      : const ['test'];
+  // Prefer all_tests.dart if it exists (consolidates coverage)
+  final allTestsPath = p.join(packageDir, 'test', 'all_tests.dart');
+  final hasAllTests = File(allTestsPath).existsSync();
+
+  final testArgs = <String>[
+    'test',
+    if (useNodePlatform) ...['-p', 'node'],
+    if (hasAllTests) 'test/all_tests.dart',
+  ];
 
   final result = await Process.run(
     'dart',
