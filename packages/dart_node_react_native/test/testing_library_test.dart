@@ -69,8 +69,7 @@ void main() {
 
   test('TestNode firePress calls onPress handler', () {
     var pressed = false;
-    final node = _createNodeWithHandler(onPress: () => pressed = true);
-    node.firePress();
+    _createNodeWithHandler(onPress: () => pressed = true).firePress();
     expect(pressed, isTrue);
   });
 
@@ -81,10 +80,8 @@ void main() {
 
   test('TestNode fireChangeText calls onChangeText handler', () {
     String? receivedText;
-    final node = _createNodeWithHandler(
-      onChangeText: (text) => receivedText = text,
-    );
-    node.fireChangeText('test value');
+    _createNodeWithHandler(onChangeText: (text) => receivedText = text)
+        .fireChangeText('test value');
     expect(receivedText, equals('test value'));
   });
 
@@ -95,10 +92,8 @@ void main() {
 
   test('TestNode fireValueChange calls onValueChange handler', () {
     bool? receivedValue;
-    final node = _createNodeWithHandler(
-      onValueChange: (value) => receivedValue = value,
-    );
-    node.fireValueChange(true);
+    _createNodeWithHandler(onValueChange: (value) => receivedValue = value)
+        .fireValueChange(true);
     expect(receivedValue, isTrue);
   });
 

@@ -8,6 +8,7 @@ Dart packages for building Node.js apps. Typed Dart layer over JS interop.
 - Don't edit locked files; signal intent via plans and messages
 - Coordinator: keep delegating via messages. Worker: keep asking for tasks via messages
 - Clean up expired locks routinely
+- Do not use Git unless asked by user
 
 ## Code Rules
 

@@ -184,8 +184,8 @@ Future<String> _captureStdout(void Function() action) async {
       buffer.writeln(line);
     },
   );
-  await runZoned(
-    () async {
+  runZoned(
+    () {
       action();
     },
     zoneSpecification: spec,
