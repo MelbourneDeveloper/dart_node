@@ -18,6 +18,14 @@ import 'package:dart_node_react/dart_node_react.dart';
 final class TestNode {
   TestNode._({required this.type, required this.props, required this.children});
 
+  /// Creates a TestNode for testing purposes.
+  // ignore: prefer_constructors_over_static_methods
+  static TestNode create({
+    required String type,
+    required Map<String, Object?> props,
+    required List<TestNode> children,
+  }) => TestNode._(type: type, props: props, children: children);
+
   /// The component type (e.g., 'View', 'Text', 'TextInput')
   final String type;
 
@@ -150,6 +158,10 @@ final class TestNode {
 /// Result of rendering a component for testing.
 final class TestRenderResult {
   TestRenderResult._(this._root);
+
+  /// Creates a TestRenderResult for testing purposes.
+  // ignore: prefer_constructors_over_static_methods
+  static TestRenderResult create(TestNode root) => TestRenderResult._(root);
 
   final TestNode _root;
 
