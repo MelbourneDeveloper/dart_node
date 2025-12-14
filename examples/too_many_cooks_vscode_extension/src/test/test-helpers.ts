@@ -6,6 +6,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { spawn } from 'child_process';
+import { createRequire } from 'module';
 import type { TestAPI } from '../test-api';
 
 // Store original methods for restoration
@@ -69,6 +71,72 @@ export function restoreDialogMocks(): void {
 }
 
 let cachedTestAPI: TestAPI | null = null;
+const serverProjectDir = path.resolve(__dirname, '../../../too_many_cooks');
+const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const requireFromServer = createRequire(path.join(serverProjectDir, 'package.json'));
+let serverDepsPromise: Promise<void> | null = null;
+
+const canRequireBetterSqlite3 = (): boolean => {
+  try {
+    requireFromServer('better-sqlite3');
+    return true;
+  } catch (err) {
+    if (
+      err instanceof Error &&
+      (err.message.includes('NODE_MODULE_VERSION') ||
+        err.message.includes("Cannot find module 'better-sqlite3'") ||
+        err.message.includes('MODULE_NOT_FOUND'))
+    ) {
+      return false;
+    }
+    throw err;
+  }
+};
+
+const runNpm = async (args: string[]): Promise<void> => {
+  console.log(`[TEST HELPER] Running ${npmCommand} ${args.join(' ')} in ${serverProjectDir}`);
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(npmCommand, args, {
+      cwd: serverProjectDir,
+      stdio: 'inherit',
+    });
+    child.on('error', reject);
+    child.on('exit', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`npm ${args.join(' ')} failed with code ${code ?? 'unknown'}`));
+      }
+    });
+  });
+};
+
+const installOrRebuildBetterSqlite3 = async (): Promise<void> => {
+  if (canRequireBetterSqlite3()) {
+    return;
+  }
+
+  const moduleDir = path.join(serverProjectDir, 'node_modules', 'better-sqlite3');
+  const args = fs.existsSync(moduleDir)
+    ? ['rebuild', 'better-sqlite3']
+    : ['install', '--no-audit', '--no-fund'];
+
+  await runNpm(args);
+
+  if (!canRequireBetterSqlite3()) {
+    throw new Error('better-sqlite3 remains unavailable after rebuild');
+  }
+};
+
+export const ensureServerDependencies = async (): Promise<void> => {
+  if (!serverDepsPromise) {
+    serverDepsPromise = installOrRebuildBetterSqlite3().catch((err) => {
+      serverDepsPromise = null;
+      throw err;
+    });
+  }
+  await serverDepsPromise;
+};
 
 /**
  * Gets the test API from the extension's exports.
@@ -107,6 +175,7 @@ export const waitForCondition = async (
  */
 export async function waitForExtensionActivation(): Promise<void> {
   console.log('[TEST HELPER] Starting extension activation wait...');
+  await ensureServerDependencies();
 
   const extension = vscode.extensions.getExtension('Nimblesite.too-many-cooks');
   if (!extension) {
