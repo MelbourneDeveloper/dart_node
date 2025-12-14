@@ -17,8 +17,17 @@ Write your entire stack in Dart: React web apps, React Native mobile apps with E
 | [dart_node_react_native](packages/dart_node_react_native) | React Native bindings |
 | [dart_node_mcp](packages/dart_node_mcp) | MCP server bindings |
 | [dart_node_better_sqlite3](packages/dart_node_better_sqlite3) | SQLite3 bindings |
+| [dart_jsx](packages/dart_jsx) | JSX transpiler for Dart |
 | [reflux](packages/reflux) | Redux-style state management |
 | [dart_logging](packages/dart_logging) | Structured logging |
+| [dart_node_coverage](packages/dart_node_coverage) | Code coverage for dart2js |
+
+## Tools
+
+| Tool | Description |
+|------|-------------|
+| [too-many-cooks](examples/too_many_cooks) | Multi-agent coordination MCP server ([npm](https://www.npmjs.com/package/too-many-cooks)) |
+| [Too Many Cooks VSCode](examples/too_many_cooks_vscode_extension) | VSCode extension for agent visualization |
 
 ## Quick Start
 

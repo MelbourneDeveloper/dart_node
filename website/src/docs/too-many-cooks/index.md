@@ -1,6 +1,14 @@
-# Too Many Cooks
+---
+layout: layouts/docs.njk
+title: Too Many Cooks
+description: Multi-agent coordination MCP server for AI agents editing codebases simultaneously.
+eleventyNavigation:
+  key: Too Many Cooks
+  parent: Packages
+  order: 10
+---
 
-Multi-agent coordination MCP server - enables multiple AI agents to safely edit a codebase simultaneously.
+Too Many Cooks is a multi-agent coordination MCP server that enables multiple AI agents to safely edit a codebase simultaneously. Built with [dart_node_mcp](/docs/mcp/).
 
 ## Features
 
@@ -9,7 +17,6 @@ Multi-agent coordination MCP server - enables multiple AI agents to safely edit 
 - **Messaging**: Inter-agent communication with broadcast support
 - **Plan Visibility**: Share goals and current tasks across agents
 - **Real-time Status**: System overview of all agents, locks, and plans
-- **Written in Dart**: Made with [dart_node](https://dartnode.dev)
 
 ## Installation
 
@@ -115,6 +122,36 @@ The server uses SQLite for persistent storage at `~/.too_many_cooks/data.db`. Al
 4. Other agents can see the lock and plan via `status()`
 5. Agent releases lock when done: `lock({ action: "release", ... })`
 
-## License
+## VSCode Extension
 
-MIT
+A companion VSCode extension provides real-time visualization of agent coordination:
+
+- **Agents Panel**: View all registered agents and their activity status
+- **File Locks Panel**: See which files are locked and by whom
+- **Messages Panel**: Monitor inter-agent communication
+- **Plans Panel**: Track agent goals and current tasks
+- **Real-time Updates**: Auto-refreshes to show latest status
+
+### Installation
+
+Install from the [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=melbournedeveloper.too-many-cooks) or search for "Too Many Cooks" in the Extensions panel.
+
+### Commands
+
+- `Too Many Cooks: Connect to MCP Server` - Connect to the server
+- `Too Many Cooks: Disconnect` - Disconnect from the server
+- `Too Many Cooks: Refresh Status` - Manually refresh all panels
+- `Too Many Cooks: Show Dashboard` - Open the dashboard view
+
+### Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `tooManyCooks.serverPath` | `""` | Path to MCP server (empty = auto-detect via npx) |
+| `tooManyCooks.autoConnect` | `true` | Auto-connect on startup |
+
+## Source Code
+
+- [MCP Server](https://github.com/melbournedeveloper/dart_node/tree/main/examples/too_many_cooks) - The Dart MCP server
+- [VSCode Extension](https://github.com/melbournedeveloper/dart_node/tree/main/examples/too_many_cooks_vscode_extension) - The visualization extension
+- [npm package](https://www.npmjs.com/package/too-many-cooks) - Published npm package

@@ -1,6 +1,6 @@
 # Reflux
 
-Redux-inspired state management for **React with Dart ([dart_node](http://www.dartnode.org))** and **Flutter**.
+Redux-inspired state management for **React with Dart ([dart_node](https://dartnode.dev))** and **Flutter**.
 
 Predictable state container with full type safety using Dart's sealed classes for exhaustive pattern matching.
 

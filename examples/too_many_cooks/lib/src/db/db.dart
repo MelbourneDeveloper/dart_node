@@ -913,6 +913,24 @@ Result<AgentRegistration, DbError> _adminResetKey(
   String agentName,
 ) {
   log.warn('Admin resetting key for agent $agentName');
+
+  // Release all locks held by this agent since old key is now invalid
+  final deleteLocks = db.prepare('DELETE FROM locks WHERE agent_name = ?');
+  switch (deleteLocks) {
+    case Success(:final value):
+      final result = value.run([agentName]);
+      switch (result) {
+        case Success(:final value):
+          if (value.changes > 0) {
+            log.warn('Released ${value.changes} locks for agent $agentName');
+          }
+        case Error(:final error):
+          log.warn('Failed to release locks: $error');
+      }
+    case Error(:final error):
+      log.warn('Failed to prepare lock deletion: $error');
+  }
+
   final newKey = _generateKey();
   final now = _now();
   final stmtResult = db.prepare('''

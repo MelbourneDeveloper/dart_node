@@ -69,7 +69,7 @@ The extension connects to the Too Many Cooks MCP server which coordinates multip
 ## Related
 
 - [too-many-cooks](https://www.npmjs.com/package/too-many-cooks) - The MCP server (npm package)
-- [dart_node](https://dartnode.org) - The underlying Dart-on-Node.js framework
+- [dart_node](https://dartnode.dev) - The underlying Dart-on-Node.js framework
 
 ## License
 
