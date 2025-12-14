@@ -6,6 +6,11 @@ echo "=== Uninstalling existing installations ==="
 claude mcp remove too-many-cooks 2>/dev/null || true
 code --uninstall-extension christianfindlay.too-many-cooks 2>/dev/null || true
 
+echo "=== Building MCP Server ==="
+pushd ../too_many_cooks > /dev/null
+rm -rf build/bin/server_node.js
+popd > /dev/null
+
 echo "=== Building VSCode extension ==="
 ./build.sh
 
