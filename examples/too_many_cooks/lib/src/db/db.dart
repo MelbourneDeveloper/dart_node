@@ -672,7 +672,7 @@ void _autoMarkRead(
   final now = _now();
   final stmtResult = db.prepare('''
     UPDATE messages SET read_at = ?
-    WHERE id = ? AND (to_agent = ? OR to_agent = '*') AND read_at IS NULL
+    WHERE id = ? AND to_agent = ? AND read_at IS NULL
   ''');
   if (stmtResult case Error(:final error)) {
     log.warn('Failed to auto-mark messages read: $error');
@@ -701,7 +701,7 @@ Result<void, DbError> _markRead(
 
   final stmtResult = db.prepare('''
     UPDATE messages SET read_at = ?
-    WHERE id = ? AND (to_agent = ? OR to_agent = '*')
+    WHERE id = ? AND to_agent = ?
   ''');
   return switch (stmtResult) {
     Success(:final value) => switch (value.run([
