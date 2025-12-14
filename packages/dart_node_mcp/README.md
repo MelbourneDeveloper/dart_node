@@ -41,6 +41,4 @@ dart compile js -o server.js lib/main.dart
 node server.js
 ```
 
-## Part of dart_node
-
-[GitHub](https://github.com/MelbourneDeveloper/dart_node)
+## Part of [dart_node](https://github.com/MelbourneDeveloper/dart_node)

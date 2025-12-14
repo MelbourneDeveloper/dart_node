@@ -19,8 +19,13 @@ import {
   waitForConnection,
   waitForCondition,
   getTestAPI,
+  restoreDialogMocks,
+  cleanDatabase,
 } from '../test-helpers';
 import type { TreeItemSnapshot } from '../../test-api';
+
+// Ensure any dialog mocks from previous tests are restored
+restoreDialogMocks();
 
 const SERVER_PATH = path.resolve(
   __dirname,
@@ -69,30 +74,14 @@ suite('MCP Integration - UI Verification', function () {
       vscode.ConfigurationTarget.Global
     );
 
-    // Clean DB for fresh state - uses shared db in home directory
-    const homeDir = process.env.HOME ?? '/tmp';
-    const dbDir = path.join(homeDir, '.too_many_cooks');
-    for (const f of ['data.db', 'data.db-wal', 'data.db-shm']) {
-      try {
-        fs.unlinkSync(path.join(dbDir, f));
-      } catch {
-        /* ignore */
-      }
-    }
+    // Clean DB for fresh state
+    cleanDatabase();
   });
 
   suiteTeardown(async () => {
     await getTestAPI().disconnect();
-    // Clean up DB after tests to avoid leaving garbage in shared database
-    const homeDir = process.env.HOME ?? '/tmp';
-    const dbDir = path.join(homeDir, '.too_many_cooks');
-    for (const f of ['data.db', 'data.db-wal', 'data.db-shm']) {
-      try {
-        fs.unlinkSync(path.join(dbDir, f));
-      } catch {
-        /* ignore if doesn't exist */
-      }
-    }
+    // Clean up DB after tests
+    cleanDatabase();
   });
 
   test('Connect to MCP server', async function () {

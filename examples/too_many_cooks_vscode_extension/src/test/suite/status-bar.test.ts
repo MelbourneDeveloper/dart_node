@@ -4,7 +4,10 @@
  */
 
 import * as assert from 'assert';
-import { waitForExtensionActivation, getTestAPI } from '../test-helpers';
+import { waitForExtensionActivation, getTestAPI, restoreDialogMocks } from '../test-helpers';
+
+// Ensure any dialog mocks from previous tests are restored
+restoreDialogMocks();
 
 suite('Status Bar', () => {
   suiteSetup(async () => {

@@ -1,10 +1,72 @@
 /**
  * Test helpers for integration tests.
- * NO MOCKING - real VSCode instance with real extension.
+ * Includes dialog mocking for command testing.
  */
 
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
 import type { TestAPI } from '../test-api';
+
+// Store original methods for restoration
+const originalShowWarningMessage = vscode.window.showWarningMessage;
+const originalShowQuickPick = vscode.window.showQuickPick;
+const originalShowInputBox = vscode.window.showInputBox;
+
+// Mock response queues
+let warningMessageResponses: (string | undefined)[] = [];
+let quickPickResponses: (string | undefined)[] = [];
+let inputBoxResponses: (string | undefined)[] = [];
+
+/**
+ * Queue a response for the next showWarningMessage call.
+ */
+export function mockWarningMessage(response: string | undefined): void {
+  warningMessageResponses.push(response);
+}
+
+/**
+ * Queue a response for the next showQuickPick call.
+ */
+export function mockQuickPick(response: string | undefined): void {
+  quickPickResponses.push(response);
+}
+
+/**
+ * Queue a response for the next showInputBox call.
+ */
+export function mockInputBox(response: string | undefined): void {
+  inputBoxResponses.push(response);
+}
+
+/**
+ * Install dialog mocks on vscode.window.
+ */
+export function installDialogMocks(): void {
+  (vscode.window as { showWarningMessage: typeof vscode.window.showWarningMessage }).showWarningMessage = (async () => {
+    return warningMessageResponses.shift();
+  }) as typeof vscode.window.showWarningMessage;
+
+  (vscode.window as { showQuickPick: typeof vscode.window.showQuickPick }).showQuickPick = (async () => {
+    return quickPickResponses.shift();
+  }) as typeof vscode.window.showQuickPick;
+
+  (vscode.window as { showInputBox: typeof vscode.window.showInputBox }).showInputBox = (async () => {
+    return inputBoxResponses.shift();
+  }) as typeof vscode.window.showInputBox;
+}
+
+/**
+ * Restore original dialog methods.
+ */
+export function restoreDialogMocks(): void {
+  (vscode.window as { showWarningMessage: typeof vscode.window.showWarningMessage }).showWarningMessage = originalShowWarningMessage;
+  (vscode.window as { showQuickPick: typeof vscode.window.showQuickPick }).showQuickPick = originalShowQuickPick;
+  (vscode.window as { showInputBox: typeof vscode.window.showInputBox }).showInputBox = originalShowInputBox;
+  warningMessageResponses = [];
+  quickPickResponses = [];
+  inputBoxResponses = [];
+}
 
 let cachedTestAPI: TestAPI | null = null;
 
@@ -109,4 +171,21 @@ export async function openTooManyCooksPanel(): Promise<void> {
   // Wait for panel to be visible
   await new Promise((resolve) => setTimeout(resolve, 500));
   console.log('[TEST HELPER] Panel opened');
+}
+
+/**
+ * Cleans the Too Many Cooks database files for fresh test state.
+ * Should be called in suiteSetup before connecting.
+ */
+export function cleanDatabase(): void {
+  const homeDir = process.env.HOME ?? '/tmp';
+  const dbDir = path.join(homeDir, '.too_many_cooks');
+  for (const f of ['data.db', 'data.db-wal', 'data.db-shm']) {
+    try {
+      fs.unlinkSync(path.join(dbDir, f));
+    } catch {
+      /* ignore if doesn't exist */
+    }
+  }
+  console.log('[TEST HELPER] Database cleaned');
 }

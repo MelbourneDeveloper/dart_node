@@ -38,6 +38,18 @@ Or configure manually in your MCP settings:
 }
 ```
 
+## Example Rules
+
+```markdown
+## Multi-Agent Coordination (Too Many Cooks)
+- Keep your key! It's critical. Do not lose it!
+- Check messages regularly, lock files before editing, unlock after
+- Don't edit locked files; signal intent via plans and messages
+- Coordinator: keep delegating via messages. Worker: keep asking for tasks via messages
+- Clean up expired locks routinely
+- Do not use Git unless asked by user
+```
+
 ## MCP Tools
 
 ### `register`

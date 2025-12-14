@@ -13,7 +13,11 @@ import {
   waitForCondition,
   openTooManyCooksPanel,
   getTestAPI,
+  restoreDialogMocks,
 } from '../test-helpers';
+
+// Ensure any dialog mocks from previous tests are restored
+restoreDialogMocks();
 
 const SERVER_PATH = path.resolve(
   __dirname,
