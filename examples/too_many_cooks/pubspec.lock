@@ -110,6 +110,13 @@ packages:
       relative: true
     source: path
     version: "0.9.0-beta"
+  dart_node_coverage:
+    dependency: "direct dev"
+    description:
+      path: "../../packages/dart_node_coverage"
+      relative: true
+    source: path
+    version: "0.9.0-beta"
   dart_node_mcp:
     dependency: "direct main"
     description:

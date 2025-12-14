@@ -8,11 +8,14 @@ library;
 
 import 'dart:js_interop';
 
+import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:dart_node_react_native/dart_node_react_native.dart';
 import 'package:nadz/nadz.dart';
 import 'package:test/test.dart';
 
 void main() {
+  setUp(initCoverage);
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
   test('loadNpmModule loads react successfully', () {
     final result = loadNpmModule('react');
     expect(result.isSuccess, isTrue);

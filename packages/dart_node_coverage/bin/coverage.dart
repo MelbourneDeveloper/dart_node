@@ -187,9 +187,15 @@ Future<Result<void, String>> _instrumentFileInPlace(String filePath) async {
 
 Future<Result<void, String>> _runTests(String packageDir) async {
   stdout.writeln('Running tests in $packageDir...');
-  final result = await Process.run('dart', const [
-    'test',
-  ], workingDirectory: packageDir);
+
+  // Check if dart_test.yaml specifies node platform
+  final testConfig = File(p.join(packageDir, 'dart_test.yaml'));
+  final useNodePlatform =
+      testConfig.existsSync() && testConfig.readAsStringSync().contains('node');
+
+  final testArgs = useNodePlatform ? const ['test', '-p', 'node'] : const ['test'];
+
+  final result = await Process.run('dart', testArgs, workingDirectory: packageDir);
 
   stdout.writeln('Test stdout: ${result.stdout}');
   stderr.writeln('Test stderr: ${result.stderr}');
