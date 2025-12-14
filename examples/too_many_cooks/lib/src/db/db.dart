@@ -647,13 +647,15 @@ ORDER BY created_at DESC''';
         _autoMarkRead(db, log, agentName, messageList);
         return Success<List<Message>, DbError>(messageList);
       }(),
-      Error(:final error) => Error<List<Message>, DbError>(
-        (code: errDatabase, message: error),
-      ),
+      Error(:final error) => Error<List<Message>, DbError>((
+        code: errDatabase,
+        message: error,
+      )),
     },
-    Error(:final error) => Error<List<Message>, DbError>(
-      (code: errDatabase, message: error),
-    ),
+    Error(:final error) => Error<List<Message>, DbError>((
+      code: errDatabase,
+      message: error,
+    )),
   };
 }
 

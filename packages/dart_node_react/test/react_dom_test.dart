@@ -4,8 +4,7 @@ library;
 
 import 'dart:js_interop';
 
-import 'package:dart_node_react/dart_node_react.dart'
-    hide RenderResult, render;
+import 'package:dart_node_react/dart_node_react.dart' hide RenderResult, render;
 import 'package:dart_node_react/src/testing_library.dart';
 import 'package:test/test.dart';
 
@@ -161,10 +160,7 @@ void main() {
     _appendChild(portalContainer);
 
     final testComponent = registerFunctionComponent(
-      (props) => div(
-        props: {'data-testid': 'main'},
-        children: [pEl('Hello')],
-      ),
+      (props) => div(props: {'data-testid': 'main'}, children: [pEl('Hello')]),
     );
 
     final result = render(fc(testComponent));
@@ -181,12 +177,7 @@ void main() {
       div(
         children: [
           h1('Modal Header'),
-          div(
-            children: [
-              pEl('Line 1'),
-              pEl('Line 2'),
-            ],
-          ),
+          div(children: [pEl('Line 1'), pEl('Line 2')]),
           button(text: 'Close'),
         ],
       ),

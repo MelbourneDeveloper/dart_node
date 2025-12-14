@@ -119,9 +119,7 @@ Result<JSAny, String> getComponentFromModule(
       }
     }
 
-    return Error(
-      'Component $part not found in module (path: $componentPath)',
-    );
+    return Error('Component $part not found in module (path: $componentPath)');
   }
 
   return switch (current) {
@@ -182,12 +180,11 @@ NpmComponentElement npmComponent(
 
   final jsProps = (props != null) ? createProps(props) : null;
 
-  final element =
-      (children != null && children.isNotEmpty)
-          ? createElementWithChildren(component, jsProps, children)
-          : (child != null)
-          ? createElement(component, jsProps, child)
-          : createElement(component, jsProps);
+  final element = (children != null && children.isNotEmpty)
+      ? createElementWithChildren(component, jsProps, children)
+      : (child != null)
+      ? createElement(component, jsProps, child)
+      : createElement(component, jsProps);
 
   return NpmComponentElement.fromJS(element);
 }
@@ -215,12 +212,11 @@ Result<NpmComponentElement, String> npmComponentSafe(
   try {
     final jsProps = (props != null) ? createProps(props) : null;
 
-    final element =
-        (children != null && children.isNotEmpty)
-            ? createElementWithChildren(component, jsProps, children)
-            : (child != null)
-            ? createElement(component, jsProps, child)
-            : createElement(component, jsProps);
+    final element = (children != null && children.isNotEmpty)
+        ? createElementWithChildren(component, jsProps, children)
+        : (child != null)
+        ? createElement(component, jsProps, child)
+        : createElement(component, jsProps);
 
     return Success(NpmComponentElement.fromJS(element));
   } on Object catch (e) {
@@ -405,10 +401,7 @@ PaperButton paperButton({
 ///   onPress: handleAdd,
 /// );
 /// ```
-PaperFAB paperFAB({
-  PaperFABProps? props,
-  void Function()? onPress,
-}) {
+PaperFAB paperFAB({PaperFABProps? props, void Function()? onPress}) {
   final p = <String, dynamic>{};
   if (props != null) {
     if (props.icon != null) p['icon'] = props.icon;

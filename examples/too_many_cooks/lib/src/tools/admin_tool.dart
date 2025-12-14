@@ -142,11 +142,7 @@ CallToolResult _deleteAgent(
   };
 }
 
-CallToolResult _resetKey(
-  TooManyCooksDb db,
-  Logger log,
-  String? agentName,
-) {
+CallToolResult _resetKey(TooManyCooksDb db, Logger log, String? agentName) {
   if (agentName == null) {
     return (
       content: <Object>[

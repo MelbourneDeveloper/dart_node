@@ -115,7 +115,8 @@ class JsxParser {
   final String _source;
   int _pos = 0;
 
-  String get _remaining => _pos >= _source.length ? '' : _source.substring(_pos);
+  String get _remaining =>
+      _pos >= _source.length ? '' : _source.substring(_pos);
   bool get _isEof => _pos >= _source.length;
   String get _currentChar => _isEof ? '' : _source[_pos];
 
@@ -190,12 +191,14 @@ class JsxParser {
     List<JsxAttribute> attrs,
   ) {
     _pos += 2; // consume '/>'
-    return Success(JsxElement(
-      tagName: tagName,
-      attributes: attrs,
-      children: [],
-      isSelfClosing: true,
-    ));
+    return Success(
+      JsxElement(
+        tagName: tagName,
+        attributes: attrs,
+        children: [],
+        isSelfClosing: true,
+      ),
+    );
   }
 
   Result<JsxNode, String> _parseElementWithChildren(
@@ -217,7 +220,8 @@ class JsxParser {
     final closingTag = '</$tagName>';
     final childrenResult = _parseChildren(closingTag);
     return childrenResult.match(
-      onSuccess: (children) => _finishElement(tagName, attrs, children, closingTag),
+      onSuccess: (children) =>
+          _finishElement(tagName, attrs, children, closingTag),
       onError: Error.new,
     );
   }
@@ -233,12 +237,14 @@ class JsxParser {
       return Error('Expected closing tag $closingTag at position $_pos');
     }
     _pos += closingTag.length;
-    return Success(JsxElement(
-      tagName: tagName,
-      attributes: attrs,
-      children: children,
-      isSelfClosing: false,
-    ));
+    return Success(
+      JsxElement(
+        tagName: tagName,
+        attributes: attrs,
+        children: children,
+        isSelfClosing: false,
+      ),
+    );
   }
 
   Result<List<JsxAttribute>, String> _parseAttributes() {
@@ -258,7 +264,10 @@ class JsxParser {
         onError: (_) => false,
       );
       if (!shouldContinue) {
-        return result.match(onSuccess: (_) => Success(attrs), onError: Error.new);
+        return result.match(
+          onSuccess: (_) => Success(attrs),
+          onError: Error.new,
+        );
       }
 
       // Detect infinite loop - invalid char that can't be parsed
@@ -312,8 +321,8 @@ class JsxParser {
     return _currentChar == '"' || _currentChar == "'"
         ? _parseStringAttribute(name)
         : _currentChar == '{'
-            ? _parseExpressionAttribute(name)
-            : Error('Expected string or expression for attribute $name');
+        ? _parseExpressionAttribute(name)
+        : Error('Expected string or expression for attribute $name');
   }
 
   Result<JsxAttribute, String> _parseStringAttribute(String name) {
@@ -353,7 +362,10 @@ class JsxParser {
         onError: (_) => false,
       );
       if (!shouldContinue) {
-        return result.match(onSuccess: (_) => Success(children), onError: Error.new);
+        return result.match(
+          onSuccess: (_) => Success(children),
+          onError: Error.new,
+        );
       }
     }
     return Success(children);
@@ -363,8 +375,8 @@ class JsxParser {
     return _currentChar == '<'
         ? _parseElement().map((e) => e)
         : _currentChar == '{'
-            ? _parseExpressionNode()
-            : _parseTextNode();
+        ? _parseExpressionNode()
+        : _parseTextNode();
   }
 
   Result<JsxNode, String> _parseExpressionNode() {

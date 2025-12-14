@@ -7,6 +7,7 @@ library;
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
+import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:dart_node_react/dart_node_react.dart' hide userClear, userType;
 import 'package:dart_node_react_native/dart_node_react_native.dart';
 import 'package:test/test.dart';
@@ -31,6 +32,8 @@ ReactElement _mockElement(String type, {Map<String, JSAny?>? props}) {
 
 void main() {
   setUpAll(setupTestEnvironment);
+  setUp(initCoverage);
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
 
   group('TestingException', () {
     test('stores message', () {
@@ -155,10 +158,7 @@ void main() {
 
     test('firePress throws when no onPress handler', () {
       final result = renderForTest(_mockElement('View'));
-      expect(
-        () => result.root.firePress(),
-        throwsA(isA<TestingException>()),
-      );
+      expect(() => result.root.firePress(), throwsA(isA<TestingException>()));
     });
 
     test('firePress calls JSFunction handler', () {

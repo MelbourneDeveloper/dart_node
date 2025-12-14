@@ -293,10 +293,7 @@ void main() {
     });
 
     test('instructions without capabilities', () {
-      const options = (
-        capabilities: null,
-        instructions: 'Instructions only',
-      );
+      const options = (capabilities: null, instructions: 'Instructions only');
 
       const impl = (name: 'instructions-only', version: '1.0.0');
       final result = McpServer.create(impl, options: options);
@@ -305,10 +302,7 @@ void main() {
     });
 
     test('both null (minimal options)', () {
-      const options = (
-        capabilities: null,
-        instructions: null,
-      );
+      const options = (capabilities: null, instructions: null);
 
       const impl = (name: 'minimal', version: '1.0.0');
       final result = McpServer.create(impl, options: options);
@@ -612,10 +606,7 @@ void main() {
     });
 
     test('accessing instructions field', () {
-      const options = (
-        capabilities: null,
-        instructions: 'Test instructions',
-      );
+      const options = (capabilities: null, instructions: 'Test instructions');
 
       expect(options.instructions, equals('Test instructions'));
       expect(options.capabilities, isNull);
@@ -637,10 +628,7 @@ void main() {
     });
 
     test('accessing null fields', () {
-      const options = (
-        capabilities: null,
-        instructions: null,
-      );
+      const options = (capabilities: null, instructions: null);
 
       expect(options.capabilities, isNull);
       expect(options.instructions, isNull);

@@ -55,7 +55,8 @@ void _transpileMode(List<String> args) {
     onSuccess: (output) {
       final hasOutput = outputPath != null;
       if (hasOutput) {
-        final header = '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+        final header =
+            '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
             '// Generated from: ${inputPath.split('/').last}\n\n';
         File(outputPath).writeAsStringSync(header + output);
       } else {
@@ -91,7 +92,8 @@ void _watchMode(List<String> args) {
 
   // Watch for changes
   dir.watch(recursive: true).listen((event) {
-    final isJsxFile = event.path.endsWith('.jsx') && !event.path.endsWith('.g.dart');
+    final isJsxFile =
+        event.path.endsWith('.jsx') && !event.path.endsWith('.g.dart');
     if (!isJsxFile) return;
 
     final isModifyOrCreate =
@@ -131,7 +133,8 @@ void _transpileFile(String inputPath) {
   result.match(
     onSuccess: (output) {
       // Add generated file header
-      final header = '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+      final header =
+          '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
           '// Generated from: ${inputPath.split('/').last}\n\n';
       File(outputPath).writeAsStringSync(header + output);
       stdout.writeln('  -> $outputPath');

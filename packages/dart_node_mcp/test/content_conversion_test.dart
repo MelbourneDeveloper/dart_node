@@ -33,7 +33,8 @@ void main() {
     test('ImageContent with base64 data', () {
       const content = (
         type: 'image',
-        data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklE'
+        data:
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklE'
             'QVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==',
         mimeType: 'image/png',
       );
@@ -53,11 +54,7 @@ void main() {
       ];
 
       for (final mimeType in imageTypes) {
-        final content = (
-          type: 'image',
-          data: 'base64data',
-          mimeType: mimeType,
-        );
+        final content = (type: 'image', data: 'base64data', mimeType: mimeType);
         expect(content.mimeType, equals(mimeType));
       }
     });
@@ -142,7 +139,12 @@ void main() {
         content: <Object>[
           {'type': 'text', 'text': 'Description'},
           {'type': 'image', 'data': 'base64', 'mimeType': 'image/png'},
-          {'type': 'resource', 'uri': 'file:///data.json', 'mimeType': null, 'text': null},
+          {
+            'type': 'resource',
+            'uri': 'file:///data.json',
+            'mimeType': null,
+            'text': null,
+          },
         ],
         isError: false,
       );
@@ -173,10 +175,7 @@ void main() {
     });
 
     test('result with empty content list', () {
-      const result = (
-        content: <Object>[],
-        isError: false,
-      );
+      const result = (content: <Object>[], isError: false);
 
       expect(result.content, isEmpty);
     });
@@ -186,7 +185,12 @@ void main() {
     test('single resource content', () {
       final result = (
         contents: <Object>[
-          {'type': 'resource', 'uri': 'file:///data', 'text': 'content', 'mimeType': null},
+          {
+            'type': 'resource',
+            'uri': 'file:///data',
+            'text': 'content',
+            'mimeType': null,
+          },
         ],
       );
 
@@ -197,8 +201,18 @@ void main() {
       final result = (
         contents: <Object>[
           {'type': 'text', 'text': 'Header'},
-          {'type': 'resource', 'uri': 'file:///data1', 'text': 'data1', 'mimeType': null},
-          {'type': 'resource', 'uri': 'file:///data2', 'text': 'data2', 'mimeType': null},
+          {
+            'type': 'resource',
+            'uri': 'file:///data1',
+            'text': 'data1',
+            'mimeType': null,
+          },
+          {
+            'type': 'resource',
+            'uri': 'file:///data2',
+            'text': 'data2',
+            'mimeType': null,
+          },
         ],
       );
 
@@ -337,10 +351,7 @@ void main() {
         (i) => {'type': 'text', 'text': 'Item $i'},
       );
 
-      final result = (
-        content: largeContentList,
-        isError: false,
-      );
+      final result = (content: largeContentList, isError: false);
 
       expect(result.content, hasLength(100));
     });
@@ -357,21 +368,14 @@ void main() {
     });
 
     test('content with empty strings', () {
-      const content = (
-        type: 'text',
-        text: '',
-      );
+      const content = (type: 'text', text: '');
 
       expect(content.text, isEmpty);
     });
 
     test('image content with large base64 string', () {
       final largeData = 'A' * 10000;
-      final content = (
-        type: 'image',
-        data: largeData,
-        mimeType: 'image/png',
-      );
+      final content = (type: 'image', data: largeData, mimeType: 'image/png');
 
       expect(content.data.length, equals(10000));
     });
@@ -392,7 +396,8 @@ void main() {
           content: <Object>[
             {
               'type': 'text',
-              'text': 'Processed ${processedArgs.length} args, '
+              'text':
+                  'Processed ${processedArgs.length} args, '
                   'token: ${meta?.progressToken ?? "none"}',
             },
           ],
@@ -448,18 +453,15 @@ void main() {
 
         return (
           contents: <Object>[
-            {
-              'type': 'text',
-              'text': 'URI: $uri, Variables: $varCount',
-            },
+            {'type': 'text', 'text': 'URI: $uri, Variables: $varCount'},
           ],
         );
       }
 
-      final result = await callback(
-        'db:///users/123',
-        {'userId': '123', 'filter': 'active'},
-      );
+      final result = await callback('db:///users/123', {
+        'userId': '123',
+        'filter': 'active',
+      });
 
       final content = result.contents.first as Map<String, Object?>;
       expect(content['text'], contains('Variables: 2'));
@@ -475,10 +477,7 @@ void main() {
           messages: <PromptMessage>[
             (
               role: 'assistant',
-              content: {
-                'type': 'text',
-                'text': 'Response for $name',
-              },
+              content: {'type': 'text', 'text': 'Response for $name'},
             ),
           ],
         );
@@ -493,10 +492,7 @@ void main() {
 
   group('Content as Map format', () {
     test('text content as Map', () {
-      final content = <String, Object?>{
-        'type': 'text',
-        'text': 'Hello world',
-      };
+      final content = <String, Object?>{'type': 'text', 'text': 'Hello world'};
 
       expect(content['type'], equals('text'));
       expect(content['text'], equals('Hello world'));
@@ -529,14 +525,8 @@ void main() {
     test('CallToolResult with Map content items', () {
       final result = (
         content: <Object>[
-          <String, Object?>{
-            'type': 'text',
-            'text': 'First item',
-          },
-          <String, Object?>{
-            'type': 'text',
-            'text': 'Second item',
-          },
+          <String, Object?>{'type': 'text', 'text': 'First item'},
+          <String, Object?>{'type': 'text', 'text': 'Second item'},
         ],
         isError: false,
       );

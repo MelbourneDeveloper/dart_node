@@ -80,8 +80,9 @@ void main() {
 
   test('TestNode fireChangeText calls onChangeText handler', () {
     String? receivedText;
-    _createNodeWithHandler(onChangeText: (text) => receivedText = text)
-        .fireChangeText('test value');
+    _createNodeWithHandler(
+      onChangeText: (text) => receivedText = text,
+    ).fireChangeText('test value');
     expect(receivedText, equals('test value'));
   });
 
@@ -92,17 +93,15 @@ void main() {
 
   test('TestNode fireValueChange calls onValueChange handler', () {
     bool? receivedValue;
-    _createNodeWithHandler(onValueChange: (value) => receivedValue = value)
-        .fireValueChange(true);
+    _createNodeWithHandler(
+      onValueChange: (value) => receivedValue = value,
+    ).fireValueChange(true);
     expect(receivedValue, isTrue);
   });
 
   test('TestNode fireValueChange throws when no handler', () {
     final node = _createNodeWithoutHandlers();
-    expect(
-      () => node.fireValueChange(true),
-      throwsA(isA<TestingException>()),
-    );
+    expect(() => node.fireValueChange(true), throwsA(isA<TestingException>()));
   });
 
   test('TestNode value getter returns value prop', () {
@@ -240,10 +239,7 @@ void main() {
   test('TestRenderResult.getByType throws when multiple found', () {
     final root = _createTestTree();
     final result = TestRenderResult.create(root);
-    expect(
-      () => result.getByType('View'),
-      throwsA(isA<TestingException>()),
-    );
+    expect(() => result.getByType('View'), throwsA(isA<TestingException>()));
   });
 
   test('TestRenderResult.getByText returns single matching node', () {
@@ -342,47 +338,32 @@ void main() {
 
   test('userType throws for non-TextInput node', () {
     final node = _node('Button', {}, []);
-    expect(
-      () => userType(node, 'text'),
-      throwsA(isA<TestingException>()),
-    );
+    expect(() => userType(node, 'text'), throwsA(isA<TestingException>()));
   });
 }
 
 // Helper functions to create test nodes
 
-TestNode _createSingleButtonTree() => _node(
-  'View',
-  {},
-  [_node('Button', {'testID': 'btn'}, [])],
-);
+TestNode _createSingleButtonTree() => _node('View', {}, [
+  _node('Button', {'testID': 'btn'}, []),
+]);
 
-TestNode _createSingleTextTree() => _node(
-  'Text',
-  {'__text__': 'OnlyText'},
-  [],
-);
+TestNode _createSingleTextTree() => _node('Text', {'__text__': 'OnlyText'}, []);
 
-TestNode _createTestTree() => _node(
-  'View',
-  {},
-  [
-    _node('View', {'style': {'flex': 1}}, []),
-    _node('Button', {'testID': 'my-button', 'disabled': true}, []),
-    _node('Text', {'__text__': 'Hello'}, []),
-  ],
-);
+TestNode _createTestTree() => _node('View', {}, [
+  _node('View', {
+    'style': {'flex': 1},
+  }, []),
+  _node('Button', {'testID': 'my-button', 'disabled': true}, []),
+  _node('Text', {'__text__': 'Hello'}, []),
+]);
 
-TestNode _createTestTreeWithText() => _node(
-  'View',
-  {},
-  [
-    _node('Text', {'__text__': 'First'}, []),
-    _node('View', {}, [
-      _node('Text', {'__text__': 'Second'}, []),
-    ]),
-  ],
-);
+TestNode _createTestTreeWithText() => _node('View', {}, [
+  _node('Text', {'__text__': 'First'}, []),
+  _node('View', {}, [
+    _node('Text', {'__text__': 'Second'}, []),
+  ]),
+]);
 
 TestNode _createNodeWithHandler({
   void Function()? onPress,
@@ -396,64 +377,42 @@ TestNode _createNodeWithHandler({
 
 TestNode _createNodeWithoutHandlers() => _node('Button', {}, []);
 
-TestNode _createTextInputNode({String? value, String? placeholder}) => _node(
-  'TextInput',
-  {
-    'value': ?value,
-    'placeholder': ?placeholder,
-  },
-  [],
-);
+TestNode _createTextInputNode({String? value, String? placeholder}) =>
+    _node('TextInput', {'value': ?value, 'placeholder': ?placeholder}, []);
 
 TestNode _createNodeWithProps(Map<String, Object?> props) =>
     _node('View', props, []);
 
-TestNode _createDeepTree() => _node(
-  'View',
-  {},
-  [
-    _node('View', {}, [
-      _node('Text', {}, []),
-      _node('View', {}, [
-        _node('Text', {}, []),
-        _node('Text', {}, []),
-      ]),
-    ]),
-  ],
-);
+TestNode _createDeepTree() => _node('View', {}, [
+  _node('View', {}, [
+    _node('Text', {}, []),
+    _node('View', {}, [_node('Text', {}, []), _node('Text', {}, [])]),
+  ]),
+]);
 
-TestNode _createDeepTreeWithText() => _node(
-  'View',
-  {},
-  [
+TestNode _createDeepTreeWithText() => _node('View', {}, [
+  _node('View', {}, [
     _node('View', {}, [
-      _node('View', {}, [
-        _node('Text', {'__text__': 'Deep text'}, []),
-      ]),
+      _node('Text', {'__text__': 'Deep text'}, []),
     ]),
-  ],
-);
+  ]),
+]);
 
 TestNode _createEmptyNode() => _node('View', {}, []);
 
-TestNode _createDuplicateTextTree() => _node(
-  'View',
-  {},
-  [
-    _node('Text', {'__text__': 'SameText'}, []),
-    _node('Text', {'__text__': 'SameText'}, []),
-  ],
-);
+TestNode _createDuplicateTextTree() => _node('View', {}, [
+  _node('Text', {'__text__': 'SameText'}, []),
+  _node('Text', {'__text__': 'SameText'}, []),
+]);
 
-TestNode _createDuplicateTestIdTree() => _node(
-  'View',
-  {},
-  [
-    _node('Button', {'testID': 'duplicate-id'}, []),
-    _node('Button', {'testID': 'duplicate-id'}, []),
-  ],
-);
+TestNode _createDuplicateTestIdTree() => _node('View', {}, [
+  _node('Button', {'testID': 'duplicate-id'}, []),
+  _node('Button', {'testID': 'duplicate-id'}, []),
+]);
 
 // Expose TestNode constructor through a helper since it's private
-TestNode _node(String type, Map<String, Object?> props, List<TestNode> children)
-    => TestNode.create(type: type, props: props, children: children);
+TestNode _node(
+  String type,
+  Map<String, Object?> props,
+  List<TestNode> children,
+) => TestNode.create(type: type, props: props, children: children);

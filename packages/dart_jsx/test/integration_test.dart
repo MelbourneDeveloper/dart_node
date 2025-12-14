@@ -64,57 +64,102 @@ dependencies:
     path: $projectRoot/packages/dart_node_react
 ''');
 
-      final pubGetResult = Process.runSync(
-        'dart',
-        ['pub', 'get'],
-        workingDirectory: testDir.path,
+      final pubGetResult = Process.runSync('dart', [
+        'pub',
+        'get',
+      ], workingDirectory: testDir.path);
+      expect(
+        pubGetResult.exitCode,
+        equals(0),
+        reason: 'pub get must succeed: ${pubGetResult.stderr}',
       );
-      expect(pubGetResult.exitCode, equals(0), reason: 'pub get must succeed: ${pubGetResult.stderr}');
 
-      final transpileResult = Process.runSync(
-        'dart',
-        [
-          'run',
-          '$projectRoot/packages/dart_jsx/bin/jsx.dart',
-          jsxSourcePath,
-          transpiledPath,
-        ],
+      final transpileResult = Process.runSync('dart', [
+        'run',
+        '$projectRoot/packages/dart_jsx/bin/jsx.dart',
+        jsxSourcePath,
+        transpiledPath,
+      ]);
+      expect(
+        transpileResult.exitCode,
+        equals(0),
+        reason: 'JSX transpilation must succeed: ${transpileResult.stderr}',
       );
-      expect(transpileResult.exitCode, equals(0), reason: 'JSX transpilation must succeed: ${transpileResult.stderr}');
 
       final transpiledExists = File(transpiledPath).existsSync();
       expect(transpiledExists, isTrue, reason: 'Transpiled file must exist');
 
       final transpiledContent = File(transpiledPath).readAsStringSync();
-      expect(transpiledContent, contains('\$div(className: \'test\')'), reason: 'Transpiled output must contain div with className');
-      expect(transpiledContent, contains('\$h1 >> \'Test JSX\''), reason: 'Transpiled output must contain h1 element');
-      expect(transpiledContent, contains('\$button(onClick:'), reason: 'Transpiled output must contain button with onClick');
-      expect(transpiledContent, contains('count.value'), reason: 'Transpiled output must reference count.value');
-      expect(transpiledContent, contains('useState'), reason: 'Transpiled output must use useState');
-
-      final compileResult = Process.runSync(
-        'dart',
-        [
-          'compile',
-          'js',
-          'app.dart',
-          '-o',
-          'app.js',
-        ],
-        workingDirectory: testDir.path,
+      expect(
+        transpiledContent,
+        contains('\$div(className: \'test\')'),
+        reason: 'Transpiled output must contain div with className',
       );
-      expect(compileResult.exitCode, equals(0), reason: 'Dart to JS compilation must succeed: ${compileResult.stdout}\n${compileResult.stderr}');
+      expect(
+        transpiledContent,
+        contains('\$h1 >> \'Test JSX\''),
+        reason: 'Transpiled output must contain h1 element',
+      );
+      expect(
+        transpiledContent,
+        contains('\$button(onClick:'),
+        reason: 'Transpiled output must contain button with onClick',
+      );
+      expect(
+        transpiledContent,
+        contains('count.value'),
+        reason: 'Transpiled output must reference count.value',
+      );
+      expect(
+        transpiledContent,
+        contains('useState'),
+        reason: 'Transpiled output must use useState',
+      );
+
+      final compileResult = Process.runSync('dart', [
+        'compile',
+        'js',
+        'app.dart',
+        '-o',
+        'app.js',
+      ], workingDirectory: testDir.path);
+      expect(
+        compileResult.exitCode,
+        equals(0),
+        reason:
+            'Dart to JS compilation must succeed: ${compileResult.stdout}\n${compileResult.stderr}',
+      );
 
       final jsExists = File('${testDir.path}/app.js').existsSync();
-      expect(jsExists, isTrue, reason: 'Compiled JS file must exist at ${testDir.path}/app.js');
+      expect(
+        jsExists,
+        isTrue,
+        reason: 'Compiled JS file must exist at ${testDir.path}/app.js',
+      );
 
       final jsContent = File('${testDir.path}/app.js').readAsStringSync();
-      expect(jsContent.isNotEmpty, isTrue, reason: 'Compiled JS must not be empty');
-      expect(jsContent, contains('function'), reason: 'Compiled JS must contain function declarations');
-      expect(jsContent, contains('main'), reason: 'Compiled JS must contain main function');
+      expect(
+        jsContent.isNotEmpty,
+        isTrue,
+        reason: 'Compiled JS must not be empty',
+      );
+      expect(
+        jsContent,
+        contains('function'),
+        reason: 'Compiled JS must contain function declarations',
+      );
+      expect(
+        jsContent,
+        contains('main'),
+        reason: 'Compiled JS must contain main function',
+      );
 
       final jsLines = jsContent.split('\n').length;
-      expect(jsLines, greaterThan(10), reason: 'Compiled JS should have substantial content');
+      expect(
+        jsLines,
+        greaterThan(10),
+        reason: 'Compiled JS should have substantial content',
+      );
     } finally {
       testDir.deleteSync(recursive: true);
     }
@@ -127,31 +172,63 @@ dependencies:
     final gDartFile = '$exampleDir/lib/counter.g.dart';
 
     final jsxExists = File(jsxFile).existsSync();
-    expect(jsxExists, isTrue, reason: 'counter.jsx must exist in jsx_demo example');
-
-    final transpileResult = Process.runSync(
-      'dart',
-      [
-        'run',
-        '$projectRoot/packages/dart_jsx/bin/jsx.dart',
-        jsxFile,
-        gDartFile,
-      ],
+    expect(
+      jsxExists,
+      isTrue,
+      reason: 'counter.jsx must exist in jsx_demo example',
     );
-    expect(transpileResult.exitCode, equals(0), reason: 'counter.jsx transpilation must succeed: ${transpileResult.stderr}');
+
+    final transpileResult = Process.runSync('dart', [
+      'run',
+      '$projectRoot/packages/dart_jsx/bin/jsx.dart',
+      jsxFile,
+      gDartFile,
+    ]);
+    expect(
+      transpileResult.exitCode,
+      equals(0),
+      reason:
+          'counter.jsx transpilation must succeed: ${transpileResult.stderr}',
+    );
 
     final gDartExists = File(gDartFile).existsSync();
     expect(gDartExists, isTrue, reason: 'counter.g.dart must be generated');
 
     final gDartContent = File(gDartFile).readAsStringSync();
-    expect(gDartContent, contains('ReactElement Counter()'), reason: 'Generated file must contain Counter function');
-    expect(gDartContent, contains('useState'), reason: 'Generated file must use useState');
-    expect(gDartContent, contains('\$div(className: \'counter\')'), reason: 'Generated file must contain counter div');
-    expect(gDartContent, contains('\$button'), reason: 'Generated file must contain buttons');
-    expect(gDartContent, contains('onClick:'), reason: 'Generated file must have onClick handlers');
-    expect(gDartContent, contains('count.value'), reason: 'Generated file must reference count.value');
+    expect(
+      gDartContent,
+      contains('ReactElement Counter()'),
+      reason: 'Generated file must contain Counter function',
+    );
+    expect(
+      gDartContent,
+      contains('useState'),
+      reason: 'Generated file must use useState',
+    );
+    expect(
+      gDartContent,
+      contains('\$div(className: \'counter\')'),
+      reason: 'Generated file must contain counter div',
+    );
+    expect(
+      gDartContent,
+      contains('\$button'),
+      reason: 'Generated file must contain buttons',
+    );
+    expect(
+      gDartContent,
+      contains('onClick:'),
+      reason: 'Generated file must have onClick handlers',
+    );
+    expect(
+      gDartContent,
+      contains('count.value'),
+      reason: 'Generated file must reference count.value',
+    );
 
-    final testDir = Directory.systemTemp.createTempSync('jsx_demo_compile_test');
+    final testDir = Directory.systemTemp.createTempSync(
+      'jsx_demo_compile_test',
+    );
 
     try {
       final testJsxPath = '${testDir.path}/test_counter.jsx';
@@ -175,16 +252,18 @@ dependencies:
     path: $projectRoot/packages/dart_node_react
 ''');
 
-      final transpileTest = Process.runSync(
-        'dart',
-        [
-          'run',
-          '$projectRoot/packages/dart_jsx/bin/jsx.dart',
-          testJsxPath,
-          testGDartPath,
-        ],
+      final transpileTest = Process.runSync('dart', [
+        'run',
+        '$projectRoot/packages/dart_jsx/bin/jsx.dart',
+        testJsxPath,
+        testGDartPath,
+      ]);
+      expect(
+        transpileTest.exitCode,
+        equals(0),
+        reason:
+            'Test counter transpilation must succeed: ${transpileTest.stderr}',
       );
-      expect(transpileTest.exitCode, equals(0), reason: 'Test counter transpilation must succeed: ${transpileTest.stderr}');
 
       File(testAppPath).writeAsStringSync('''
 import 'dart:js_interop';
@@ -204,25 +283,55 @@ extension on JSObject {
 }
 ''');
 
-      final pubGet = Process.runSync('dart', ['pub', 'get'], workingDirectory: testDir.path);
-      expect(pubGet.exitCode, equals(0), reason: 'pub get must succeed: ${pubGet.stderr}');
-
-      final compile = Process.runSync(
-        'dart',
-        ['compile', 'js', 'app.dart', '-o', 'app.js'],
-        workingDirectory: testDir.path,
+      final pubGet = Process.runSync('dart', [
+        'pub',
+        'get',
+      ], workingDirectory: testDir.path);
+      expect(
+        pubGet.exitCode,
+        equals(0),
+        reason: 'pub get must succeed: ${pubGet.stderr}',
       );
-      expect(compile.exitCode, equals(0), reason: 'Counter app must compile to JS:\nSTDOUT: ${compile.stdout}\nSTDERR: ${compile.stderr}');
+
+      final compile = Process.runSync('dart', [
+        'compile',
+        'js',
+        'app.dart',
+        '-o',
+        'app.js',
+      ], workingDirectory: testDir.path);
+      expect(
+        compile.exitCode,
+        equals(0),
+        reason:
+            'Counter app must compile to JS:\nSTDOUT: ${compile.stdout}\nSTDERR: ${compile.stderr}',
+      );
 
       final jsFile = File('${testDir.path}/app.js');
-      expect(jsFile.existsSync(), isTrue, reason: 'Compiled JS file must exist');
+      expect(
+        jsFile.existsSync(),
+        isTrue,
+        reason: 'Compiled JS file must exist',
+      );
 
       final jsContent = jsFile.readAsStringSync();
-      expect(jsContent.isNotEmpty, isTrue, reason: 'Compiled JS must not be empty');
-      expect(jsContent, contains('function'), reason: 'Compiled JS must contain functions');
+      expect(
+        jsContent.isNotEmpty,
+        isTrue,
+        reason: 'Compiled JS must not be empty',
+      );
+      expect(
+        jsContent,
+        contains('function'),
+        reason: 'Compiled JS must contain functions',
+      );
 
       final jsLines = jsContent.split('\n').length;
-      expect(jsLines, greaterThan(50), reason: 'Compiled JS should have substantial content');
+      expect(
+        jsLines,
+        greaterThan(50),
+        reason: 'Compiled JS should have substantial content',
+      );
     } finally {
       testDir.deleteSync(recursive: true);
     }

@@ -41,7 +41,10 @@ void main() {
 
     final content = result.container.querySelector('.tab-content');
     expect(content!.textContent, contains('Profile'));
-    expect(content.textContent, contains('View and edit your profile settings'));
+    expect(
+      content.textContent,
+      contains('View and edit your profile settings'),
+    );
 
     result.unmount();
   });
@@ -56,7 +59,10 @@ void main() {
 
     final content = result.container.querySelector('.tab-content');
     expect(content!.textContent, contains('Settings'));
-    expect(content.textContent, contains('Configure your application preferences'));
+    expect(
+      content.textContent,
+      contains('Configure your application preferences'),
+    );
 
     result.unmount();
   });

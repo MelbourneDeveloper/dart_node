@@ -13,13 +13,25 @@ import 'package:dart_node_react/dart_node_react.dart';
 ReactElement Counter() {
   final count = useState(0);
 
-  return $div(className: 'counter') >> [
-  $h1 >> 'Dart + JSX',
-  $div(className: 'value') >> count.value,
-  $div(className: 'buttons') >> [
-    $button(className: 'btn-dec', onClick: () => count.set(count.value - 1)) >> '-',
-    $button(className: 'btn-inc', onClick: () => count.set(count.value + 1)) >> '+',
-  ],
-  $div(className: 'buttons') >> ($button(className: 'btn-reset', onClick: () => count.set(0)) >> 'Reset'),
-];
+  return $div(className: 'counter') >>
+      [
+        $h1 >> 'Dart + JSX',
+        $div(className: 'value') >> count.value,
+        $div(className: 'buttons') >>
+            [
+              $button(
+                    className: 'btn-dec',
+                    onClick: () => count.set(count.value - 1),
+                  ) >>
+                  '-',
+              $button(
+                    className: 'btn-inc',
+                    onClick: () => count.set(count.value + 1),
+                  ) >>
+                  '+',
+            ],
+        $div(className: 'buttons') >>
+            ($button(className: 'btn-reset', onClick: () => count.set(0)) >>
+                'Reset'),
+      ];
 }

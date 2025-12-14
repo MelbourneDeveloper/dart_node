@@ -193,9 +193,15 @@ Future<Result<void, String>> _runTests(String packageDir) async {
   final useNodePlatform =
       testConfig.existsSync() && testConfig.readAsStringSync().contains('node');
 
-  final testArgs = useNodePlatform ? const ['test', '-p', 'node'] : const ['test'];
+  final testArgs = useNodePlatform
+      ? const ['test', '-p', 'node']
+      : const ['test'];
 
-  final result = await Process.run('dart', testArgs, workingDirectory: packageDir);
+  final result = await Process.run(
+    'dart',
+    testArgs,
+    workingDirectory: packageDir,
+  );
 
   stdout.writeln('Test stdout: ${result.stdout}');
   stderr.writeln('Test stderr: ${result.stderr}');

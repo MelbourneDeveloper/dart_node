@@ -75,10 +75,7 @@ void main() {
     final result = render(fc(appComponent));
 
     // Initial state - Home tab content should show
-    expect(
-      result.container.textContent,
-      contains('Welcome to the home tab'),
-    );
+    expect(result.container.textContent, contains('Welcome to the home tab'));
 
     // Find tab buttons by their text content
     final tabButtons = result.container.querySelectorAll('.tab-btn');
@@ -109,10 +106,7 @@ void main() {
     fireClick(homeButton);
 
     // Home content should show again
-    expect(
-      result.container.textContent,
-      contains('Welcome to the home tab'),
-    );
+    expect(result.container.textContent, contains('Welcome to the home tab'));
 
     result.unmount();
   });

@@ -1732,10 +1732,9 @@ void main() {
 
     test('creates nested elements with >> operator', () {
       final component = registerFunctionComponent(
-        (props) => $div(spread: {'data-testid': 'container'}) >> [
-          $h1 >> 'Title',
-          $p() >> 'Content',
-        ],
+        (props) =>
+            $div(spread: {'data-testid': 'container'}) >>
+            [$h1 >> 'Title', $p() >> 'Content'],
       );
 
       final result = render(fc(component));
@@ -1761,14 +1760,16 @@ void main() {
     test(r'$button with onClick handler works', () {
       final component = registerFunctionComponent((props) {
         final count = useState(0);
-        return $div() >> [
-          $span(spread: {'data-testid': 'count'}) >> 'Count: ${count.value}',
-          $button(
-            onClick: () => count.set(count.value + 1),
-            spread: {'data-testid': 'btn'},
-          ) >>
-              'Click',
-        ];
+        return $div() >>
+            [
+              $span(spread: {'data-testid': 'count'}) >>
+                  'Count: ${count.value}',
+              $button(
+                    onClick: () => count.set(count.value + 1),
+                    spread: {'data-testid': 'btn'},
+                  ) >>
+                  'Click',
+            ];
       });
 
       final result = render(fc(component));
@@ -1781,40 +1782,37 @@ void main() {
     test(r'$input with onChange handler works', () {
       final component = registerFunctionComponent((props) {
         final text = useState('');
-        return $div() >> [
-          $input(
-            type: 'text',
-            value: text.value,
-            onChange: (e) {
-              final target = e.target;
-              if (target case final JSObject t) {
-                final value = t['value'];
-                if (value case final JSString s) text.set(s.toDart);
-              }
-            },
-            spread: {'data-testid': 'input'},
-          ),
-          $span(spread: {'data-testid': 'output'}) >> 'Value: ${text.value}',
-        ];
+        return $div() >>
+            [
+              $input(
+                type: 'text',
+                value: text.value,
+                onChange: (e) {
+                  final target = e.target;
+                  if (target case final JSObject t) {
+                    final value = t['value'];
+                    if (value case final JSString s) text.set(s.toDart);
+                  }
+                },
+                spread: {'data-testid': 'input'},
+              ),
+              $span(spread: {'data-testid': 'output'}) >>
+                  'Value: ${text.value}',
+            ];
       });
 
       final result = render(fc(component));
       final inputEl = result.getByTestId('input');
       fireChange(inputEl, value: 'Hello');
-      expect(
-        result.getByTestId('output').textContent,
-        equals('Value: Hello'),
-      );
+      expect(result.getByTestId('output').textContent, equals('Value: Hello'));
       result.unmount();
     });
 
     test(r'$ul and $li create lists', () {
       final component = registerFunctionComponent(
-        (props) => $ul(spread: {'data-testid': 'list'}) >> [
-          $li() >> 'Item 1',
-          $li() >> 'Item 2',
-          $li() >> 'Item 3',
-        ],
+        (props) =>
+            $ul(spread: {'data-testid': 'list'}) >>
+            [$li() >> 'Item 1', $li() >> 'Item 2', $li() >> 'Item 3'],
       );
 
       final result = render(fc(component));
@@ -1827,10 +1825,7 @@ void main() {
 
     test(r'$fragment groups elements without wrapper', () {
       final component = registerFunctionComponent(
-        (props) => $fragment >> [
-          $h1 >> 'First',
-          $h2 >> 'Second',
-        ],
+        (props) => $fragment >> [$h1 >> 'First', $h2 >> 'Second'],
       );
 
       final result = render(fc(component));
@@ -1842,14 +1837,16 @@ void main() {
     test('conditional rendering with null children', () {
       final component = registerFunctionComponent((props) {
         final show = useState(false);
-        return $div() >> [
-          $button(
-            onClick: () => show.set(!show.value),
-            spread: {'data-testid': 'toggle'},
-          ) >>
-              'Toggle',
-          if (show.value) $p(spread: {'data-testid': 'content'}) >> 'Visible',
-        ];
+        return $div() >>
+            [
+              $button(
+                    onClick: () => show.set(!show.value),
+                    spread: {'data-testid': 'toggle'},
+                  ) >>
+                  'Toggle',
+              if (show.value)
+                $p(spread: {'data-testid': 'content'}) >> 'Visible',
+            ];
       });
 
       final result = render(fc(component));
@@ -1896,11 +1893,13 @@ void main() {
 
     test('semantic elements work correctly', () {
       final component = registerFunctionComponent(
-        (props) => $main(spread: {'data-testid': 'main'}) >> [
-          $header() >> [$h1 >> 'Header'],
-          $section() >> [$p() >> 'Section content'],
-          $footer() >> [$span() >> 'Footer'],
-        ],
+        (props) =>
+            $main(spread: {'data-testid': 'main'}) >>
+            [
+              $header() >> [$h1 >> 'Header'],
+              $section() >> [$p() >> 'Section content'],
+              $footer() >> [$span() >> 'Footer'],
+            ],
       );
 
       final result = render(fc(component));

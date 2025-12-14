@@ -222,14 +222,24 @@ class JsxTranspiler {
   /// Checks if `<` at pos is part of a Dart generic type, not JSX.
   bool _isGenericType(String source, int ltPos) {
     var end = ltPos + 1;
-    while (end < source.length && RegExp(r'[a-zA-Z0-9_]').hasMatch(source[end])) {
+    while (end < source.length &&
+        RegExp(r'[a-zA-Z0-9_]').hasMatch(source[end])) {
       end++;
     }
     final identifier = source.substring(ltPos + 1, end);
 
     const genericTypes = {
-      'List', 'Map', 'Set', 'Future', 'Stream', 'Iterable',
-      'Iterator', 'Function', 'Record', 'Type', 'Symbol',
+      'List',
+      'Map',
+      'Set',
+      'Future',
+      'Stream',
+      'Iterable',
+      'Iterator',
+      'Function',
+      'Record',
+      'Type',
+      'Symbol',
     };
 
     if (genericTypes.contains(identifier)) return true;
@@ -309,8 +319,9 @@ class JsxTranspiler {
       }
 
       // Handle fragment close
-      final next2 =
-          pos + 2 < source.length ? source.substring(pos, pos + 3) : '';
+      final next2 = pos + 2 < source.length
+          ? source.substring(pos, pos + 3)
+          : '';
       final isFragmentClose = next2 == '</>';
       if (isFragmentClose) {
         depth--;

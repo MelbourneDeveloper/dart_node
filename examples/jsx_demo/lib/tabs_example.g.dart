@@ -33,13 +33,34 @@ ReactElement TabsExample() {
     _ => 'Home',
   };
 
-  return $div(className: 'tabs-container') >> [
-  $h1 >> 'Tabbed Interface',
-  $div(className: 'tab-buttons') >> [
-    $button(className: activeTab.value == 'home' ? 'tab-btn active' : 'tab-btn', onClick: () => activeTab.set('home')) >> 'Home',
-    $button(className: activeTab.value == 'profile' ? 'tab-btn active' : 'tab-btn', onClick: () => activeTab.set('profile')) >> 'Profile',
-    $button(className: activeTab.value == 'settings' ? 'tab-btn active' : 'tab-btn', onClick: () => activeTab.set('settings')) >> 'Settings',
-  ],
-  $div(className: 'tab-content') >> [$h2 >> currentLabel, $p() >> currentContent],
-];
+  return $div(className: 'tabs-container') >>
+      [
+        $h1 >> 'Tabbed Interface',
+        $div(className: 'tab-buttons') >>
+            [
+              $button(
+                    className: activeTab.value == 'home'
+                        ? 'tab-btn active'
+                        : 'tab-btn',
+                    onClick: () => activeTab.set('home'),
+                  ) >>
+                  'Home',
+              $button(
+                    className: activeTab.value == 'profile'
+                        ? 'tab-btn active'
+                        : 'tab-btn',
+                    onClick: () => activeTab.set('profile'),
+                  ) >>
+                  'Profile',
+              $button(
+                    className: activeTab.value == 'settings'
+                        ? 'tab-btn active'
+                        : 'tab-btn',
+                    onClick: () => activeTab.set('settings'),
+                  ) >>
+                  'Settings',
+            ],
+        $div(className: 'tab-content') >>
+            [$h2 >> currentLabel, $p() >> currentContent],
+      ];
 }

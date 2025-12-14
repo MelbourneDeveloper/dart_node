@@ -438,15 +438,15 @@ void main() {
     test('clicking bold button applies bold formatting', () async {
       final result = render(EditorApp());
 
-      final editorContent =
-          result.container.querySelector('.editor-content')!;
+      final editorContent = result.container.querySelector('.editor-content')!;
       setEditorContent(editorContent, 'test text');
       focusElement(editorContent);
       selectAllInEditor(editorContent);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      final buttons =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final buttons = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final boldBtn = buttons.firstWhere(
         (btn) => btn.textContent == 'B',
         orElse: () => throw StateError('Bold button not found'),
@@ -460,15 +460,15 @@ void main() {
     test('clicking italic button applies italic formatting', () async {
       final result = render(EditorApp());
 
-      final editorContent =
-          result.container.querySelector('.editor-content')!;
+      final editorContent = result.container.querySelector('.editor-content')!;
       setEditorContent(editorContent, 'test text');
       focusElement(editorContent);
       selectAllInEditor(editorContent);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      final buttons =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final buttons = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final italicBtn = buttons.firstWhere(
         (btn) => btn.textContent == 'I',
         orElse: () => throw StateError('Italic button not found'),
@@ -482,15 +482,15 @@ void main() {
     test('clicking underline button applies underline formatting', () async {
       final result = render(EditorApp());
 
-      final editorContent =
-          result.container.querySelector('.editor-content')!;
+      final editorContent = result.container.querySelector('.editor-content')!;
       setEditorContent(editorContent, 'test text');
       focusElement(editorContent);
       selectAllInEditor(editorContent);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      final buttons =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final buttons = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final underlineBtn = buttons.firstWhere(
         (btn) => btn.textContent == 'U',
         orElse: () => throw StateError('Underline button not found'),
@@ -504,15 +504,15 @@ void main() {
     test('clicking strikethrough button applies strikethrough', () async {
       final result = render(EditorApp());
 
-      final editorContent =
-          result.container.querySelector('.editor-content')!;
+      final editorContent = result.container.querySelector('.editor-content')!;
       setEditorContent(editorContent, 'test text');
       focusElement(editorContent);
       selectAllInEditor(editorContent);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      final buttons =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final buttons = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final strikeBtn = buttons.firstWhere(
         (btn) => btn.textContent == 'S',
         orElse: () => throw StateError('Strikethrough button not found'),
@@ -526,15 +526,15 @@ void main() {
     test('clicking code button applies code formatting', () async {
       final result = render(EditorApp());
 
-      final editorContent =
-          result.container.querySelector('.editor-content')!;
+      final editorContent = result.container.querySelector('.editor-content')!;
       setEditorContent(editorContent, 'test text');
       focusElement(editorContent);
       selectAllInEditor(editorContent);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      final buttons =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final buttons = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final codeBtn = buttons.firstWhere(
         (btn) => btn.textContent == '<>',
         orElse: () => throw StateError('Code button not found'),
@@ -548,8 +548,7 @@ void main() {
     test('selecting heading level applies heading', () async {
       final result = render(EditorApp());
 
-      final editorContent =
-          result.container.querySelector('.editor-content')!;
+      final editorContent = result.container.querySelector('.editor-content')!;
       setEditorContent(editorContent, 'test heading');
       focusElement(editorContent);
       selectAllInEditor(editorContent);
@@ -565,15 +564,15 @@ void main() {
     test('clicking unordered list button applies list', () async {
       final result = render(EditorApp());
 
-      final editorContent =
-          result.container.querySelector('.editor-content')!;
+      final editorContent = result.container.querySelector('.editor-content')!;
       setEditorContent(editorContent, 'list item');
       focusElement(editorContent);
       selectAllInEditor(editorContent);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      final buttons =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final buttons = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final listBtn = buttons.firstWhere(
         (btn) => btn.textContent == '•',
         orElse: () => throw StateError('List button not found'),
@@ -587,15 +586,15 @@ void main() {
     test('clicking ordered list button applies numbered list', () async {
       final result = render(EditorApp());
 
-      final editorContent =
-          result.container.querySelector('.editor-content')!;
+      final editorContent = result.container.querySelector('.editor-content')!;
       setEditorContent(editorContent, 'list item');
       focusElement(editorContent);
       selectAllInEditor(editorContent);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      final buttons =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final buttons = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final listBtn = buttons.firstWhere(
         (btn) => btn.textContent == '1.',
         orElse: () => throw StateError('Ordered list button not found'),
@@ -609,15 +608,15 @@ void main() {
     test('clicking quote button applies blockquote', () async {
       final result = render(EditorApp());
 
-      final editorContent =
-          result.container.querySelector('.editor-content')!;
+      final editorContent = result.container.querySelector('.editor-content')!;
       setEditorContent(editorContent, 'quote text');
       focusElement(editorContent);
       selectAllInEditor(editorContent);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      final buttons =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final buttons = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final quoteBtn = buttons.firstWhere(
         (btn) => btn.textContent == '"',
         orElse: () => throw StateError('Quote button not found'),
@@ -631,15 +630,15 @@ void main() {
     test('clicking code block button applies pre formatting', () async {
       final result = render(EditorApp());
 
-      final editorContent =
-          result.container.querySelector('.editor-content')!;
+      final editorContent = result.container.querySelector('.editor-content')!;
       setEditorContent(editorContent, 'code block');
       focusElement(editorContent);
       selectAllInEditor(editorContent);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      final buttons =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final buttons = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final codeBlockBtn = buttons.firstWhere(
         (btn) => btn.textContent == '{ }',
         orElse: () => throw StateError('Code block button not found'),
@@ -653,13 +652,13 @@ void main() {
     test('clicking horizontal rule button inserts hr', () async {
       final result = render(EditorApp());
 
-      final editorContent =
-          result.container.querySelector('.editor-content')!;
+      final editorContent = result.container.querySelector('.editor-content')!;
       focusElement(editorContent);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      final buttons =
-          result.container.querySelectorAll('.toolbar-btn').toList();
+      final buttons = result.container
+          .querySelectorAll('.toolbar-btn')
+          .toList();
       final hrBtn = buttons.firstWhere(
         (btn) => btn.textContent == '—',
         orElse: () => throw StateError('HR button not found'),

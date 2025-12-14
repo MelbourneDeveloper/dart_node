@@ -8,8 +8,15 @@ class JsxTransformer {
   /// HTML elements that are getters (not functions) in jsx.dart.
   /// These elements cannot be called with () when they have no props.
   static const _getterElements = {
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'strong', 'em', 'code',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'strong',
+    'em',
+    'code',
   };
 
   /// Transforms a JSX node to Dart code.
@@ -75,7 +82,9 @@ class JsxTransformer {
     // For functions without props: $div() >> [...]
     // For functions with props: $div(...) >> [...]
     final factory = hasProps
-        ? (isGetter ? '\$${element.tagName}Props($props)' : '$factoryName($props)')
+        ? (isGetter
+              ? '\$${element.tagName}Props($props)'
+              : '$factoryName($props)')
         : (isGetter ? factoryName : '$factoryName()');
     final childrenCode = _transformChildrenForOperator(children);
     return '$factory >> $childrenCode';
@@ -86,7 +95,8 @@ class JsxTransformer {
 
     for (final attr in attrs) {
       final part = switch (attr) {
-        JsxStringAttribute a => '${_dartPropName(a.name)}: \'${_escapeString(a.value)}\'',
+        JsxStringAttribute a =>
+          '${_dartPropName(a.name)}: \'${_escapeString(a.value)}\'',
         JsxExpressionAttribute a => '${_dartPropName(a.name)}: ${a.expression}',
         JsxBooleanAttribute a => '${_dartPropName(a.name)}: true',
         JsxSpreadAttribute a => '...${a.expression}',
@@ -143,10 +153,12 @@ class JsxTransformer {
     final isTooLong = joined.length > 80;
     if (!isTooLong) return '[${joined}]';
 
-    final formattedItems = items.map((item) {
-      final hasNewlines = item.contains('\n');
-      return hasNewlines ? item.replaceAll('\n', '\n  ') : item;
-    }).join(',\n  ');
+    final formattedItems = items
+        .map((item) {
+          final hasNewlines = item.contains('\n');
+          return hasNewlines ? item.replaceAll('\n', '\n  ') : item;
+        })
+        .join(',\n  ');
 
     return '[\n  $formattedItems,\n]';
   }
@@ -164,8 +176,7 @@ class JsxTransformer {
   };
 
   /// Wraps code in parentheses if it contains >> to prevent chaining issues.
-  String _wrapIfNeeded(String code) =>
-      code.contains(' >> ') ? '($code)' : code;
+  String _wrapIfNeeded(String code) => code.contains(' >> ') ? '($code)' : code;
 
   String _transformChildForList(JsxNode node) => switch (node) {
     JsxText t => "'${_escapeString(t.text)}'",

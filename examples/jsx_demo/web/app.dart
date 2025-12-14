@@ -18,10 +18,7 @@ void main() {
 }
 
 /// The main app component - shows counter and tabs.
-ReactElement App() => $div(className: 'app') >> [
-  Counter(),
-  TabsExample(),
-];
+ReactElement App() => $div(className: 'app') >> [Counter(), TabsExample()];
 
 @JS('document')
 external JSObject get document;

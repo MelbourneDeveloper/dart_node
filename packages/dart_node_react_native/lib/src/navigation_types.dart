@@ -94,10 +94,7 @@ extension type RouteProp._(JSObject _) implements JSObject {
 }
 
 /// Screen component props (navigation + route)
-typedef ScreenProps = ({
-  NavigationProp navigation,
-  RouteProp route,
-});
+typedef ScreenProps = ({NavigationProp navigation, RouteProp route});
 
 /// Extract ScreenProps from JSObject props passed to screen components.
 ///

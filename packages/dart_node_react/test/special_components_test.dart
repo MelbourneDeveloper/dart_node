@@ -28,9 +28,7 @@ void main() {
   });
 
   test('Fragment without children renders empty', () {
-    final fragmentComponent = registerFunctionComponent(
-      (props) => fragment(),
-    );
+    final fragmentComponent = registerFunctionComponent((props) => fragment());
 
     final result = render(fc(fragmentComponent));
 
@@ -73,9 +71,7 @@ void main() {
   });
 
   test('StrictMode without children renders empty', () {
-    final strictComponent = registerFunctionComponent(
-      (props) => strictMode(),
-    );
+    final strictComponent = registerFunctionComponent((props) => strictMode());
 
     final result = render(fc(strictComponent));
 
@@ -203,10 +199,7 @@ void main() {
 
   test('memo2 with custom arePropsEqual', () {
     final innerComponent = registerFunctionComponent(
-      (props) => pEl(
-        'ID: ${props['id']}',
-        props: {'data-testid': 'memoized'},
-      ),
+      (props) => pEl('ID: ${props['id']}', props: {'data-testid': 'memoized'}),
     );
 
     final memoizedComponent = memo2(

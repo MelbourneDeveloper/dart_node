@@ -182,7 +182,10 @@ void main() {
     ]);
 
     final result = transformer.transform(fragment);
-    expect(result, equals("\$fragment >> [\$h1 >> 'First', \$p() >> 'Second']"));
+    expect(
+      result,
+      equals("\$fragment >> [\$h1 >> 'First', \$p() >> 'Second']"),
+    );
   });
 
   test('transpiles JSX in Dart source', () {
@@ -215,7 +218,10 @@ void main() {
     expect(result.isSuccess, isTrue);
 
     final output = (result as Success<String, String>).value;
-    expect(output, contains("import 'package:dart_node_react/dart_node_react.dart';"));
+    expect(
+      output,
+      contains("import 'package:dart_node_react/dart_node_react.dart';"),
+    );
     expect(output, contains('void main()'));
     expect(output, contains('final count = 0;'));
     expect(output, contains('\$div() >> count'));
@@ -477,7 +483,9 @@ final element = <div>JSX</div>;
   });
 
   test('parses mixed children (text + elements + expressions)', () {
-    final parser = JsxParser('<div>Hello <strong>world</strong> {count} items</div>');
+    final parser = JsxParser(
+      '<div>Hello <strong>world</strong> {count} items</div>',
+    );
     final result = parser.parse();
 
     expect(result.isSuccess, isTrue);
@@ -985,7 +993,8 @@ final nav = <nav className="menu">
     final result = parser.parse();
 
     expect(result.isSuccess, isTrue);
-    final outerFragment = (result as Success<JsxNode, String>).value as JsxFragment;
+    final outerFragment =
+        (result as Success<JsxNode, String>).value as JsxFragment;
     expect(outerFragment.children.length, equals(1));
 
     final innerFragment = outerFragment.children[0] as JsxFragment;
@@ -996,7 +1005,9 @@ final nav = <nav className="menu">
   });
 
   test('parses complex nested expressions', () {
-    final parser = JsxParser('<div>{items.map((item) => <span key={item.id}>{item.name}</span>)}</div>');
+    final parser = JsxParser(
+      '<div>{items.map((item) => <span key={item.id}>{item.name}</span>)}</div>',
+    );
     final result = parser.parse();
 
     expect(result.isSuccess, isTrue);
@@ -1007,7 +1018,9 @@ final nav = <nav className="menu">
   });
 
   test('parses attribute with nested braces', () {
-    final parser = JsxParser('<div style={{color: "red", fontSize: 14}}>Text</div>');
+    final parser = JsxParser(
+      '<div style={{color: "red", fontSize: 14}}>Text</div>',
+    );
     final result = parser.parse();
 
     expect(result.isSuccess, isTrue);
@@ -1025,9 +1038,18 @@ final nav = <nav className="menu">
     final element = (result as Success<JsxNode, String>).value as JsxElement;
     expect(element.attributes.length, equals(3));
 
-    expect((element.attributes[0] as JsxBooleanAttribute).name, equals('disabled'));
-    expect((element.attributes[1] as JsxBooleanAttribute).name, equals('readOnly'));
-    expect((element.attributes[2] as JsxBooleanAttribute).name, equals('required'));
+    expect(
+      (element.attributes[0] as JsxBooleanAttribute).name,
+      equals('disabled'),
+    );
+    expect(
+      (element.attributes[1] as JsxBooleanAttribute).name,
+      equals('readOnly'),
+    );
+    expect(
+      (element.attributes[2] as JsxBooleanAttribute).name,
+      equals('required'),
+    );
   });
 
   test('parses mix of attribute types', () {
@@ -1121,7 +1143,8 @@ final nav = <nav className="menu">
     var depth = 0;
     var current = (result as Success<JsxNode, String>).value as JsxElement;
 
-    while (current.children.isNotEmpty && current.children.first is JsxElement) {
+    while (current.children.isNotEmpty &&
+        current.children.first is JsxElement) {
       depth++;
       current = current.children.first as JsxElement;
     }
@@ -1194,13 +1217,18 @@ final nav = <nav className="menu">
   });
 
   test('parses expression with ternary containing JSX', () {
-    final parser = JsxParser('<div>{condition ? <span>Yes</span> : <span>No</span>}</div>');
+    final parser = JsxParser(
+      '<div>{condition ? <span>Yes</span> : <span>No</span>}</div>',
+    );
     final result = parser.parse();
 
     expect(result.isSuccess, isTrue);
     final element = (result as Success<JsxNode, String>).value as JsxElement;
     final expr = element.children.first as JsxExpression;
-    expect(expr.expression, contains('condition ? <span>Yes</span> : <span>No</span>'));
+    expect(
+      expr.expression,
+      contains('condition ? <span>Yes</span> : <span>No</span>'),
+    );
   });
 
   test('parses self-closing tag without space before slash', () {
@@ -1299,7 +1327,9 @@ final nav = <nav className="menu">
   });
 
   test('parses deeply nested expressions with multiple brace levels', () {
-    final parser = JsxParser('<div>{obj.prop[func({nested: {deep: true}})]}</div>');
+    final parser = JsxParser(
+      '<div>{obj.prop[func({nested: {deep: true}})]}</div>',
+    );
     final result = parser.parse();
 
     expect(result.isSuccess, isTrue);
@@ -1309,7 +1339,9 @@ final nav = <nav className="menu">
   });
 
   test('parses multiple spread attributes', () {
-    final parser = JsxParser('<div {...props1} {...props2} className="test">Text</div>');
+    final parser = JsxParser(
+      '<div {...props1} {...props2} className="test">Text</div>',
+    );
     final result = parser.parse();
 
     expect(result.isSuccess, isTrue);
@@ -1338,7 +1370,9 @@ final nav = <nav className="menu">
   });
 
   test('parses nested fragments correctly', () {
-    final parser = JsxParser('<div><><span>A</span></><><span>B</span></></div>');
+    final parser = JsxParser(
+      '<div><><span>A</span></><><span>B</span></></div>',
+    );
     final result = parser.parse();
 
     expect(result.isSuccess, isTrue);
@@ -1359,7 +1393,9 @@ final nav = <nav className="menu">
   });
 
   test('parses attribute with object expression', () {
-    final parser = JsxParser('<div style={{margin: 10, padding: 20}}>Text</div>');
+    final parser = JsxParser(
+      '<div style={{margin: 10, padding: 20}}>Text</div>',
+    );
     final result = parser.parse();
 
     expect(result.isSuccess, isTrue);
@@ -1369,7 +1405,9 @@ final nav = <nav className="menu">
   });
 
   test('parses mixed whitespace in attributes', () {
-    final parser = JsxParser('<div\n  className="test"\n  id="main"\n>Text</div>');
+    final parser = JsxParser(
+      '<div\n  className="test"\n  id="main"\n>Text</div>',
+    );
     final result = parser.parse();
 
     expect(result.isSuccess, isTrue);
@@ -1392,11 +1430,7 @@ final nav = <nav className="menu">
     final element = JsxElement(
       tagName: 'div',
       attributes: [],
-      children: [
-        JsxExpression('a'),
-        JsxExpression('b'),
-        JsxExpression('c'),
-      ],
+      children: [JsxExpression('a'), JsxExpression('b'), JsxExpression('c')],
       isSelfClosing: false,
     );
 

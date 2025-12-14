@@ -57,10 +57,7 @@ void main() {
   });
 
   test('npmComponentSafe returns Error for invalid package', () {
-    final result = npmComponentSafe(
-      'nonexistent-package-xyz',
-      'Component',
-    );
+    final result = npmComponentSafe('nonexistent-package-xyz', 'Component');
     expect(result.isSuccess, isFalse);
   });
 
