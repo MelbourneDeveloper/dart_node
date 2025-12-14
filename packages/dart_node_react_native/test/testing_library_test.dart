@@ -298,6 +298,55 @@ void main() {
     expect(result.queryByTestId('my-button'), isNotNull);
     expect(result.queryByTestId('nonexistent-id'), isNull);
   });
+
+  // User interaction helper tests
+  test('userPress calls firePress on node', () {
+    var pressed = false;
+    final node = _createNodeWithHandler(onPress: () => pressed = true);
+    userPress(node);
+    expect(pressed, isTrue);
+  });
+
+  test('userClear calls fireChangeText with empty string', () {
+    String? lastText;
+    final node = _createNodeWithHandler(onChangeText: (t) => lastText = t);
+    userClear(node);
+    expect(lastText, equals(''));
+  });
+
+  test('TestRenderResult.getByText throws when multiple nodes match', () {
+    // Create tree where multiple nodes have same textContent due to bubbling
+    final root = _createDuplicateTextTree();
+    final result = TestRenderResult.create(root);
+    expect(
+      () => result.getByText('SameText', exact: true),
+      throwsA(isA<TestingException>()),
+    );
+  });
+
+  test('TestRenderResult.getByTestId throws when multiple found', () {
+    final root = _createDuplicateTestIdTree();
+    final result = TestRenderResult.create(root);
+    expect(
+      () => result.getByTestId('duplicate-id'),
+      throwsA(isA<TestingException>()),
+    );
+  });
+
+  test('TestNode findAll returns root if predicate matches', () {
+    final root = _node('MatchThis', {}, []);
+    final results = root.findAll((n) => n.type == 'MatchThis');
+    expect(results.length, equals(1));
+    expect(results.first, equals(root));
+  });
+
+  test('userType throws for non-TextInput node', () {
+    final node = _node('Button', {}, []);
+    expect(
+      () => userType(node, 'text'),
+      throwsA(isA<TestingException>()),
+    );
+  });
 }
 
 // Helper functions to create test nodes
@@ -386,6 +435,24 @@ TestNode _createDeepTreeWithText() => _node(
 );
 
 TestNode _createEmptyNode() => _node('View', {}, []);
+
+TestNode _createDuplicateTextTree() => _node(
+  'View',
+  {},
+  [
+    _node('Text', {'__text__': 'SameText'}, []),
+    _node('Text', {'__text__': 'SameText'}, []),
+  ],
+);
+
+TestNode _createDuplicateTestIdTree() => _node(
+  'View',
+  {},
+  [
+    _node('Button', {'testID': 'duplicate-id'}, []),
+    _node('Button', {'testID': 'duplicate-id'}, []),
+  ],
+);
 
 // Expose TestNode constructor through a helper since it's private
 TestNode _node(String type, Map<String, Object?> props, List<TestNode> children)

@@ -21,11 +21,10 @@ MIN_COVERAGE="${MIN_COVERAGE:-80}"
 
 # Package type definitions
 NODE_PACKAGES="dart_node_core dart_node_express dart_node_ws dart_node_better_sqlite3"
-NODE_INTEROP_PACKAGES="dart_node_mcp dart_node_react_native"
+NODE_INTEROP_PACKAGES="dart_node_mcp dart_node_react_native too_many_cooks"
 BROWSER_PACKAGES="dart_node_react frontend"
 NPM_PACKAGES="too_many_cooks_vscode_extension"
 BUILD_FIRST="too_many_cooks"
-NO_COVERAGE="too_many_cooks"
 
 # Tier definitions (space-separated paths)
 TIER1="packages/dart_logging packages/dart_node_core"
@@ -102,14 +101,17 @@ test_package() {
   if is_type "$dir" "$NPM_PACKAGES"; then
     npm test >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
   elif is_type "$dir" "$NODE_INTEROP_PACKAGES"; then
-    dart test >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
+    # Node interop packages: use coverage CLI like NODE_PACKAGES
+    dart run "$COVERAGE_CLI" >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
+    coverage=$(calc_coverage "coverage/lcov.info")
   elif is_type "$dir" "$NODE_PACKAGES"; then
     dart run "$COVERAGE_CLI" >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
     coverage=$(calc_coverage "coverage/lcov.info")
   elif is_type "$dir" "$BROWSER_PACKAGES"; then
-    dart test -p chrome >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
-  elif is_type "$dir" "$NO_COVERAGE"; then
-    dart test >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
+    # Browser packages: run tests with coverage
+    dart test -p chrome --coverage=coverage >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
+    dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib >> "$log" 2>&1
+    coverage=$(calc_coverage "coverage/lcov.info")
   else
     # Standard VM package with coverage
     dart test --coverage=coverage >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
