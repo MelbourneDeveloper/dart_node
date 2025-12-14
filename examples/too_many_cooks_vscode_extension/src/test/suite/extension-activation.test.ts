@@ -87,8 +87,11 @@ suite('Extension Activation', () => {
     const hasActivatedLog = logs.some((msg) => msg.includes('Extension activated'));
     assert.ok(hasActivatedLog, 'Must log "Extension activated"');
 
-    // MUST contain server path log
-    const hasServerPathLog = logs.some((msg) => msg.includes('Server path:'));
-    assert.ok(hasServerPathLog, 'Must log server path');
+    // MUST contain server mode log (either test server path or npx)
+    const hasServerLog = logs.some((msg) =>
+      msg.includes('TEST MODE: Using local server') ||
+      msg.includes('Using npx too-many-cooks')
+    );
+    assert.ok(hasServerLog, 'Must log server mode');
   });
 });

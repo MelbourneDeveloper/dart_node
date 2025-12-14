@@ -5,24 +5,16 @@
 
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
 import {
   waitForExtensionActivation,
   waitForConnection,
   waitForCondition,
   getTestAPI,
   restoreDialogMocks,
-  
 } from '../test-helpers';
 
 // Ensure any dialog mocks from previous tests are restored
 restoreDialogMocks();
-
-const SERVER_PATH = path.resolve(
-  __dirname,
-  '../../../../too_many_cooks/build/bin/server_node.js'
-);
 
 /**
  * Lock State Coverage Tests
@@ -34,16 +26,12 @@ suite('Lock State Coverage', function () {
 
   suiteSetup(async function () {
     this.timeout(60000);
-    if (!fs.existsSync(SERVER_PATH)) {
-      this.skip();
-      return;
-    }
+
+    // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
-    const config = vscode.workspace.getConfiguration('tooManyCooks');
-    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
 
     const api = getTestAPI();
-    // Disconnect first, then clean DB, then reconnect
+    // Disconnect first, then reconnect
     await api.disconnect();
     await api.connect();
     await waitForConnection();
@@ -124,16 +112,11 @@ suite('Store Error Handling Coverage', function () {
 
   suiteSetup(async function () {
     this.timeout(60000);
-    if (!fs.existsSync(SERVER_PATH)) {
-      this.skip();
-      return;
-    }
+
+    // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
-    const config = vscode.workspace.getConfiguration('tooManyCooks');
-    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
 
     const api = getTestAPI();
-    // Disconnect first, then clean DB, then reconnect
     await api.disconnect();
     await api.connect();
     await waitForConnection();
@@ -267,23 +250,19 @@ suite('Store Error Handling Coverage', function () {
 suite('Extension Commands Coverage', function () {
   suiteSetup(async function () {
     this.timeout(60000);
+
+    // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
-    // Disconnect, clean DB, then tests will reconnect as needed
+
+    // Disconnect so tests can reconnect as needed
     const api = getTestAPI();
     await api.disconnect();
   });
 
   test('refresh command works when connected', async function () {
     this.timeout(30000);
-    if (!fs.existsSync(SERVER_PATH)) {
-      this.skip();
-      return;
-    }
 
     const api = getTestAPI();
-    const config = vscode.workspace.getConfiguration('tooManyCooks');
-    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
-
     await api.disconnect();
     await api.connect();
     await waitForConnection();
@@ -297,10 +276,6 @@ suite('Extension Commands Coverage', function () {
 
   test('connect command succeeds with valid server', async function () {
     this.timeout(30000);
-    if (!fs.existsSync(SERVER_PATH)) {
-      this.skip();
-      return;
-    }
 
     const api = getTestAPI();
     await api.disconnect();
@@ -352,15 +327,9 @@ suite('Tree Provider Edge Cases', function () {
 
   suiteSetup(async function () {
     this.timeout(60000);
-    if (!fs.existsSync(SERVER_PATH)) {
-      this.skip();
-      return;
-    }
-    await waitForExtensionActivation();
-    const config = vscode.workspace.getConfiguration('tooManyCooks');
-    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
 
-    // Clean DB for fresh state
+    // waitForExtensionActivation handles server path setup and validation
+    await waitForExtensionActivation();
 
     const api = getTestAPI();
     await api.disconnect();
@@ -488,15 +457,9 @@ suite('Error Handling Coverage', function () {
 
   suiteSetup(async function () {
     this.timeout(60000);
-    if (!fs.existsSync(SERVER_PATH)) {
-      this.skip();
-      return;
-    }
-    await waitForExtensionActivation();
-    const config = vscode.workspace.getConfiguration('tooManyCooks');
-    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
 
-    // Clean DB for fresh state
+    // waitForExtensionActivation handles server path setup and validation
+    await waitForExtensionActivation();
 
     const api = getTestAPI();
     await api.disconnect();
@@ -619,16 +582,16 @@ suite('Error Handling Coverage', function () {
     this.timeout(10000);
 
     const config = vscode.workspace.getConfiguration('tooManyCooks');
-    const originalPath = config.get<string>('serverPath', '');
+    const originalAutoConnect = config.get<boolean>('autoConnect', true);
 
-    // Change the server path to trigger configListener
-    await config.update('serverPath', '/tmp/fake/path', vscode.ConfigurationTarget.Global);
+    // Change autoConnect to trigger configListener
+    await config.update('autoConnect', !originalAutoConnect, vscode.ConfigurationTarget.Global);
 
     // Wait for handler
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    // Restore original path
-    await config.update('serverPath', originalPath, vscode.ConfigurationTarget.Global);
+    // Restore original value
+    await config.update('autoConnect', originalAutoConnect, vscode.ConfigurationTarget.Global);
 
     // Wait for handler
     await new Promise(resolve => setTimeout(resolve, 100));

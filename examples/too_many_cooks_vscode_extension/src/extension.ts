@@ -5,8 +5,6 @@
  */
 
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
 import { Store } from './state/store';
 import { AgentsTreeProvider, AgentTreeItem } from './ui/tree/agentsTreeProvider';
 import { LocksTreeProvider, LockTreeItem } from './ui/tree/locksTreeProvider';
@@ -43,40 +41,17 @@ export async function activate(
   log('Extension activating...');
 
   const config = vscode.workspace.getConfiguration('tooManyCooks');
-  let serverPath = config.get<string>('serverPath', '');
 
-  // Auto-detect server path if not configured
-  if (!serverPath) {
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    if (workspaceFolder) {
-      // Try common locations relative to workspace
-      const candidates = [
-        'examples/too_many_cooks/build/bin/server_node.js',
-        'too_many_cooks/build/bin/server_node.js',
-        'build/bin/server_node.js',
-      ];
-      for (const candidate of candidates) {
-        const fullPath = path.join(workspaceFolder.uri.fsPath, candidate);
-        if (fs.existsSync(fullPath)) {
-          serverPath = fullPath;
-          log(`Auto-detected server at: ${serverPath}`);
-          break;
-        }
-      }
-    }
+  // Check for test-mode server path (allows tests to use local build)
+  // Production uses npx too-many-cooks by default
+  const testServerPath = (globalThis as Record<string, unknown>)._tooManyCooksTestServerPath as string | undefined;
+  if (testServerPath) {
+    log(`TEST MODE: Using local server at ${testServerPath}`);
+    store = new Store(testServerPath);
+  } else {
+    log('Using npx too-many-cooks for server');
+    store = new Store();
   }
-
-  if (!serverPath) {
-    log('WARNING: No server path configured and auto-detect failed');
-    vscode.window.showWarningMessage(
-      'Too Many Cooks: Set tooManyCooks.serverPath in settings'
-    );
-  }
-
-  log(`Server path: ${serverPath}`);
-
-  // Initialize store
-  store = new Store(serverPath);
 
   // Create tree providers
   agentsProvider = new AgentsTreeProvider();
@@ -273,14 +248,9 @@ export async function activate(
     });
   }
 
-  // Watch for config changes
-  const configListener = vscode.workspace.onDidChangeConfiguration((e) => {
-    if (e.affectsConfiguration('tooManyCooks.serverPath')) {
-      const newPath = vscode.workspace
-        .getConfiguration('tooManyCooks')
-        .get<string>('serverPath', 'dart run too_many_cooks');
-      store?.setServerPath(newPath);
-    }
+  // Config listener placeholder for future settings
+  const configListener = vscode.workspace.onDidChangeConfiguration(() => {
+    // Currently no dynamic config needed - server uses npx too-many-cooks
   });
 
   log('Extension activated');

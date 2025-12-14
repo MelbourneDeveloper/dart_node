@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0
+
+### Added
+- Admin tool with `delete_lock`, `delete_agent`, and `reset_key` actions
+- Subscription system for real-time notifications
+- 96 integration tests with comprehensive coverage
+
+### Improved
+- Enhanced concurrent agent coordination
+- Better error messages for all tool operations
+- Documentation updates for Claude Code integration
+
 ## 0.2.0
 
 ### Fixed

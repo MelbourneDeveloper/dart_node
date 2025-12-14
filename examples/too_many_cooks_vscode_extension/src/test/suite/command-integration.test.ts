@@ -6,8 +6,6 @@
 
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
 import {
   waitForExtensionActivation,
   waitForConnection,
@@ -23,11 +21,6 @@ import {
 import { LockTreeItem } from '../../ui/tree/locksTreeProvider';
 import { AgentTreeItem } from '../../ui/tree/agentsTreeProvider';
 
-const SERVER_PATH = path.resolve(
-  __dirname,
-  '../../../../too_many_cooks/build/bin/server_node.js'
-);
-
 suite('Command Integration - Dialog Mocking', function () {
   let agentKey: string;
   const testId = Date.now();
@@ -36,14 +29,8 @@ suite('Command Integration - Dialog Mocking', function () {
   suiteSetup(async function () {
     this.timeout(60000);
 
-    if (!fs.existsSync(SERVER_PATH)) {
-      throw new Error(`MCP SERVER NOT FOUND AT ${SERVER_PATH}`);
-    }
-
+    // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
-
-    const config = vscode.workspace.getConfiguration('tooManyCooks');
-    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
 
     // Clean DB for fresh state
     cleanDatabase();

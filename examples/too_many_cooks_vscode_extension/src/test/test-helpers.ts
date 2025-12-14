@@ -76,6 +76,21 @@ const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const requireFromServer = createRequire(path.join(serverProjectDir, 'package.json'));
 let serverDepsPromise: Promise<void> | null = null;
 
+// Path to local server build for testing
+export const SERVER_PATH = path.resolve(
+  serverProjectDir,
+  'build/bin/server_node.js'
+);
+
+/**
+ * Configure the extension to use local server path for testing.
+ * MUST be called before extension activates.
+ */
+export function setTestServerPath(): void {
+  (globalThis as Record<string, unknown>)._tooManyCooksTestServerPath = SERVER_PATH;
+  console.log(`[TEST HELPER] Set test server path: ${SERVER_PATH}`);
+}
+
 const canRequireBetterSqlite3 = (): boolean => {
   try {
     requireFromServer('better-sqlite3');
@@ -172,10 +187,22 @@ export const waitForCondition = async (
 
 /**
  * Waits for the extension to fully activate.
+ * Sets up test server path before activation.
  */
 export async function waitForExtensionActivation(): Promise<void> {
   console.log('[TEST HELPER] Starting extension activation wait...');
+
+  // Ensure server dependencies are installed
   await ensureServerDependencies();
+
+  // Set test server path BEFORE extension activates
+  if (!fs.existsSync(SERVER_PATH)) {
+    throw new Error(
+      `MCP SERVER NOT FOUND AT ${SERVER_PATH}\n` +
+      'Build it first: cd examples/too_many_cooks && ./build.sh'
+    );
+  }
+  setTestServerPath();
 
   const extension = vscode.extensions.getExtension('Nimblesite.too-many-cooks');
   if (!extension) {

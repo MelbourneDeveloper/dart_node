@@ -138,15 +138,10 @@
     "configuration": {
       "title": "Too Many Cooks",
       "properties": {
-        "tooManyCooks.serverPath": {
-          "type": "string",
-          "default": "",
-          "description": "Path to the Too Many Cooks MCP server (leave empty for auto-detect)"
-        },
         "tooManyCooks.autoConnect": {
           "type": "boolean",
           "default": true,
-          "description": "Automatically connect to server on startup"
+          "description": "Automatically connect to server on startup (requires npm install -g too-many-cooks)"
         }
       }
     }

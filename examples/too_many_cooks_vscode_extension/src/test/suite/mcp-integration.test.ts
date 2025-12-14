@@ -11,9 +11,6 @@
  */
 
 import * as assert from 'assert';
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
 import {
   waitForExtensionActivation,
   waitForConnection,
@@ -26,11 +23,6 @@ import type { TreeItemSnapshot } from '../../test-api';
 
 // Ensure any dialog mocks from previous tests are restored
 restoreDialogMocks();
-
-const SERVER_PATH = path.resolve(
-  __dirname,
-  '../../../../too_many_cooks/build/bin/server_node.js'
-);
 
 /** Helper to dump tree snapshot for debugging */
 function dumpTree(name: string, items: TreeItemSnapshot[]): void {
@@ -58,21 +50,8 @@ suite('MCP Integration - UI Verification', function () {
   suiteSetup(async function () {
     this.timeout(60000);
 
-    if (!fs.existsSync(SERVER_PATH)) {
-      throw new Error(
-        `MCP SERVER NOT FOUND AT ${SERVER_PATH}\n` +
-          'Build it first: cd examples/too_many_cooks && ./build.sh'
-      );
-    }
-
+    // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
-
-    const config = vscode.workspace.getConfiguration('tooManyCooks');
-    await config.update(
-      'serverPath',
-      SERVER_PATH,
-      vscode.ConfigurationTarget.Global
-    );
 
     // Clean DB for fresh state
     cleanDatabase();
@@ -643,14 +622,8 @@ suite('MCP Integration - Admin Operations', function () {
   suiteSetup(async function () {
     this.timeout(60000);
 
-    if (!fs.existsSync(SERVER_PATH)) {
-      throw new Error(`MCP SERVER NOT FOUND AT ${SERVER_PATH}`);
-    }
-
+    // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
-
-    const config = vscode.workspace.getConfiguration('tooManyCooks');
-    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
   });
 
   suiteTeardown(async () => {
@@ -853,14 +826,8 @@ suite('MCP Integration - Lock State', function () {
   suiteSetup(async function () {
     this.timeout(60000);
 
-    if (!fs.existsSync(SERVER_PATH)) {
-      throw new Error(`MCP SERVER NOT FOUND AT ${SERVER_PATH}`);
-    }
-
+    // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
-
-    const config = vscode.workspace.getConfiguration('tooManyCooks');
-    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
   });
 
   suiteTeardown(async () => {
@@ -993,14 +960,8 @@ suite('MCP Integration - Tree Provider Edge Cases', function () {
   suiteSetup(async function () {
     this.timeout(60000);
 
-    if (!fs.existsSync(SERVER_PATH)) {
-      throw new Error(`MCP SERVER NOT FOUND AT ${SERVER_PATH}`);
-    }
-
+    // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
-
-    const config = vscode.workspace.getConfiguration('tooManyCooks');
-    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
   });
 
   suiteTeardown(async () => {
@@ -1142,14 +1103,8 @@ suite('MCP Integration - Store Methods', function () {
   suiteSetup(async function () {
     this.timeout(60000);
 
-    if (!fs.existsSync(SERVER_PATH)) {
-      throw new Error(`MCP SERVER NOT FOUND AT ${SERVER_PATH}`);
-    }
-
+    // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
-
-    const config = vscode.workspace.getConfiguration('tooManyCooks');
-    await config.update('serverPath', SERVER_PATH, vscode.ConfigurationTarget.Global);
   });
 
   suiteTeardown(async () => {

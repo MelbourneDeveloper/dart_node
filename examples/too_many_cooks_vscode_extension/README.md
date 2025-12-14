@@ -4,11 +4,7 @@ Visualize multi-agent coordination in real-time. See file locks, messages, and p
 
 ## Prerequisites
 
-**Node.js** and the **too-many-cooks** MCP server must be installed:
-
-```bash
-npm install -g too-many-cooks
-```
+**Node.js 18+** is required. The `too-many-cooks` package is fetched automatically via `npx`.
 
 ## Features
 
@@ -18,12 +14,62 @@ npm install -g too-many-cooks
 - **Plans Panel**: Track agent goals and current tasks
 - **Real-time Updates**: Auto-refreshes to show latest status
 
-## Usage
+## Quick Start
 
-1. Install the extension
-2. The extension auto-connects on startup (configurable)
-3. Open the "Too Many Cooks" view in the Activity Bar (chef icon)
-4. View agents, locks, messages, and plans in real-time
+1. Add the MCP server to your AI coding assistant (see below)
+2. Install this VSCode extension
+3. The extension auto-connects on startup
+4. Open the "Too Many Cooks" view in the Activity Bar (chef icon)
+
+All tools use `npx too-many-cooks`, sharing the same SQLite database at `~/.too_many_cooks/data.db`.
+
+## MCP Server Setup
+
+### Claude Code
+
+```bash
+claude mcp add --transport stdio too-many-cooks --scope user -- npx too-many-cooks
+```
+
+### Cursor
+
+Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project):
+
+```json
+{
+  "mcpServers": {
+    "too-many-cooks": {
+      "command": "npx",
+      "args": ["-y", "too-many-cooks"]
+    }
+  }
+}
+```
+
+### OpenAI Codex CLI
+
+Add to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.too-many-cooks]
+command = "npx"
+args = ["-y", "too-many-cooks"]
+```
+
+### GitHub Copilot
+
+Add to `.vscode/mcp.json` in your project:
+
+```json
+{
+  "servers": {
+    "too-many-cooks": {
+      "command": "npx",
+      "args": ["-y", "too-many-cooks"]
+    }
+  }
+}
+```
 
 ### Commands
 
@@ -36,7 +82,6 @@ npm install -g too-many-cooks
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `tooManyCooks.serverPath` | `""` | Path to MCP server (empty = auto-detect via npx) |
 | `tooManyCooks.autoConnect` | `true` | Auto-connect on startup |
 
 ## Architecture

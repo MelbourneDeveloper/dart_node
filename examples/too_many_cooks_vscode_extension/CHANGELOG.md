@@ -2,6 +2,21 @@
 
 All notable changes to the "Too Many Cooks" extension will be documented in this file.
 
+## [0.3.0] - 2025-06-14
+
+### Changed
+- Uses `npx too-many-cooks` by default - same server as Claude Code
+- Shared SQLite database ensures both VSCode and Claude Code see the same state
+
+### Added
+- Admin commands: Force Release Lock, Remove Agent
+- Send Message command with broadcast support
+- Real-time polling (2s interval) for cross-process updates
+- Comprehensive logging via Output Channel
+
+### Fixed
+- Server path configuration removed in favor of unified npx approach
+
 ## [0.1.0] - 2025-01-01
 
 ### Added

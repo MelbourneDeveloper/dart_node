@@ -5,8 +5,6 @@
 
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
 import {
   waitForExtensionActivation,
   waitForConnection,
@@ -14,15 +12,11 @@ import {
   openTooManyCooksPanel,
   getTestAPI,
   restoreDialogMocks,
+  cleanDatabase,
 } from '../test-helpers';
 
 // Ensure any dialog mocks from previous tests are restored
 restoreDialogMocks();
-
-const SERVER_PATH = path.resolve(
-  __dirname,
-  '../../../../too_many_cooks/build/bin/server_node.js'
-);
 
 suite('Views', () => {
   suiteSetup(async () => {
@@ -84,30 +78,8 @@ suite('UI Bug Fixes', function () {
   suiteSetup(async function () {
     this.timeout(60000);
 
-    if (!fs.existsSync(SERVER_PATH)) {
-      this.skip();
-      return;
-    }
-
+    // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
-
-    const config = vscode.workspace.getConfiguration('tooManyCooks');
-    await config.update(
-      'serverPath',
-      SERVER_PATH,
-      vscode.ConfigurationTarget.Global
-    );
-
-    // Clean DB for fresh state
-    const homeDir = process.env.HOME ?? '/tmp';
-    const dbDir = path.join(homeDir, '.too_many_cooks');
-    for (const f of ['data.db', 'data.db-wal', 'data.db-shm']) {
-      try {
-        fs.unlinkSync(path.join(dbDir, f));
-      } catch {
-        /* ignore */
-      }
-    }
 
     const api = getTestAPI();
     await api.disconnect();
@@ -122,16 +94,7 @@ suite('UI Bug Fixes', function () {
   suiteTeardown(async () => {
     const api = getTestAPI();
     await api.disconnect();
-    // Clean up DB
-    const homeDir = process.env.HOME ?? '/tmp';
-    const dbDir = path.join(homeDir, '.too_many_cooks');
-    for (const f of ['data.db', 'data.db-wal', 'data.db-shm']) {
-      try {
-        fs.unlinkSync(path.join(dbDir, f));
-      } catch {
-        /* ignore */
-      }
-    }
+    cleanDatabase();
   });
 
   test('BUG FIX: Messages show as single row (no 4-row expansion)', async function () {

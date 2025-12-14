@@ -36,20 +36,22 @@ function log(message: string): void {
 
 export class Store {
   private client: McpClient | null = null;
-  private serverPath: string;
   private pollInterval: ReturnType<typeof setInterval> | null = null;
+  private serverPath: string | undefined;
 
-  constructor(serverPath: string) {
+  /**
+   * @param serverPath Optional path to server JS file for testing.
+   *                   If not provided, uses 'npx too-many-cooks'.
+   */
+  constructor(serverPath?: string) {
     this.serverPath = serverPath;
-    log(`Store created with serverPath: ${serverPath}`);
-  }
-
-  setServerPath(path: string): void {
-    this.serverPath = path;
+    log(serverPath
+      ? `Store created with serverPath: ${serverPath}`
+      : 'Store created (will use npx too-many-cooks)');
   }
 
   async connect(): Promise<void> {
-    log(`connect() called, serverPath: ${this.serverPath}`);
+    log('connect() called');
     if (this.client?.isConnected()) {
       log('Already connected, returning');
       return;
@@ -59,7 +61,9 @@ export class Store {
     log('Connection status: connecting');
 
     try {
-      log('Creating McpClient...');
+      log(this.serverPath
+        ? `Creating McpClient with path: ${this.serverPath}`
+        : 'Creating McpClient (using npx too-many-cooks)...');
       this.client = new McpClient(this.serverPath);
 
       // Handle notifications
