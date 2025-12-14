@@ -108,8 +108,9 @@ test_package() {
     dart run "$COVERAGE_CLI" >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
     coverage=$(calc_coverage "coverage/lcov.info")
   elif is_type "$dir" "$BROWSER_PACKAGES"; then
-    # Browser packages: no coverage support for Chrome tests
+    # Browser packages: run Chrome tests, check coverage if lcov.info exists
     dart test -p chrome >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
+    [[ -f "coverage/lcov.info" ]] && coverage=$(calc_coverage "coverage/lcov.info")
   else
     # Standard VM package with coverage
     dart test --coverage=coverage >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
