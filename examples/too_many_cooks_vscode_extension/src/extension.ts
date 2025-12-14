@@ -5,11 +5,12 @@
  */
 
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Store } from './state/store';
 import { AgentsTreeProvider, AgentTreeItem } from './ui/tree/agentsTreeProvider';
 import { LocksTreeProvider, LockTreeItem } from './ui/tree/locksTreeProvider';
 import { MessagesTreeProvider } from './ui/tree/messagesTreeProvider';
-import { LockDecorationProvider } from './ui/decorations/lockDecorations';
 import { StatusBarManager } from './ui/statusBar/statusBarItem';
 import { DashboardPanel } from './ui/webview/dashboardPanel';
 import { createTestAPI, addLogMessage, type TestAPI } from './test-api';
@@ -21,7 +22,6 @@ let statusBar: StatusBarManager | undefined;
 let agentsProvider: AgentsTreeProvider | undefined;
 let locksProvider: LocksTreeProvider | undefined;
 let messagesProvider: MessagesTreeProvider | undefined;
-let lockDecorations: LockDecorationProvider | undefined;
 let outputChannel: vscode.OutputChannel | undefined;
 
 function log(message: string): void {
@@ -55,8 +55,6 @@ export async function activate(
         'too_many_cooks/build/bin/server_node.js',
         'build/bin/server_node.js',
       ];
-      const fs = require('fs');
-      const path = require('path');
       for (const candidate of candidates) {
         const fullPath = path.join(workspaceFolder.uri.fsPath, candidate);
         if (fs.existsSync(fullPath)) {
@@ -98,12 +96,6 @@ export async function activate(
   const messagesView = vscode.window.createTreeView('tooManyCooksMessages', {
     treeDataProvider: messagesProvider,
   });
-
-  // Create file decoration provider
-  lockDecorations = new LockDecorationProvider();
-  const decorationDisposable = vscode.window.registerFileDecorationProvider(
-    lockDecorations
-  );
 
   // Create status bar
   statusBar = new StatusBarManager();
@@ -299,7 +291,6 @@ export async function activate(
     agentsView,
     locksView,
     messagesView,
-    decorationDisposable,
     connectCmd,
     disconnectCmd,
     refreshCmd,
@@ -315,7 +306,6 @@ export async function activate(
         agentsProvider?.dispose();
         locksProvider?.dispose();
         messagesProvider?.dispose();
-        lockDecorations?.dispose();
       },
     }
   );

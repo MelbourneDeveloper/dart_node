@@ -150,9 +150,6 @@ suite('UI Bug Fixes', function () {
       5000
     );
 
-    // Get the message tree snapshot
-    const messagesTree = api.getMessagesTreeSnapshot();
-
     // Find our message
     const msgItem = api.findMessageInTree('Test message');
     assert.ok(msgItem, 'Message must appear in tree');

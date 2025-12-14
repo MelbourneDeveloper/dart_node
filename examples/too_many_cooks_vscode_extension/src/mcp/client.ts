@@ -134,9 +134,8 @@ export class McpClient extends EventEmitter {
 
   private processBuffer(): void {
     // MCP SDK stdio uses newline-delimited JSON
-    while (true) {
-      const newlineIndex = this.buffer.indexOf('\n');
-      if (newlineIndex === -1) return;
+    let newlineIndex = this.buffer.indexOf('\n');
+    while (newlineIndex !== -1) {
 
       const line = this.buffer.substring(0, newlineIndex).replace(/\r$/, '');
       this.buffer = this.buffer.substring(newlineIndex + 1);
@@ -148,6 +147,7 @@ export class McpClient extends EventEmitter {
       } catch (e) {
         this.emit('error', e instanceof Error ? e : new Error(String(e)));
       }
+      newlineIndex = this.buffer.indexOf('\n');
     }
   }
 

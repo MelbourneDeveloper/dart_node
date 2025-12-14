@@ -854,9 +854,9 @@ suite('MCP Integration - Admin Operations', function () {
 });
 
 /**
- * Lock Decorations Tests - covers lockDecorations.ts
+ * Lock State Tests - tests lock acquire/release state management
  */
-suite('MCP Integration - Lock Decorations', function () {
+suite('MCP Integration - Lock State', function () {
   let agentKey: string;
   const testId = Date.now();
   const agentName = `deco-test-${testId}`;

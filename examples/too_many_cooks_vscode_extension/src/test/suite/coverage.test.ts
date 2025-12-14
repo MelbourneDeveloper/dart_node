@@ -20,9 +20,9 @@ const SERVER_PATH = path.resolve(
 );
 
 /**
- * Lock Decorations Coverage Tests
+ * Lock State Coverage Tests
  */
-suite('Lock Decorations Coverage', function () {
+suite('Lock State Coverage', function () {
   const testId = Date.now();
   const agentName = `lock-decor-test-${testId}`;
   let agentKey: string;
@@ -51,43 +51,40 @@ suite('Lock Decorations Coverage', function () {
     await api.disconnect();
   });
 
-  test('File decoration shows lock badge for active locks', async function () {
+  test('Active lock appears in state and tree', async function () {
     this.timeout(15000);
     const api = getTestAPI();
 
     // Acquire a lock
     await api.callTool('lock', {
       action: 'acquire',
-      file_path: '/test/decor/active.ts',
+      file_path: '/test/lock/active.ts',
       agent_name: agentName,
       agent_key: agentKey,
-      reason: 'Testing active lock decoration',
+      reason: 'Testing active lock',
     });
 
     await waitForCondition(
-      () => api.findLockInTree('/test/decor/active.ts') !== undefined,
+      () => api.findLockInTree('/test/lock/active.ts') !== undefined,
       'Lock to appear',
       5000
     );
 
     // Verify lock is in the state
     const locks = api.getLocks();
-    const ourLock = locks.find(l => l.filePath === '/test/decor/active.ts');
+    const ourLock = locks.find(l => l.filePath === '/test/lock/active.ts');
     assert.ok(ourLock, 'Lock should be in state');
     assert.strictEqual(ourLock.agentName, agentName, 'Lock should be owned by test agent');
     assert.ok(ourLock.reason, 'Lock should have reason');
-
-    // The decoration provider is triggered by the lock signal
-    // We can't directly test the decoration visually, but we verify the lock state
     assert.ok(ourLock.expiresAt > Date.now(), 'Lock should not be expired');
   });
 
-  test('Lock with reason shows in tooltip', async function () {
+  test('Lock shows agent name in tree description', async function () {
     this.timeout(10000);
     const api = getTestAPI();
 
     // The lock from previous test should still exist
-    const lockItem = api.findLockInTree('/test/decor/active.ts');
+    const lockItem = api.findLockInTree('/test/lock/active.ts');
     assert.ok(lockItem, 'Lock should still exist');
     assert.ok(
       lockItem.description?.includes(agentName),

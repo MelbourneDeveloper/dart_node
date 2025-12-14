@@ -60,15 +60,6 @@ export const agentDetails = computed<AgentDetails[]>(() =>
   }))
 );
 
-/** Locks grouped by file path. */
-export const locksByFile = computed(() => {
-  const byFile = new Map<string, FileLock>();
-  for (const lock of locks.value) {
-    byFile.set(lock.filePath, lock);
-  }
-  return byFile;
-});
-
 /** Reset all state. */
 export function resetState(): void {
   connectionStatus.value = 'disconnected';
