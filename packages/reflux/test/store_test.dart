@@ -123,6 +123,73 @@ void main() {
       unsubscribe(); // Should not throw
     });
 
+    test('unsubscribe after unsubscribed does not remove other listeners', () {
+      final store = createStore(counterReducer, (count: 0));
+      var listener1Called = 0;
+      var listener2Called = 0;
+
+      final unsubscribe1 = store.subscribe(() => listener1Called++);
+      store.subscribe(() => listener2Called++);
+
+      // Unsubscribe listener1
+      unsubscribe1();
+
+      // Calling unsubscribe again should be a no-op (isSubscribed = false)
+      unsubscribe1();
+
+      // Dispatch should only call listener2 now
+      store.dispatch(const Increment());
+
+      expect(listener1Called, equals(0));
+      expect(listener2Called, equals(1));
+    });
+
+    test('unsubscribe sets isSubscribed to false preventing double removal',
+        () {
+      final store = createStore(counterReducer, (count: 0));
+      var callCount = 0;
+
+      final unsubscribe = store.subscribe(() => callCount++);
+
+      // First dispatch notifies
+      store.dispatch(const Increment());
+      expect(callCount, equals(1));
+
+      // Unsubscribe
+      unsubscribe();
+
+      // Second dispatch doesn't notify
+      store.dispatch(const Increment());
+      expect(callCount, equals(1));
+
+      // Second unsubscribe is safe (isSubscribed is false)
+      unsubscribe();
+
+      // Third dispatch still doesn't notify
+      store.dispatch(const Increment());
+      expect(callCount, equals(1));
+    });
+
+    test('throws when unsubscribing during reduce', () {
+      late Store<CounterState> store;
+      late void Function() unsubscribe;
+
+      CounterState badReducer(CounterState state, Action action) {
+        if (action is UnsubscribeDuringReduceAction) {
+          unsubscribe();
+        }
+        return state;
+      }
+
+      store = createStore(badReducer, (count: 0));
+      unsubscribe = store.subscribe(() {});
+
+      expect(
+        () => store.dispatch(const UnsubscribeDuringReduceAction()),
+        throwsA(isA<DispatchInReducerException>()),
+      );
+    });
+
     test('throws when subscribing during reduce', () {
       late Store<CounterState> store;
       CounterState badReducer(CounterState state, Action action) {
@@ -137,6 +204,14 @@ void main() {
         () => store.dispatch(const BadAction()),
         throwsA(isA<SubscribeInReducerException>()),
       );
+    });
+
+    test('SubscribeInReducerException has correct message', () {
+      final exception = SubscribeInReducerException();
+      final message = exception.toString();
+      expect(message, contains('SubscribeInReducerException'));
+      expect(message, contains('Cannot subscribe'));
+      expect(message, contains('reducer'));
     });
   });
 
@@ -185,4 +260,9 @@ void main() {
 /// Test action that triggers bad behavior in reducer
 final class BadAction extends Action {
   const BadAction();
+}
+
+/// Test action that triggers unsubscribe during reduce
+final class UnsubscribeDuringReduceAction extends Action {
+  const UnsubscribeDuringReduceAction();
 }
