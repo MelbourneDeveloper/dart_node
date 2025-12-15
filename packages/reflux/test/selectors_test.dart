@@ -364,7 +364,7 @@ void main() {
 
       final result = selector((a: 1, b: 2, c: 3, d: 4));
       expect(result, equals('r:1-2-3-4'));
-      expect(result.length, equals(10));
+      expect(result.length, equals(9));
     });
 
     test('memoizes when all inputs unchanged', () {
@@ -843,6 +843,19 @@ void main() {
         ..resetCache()
         ..select(state);
       expect(computeCount, equals(2));
+    });
+
+    test('create2 first call returns computed value not null', () {
+      final selector =
+          ResettableSelector.create2<AppState, List<int>, String, String>(
+            (s) => s.numbers,
+            (s) => s.filter,
+            (nums, filter) => '$filter:${nums.length}',
+          );
+
+      final result = selector.select((numbers: [1, 2, 3], filter: 'x'));
+      expect(result, equals('x:3'));
+      expect(result.length, equals(3));
     });
   });
 

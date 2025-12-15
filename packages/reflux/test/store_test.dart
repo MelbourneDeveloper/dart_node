@@ -243,6 +243,75 @@ void main() {
     });
   });
 
+  group('isSubscribed mutation killers', () {
+    test('double unsubscribe does not remove other listeners from list', () {
+      // This test kills: if (!isSubscribed) return; → if (false) return;
+      // If the mutation survives, calling unsubscribe twice would try to
+      // remove the same listener twice from the list, potentially
+      // causing issues with the listeners list
+
+      final store = createStore(counterReducer, (count: 0));
+      var listener1Count = 0;
+      var listener2Count = 0;
+      var listener3Count = 0;
+
+      final unsub1 = store.subscribe(() => listener1Count++);
+      store
+        ..subscribe(() => listener2Count++)
+        ..subscribe(() => listener3Count++)
+        // Verify all listeners are called
+        ..dispatch(const Increment());
+      expect(listener1Count, equals(1));
+      expect(listener2Count, equals(1));
+      expect(listener3Count, equals(1));
+
+      // Unsubscribe listener1 twice - should be a no-op second time
+      unsub1();
+      unsub1();
+
+      // All other listeners should still work
+      store.dispatch(const Increment());
+      expect(listener1Count, equals(1)); // Still 1 (unsubscribed)
+      expect(listener2Count, equals(2)); // Incremented
+      expect(listener3Count, equals(2)); // Incremented
+    });
+
+    test('isSubscribed becomes false after unsubscribe', () {
+      // This test kills: isSubscribed = false; → isSubscribed = true;
+      // If the mutation survives, isSubscribed stays true after unsubscribe
+      // and subsequent unsubscribe calls would still try to remove
+
+      final store = createStore(counterReducer, (count: 0));
+      var listener1Count = 0;
+      var listener2Count = 0;
+
+      void listener1() => listener1Count++;
+      void listener2() => listener2Count++;
+
+      final unsub1 = store.subscribe(listener1);
+      store
+        ..subscribe(listener2)
+        // Verify both work
+        ..dispatch(const Increment());
+      expect(listener1Count, equals(1));
+      expect(listener2Count, equals(1));
+
+      // Unsubscribe first listener
+      unsub1();
+
+      // Unsubscribe again - isSubscribed should be false, so this is a no-op
+      // If isSubscribed stayed true (mutation), this would try to remove again
+      unsub1();
+      unsub1();
+      unsub1();
+
+      // listener2 should still be called
+      store.dispatch(const Increment());
+      expect(listener1Count, equals(1)); // Unchanged
+      expect(listener2Count, equals(2)); // Incremented
+    });
+  });
+
   group('Store.getState', () {
     test('returns current state', () {
       final store = createStore(counterReducer, (count: 5));

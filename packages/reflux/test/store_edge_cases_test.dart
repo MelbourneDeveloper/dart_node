@@ -247,24 +247,24 @@ void main() {
     test('enhancer receives createStore function', () {
       var enhancerCalled = false;
 
-      final enhancer = (
+      Store<CounterState> enhancer(
         Store<CounterState> Function(Reducer<CounterState>, CounterState)
-            createStore,
+            createStoreFn,
         Reducer<CounterState> reducer,
         CounterState preloadedState,
       ) {
         enhancerCalled = true;
-        return createStore(reducer, preloadedState);
-      };
+        return createStoreFn(reducer, preloadedState);
+      }
 
       createStore(counterReducer, (count: 0), enhancer: enhancer);
       expect(enhancerCalled, isTrue);
     });
 
     test('enhancer can modify reducer', () {
-      final enhancer = (
+      Store<CounterState> enhancer(
         Store<CounterState> Function(Reducer<CounterState>, CounterState)
-            createStore,
+            createStoreFn,
         Reducer<CounterState> reducer,
         CounterState preloadedState,
       ) {
@@ -273,8 +273,8 @@ void main() {
           return (count: newState.count * 2);
         }
 
-        return createStore(wrappedReducer, preloadedState);
-      };
+        return createStoreFn(wrappedReducer, preloadedState);
+      }
 
       final store = createStore(counterReducer, (count: 1), enhancer: enhancer);
       expect(store.getState().count, equals(2));
