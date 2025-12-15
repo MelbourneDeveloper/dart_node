@@ -219,6 +219,20 @@ vkern
 # Test utilities
 scry
 
+# VS Code API
+quickpick
+
+# Image formats
+webp
+
+# Test patterns (intentional partial matches/abbreviations)
+ello
+feTurb
+meshgrad
+
+# Unicode test data
+مرحبا
+
 # iOS/Xcode
 xcworkspace
 xcassets

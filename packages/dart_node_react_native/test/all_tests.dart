@@ -319,10 +319,7 @@ void _testingLibraryTests() {
 
     test('firePress throws when no onPress handler', () {
       final result = renderForTest(_mockElement('View'));
-      expect(
-        () => result.root.firePress(),
-        throwsA(isA<TestingException>()),
-      );
+      expect(() => result.root.firePress(), throwsA(isA<TestingException>()));
     });
 
     test('firePress calls JSFunction handler', () {
