@@ -33,9 +33,10 @@ void main() {
     test('ImageContent with base64 data', () {
       const content = (
         type: 'image',
-        data:
-            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklE'
+        // cspell:disable
+        data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklE'
             'QVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==',
+        // cspell:enable
         mimeType: 'image/png',
       );
 
