@@ -34,7 +34,8 @@ void main() {
       const content = (
         type: 'image',
         // cspell:disable
-        data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklE'
+        data:
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklE'
             'QVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==',
         // cspell:enable
         mimeType: 'image/png',
