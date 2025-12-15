@@ -9,18 +9,20 @@ code --uninstall-extension christianfindlay.too-many-cooks 2>/dev/null || true
 echo "=== Deleting global database (fresh state) ==="
 rm -rf ~/.too_many_cooks/data.db ~/.too_many_cooks/data.db-wal ~/.too_many_cooks/data.db-shm
 
-echo "=== Building MCP Server (local dart2js build) ==="
-pushd ../too_many_cooks > /dev/null
-rm -rf build/bin/server_node.js
-dart run tools/build/build.dart
-popd > /dev/null
+echo "=== Cleaning old build ==="
+rm -rf ../too_many_cooks/build
 
-# Get absolute path to local server
-SERVER_PATH="$(cd ../too_many_cooks && pwd)/build/bin/server_node.js"
-echo "Local server: $SERVER_PATH"
+echo "=== Building MCP Server ==="
+REPO_ROOT="$(cd ../.. && pwd)"
+cd "$REPO_ROOT"
+dart run tools/build/build.dart too_many_cooks
+cd "$REPO_ROOT/examples/too_many_cooks_vscode_extension"
+SERVER_PATH="$(cd ../too_many_cooks && pwd)/build/bin/server.js"
 
 echo "=== Building VSCode extension ==="
-./build.sh
+npm install
+npm run compile
+npx @vscode/vsce package
 
 echo "=== Installing MCP Server in Claude Code (LOCAL build) ==="
 claude mcp add --transport stdio too-many-cooks --scope user -- node "$SERVER_PATH"
@@ -31,10 +33,5 @@ code --install-extension "$VSIX" --force
 
 echo ""
 echo "Done! Restart VSCode to activate."
-echo "Claude Code uses LOCAL server: $SERVER_PATH"
-echo "VSCode extension uses: npx too-many-cooks (will need npm publish for admin tools)"
-echo ""
-echo "IMPORTANT: To use admin tools in VSCode, publish 0.3.0 first:"
-echo "  cd ../too_many_cooks && npm publish"
-echo ""
-echo "Verify MCP with: claude mcp list"
+echo "Verify: claude mcp list"
+echo "MCP logs: ~/Library/Caches/claude-cli-nodejs/*/mcp-logs-too-many-cooks/"

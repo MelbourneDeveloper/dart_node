@@ -18,6 +18,7 @@ import {
   getTestAPI,
   restoreDialogMocks,
   cleanDatabase,
+  safeDisconnect,
 } from '../test-helpers';
 import type { TreeItemSnapshot } from '../../test-api';
 
@@ -58,16 +59,16 @@ suite('MCP Integration - UI Verification', function () {
   });
 
   suiteTeardown(async () => {
-    await getTestAPI().disconnect();
+    await safeDisconnect();
     // Clean up DB after tests
     cleanDatabase();
   });
 
   test('Connect to MCP server', async function () {
     this.timeout(30000);
-    const api = getTestAPI();
 
-    await api.disconnect();
+    await safeDisconnect();
+    const api = getTestAPI();
     assert.strictEqual(api.isConnected(), false, 'Should be disconnected');
 
     await api.connect();
@@ -452,9 +453,9 @@ suite('MCP Integration - UI Verification', function () {
 
   test('Disconnect clears all tree views', async function () {
     this.timeout(10000);
-    const api = getTestAPI();
 
-    await api.disconnect();
+    await safeDisconnect();
+    const api = getTestAPI();
 
     assert.strictEqual(api.isConnected(), false, 'Should be disconnected');
 
@@ -627,16 +628,50 @@ suite('MCP Integration - Admin Operations', function () {
   });
 
   suiteTeardown(async () => {
-    await getTestAPI().disconnect();
+    await safeDisconnect();
+  });
+
+  test('CRITICAL: Admin tool must exist on server', async function () {
+    this.timeout(30000);
+
+    await safeDisconnect();
+    const api = getTestAPI();
+    await api.connect();
+    await waitForConnection();
+
+    // This test catches the bug where VSCode uses old npm version without admin tool
+    // If this fails, the server version is outdated - npm publish needed
+    try {
+      const result = await api.callTool('admin', { action: 'delete_lock', file_path: '/nonexistent' });
+      // Even if lock doesn't exist, we should get a valid response (not "tool not found")
+      const parsed = JSON.parse(result);
+      // Valid responses: {"deleted":true} or {"error":"..."}
+      assert.ok(
+        parsed.deleted !== undefined || parsed.error !== undefined,
+        `Admin tool should return valid response, got: ${result}`
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      // Check for MCP-level "Tool admin not found" error (means admin tool missing)
+      if (msg.includes('Tool admin not found') || msg.includes('-32602')) {
+        assert.fail(
+          'ADMIN TOOL NOT FOUND! The MCP server is outdated. ' +
+          'Publish new version: cd examples/too_many_cooks && npm publish'
+        );
+      }
+      // "NOT_FOUND:" errors are valid business responses - tool exists!
+      if (msg.includes('NOT_FOUND:')) {
+        return; // Success - admin tool exists and responded
+      }
+      // Other errors are OK (e.g., lock doesn't exist)
+    }
   });
 
   test('Setup: Connect and register agents', async function () {
     this.timeout(30000);
     const api = getTestAPI();
 
-    await api.disconnect();
-    await api.connect();
-    await waitForConnection();
+    // Already connected from previous test, just register agents
 
     // Register admin agent
     const result1 = await api.callTool('register', { name: adminAgentName });
@@ -831,14 +866,14 @@ suite('MCP Integration - Lock State', function () {
   });
 
   suiteTeardown(async () => {
-    await getTestAPI().disconnect();
+    await safeDisconnect();
   });
 
   test('Setup: Connect and register agent', async function () {
     this.timeout(30000);
-    const api = getTestAPI();
 
-    await api.disconnect();
+    await safeDisconnect();
+    const api = getTestAPI();
     await api.connect();
     await waitForConnection();
 
@@ -965,14 +1000,14 @@ suite('MCP Integration - Tree Provider Edge Cases', function () {
   });
 
   suiteTeardown(async () => {
-    await getTestAPI().disconnect();
+    await safeDisconnect();
   });
 
   test('Setup: Connect and register agent', async function () {
     this.timeout(30000);
-    const api = getTestAPI();
 
-    await api.disconnect();
+    await safeDisconnect();
+    const api = getTestAPI();
     await api.connect();
     await waitForConnection();
 
@@ -1108,14 +1143,14 @@ suite('MCP Integration - Store Methods', function () {
   });
 
   suiteTeardown(async () => {
-    await getTestAPI().disconnect();
+    await safeDisconnect();
   });
 
   test('Setup: Connect and register agents', async function () {
     this.timeout(30000);
-    const api = getTestAPI();
 
-    await api.disconnect();
+    await safeDisconnect();
+    const api = getTestAPI();
     await api.connect();
     await waitForConnection();
 

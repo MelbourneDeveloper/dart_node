@@ -13,6 +13,7 @@ import {
   getTestAPI,
   restoreDialogMocks,
   cleanDatabase,
+  safeDisconnect,
 } from '../test-helpers';
 
 // Ensure any dialog mocks from previous tests are restored
@@ -81,8 +82,10 @@ suite('UI Bug Fixes', function () {
     // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
 
+    // Safely disconnect to avoid race condition with auto-connect
+    await safeDisconnect();
+
     const api = getTestAPI();
-    await api.disconnect();
     await api.connect();
     await waitForConnection();
 
@@ -92,8 +95,7 @@ suite('UI Bug Fixes', function () {
   });
 
   suiteTeardown(async () => {
-    const api = getTestAPI();
-    await api.disconnect();
+    await safeDisconnect();
     cleanDatabase();
   });
 

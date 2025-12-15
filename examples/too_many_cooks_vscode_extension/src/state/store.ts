@@ -38,6 +38,7 @@ export class Store {
   private client: McpClient | null = null;
   private pollInterval: ReturnType<typeof setInterval> | null = null;
   private serverPath: string | undefined;
+  private connectPromise: Promise<void> | null = null;
 
   /**
    * @param serverPath Optional path to server JS file for testing.
@@ -52,6 +53,13 @@ export class Store {
 
   async connect(): Promise<void> {
     log('connect() called');
+
+    // If already connecting, wait for that to complete
+    if (this.connectPromise) {
+      log('Connect already in progress, waiting...');
+      return this.connectPromise;
+    }
+
     if (this.client?.isConnected()) {
       log('Already connected, returning');
       return;
@@ -60,6 +68,15 @@ export class Store {
     connectionStatus.value = 'connecting';
     log('Connection status: connecting');
 
+    this.connectPromise = this.doConnect();
+    try {
+      await this.connectPromise;
+    } finally {
+      this.connectPromise = null;
+    }
+  }
+
+  private async doConnect(): Promise<void> {
     try {
       log(this.serverPath
         ? `Creating McpClient with path: ${this.serverPath}`
@@ -114,6 +131,11 @@ export class Store {
   }
 
   async disconnect(): Promise<void> {
+    log('disconnect() called');
+
+    // Clear the connect promise - we're aborting any in-progress connection
+    this.connectPromise = null;
+
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
       this.pollInterval = null;
@@ -122,8 +144,11 @@ export class Store {
     if (this.client) {
       await this.client.stop();
       this.client = null;
+      log('Client stopped');
     }
     resetState();
+    connectionStatus.value = 'disconnected';
+    log('State reset, disconnected');
   }
 
   async refreshStatus(): Promise<void> {

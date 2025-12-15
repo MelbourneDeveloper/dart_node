@@ -244,7 +244,7 @@ String? _searchEntryPoints(String exampleDir, List<String> remaining) {
 ) {
   print('  Adding Node.js preamble...');
   final compiledJs = File(tempOutput).readAsStringSync();
-  final nodeJs = '${preamble.getPreamble()}\n$compiledJs';
+  final nodeJs = '#!/usr/bin/env node\n${preamble.getPreamble()}\n$compiledJs';
 
   File(finalOutput).writeAsStringSync(nodeJs);
   File(tempOutput).deleteSync();

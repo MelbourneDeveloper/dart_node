@@ -2,12 +2,12 @@
   "name": "too-many-cooks",
   "version": "0.3.0",
   "description": "Multi-agent Git coordination MCP server - enables multiple AI agents to safely edit a git repository simultaneously with file locking, messaging, and plan visibility",
-  "main": "build/bin/server_node.js",
+  "main": "build/bin/server.js",
   "bin": {
-    "too-many-cooks": "build/bin/server_node.js"
+    "too-many-cooks": "build/bin/server.js"
   },
   "scripts": {
-    "start": "node build/bin/server_node.js"
+    "start": "node build/bin/server.js"
   },
   "keywords": [
     "mcp",
@@ -34,7 +34,7 @@
     "better-sqlite3": "^12.5.0"
   },
   "files": [
-    "build/bin/server_node.js",
+    "build/bin/server.js",
     "README.md",
     "LICENSE"
   ]

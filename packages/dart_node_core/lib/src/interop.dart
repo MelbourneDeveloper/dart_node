@@ -8,6 +8,7 @@ extension type _GlobalContext(JSObject _) implements JSObject {
 
 extension type _Console(JSObject _) implements JSObject {
   external JSFunction get log;
+  external JSFunction get error;
 }
 
 _GlobalContext get _context => _GlobalContext(globalContext);
@@ -21,7 +22,12 @@ JSFunction get require => _context.require;
 /// Get the console object
 JSObject get console => _context.console;
 
-/// Log to console
+/// Log to console (stdout)
 void consoleLog(String message) {
   _Console(console).log.callAsFunction(null, message.toJS);
+}
+
+/// Log to console.error (stderr)
+void consoleError(String message) {
+  _Console(console).error.callAsFunction(null, message.toJS);
 }

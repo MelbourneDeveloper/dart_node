@@ -4,7 +4,7 @@
  */
 
 import * as assert from 'assert';
-import { waitForExtensionActivation, getTestAPI, restoreDialogMocks } from '../test-helpers';
+import { waitForExtensionActivation, getTestAPI, restoreDialogMocks, safeDisconnect } from '../test-helpers';
 
 // Ensure any dialog mocks from previous tests are restored
 restoreDialogMocks();
@@ -23,10 +23,10 @@ suite('Status Bar', () => {
 
   test('Connection status changes are reflected', async function () {
     this.timeout(5000);
-    const api = getTestAPI();
 
     // Ensure clean state by disconnecting first
-    await api.disconnect();
+    await safeDisconnect();
+    const api = getTestAPI();
 
     // Initial state should be disconnected
     assert.strictEqual(api.getConnectionStatus(), 'disconnected');

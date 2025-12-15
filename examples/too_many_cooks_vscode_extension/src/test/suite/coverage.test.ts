@@ -11,6 +11,7 @@ import {
   waitForCondition,
   getTestAPI,
   restoreDialogMocks,
+  safeDisconnect,
 } from '../test-helpers';
 
 // Ensure any dialog mocks from previous tests are restored
@@ -30,9 +31,9 @@ suite('Lock State Coverage', function () {
     // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
 
+    // Safely disconnect, then reconnect
+    await safeDisconnect();
     const api = getTestAPI();
-    // Disconnect first, then reconnect
-    await api.disconnect();
     await api.connect();
     await waitForConnection();
 
@@ -41,8 +42,7 @@ suite('Lock State Coverage', function () {
   });
 
   suiteTeardown(async () => {
-    const api = getTestAPI();
-    await api.disconnect();
+    await safeDisconnect();
   });
 
   test('Active lock appears in state and tree', async function () {
@@ -116,8 +116,8 @@ suite('Store Error Handling Coverage', function () {
     // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
 
+    await safeDisconnect();
     const api = getTestAPI();
-    await api.disconnect();
     await api.connect();
     await waitForConnection();
 
@@ -126,8 +126,7 @@ suite('Store Error Handling Coverage', function () {
   });
 
   suiteTeardown(async () => {
-    const api = getTestAPI();
-    await api.disconnect();
+    await safeDisconnect();
   });
 
   test('forceReleaseLock works on existing lock', async function () {
@@ -255,15 +254,14 @@ suite('Extension Commands Coverage', function () {
     await waitForExtensionActivation();
 
     // Disconnect so tests can reconnect as needed
-    const api = getTestAPI();
-    await api.disconnect();
+    await safeDisconnect();
   });
 
   test('refresh command works when connected', async function () {
     this.timeout(30000);
 
+    await safeDisconnect();
     const api = getTestAPI();
-    await api.disconnect();
     await api.connect();
     await waitForConnection();
 
@@ -277,8 +275,8 @@ suite('Extension Commands Coverage', function () {
   test('connect command succeeds with valid server', async function () {
     this.timeout(30000);
 
+    await safeDisconnect();
     const api = getTestAPI();
-    await api.disconnect();
 
     // Execute connect command
     await vscode.commands.executeCommand('tooManyCooks.connect');
@@ -331,8 +329,8 @@ suite('Tree Provider Edge Cases', function () {
     // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
 
+    await safeDisconnect();
     const api = getTestAPI();
-    await api.disconnect();
     await api.connect();
     await waitForConnection();
 
@@ -341,8 +339,7 @@ suite('Tree Provider Edge Cases', function () {
   });
 
   suiteTeardown(async () => {
-    const api = getTestAPI();
-    await api.disconnect();
+    await safeDisconnect();
   });
 
   test('Messages tree handles read messages correctly', async function () {
@@ -461,8 +458,8 @@ suite('Error Handling Coverage', function () {
     // waitForExtensionActivation handles server path setup and validation
     await waitForExtensionActivation();
 
+    await safeDisconnect();
     const api = getTestAPI();
-    await api.disconnect();
     await api.connect();
     await waitForConnection();
 
@@ -471,8 +468,7 @@ suite('Error Handling Coverage', function () {
   });
 
   suiteTeardown(async () => {
-    const api = getTestAPI();
-    await api.disconnect();
+    await safeDisconnect();
   });
 
   test('Tool call with isError response triggers error handling', async function () {

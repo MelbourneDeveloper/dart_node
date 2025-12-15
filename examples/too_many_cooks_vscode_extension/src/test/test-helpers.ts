@@ -71,6 +71,7 @@ export function restoreDialogMocks(): void {
 }
 
 let cachedTestAPI: TestAPI | null = null;
+// __dirname at runtime is out/test, so go up 3 levels to extension root, then up to examples/, then into too_many_cooks
 const serverProjectDir = path.resolve(__dirname, '../../../too_many_cooks');
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const requireFromServer = createRequire(path.join(serverProjectDir, 'package.json'));
@@ -79,7 +80,7 @@ let serverDepsPromise: Promise<void> | null = null;
 // Path to local server build for testing
 export const SERVER_PATH = path.resolve(
   serverProjectDir,
-  'build/bin/server_node.js'
+  'build/bin/server.js'
 );
 
 /**
@@ -255,6 +256,29 @@ export async function waitForConnection(timeout = 30000): Promise<void> {
   );
 
   console.log('[TEST HELPER] MCP connection established');
+}
+
+/**
+ * Safely disconnects, waiting for any pending connection to settle first.
+ * This avoids the "Client stopped" race condition.
+ */
+export async function safeDisconnect(): Promise<void> {
+  const api = getTestAPI();
+
+  // Wait a moment for any pending auto-connect to either succeed or fail
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  // Only disconnect if actually connected - avoids "Client stopped" error
+  // when disconnecting a client that failed to connect
+  if (api.isConnected()) {
+    try {
+      await api.disconnect();
+    } catch {
+      // Ignore errors during disconnect - connection may have failed
+    }
+  }
+
+  console.log('[TEST HELPER] Safe disconnect complete');
 }
 
 /**

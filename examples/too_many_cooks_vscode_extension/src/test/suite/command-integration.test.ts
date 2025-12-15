@@ -17,6 +17,7 @@ import {
   mockQuickPick,
   mockInputBox,
   cleanDatabase,
+  safeDisconnect,
 } from '../test-helpers';
 import { LockTreeItem } from '../../ui/tree/locksTreeProvider';
 import { AgentTreeItem } from '../../ui/tree/agentsTreeProvider';
@@ -38,7 +39,7 @@ suite('Command Integration - Dialog Mocking', function () {
 
   suiteTeardown(async () => {
     restoreDialogMocks();
-    await getTestAPI().disconnect();
+    await safeDisconnect();
   });
 
   setup(() => {
@@ -53,7 +54,7 @@ suite('Command Integration - Dialog Mocking', function () {
     this.timeout(30000);
     const api = getTestAPI();
 
-    await api.disconnect();
+    await safeDisconnect();
     await api.connect();
     await waitForConnection();
 
