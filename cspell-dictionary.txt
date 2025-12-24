@@ -225,10 +225,6 @@ quickpick
 # Image formats
 webp
 
-# Test patterns (intentional partial matches/abbreviations)
-ello
-feTurb
-meshgrad
 
 # Unicode test data
 مرحبا
