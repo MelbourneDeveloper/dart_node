@@ -17,8 +17,7 @@ extension type OutputChannel._(JSObject _) implements JSObject {
   /// Shows this channel in the UI.
   ///
   /// [preserveFocus] - If true, the channel will not take focus.
-  void show([bool preserveFocus = false]) =>
-      _showOutputChannel(_, preserveFocus.toJS);
+  external void show([bool preserveFocus]);
 
   /// Hides this channel from the UI.
   external void hide();
@@ -26,6 +25,3 @@ extension type OutputChannel._(JSObject _) implements JSObject {
   /// Disposes of this output channel.
   external void dispose();
 }
-
-@JS()
-external void _showOutputChannel(JSObject channel, JSBoolean preserveFocus);

@@ -20,7 +20,8 @@ cd "$REPO_ROOT/examples/too_many_cooks_vscode_extension_dart"
 SERVER_PATH="$(cd ../too_many_cooks && pwd)/build/bin/server.js"
 
 echo "=== Building VSCode extension (Dart) ==="
-dart compile js -O2 -o out/extension.js lib/src/extension.dart
+dart compile js -O2 -o out/extension.dart.js lib/extension.dart
+node scripts/wrap-extension.js
 npx @vscode/vsce package
 
 echo "=== Installing MCP Server in Claude Code (LOCAL build) ==="

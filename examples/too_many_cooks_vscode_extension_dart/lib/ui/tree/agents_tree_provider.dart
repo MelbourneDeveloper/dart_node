@@ -44,42 +44,41 @@ TreeItem createAgentTreeItem({
   return item;
 }
 
-@JS('Object.defineProperty')
-external void _setPropertyDescriptor(
-  JSObject obj,
-  String key,
-  JSObject descriptor,
-);
-
 void _setProperty(JSObject obj, String key, JSAny value) {
-  final descriptor = _createJSObject();
-  _setRawProperty(descriptor, 'value', value);
-  _setRawProperty(descriptor, 'writable', true.toJS);
-  _setRawProperty(descriptor, 'enumerable', true.toJS);
-  _setPropertyDescriptor(obj, key, descriptor);
+  _setPropertyBracket(obj, key, value);
 }
 
-@JS('Object')
-external JSObject _createJSObject();
+/// Helper to set a property on a JS object using bracket notation.
+extension _JSObjectExt on JSObject {
+  external void operator []=(String key, JSAny? value);
+}
 
-@JS()
-external void _setRawProperty(JSObject obj, String key, JSAny? value);
+void _setPropertyBracket(JSObject target, String key, JSAny? value) =>
+    target[key] = value;
 
 /// Gets a custom property from a tree item.
 AgentTreeItemType? getItemType(TreeItem item) {
-  final value = _getProperty(item, 'itemType');
+  final value = _getPropertyValue(item, 'itemType');
   if (value == null) return null;
-  return AgentTreeItemType.values.where((t) => t.name == value).firstOrNull;
+  final str = (value as JSString?)?.toDart;
+  if (str == null) return null;
+  return AgentTreeItemType.values.where((t) => t.name == str).firstOrNull;
 }
 
 /// Gets the agent name from a tree item.
-String? getAgentName(TreeItem item) => _getProperty(item, 'agentName');
+String? getAgentName(TreeItem item) {
+  final value = _getPropertyValue(item, 'agentName');
+  return (value as JSString?)?.toDart;
+}
 
 /// Gets the file path from a tree item.
-String? getFilePath(TreeItem item) => _getProperty(item, 'filePath');
+String? getFilePath(TreeItem item) {
+  final value = _getPropertyValue(item, 'filePath');
+  return (value as JSString?)?.toDart;
+}
 
-@JS()
-external String? _getProperty(JSObject obj, String key);
+@JS('Reflect.get')
+external JSAny? _getPropertyValue(JSObject obj, String key);
 
 /// Tree data provider for the agents view.
 final class AgentsTreeProvider implements TreeDataProvider<TreeItem> {
@@ -101,13 +100,13 @@ final class AgentsTreeProvider implements TreeDataProvider<TreeItem> {
   TreeItem getTreeItem(TreeItem element) => element;
 
   @override
-  JSArray<TreeItem>? getChildren([TreeItem? element]) {
+  List<TreeItem>? getChildren([TreeItem? element]) {
     final state = _storeManager.state;
     final details = selectAgentDetails(state);
 
     if (element == null) {
       // Root: list all agents
-      return details.map(_createAgentItem).toList().toJS;
+      return details.map(_createAgentItem).toList();
     }
 
     // Children: agent's plan, locks, messages
@@ -116,12 +115,10 @@ final class AgentsTreeProvider implements TreeDataProvider<TreeItem> {
     if (itemType == AgentTreeItemType.agent && agentName != null) {
       final detail =
           details.where((d) => d.agent.agentName == agentName).firstOrNull;
-      return detail != null
-          ? _createAgentChildren(detail).toJS
-          : <TreeItem>[].toJS;
+      return detail != null ? _createAgentChildren(detail) : <TreeItem>[];
     }
 
-    return <TreeItem>[].toJS;
+    return <TreeItem>[];
   }
 
   TreeItem _createAgentItem(AgentDetails detail) {

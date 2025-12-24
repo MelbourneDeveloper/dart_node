@@ -1,12 +1,16 @@
 import 'dart:js_interop';
 
 import 'package:dart_node_vsix/src/disposable.dart';
+import 'package:dart_node_vsix/src/vscode.dart';
 
 /// An event emitter for VSCode events.
 extension type EventEmitter<T extends JSAny?>._(JSObject _)
     implements JSObject {
   /// Creates a new EventEmitter.
-  factory EventEmitter() => _eventEmitterConstructor();
+  factory EventEmitter() {
+    final ctor = _getEventEmitterConstructor(vscode);
+    return EventEmitter._(_newInstance(ctor) as JSObject);
+  }
 
   /// The event that listeners can subscribe to.
   external Event<T> get event;
@@ -18,8 +22,17 @@ extension type EventEmitter<T extends JSAny?>._(JSObject _)
   external void dispose();
 }
 
-@JS('vscode.EventEmitter')
-external EventEmitter<T> _eventEmitterConstructor<T extends JSAny?>();
+@JS('Reflect.get')
+external JSFunction _reflectGet(JSObject obj, JSString key);
+
+@JS('Reflect.construct')
+external JSAny _reflectConstruct(JSFunction ctor, JSArray args);
+
+JSFunction _getEventEmitterConstructor(JSObject vscodeModule) =>
+    _reflectGet(vscodeModule, 'EventEmitter'.toJS);
+
+JSAny _newInstance(JSFunction ctor) =>
+    _reflectConstruct(ctor, <JSAny>[].toJS);
 
 /// An event that can be subscribed to.
 extension type Event<T extends JSAny?>._(JSFunction _) implements JSFunction {
@@ -30,5 +43,13 @@ extension type Event<T extends JSAny?>._(JSFunction _) implements JSFunction {
   }
 }
 
-@JS()
-external Disposable _eventSubscribe(JSFunction event, JSFunction listener);
+@JS('Reflect.apply')
+external Disposable _eventSubscribeReflect(
+  JSFunction event,
+  JSAny? thisArg,
+  JSArray<JSAny?> args,
+);
+
+/// Subscribe to a VSCode event.
+Disposable _eventSubscribe(JSFunction event, JSFunction listener) =>
+    _eventSubscribeReflect(event, null, [listener].toJS);

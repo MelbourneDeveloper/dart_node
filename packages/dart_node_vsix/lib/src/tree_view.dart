@@ -1,6 +1,7 @@
 import 'dart:js_interop';
 
 import 'package:dart_node_vsix/src/event_emitter.dart';
+import 'package:dart_node_vsix/src/vscode.dart';
 
 /// Tree item collapsible state.
 abstract final class TreeItemCollapsibleState {
@@ -51,8 +52,18 @@ extension type TreeItem._(JSObject _) implements JSObject {
   external set command(Command? value);
 }
 
-@JS('vscode.TreeItem')
-external TreeItem _createTreeItem(String label, int collapsibleState);
+/// Creates a TreeItem using Reflect.construct (ES6 classes require 'new').
+TreeItem _createTreeItem(String label, int collapsibleState) {
+  final ctor = _reflectGet(vscode, 'TreeItem'.toJS);
+  final args = [label.toJS, collapsibleState.toJS].toJS;
+  return _reflectConstruct(ctor, args) as TreeItem;
+}
+
+@JS('Reflect.get')
+external JSFunction _reflectGet(JSObject obj, JSString key);
+
+@JS('Reflect.construct')
+external JSObject _reflectConstruct(JSFunction target, JSArray args);
 
 /// A command that can be executed.
 extension type Command._(JSObject _) implements JSObject {
@@ -94,11 +105,20 @@ extension type MarkdownString._(JSObject _) implements JSObject {
   external MarkdownString appendMarkdown(String value);
 }
 
-@JS('vscode.MarkdownString')
-external MarkdownString _createMarkdownString(String value);
+/// Creates a MarkdownString using Reflect.construct.
+/// ES6 classes require 'new'.
+MarkdownString _createMarkdownString(String value) {
+  final ctor = _reflectGet(vscode, 'MarkdownString'.toJS);
+  final args = [value.toJS].toJS;
+  return _reflectConstruct(ctor, args) as MarkdownString;
+}
 
-@JS('vscode.MarkdownString')
-external MarkdownString _createMarkdownStringEmpty();
+/// Creates an empty MarkdownString using Reflect.construct.
+MarkdownString _createMarkdownStringEmpty() {
+  final ctor = _reflectGet(vscode, 'MarkdownString'.toJS);
+  final args = <JSAny?>[].toJS;
+  return _reflectConstruct(ctor, args) as MarkdownString;
+}
 
 /// A tree data provider.
 abstract class TreeDataProvider<T extends TreeItem> {
@@ -109,7 +129,7 @@ abstract class TreeDataProvider<T extends TreeItem> {
   TreeItem getTreeItem(T element);
 
   /// Gets the children of an element.
-  JSArray<T>? getChildren([T? element]);
+  List<T>? getChildren([T? element]);
 }
 
 /// Wrapper to create a JS-compatible tree data provider.
@@ -127,7 +147,7 @@ extension type JSTreeDataProvider<T extends TreeItem>._(JSObject _)
     _setProperty(
       obj,
       'getChildren',
-      ((T? element) => provider.getChildren(element)).toJS,
+      ((T? element) => provider.getChildren(element)?.toJS).toJS,
     );
     return JSTreeDataProvider<T>._(obj);
   }
@@ -157,8 +177,16 @@ extension type TreeView<T extends TreeItem>._(JSObject _) implements JSObject {
   external void dispose();
 }
 
-@JS('Object')
-external JSObject _createJSObject();
+/// Creates an empty JS object using Object.create(null).
+@JS('Object.create')
+external JSObject _createJSObjectFromProto(JSAny? proto);
 
-@JS('Object.defineProperty')
-external void _setProperty(JSObject obj, String key, JSAny? value);
+JSObject _createJSObject() => _createJSObjectFromProto(null);
+
+/// Sets a property on a JS object using bracket notation.
+void _setProperty(JSObject obj, String key, JSAny? value) {
+  _setPropertyRaw(obj, key.toJS, value);
+}
+
+@JS('Reflect.set')
+external void _setPropertyRaw(JSObject obj, JSString key, JSAny? value);

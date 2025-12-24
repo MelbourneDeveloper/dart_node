@@ -82,32 +82,26 @@ MarkdownString _createLockTooltip(FileLock lock) {
   return md;
 }
 
-@JS('Object.defineProperty')
-external void _setPropertyDescriptor(
-  JSObject obj,
-  String key,
-  JSObject descriptor,
-);
-
 void _setProperty(JSObject obj, String key, JSAny value) {
-  final descriptor = _createJSObject();
-  _setRawProperty(descriptor, 'value', value);
-  _setRawProperty(descriptor, 'writable', true.toJS);
-  _setRawProperty(descriptor, 'enumerable', true.toJS);
-  _setPropertyDescriptor(obj, key, descriptor);
+  _setPropertyBracket(obj, key, value);
 }
 
-@JS('Object')
-external JSObject _createJSObject();
+/// Helper to set a property on a JS object using bracket notation.
+extension _JSObjectExt on JSObject {
+  external void operator []=(String key, JSAny? value);
+}
 
-@JS()
-external void _setRawProperty(JSObject obj, String key, JSAny? value);
+void _setPropertyBracket(JSObject target, String key, JSAny? value) =>
+    target[key] = value;
 
 /// Gets whether item is a category.
-bool getIsCategory(TreeItem item) => _getBoolProperty(item, 'isCategory');
+bool getIsCategory(TreeItem item) {
+  final value = _getPropertyValue(item, 'isCategory');
+  return value.dartify() == true;
+}
 
-@JS()
-external bool _getBoolProperty(JSObject obj, String key);
+@JS('Reflect.get')
+external JSAny? _getPropertyValue(JSObject obj, String key);
 
 /// Tree data provider for the locks view.
 final class LocksTreeProvider implements TreeDataProvider<TreeItem> {
@@ -129,7 +123,7 @@ final class LocksTreeProvider implements TreeDataProvider<TreeItem> {
   TreeItem getTreeItem(TreeItem element) => element;
 
   @override
-  JSArray<TreeItem>? getChildren([TreeItem? element]) {
+  List<TreeItem>? getChildren([TreeItem? element]) {
     final state = _storeManager.state;
 
     if (element == null) {
@@ -162,7 +156,7 @@ final class LocksTreeProvider implements TreeDataProvider<TreeItem> {
         ));
       }
 
-      return items.toJS;
+      return items;
     }
 
     // Children based on category
@@ -189,10 +183,10 @@ final class LocksTreeProvider implements TreeDataProvider<TreeItem> {
           isCategory: false,
           lock: lock,
         );
-      }).toList().toJS;
+      }).toList();
     }
 
-    return <TreeItem>[].toJS;
+    return <TreeItem>[];
   }
 
   /// Disposes of this provider.

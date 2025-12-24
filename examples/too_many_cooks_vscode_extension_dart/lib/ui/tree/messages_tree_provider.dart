@@ -85,26 +85,17 @@ String _getRelativeTime(int timestamp) {
   return 'just now';
 }
 
-@JS('Object.defineProperty')
-external void _setPropertyDescriptor(
-  JSObject obj,
-  String key,
-  JSObject descriptor,
-);
-
 void _setProperty(JSObject obj, String key, JSAny value) {
-  final descriptor = _createJSObject();
-  _setRawProperty(descriptor, 'value', value);
-  _setRawProperty(descriptor, 'writable', true.toJS);
-  _setRawProperty(descriptor, 'enumerable', true.toJS);
-  _setPropertyDescriptor(obj, key, descriptor);
+  _setPropertyBracket(obj, key, value);
 }
 
-@JS('Object')
-external JSObject _createJSObject();
+/// Helper to set a property on a JS object using bracket notation.
+extension _JSObjectExt on JSObject {
+  external void operator []=(String key, JSAny? value);
+}
 
-@JS()
-external void _setRawProperty(JSObject obj, String key, JSAny? value);
+void _setPropertyBracket(JSObject target, String key, JSAny? value) =>
+    target[key] = value;
 
 /// Tree data provider for the messages view.
 final class MessagesTreeProvider implements TreeDataProvider<TreeItem> {
@@ -126,9 +117,9 @@ final class MessagesTreeProvider implements TreeDataProvider<TreeItem> {
   TreeItem getTreeItem(TreeItem element) => element;
 
   @override
-  JSArray<TreeItem>? getChildren([TreeItem? element]) {
+  List<TreeItem>? getChildren([TreeItem? element]) {
     // No children - flat list
-    if (element != null) return <TreeItem>[].toJS;
+    if (element != null) return <TreeItem>[];
 
     final allMessages = selectMessages(_storeManager.state);
 
@@ -138,7 +129,7 @@ final class MessagesTreeProvider implements TreeDataProvider<TreeItem> {
           label: 'No messages',
           collapsibleState: TreeItemCollapsibleState.none,
         ),
-      ].toJS;
+      ];
     }
 
     // Sort by created time, newest first
@@ -157,7 +148,7 @@ final class MessagesTreeProvider implements TreeDataProvider<TreeItem> {
         collapsibleState: TreeItemCollapsibleState.none,
         message: msg,
       );
-    }).toList().toJS;
+    }).toList();
   }
 
   String _getRelativeTimeShort(int timestamp) {

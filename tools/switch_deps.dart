@@ -1,4 +1,40 @@
 // ignore_for_file: avoid_print
+
+/// Switch Dependencies Tool
+///
+/// Switches internal package dependencies between local path references
+/// (for development) and versioned pub.dev references (for release).
+///
+/// ## Usage
+///
+/// ```bash
+/// # Switch to local path dependencies for development:
+/// dart tools/switch_deps.dart local
+///
+/// # Switch to versioned pub.dev dependencies for release:
+/// dart tools/switch_deps.dart release
+/// ```
+///
+/// ## What it does
+///
+/// **Local mode** (`local`):
+/// Changes dependencies like `dart_node_core: ^0.11.0` to:
+/// ```yaml
+/// dart_node_core:
+///   path: ../dart_node_core
+/// ```
+///
+/// **Release mode** (`release`):
+/// Changes path dependencies back to versioned references:
+/// ```yaml
+/// dart_node_core: ^0.11.0
+/// ```
+///
+/// The version number is read from the first publishable package's pubspec.
+///
+/// ## After running
+///
+/// Run `dart pub get` in each affected package to update dependencies.
 import 'dart:io';
 
 import 'lib/packages.dart';

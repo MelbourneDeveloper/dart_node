@@ -1,4 +1,5 @@
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 
 import 'package:dart_node_vsix/src/disposable.dart';
 import 'package:dart_node_vsix/src/uri.dart';
@@ -44,16 +45,15 @@ extension type Memento._(JSObject _) implements JSObject {
   List<String> keys() => _mementoKeys(_).toDart.cast<String>();
 }
 
-@JS()
-external JSArray<Disposable> _getRawSubscriptions(JSObject context);
-
 List<Disposable> _getSubscriptions(JSObject context) {
-  final arr = _getRawSubscriptions(context);
+  final arr = context['subscriptions']! as JSArray<Disposable>;
   return [for (var i = 0; i < arr.length; i++) arr[i]];
 }
 
-@JS()
-external void _pushSubscription(JSObject context, Disposable disposable);
+void _pushSubscription(JSObject context, Disposable disposable) {
+  final subs = context['subscriptions']! as JSObject;
+  (subs['push']! as JSFunction).callAsFunction(subs, disposable);
+}
 
 @JS()
 external T? _mementoGet<T extends JSAny?>(JSObject memento, JSString key);

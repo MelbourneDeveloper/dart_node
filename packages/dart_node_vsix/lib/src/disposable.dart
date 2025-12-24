@@ -16,12 +16,13 @@ external Disposable _createDisposable(JSFunction disposeFunc);
 /// Creates a Disposable that wraps a dispose callback.
 Disposable createDisposable(void Function() onDispose) {
   final obj = _createJSObject();
-  _setProperty(obj, 'dispose', onDispose.toJS);
+  obj['dispose'] = onDispose.toJS;
   return Disposable._(obj);
 }
 
 @JS('Object')
 external JSObject _createJSObject();
 
-@JS('Object.defineProperty')
-external void _setProperty(JSObject obj, String key, JSAny? value);
+extension on JSObject {
+  external void operator []=(String key, JSAny? value);
+}

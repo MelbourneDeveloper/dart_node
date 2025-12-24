@@ -6,10 +6,16 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:js_interop';
 
 import 'package:reflux/reflux.dart';
 
 import 'package:too_many_cooks_vscode_extension_dart/state/state.dart';
+
+@JS('console.log')
+external void _consoleLog(JSAny? message);
+
+void _log(String msg) => _consoleLog(msg.toJS);
 
 /// Local notification event type for store handling (uses string event name).
 typedef StoreNotificationEvent = ({
@@ -84,22 +90,28 @@ class StoreManager {
 
   /// Connect to the MCP server.
   Future<void> connect() async {
+    _log('[StoreManager] connect() called');
     // If already connecting, wait for that to complete
     if (_connectCompleter case final completer?) {
+      _log('[StoreManager] Already connecting, waiting...');
       return completer.future;
     }
 
     if (_client?.isConnected() ?? false) {
+      _log('[StoreManager] Already connected');
       return;
     }
 
+    _log('[StoreManager] Starting connection...');
     _store.dispatch(SetConnectionStatus(ConnectionStatus.connecting));
     _connectCompleter = Completer<void>();
 
     try {
       await _doConnect();
+      _log('[StoreManager] _doConnect completed');
       _connectCompleter?.complete();
     } catch (e) {
+      _log('[StoreManager] connect error: $e');
       _connectCompleter?.completeError(e);
       rethrow;
     } finally {
@@ -108,30 +120,37 @@ class StoreManager {
   }
 
   Future<void> _doConnect() async {
+    _log('[StoreManager] _doConnect starting');
     // Client should be injected or created externally
     // This allows for testing with mock clients
     final client = _client;
     if (client == null) {
+      _log('[StoreManager] ERROR: client is null!');
       throw StateError(
         'McpClient not provided. Inject client via constructor.',
       );
     }
 
+    _log('[StoreManager] Setting up event handlers...');
     // Set up event handlers
     _notificationSub = client.notifications.listen(_handleNotification);
     _closeSub = client.onClose.listen((_) {
       _store.dispatch(SetConnectionStatus(ConnectionStatus.disconnected));
     });
     _errorSub = client.errors.listen((err) {
-      // Log error - in real impl would use output channel
+      _log('[StoreManager] Client error: $err');
     });
     _logSub = client.logs.listen((msg) {
-      // Log message - in real impl would use output channel
+      _log('[StoreManager] Client log: $msg');
     });
 
+    _log('[StoreManager] Calling client.start()...');
     await client.start();
+    _log('[StoreManager] client.start() completed');
     await client.subscribe(['*']);
+    _log('[StoreManager] subscribe completed');
     await refreshStatus();
+    _log('[StoreManager] refreshStatus completed');
 
     _store.dispatch(SetConnectionStatus(ConnectionStatus.connected));
 
@@ -145,6 +164,10 @@ class StoreManager {
 
   /// Disconnect from the MCP server.
   Future<void> disconnect() async {
+    // Complete any pending connection with an error so waiters don't hang
+    if (_connectCompleter case final completer? when !completer.isCompleted) {
+      completer.completeError(StateError('Disconnected while connecting'));
+    }
     _connectCompleter = null;
 
     _pollTimer?.cancel();

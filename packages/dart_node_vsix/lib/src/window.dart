@@ -120,8 +120,13 @@ extension type TextEditor._(JSObject _) implements JSObject {
   external int? get viewColumn;
 }
 
-@JS('Object')
-external JSObject _createJSObject();
+@JS('Object.create')
+external JSObject _createJSObjectFromProto(JSAny? proto);
 
-@JS('Object.defineProperty')
-external void _setProperty(JSObject obj, String key, JSAny? value);
+JSObject _createJSObject() => _createJSObjectFromProto(null);
+
+@JS('Reflect.set')
+external void _setPropertyRaw(JSObject obj, JSString key, JSAny? value);
+
+void _setProperty(JSObject obj, String key, JSAny? value) =>
+    _setPropertyRaw(obj, key.toJS, value);

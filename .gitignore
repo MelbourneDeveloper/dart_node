@@ -40,3 +40,8 @@ examples/reflux_demo/flutter_counter/test/failures/
 
 
 mutation-reports
+
+out/
+
+
+.vscode-test
