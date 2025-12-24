@@ -21,7 +21,12 @@
     "**/package-lock.json",
     "website/src/api/**",
     "website/_site/api/**",
-    "**/.dart_tool"
+    "**/.dart_tool",
+    "packages/reflux/test/selector_memoization_test.dart",
+    "packages/reflux/test/store_edge_cases_test.dart",
+    "packages/reflux/test/store_test.dart",
+    "packages/dart_node_react/test/svg_elements_test.dart",
+    "packages/dart_node_react_native/test/testing_library_test.dart"
   ],
   "files": ["**/*.md", "**/*.dart", "**/*.ts"],
   "words": [],

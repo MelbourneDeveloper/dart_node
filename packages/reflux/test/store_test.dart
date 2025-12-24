@@ -123,6 +123,75 @@ void main() {
       unsubscribe(); // Should not throw
     });
 
+    test('unsubscribe after unsubscribed does not remove other listeners', () {
+      final store = createStore(counterReducer, (count: 0));
+      var listener1Called = 0;
+      var listener2Called = 0;
+
+      final unsubscribe1 = store.subscribe(() => listener1Called++);
+      store.subscribe(() => listener2Called++);
+
+      // Unsubscribe listener1
+      unsubscribe1();
+
+      // Calling unsubscribe again should be a no-op (isSubscribed = false)
+      unsubscribe1();
+
+      // Dispatch should only call listener2 now
+      store.dispatch(const Increment());
+
+      expect(listener1Called, equals(0));
+      expect(listener2Called, equals(1));
+    });
+
+    test(
+      'unsubscribe sets isSubscribed to false preventing double removal',
+      () {
+        final store = createStore(counterReducer, (count: 0));
+        var callCount = 0;
+
+        final unsubscribe = store.subscribe(() => callCount++);
+
+        // First dispatch notifies
+        store.dispatch(const Increment());
+        expect(callCount, equals(1));
+
+        // Unsubscribe
+        unsubscribe();
+
+        // Second dispatch doesn't notify
+        store.dispatch(const Increment());
+        expect(callCount, equals(1));
+
+        // Second unsubscribe is safe (isSubscribed is false)
+        unsubscribe();
+
+        // Third dispatch still doesn't notify
+        store.dispatch(const Increment());
+        expect(callCount, equals(1));
+      },
+    );
+
+    test('throws when unsubscribing during reduce', () {
+      late Store<CounterState> store;
+      late void Function() unsubscribe;
+
+      CounterState badReducer(CounterState state, Action action) {
+        if (action is UnsubscribeDuringReduceAction) {
+          unsubscribe();
+        }
+        return state;
+      }
+
+      store = createStore(badReducer, (count: 0));
+      unsubscribe = store.subscribe(() {});
+
+      expect(
+        () => store.dispatch(const UnsubscribeDuringReduceAction()),
+        throwsA(isA<DispatchInReducerException>()),
+      );
+    });
+
     test('throws when subscribing during reduce', () {
       late Store<CounterState> store;
       CounterState badReducer(CounterState state, Action action) {
@@ -137,6 +206,14 @@ void main() {
         () => store.dispatch(const BadAction()),
         throwsA(isA<SubscribeInReducerException>()),
       );
+    });
+
+    test('SubscribeInReducerException has correct message', () {
+      final exception = SubscribeInReducerException();
+      final message = exception.toString();
+      expect(message, contains('SubscribeInReducerException'));
+      expect(message, contains('Cannot subscribe'));
+      expect(message, contains('reducer'));
     });
   });
 
@@ -168,6 +245,75 @@ void main() {
     });
   });
 
+  group('isSubscribed mutation killers', () {
+    test('double unsubscribe does not remove other listeners from list', () {
+      // This test kills: if (!isSubscribed) return; → if (false) return;
+      // If the mutation survives, calling unsubscribe twice would try to
+      // remove the same listener twice from the list, potentially
+      // causing issues with the listeners list
+
+      final store = createStore(counterReducer, (count: 0));
+      var listener1Count = 0;
+      var listener2Count = 0;
+      var listener3Count = 0;
+
+      final unsub1 = store.subscribe(() => listener1Count++);
+      store
+        ..subscribe(() => listener2Count++)
+        ..subscribe(() => listener3Count++)
+        // Verify all listeners are called
+        ..dispatch(const Increment());
+      expect(listener1Count, equals(1));
+      expect(listener2Count, equals(1));
+      expect(listener3Count, equals(1));
+
+      // Unsubscribe listener1 twice - should be a no-op second time
+      unsub1();
+      unsub1();
+
+      // All other listeners should still work
+      store.dispatch(const Increment());
+      expect(listener1Count, equals(1)); // Still 1 (unsubscribed)
+      expect(listener2Count, equals(2)); // Incremented
+      expect(listener3Count, equals(2)); // Incremented
+    });
+
+    test('isSubscribed becomes false after unsubscribe', () {
+      // This test kills: isSubscribed = false; → isSubscribed = true;
+      // If the mutation survives, isSubscribed stays true after unsubscribe
+      // and subsequent unsubscribe calls would still try to remove
+
+      final store = createStore(counterReducer, (count: 0));
+      var listener1Count = 0;
+      var listener2Count = 0;
+
+      void listener1() => listener1Count++;
+      void listener2() => listener2Count++;
+
+      final unsub1 = store.subscribe(listener1);
+      store
+        ..subscribe(listener2)
+        // Verify both work
+        ..dispatch(const Increment());
+      expect(listener1Count, equals(1));
+      expect(listener2Count, equals(1));
+
+      // Unsubscribe first listener
+      unsub1();
+
+      // Unsubscribe again - isSubscribed should be false, so this is a no-op
+      // If isSubscribed stayed true (mutation), this would try to remove again
+      unsub1();
+      unsub1();
+      unsub1();
+
+      // listener2 should still be called
+      store.dispatch(const Increment());
+      expect(listener1Count, equals(1)); // Unchanged
+      expect(listener2Count, equals(2)); // Incremented
+    });
+  });
+
   group('Store.getState', () {
     test('returns current state', () {
       final store = createStore(counterReducer, (count: 5));
@@ -185,4 +331,9 @@ void main() {
 /// Test action that triggers bad behavior in reducer
 final class BadAction extends Action {
   const BadAction();
+}
+
+/// Test action that triggers unsubscribe during reduce
+final class UnsubscribeDuringReduceAction extends Action {
+  const UnsubscribeDuringReduceAction();
 }
