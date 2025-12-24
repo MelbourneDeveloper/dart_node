@@ -458,12 +458,12 @@ void main() {
       var computeCount = 0;
 
       ResettableSelector.create1<({List<int> nums}), List<int>, int>(
-        (s) => s.nums,
-        (nums) {
-          computeCount++;
-          return nums.length;
-        },
-      )
+          (s) => s.nums,
+          (nums) {
+            computeCount++;
+            return nums.length;
+          },
+        )
         ..select((nums: [1, 2, 3]))
         ..select((nums: [1, 2, 3, 4]));
       expect(computeCount, equals(2));
@@ -521,14 +521,14 @@ void main() {
       var computeCount = 0;
 
       ResettableSelector.create2<
-        ({List<int> nums, String filter}),
-        List<int>,
-        String,
-        String
-      >((s) => s.nums, (s) => s.filter, (nums, f) {
-        computeCount++;
-        return '$f: ${nums.length}';
-      })
+          ({List<int> nums, String filter}),
+          List<int>,
+          String,
+          String
+        >((s) => s.nums, (s) => s.filter, (nums, f) {
+          computeCount++;
+          return '$f: ${nums.length}';
+        })
         ..select((nums: [1, 2, 3], filter: 'test'))
         ..select((nums: [1, 2, 3, 4], filter: 'test'));
       expect(computeCount, equals(2));
@@ -539,14 +539,14 @@ void main() {
       final list = [1, 2, 3];
 
       ResettableSelector.create2<
-        ({List<int> nums, String filter}),
-        List<int>,
-        String,
-        String
-      >((s) => s.nums, (s) => s.filter, (nums, f) {
-        computeCount++;
-        return '$f: ${nums.length}';
-      })
+          ({List<int> nums, String filter}),
+          List<int>,
+          String,
+          String
+        >((s) => s.nums, (s) => s.filter, (nums, f) {
+          computeCount++;
+          return '$f: ${nums.length}';
+        })
         ..select((nums: list, filter: 'test'))
         ..select((nums: list, filter: 'changed'));
       expect(computeCount, equals(2));
@@ -764,20 +764,21 @@ void main() {
 
   group('createSelector4 null input handling', () {
     test('first call computes even with null inputs', () {
-      final selector = createSelector4<
-        ({int? a, int? b, int? c, int? d}),
-        int?,
-        int?,
-        int?,
-        int?,
-        String
-      >(
-        (s) => s.a,
-        (s) => s.b,
-        (s) => s.c,
-        (s) => s.d,
-        (a, b, c, d) => 'r=$a$b$c$d',
-      );
+      final selector =
+          createSelector4<
+            ({int? a, int? b, int? c, int? d}),
+            int?,
+            int?,
+            int?,
+            int?,
+            String
+          >(
+            (s) => s.a,
+            (s) => s.b,
+            (s) => s.c,
+            (s) => s.d,
+            (a, b, c, d) => 'r=$a$b$c$d',
+          );
 
       final result = selector((a: null, b: null, c: null, d: null));
       expect(result, isNotNull);
@@ -787,22 +788,23 @@ void main() {
 
   group('createSelector5 null input handling', () {
     test('first call computes even with null inputs', () {
-      final selector = createSelector5<
-        ({int? a, int? b, int? c, int? d, int? e}),
-        int?,
-        int?,
-        int?,
-        int?,
-        int?,
-        String
-      >(
-        (s) => s.a,
-        (s) => s.b,
-        (s) => s.c,
-        (s) => s.d,
-        (s) => s.e,
-        (a, b, c, d, e) => 'r=$a$b$c$d$e',
-      );
+      final selector =
+          createSelector5<
+            ({int? a, int? b, int? c, int? d, int? e}),
+            int?,
+            int?,
+            int?,
+            int?,
+            int?,
+            String
+          >(
+            (s) => s.a,
+            (s) => s.b,
+            (s) => s.c,
+            (s) => s.d,
+            (s) => s.e,
+            (a, b, c, d, e) => 'r=$a$b$c$d$e',
+          );
 
       final result = selector((a: null, b: null, c: null, d: null, e: null));
       expect(result, isNotNull);
@@ -812,11 +814,10 @@ void main() {
 
   group('ResettableSelector.create1 null input handling', () {
     test('first call computes even with null input', () {
-      final selector =
-          ResettableSelector.create1<({int? value}), int?, String>(
-            (s) => s.value,
-            (v) => 'val=$v',
-          );
+      final selector = ResettableSelector.create1<({int? value}), int?, String>(
+        (s) => s.value,
+        (v) => 'val=$v',
+      );
 
       final result = selector.select((value: null));
       expect(result, isNotNull);
@@ -826,9 +827,9 @@ void main() {
     test('after reset computes even with null input', () {
       final selector =
           ResettableSelector.create1<({int? value}), int?, String>(
-            (s) => s.value,
-            (v) => 'val=$v',
-          )
+              (s) => s.value,
+              (v) => 'val=$v',
+            )
             ..select((value: 42))
             ..resetCache();
       final result = selector.select((value: null));
@@ -854,10 +855,10 @@ void main() {
     test('after reset computes even with null inputs', () {
       final selector =
           ResettableSelector.create2<({int? a, int? b}), int?, int?, String>(
-            (s) => s.a,
-            (s) => s.b,
-            (a, b) => 'a=$a,b=$b',
-          )
+              (s) => s.a,
+              (s) => s.b,
+              (a, b) => 'a=$a,b=$b',
+            )
             ..select((a: 1, b: 2))
             ..resetCache();
       final result = selector.select((a: null, b: null));

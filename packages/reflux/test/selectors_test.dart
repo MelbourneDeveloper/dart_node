@@ -179,23 +179,25 @@ void main() {
       expect(computeCount, equals(2)); // Must recompute
     });
 
-    test('first call computes even with same inputs (hasCache starts false)',
-        () {
-      var computeCount = 0;
-      List<int> getNumbers(AppState state) => state.numbers;
-      String getFilter(AppState state) => state.filter;
+    test(
+      'first call computes even with same inputs (hasCache starts false)',
+      () {
+        var computeCount = 0;
+        List<int> getNumbers(AppState state) => state.numbers;
+        String getFilter(AppState state) => state.filter;
 
-      final selector = createSelector2(getNumbers, getFilter, (nums, filter) {
-        computeCount++;
-        return nums.length;
-      });
+        final selector = createSelector2(getNumbers, getFilter, (nums, filter) {
+          computeCount++;
+          return nums.length;
+        });
 
-      final numbers = [1, 2, 3];
-      final state = (numbers: numbers, filter: 'test');
-      final result = selector(state);
-      expect(result, equals(3));
-      expect(computeCount, equals(1));
-    });
+        final numbers = [1, 2, 3];
+        final state = (numbers: numbers, filter: 'test');
+        final result = selector(state);
+        expect(result, equals(3));
+        expect(computeCount, equals(1));
+      },
+    );
   });
 
   group('createSelector3', () {
@@ -499,8 +501,7 @@ void main() {
     });
 
     test('first call returns computed value not null', () {
-      final selector =
-          createSelector5<State5, int, int, int, int, int, String>(
+      final selector = createSelector5<State5, int, int, int, int, int, String>(
         (s) => s.a,
         (s) => s.b,
         (s) => s.c,
@@ -675,8 +676,7 @@ void main() {
     });
 
     test('create1 first call returns computed value not null', () {
-      final selector =
-          ResettableSelector.create1<AppState, List<int>, String>(
+      final selector = ResettableSelector.create1<AppState, List<int>, String>(
         (s) => s.numbers,
         (nums) => 'len:${nums.length}',
       );

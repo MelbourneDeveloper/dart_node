@@ -253,8 +253,9 @@ void main() {
 
     test('TimeTravelStore dispatch delegates to wrapped store', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
-      createStore(counterReducer, (count: 0), enhancer: timeTravel.enhancer)
-          .dispatch(const Increment());
+      createStore(counterReducer, (
+        count: 0,
+      ), enhancer: timeTravel.enhancer).dispatch(const Increment());
 
       expect(timeTravel.history.length, equals(2));
     });

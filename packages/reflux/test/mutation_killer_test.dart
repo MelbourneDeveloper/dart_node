@@ -44,14 +44,14 @@ void main() {
 
       final selector =
           createSelector3<NullableState, int?, String?, bool?, String>(
-        (s) => s.value,
-        (s) => s.name,
-        (s) => s.flag,
-        (a, b, c) {
-          computeCount++;
-          return 'computed: $a, $b, $c';
-        },
-      );
+            (s) => s.value,
+            (s) => s.name,
+            (s) => s.flag,
+            (a, b, c) {
+              computeCount++;
+              return 'computed: $a, $b, $c';
+            },
+          );
 
       final result = selector((value: null, name: null, flag: null));
       expect(result, equals('computed: null, null, null'));
@@ -63,14 +63,14 @@ void main() {
 
       final selector =
           createSelector3<NullableState, int?, String?, bool?, String>(
-        (s) => s.value,
-        (s) => s.name,
-        (s) => s.flag,
-        (a, b, c) {
-          computeCount++;
-          return 'computed: $a, $b, $c';
-        },
-      );
+            (s) => s.value,
+            (s) => s.name,
+            (s) => s.flag,
+            (a, b, c) {
+              computeCount++;
+              return 'computed: $a, $b, $c';
+            },
+          );
 
       final result = selector((value: null, name: 'test', flag: true));
       expect(result, equals('computed: null, test, true'));
@@ -84,15 +84,15 @@ void main() {
 
       final selector =
           createSelector4<MultiNullState, int?, int?, int?, int?, String>(
-        (s) => s.a,
-        (s) => s.b,
-        (s) => s.c,
-        (s) => s.d,
-        (a, b, c, d) {
-          computeCount++;
-          return 'computed: $a, $b, $c, $d';
-        },
-      );
+            (s) => s.a,
+            (s) => s.b,
+            (s) => s.c,
+            (s) => s.d,
+            (a, b, c, d) {
+              computeCount++;
+              return 'computed: $a, $b, $c, $d';
+            },
+          );
 
       final result = selector((a: null, b: null, c: null, d: null, e: null));
       expect(result, equals('computed: null, null, null, null'));
@@ -106,16 +106,16 @@ void main() {
 
       final selector =
           createSelector5<MultiNullState, int?, int?, int?, int?, int?, String>(
-        (s) => s.a,
-        (s) => s.b,
-        (s) => s.c,
-        (s) => s.d,
-        (s) => s.e,
-        (a, b, c, d, e) {
-          computeCount++;
-          return 'computed: $a, $b, $c, $d, $e';
-        },
-      );
+            (s) => s.a,
+            (s) => s.b,
+            (s) => s.c,
+            (s) => s.d,
+            (s) => s.e,
+            (a, b, c, d, e) {
+              computeCount++;
+              return 'computed: $a, $b, $c, $d, $e';
+            },
+          );
 
       final result = selector((a: null, b: null, c: null, d: null, e: null));
       expect(result, equals('computed: null, null, null, null, null'));
@@ -127,8 +127,7 @@ void main() {
     test('computes when input is null on first call', () {
       var computeCount = 0;
 
-      final selector =
-          ResettableSelector.create1<({int? value}), int?, String>(
+      final selector = ResettableSelector.create1<({int? value}), int?, String>(
         (s) => s.value,
         (v) {
           computeCount++;
@@ -145,13 +144,12 @@ void main() {
       var computeCount = 0;
 
       // First call with null, then non-null, reset, then null again
-      ResettableSelector.create1<({int? value}), int?, String>(
-        (s) => s.value,
-        (v) {
+      ResettableSelector.create1<({int? value}), int?, String>((s) => s.value, (
+          v,
+        ) {
           computeCount++;
           return 'computed: $v';
-        },
-      )
+        })
         ..select((value: null))
         ..select((value: 42))
         ..resetCache()
@@ -166,13 +164,13 @@ void main() {
 
       final selector =
           ResettableSelector.create2<({int? a, int? b}), int?, int?, String>(
-        (s) => s.a,
-        (s) => s.b,
-        (a, b) {
-          computeCount++;
-          return 'computed: $a, $b';
-        },
-      );
+            (s) => s.a,
+            (s) => s.b,
+            (a, b) {
+              computeCount++;
+              return 'computed: $a, $b';
+            },
+          );
 
       final result = selector.select((a: null, b: null));
       expect(result, equals('computed: null, null'));
@@ -184,13 +182,13 @@ void main() {
 
       // First call with nulls, then non-null, reset, then nulls again
       ResettableSelector.create2<({int? a, int? b}), int?, int?, String>(
-        (s) => s.a,
-        (s) => s.b,
-        (a, b) {
-          computeCount++;
-          return 'computed: $a, $b';
-        },
-      )
+          (s) => s.a,
+          (s) => s.b,
+          (a, b) {
+            computeCount++;
+            return 'computed: $a, $b';
+          },
+        )
         ..select((a: null, b: null))
         ..select((a: 1, b: 2))
         ..resetCache()
@@ -274,14 +272,11 @@ void main() {
   group('TimeTravelEnhancer boundary mutation killer', () {
     test('truncation boundary: exactly at end vs one before end', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
-      final store = createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      )
-        ..dispatch(const Increment())
-        ..dispatch(const Increment())
-        ..dispatch(const Increment());
+      final store =
+          createStore(counterReducer, (count: 0), enhancer: timeTravel.enhancer)
+            ..dispatch(const Increment())
+            ..dispatch(const Increment())
+            ..dispatch(const Increment());
 
       expect(timeTravel.history.length, equals(4));
 
@@ -299,13 +294,10 @@ void main() {
 
     test('truncation at exact boundary where < vs <= differs', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
-      final store = createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      )
-        ..dispatch(const Increment())
-        ..dispatch(const Increment());
+      final store =
+          createStore(counterReducer, (count: 0), enhancer: timeTravel.enhancer)
+            ..dispatch(const Increment())
+            ..dispatch(const Increment());
 
       expect(timeTravel.history.length, equals(3));
 
@@ -331,11 +323,9 @@ void main() {
 
     test('arithmetic boundary: - vs + in history length calculation', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
-      final store = createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      )..dispatch(const Increment());
+      final store = createStore(counterReducer, (
+        count: 0,
+      ), enhancer: timeTravel.enhancer)..dispatch(const Increment());
 
       expect(timeTravel.history.length, equals(2));
 
@@ -360,11 +350,9 @@ void main() {
 
     test('verifies truncation removes future states correctly', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
-      final store = createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      );
+      final store = createStore(counterReducer, (
+        count: 0,
+      ), enhancer: timeTravel.enhancer);
 
       for (var i = 0; i < 4; i++) {
         store.dispatch(const Increment());
@@ -382,19 +370,14 @@ void main() {
 
       // History should be: 0, 1, 99 (3 items)
       expect(timeTravel.history.length, equals(3));
-      expect(
-        timeTravel.history,
-        equals([(count: 0), (count: 1), (count: 99)]),
-      );
+      expect(timeTravel.history, equals([(count: 0), (count: 1), (count: 99)]));
     });
 
     test('no truncation when at latest state', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
-      final store = createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      )..dispatch(const Increment());
+      final store = createStore(counterReducer, (
+        count: 0,
+      ), enhancer: timeTravel.enhancer)..dispatch(const Increment());
 
       // At latest state (index 1, length 2)
       // _currentIndex=1, _history.length=2
@@ -406,10 +389,7 @@ void main() {
       store.dispatch(const Increment());
 
       expect(timeTravel.history.length, equals(3));
-      expect(
-        timeTravel.history,
-        equals([(count: 0), (count: 1), (count: 2)]),
-      );
+      expect(timeTravel.history, equals([(count: 0), (count: 1), (count: 2)]));
     });
   });
 
@@ -432,7 +412,7 @@ void main() {
 
       Store<CounterState> singleEnhancer(
         Store<CounterState> Function(Reducer<CounterState>, CounterState)
-            createStoreFn,
+        createStoreFn,
         Reducer<CounterState> reducer,
         CounterState preloadedState,
       ) {

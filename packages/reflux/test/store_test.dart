@@ -144,31 +144,33 @@ void main() {
       expect(listener2Called, equals(1));
     });
 
-    test('unsubscribe sets isSubscribed to false preventing double removal',
-        () {
-      final store = createStore(counterReducer, (count: 0));
-      var callCount = 0;
+    test(
+      'unsubscribe sets isSubscribed to false preventing double removal',
+      () {
+        final store = createStore(counterReducer, (count: 0));
+        var callCount = 0;
 
-      final unsubscribe = store.subscribe(() => callCount++);
+        final unsubscribe = store.subscribe(() => callCount++);
 
-      // First dispatch notifies
-      store.dispatch(const Increment());
-      expect(callCount, equals(1));
+        // First dispatch notifies
+        store.dispatch(const Increment());
+        expect(callCount, equals(1));
 
-      // Unsubscribe
-      unsubscribe();
+        // Unsubscribe
+        unsubscribe();
 
-      // Second dispatch doesn't notify
-      store.dispatch(const Increment());
-      expect(callCount, equals(1));
+        // Second dispatch doesn't notify
+        store.dispatch(const Increment());
+        expect(callCount, equals(1));
 
-      // Second unsubscribe is safe (isSubscribed is false)
-      unsubscribe();
+        // Second unsubscribe is safe (isSubscribed is false)
+        unsubscribe();
 
-      // Third dispatch still doesn't notify
-      store.dispatch(const Increment());
-      expect(callCount, equals(1));
-    });
+        // Third dispatch still doesn't notify
+        store.dispatch(const Increment());
+        expect(callCount, equals(1));
+      },
+    );
 
     test('throws when unsubscribing during reduce', () {
       late Store<CounterState> store;

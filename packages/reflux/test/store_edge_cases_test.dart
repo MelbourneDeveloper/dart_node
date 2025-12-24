@@ -219,8 +219,7 @@ void main() {
         return counterReducer(state, action);
       }
 
-      createStore(counterReducer, (count: 0))
-          .replaceReducer(trackingReducer);
+      createStore(counterReducer, (count: 0)).replaceReducer(trackingReducer);
 
       expect(replaceActionSeen, isTrue);
     });
@@ -249,7 +248,7 @@ void main() {
 
       Store<CounterState> enhancer(
         Store<CounterState> Function(Reducer<CounterState>, CounterState)
-            createStoreFn,
+        createStoreFn,
         Reducer<CounterState> reducer,
         CounterState preloadedState,
       ) {
@@ -264,7 +263,7 @@ void main() {
     test('enhancer can modify reducer', () {
       Store<CounterState> enhancer(
         Store<CounterState> Function(Reducer<CounterState>, CounterState)
-            createStoreFn,
+        createStoreFn,
         Reducer<CounterState> reducer,
         CounterState preloadedState,
       ) {

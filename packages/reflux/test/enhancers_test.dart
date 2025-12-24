@@ -295,11 +295,9 @@ void main() {
     test('undo does nothing when canUndo is false', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
 
-      final store = createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      );
+      final store = createStore(counterReducer, (
+        count: 0,
+      ), enhancer: timeTravel.enhancer);
 
       // At initial state, canUndo should be false
       expect(timeTravel.canUndo, isFalse);
@@ -316,9 +314,9 @@ void main() {
     test('redo does nothing when canRedo is false', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
 
-      final store =
-          createStore(counterReducer, (count: 0), enhancer: timeTravel.enhancer)
-            ..dispatch(const Increment());
+      final store = createStore(counterReducer, (
+        count: 0,
+      ), enhancer: timeTravel.enhancer)..dispatch(const Increment());
 
       // At latest state, canRedo should be false
       expect(timeTravel.canRedo, isFalse);
@@ -360,11 +358,9 @@ void main() {
     test('canUndo boundary at index 0', () {
       final timeTravel = TimeTravelEnhancer<CounterState>();
 
-      createStore(
-        counterReducer,
-        (count: 0),
-        enhancer: timeTravel.enhancer,
-      ).dispatch(const Increment());
+      createStore(counterReducer, (
+        count: 0,
+      ), enhancer: timeTravel.enhancer).dispatch(const Increment());
 
       // history = [0, 1], currentIndex = 1
       // canUndo = currentIndex > 0 = true
