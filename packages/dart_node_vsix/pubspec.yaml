@@ -1,0 +1,15 @@
+name: dart_node_vsix
+description: VSCode extension API bindings for Dart via dart:js_interop
+version: 0.1.0
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  austerity: ^1.3.0
+  nadz: ^0.0.7-beta
+
+dev_dependencies:
+  dart_node_coverage:
+    path: ../dart_node_coverage
+  test: ^1.24.0

@@ -1,0 +1,154 @@
+{
+  "name": "too-many-cooks-dart",
+  "displayName": "Too Many Cooks (Dart)",
+  "description": "Visualize multi-agent coordination - Dart port",
+  "version": "0.3.0",
+  "publisher": "Nimblesite",
+  "license": "MIT",
+  "icon": "media/icons/chef-128.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/melbournedeveloper/dart_node"
+  },
+  "homepage": "https://github.com/melbournedeveloper/dart_node/tree/main/examples/too_many_cooks_vscode_extension_dart",
+  "bugs": {
+    "url": "https://github.com/melbournedeveloper/dart_node/issues"
+  },
+  "keywords": [
+    "mcp",
+    "ai-agents",
+    "multi-agent",
+    "claude",
+    "coordination",
+    "file-locking"
+  ],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tooManyCooks.connect",
+        "title": "Connect to MCP Server",
+        "category": "Too Many Cooks"
+      },
+      {
+        "command": "tooManyCooks.disconnect",
+        "title": "Disconnect",
+        "category": "Too Many Cooks"
+      },
+      {
+        "command": "tooManyCooks.refresh",
+        "title": "Refresh Status",
+        "category": "Too Many Cooks"
+      },
+      {
+        "command": "tooManyCooks.showDashboard",
+        "title": "Show Dashboard",
+        "category": "Too Many Cooks"
+      },
+      {
+        "command": "tooManyCooks.deleteLock",
+        "title": "Force Release Lock",
+        "category": "Too Many Cooks",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "tooManyCooks.deleteAgent",
+        "title": "Remove Agent",
+        "category": "Too Many Cooks",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "tooManyCooks.sendMessage",
+        "title": "Send Message",
+        "category": "Too Many Cooks",
+        "icon": "$(mail)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tooManyCooks",
+          "title": "Too Many Cooks",
+          "icon": "media/icons/chef.svg"
+        }
+      ]
+    },
+    "views": {
+      "tooManyCooks": [
+        {
+          "id": "tooManyCooksAgents",
+          "name": "Agents"
+        },
+        {
+          "id": "tooManyCooksLocks",
+          "name": "File Locks"
+        },
+        {
+          "id": "tooManyCooksMessages",
+          "name": "Messages"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "tooManyCooks.refresh",
+          "when": "view =~ /tooManyCooks.*/",
+          "group": "navigation"
+        },
+        {
+          "command": "tooManyCooks.sendMessage",
+          "when": "view == tooManyCooksMessages",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "tooManyCooks.deleteLock",
+          "when": "view == tooManyCooksLocks && viewItem == lock",
+          "group": "inline"
+        },
+        {
+          "command": "tooManyCooks.deleteLock",
+          "when": "view == tooManyCooksAgents && viewItem == lock",
+          "group": "inline"
+        },
+        {
+          "command": "tooManyCooks.deleteAgent",
+          "when": "view == tooManyCooksAgents && viewItem == deletableAgent",
+          "group": "inline"
+        },
+        {
+          "command": "tooManyCooks.sendMessage",
+          "when": "view == tooManyCooksAgents && viewItem == deletableAgent",
+          "group": "inline"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Too Many Cooks",
+      "properties": {
+        "tooManyCooks.autoConnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically connect to server on startup"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "dart compile js -O2 -o out/extension.js lib/src/extension.dart",
+    "watch": "dart compile js -O0 -o out/extension.js lib/src/extension.dart",
+    "package": "vsce package"
+  }
+}
