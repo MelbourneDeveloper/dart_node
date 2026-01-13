@@ -489,6 +489,7 @@ class _TestAPIImpl {
   }
   Future<void> refreshStatus() async => _storeManager?.refreshStatus();
   bool isConnected() => _storeManager?.isConnected ?? false;
+  bool isConnecting() => _storeManager?.isConnecting ?? false;
 
   Future<String> callTool(String name, Map<String, Object?> args) async =>
       await _storeManager?.callTool(name, args) ?? '';
@@ -620,6 +621,7 @@ class _TestAPIImpl {
     _setProp(obj, 'disconnect', (() => disconnect().toJS).toJS);
     _setProp(obj, 'refreshStatus', (() => refreshStatus().toJS).toJS);
     _setProp(obj, 'isConnected', isConnected.toJS);
+    _setProp(obj, 'isConnecting', isConnecting.toJS);
     _setProp(
       obj,
       'callTool',

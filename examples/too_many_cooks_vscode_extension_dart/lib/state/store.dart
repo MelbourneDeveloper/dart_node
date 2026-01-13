@@ -88,6 +88,9 @@ class StoreManager {
   /// Whether connected to MCP server.
   bool get isConnected => _client?.isConnected() ?? false;
 
+  /// Whether currently attempting to connect.
+  bool get isConnecting => _connectCompleter != null;
+
   /// Connect to the MCP server.
   Future<void> connect() async {
     _log('[StoreManager] connect() called');
@@ -164,11 +167,18 @@ class StoreManager {
 
   /// Disconnect from the MCP server.
   Future<void> disconnect() async {
+    _log('[StoreManager] disconnect() called');
     // Complete any pending connection with an error so waiters don't hang
-    if (_connectCompleter case final completer? when !completer.isCompleted) {
-      completer.completeError(StateError('Disconnected while connecting'));
+    if (_connectCompleter case final completer?) {
+      final done = completer.isCompleted;
+      _log('[StoreManager] Found pending completer, isCompleted=$done');
+      if (!completer.isCompleted) {
+        _log('[StoreManager] Completing with error');
+        completer.completeError(StateError('Disconnected while connecting'));
+      }
     }
     _connectCompleter = null;
+    _log('[StoreManager] _connectCompleter set to null');
 
     _pollTimer?.cancel();
     _pollTimer = null;

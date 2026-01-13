@@ -14,6 +14,9 @@ import 'package:too_many_cooks_vscode_extension_dart/state/store.dart';
 @JS('console.log')
 external void _consoleLog(JSAny? message);
 
+/// Callback type for stdout data - bypasses StreamController for dart2js.
+typedef StdoutCallback = void Function(String data);
+
 /// Implementation of McpClient that spawns the server process.
 class McpClientImpl implements McpClient {
   /// Creates an MCP client with optional server path.
@@ -33,9 +36,8 @@ class McpClientImpl implements McpClient {
   StreamController<Object>? _errorController;
   StreamController<void>? _closeController;
 
-  StreamSubscription<String>? _stdoutSub;
+  // stdout uses direct callback (setupDirectStdoutCallback) - no stream
   StreamSubscription<String>? _stderrSub;
-  StreamController<String>? _stdoutController;
   StreamController<String>? _stderrController;
 
   /// Lazily creates the notification controller if needed.
@@ -89,15 +91,14 @@ class McpClientImpl implements McpClient {
     _process = spawn(cmd, args, shell: useShell);
     _log('[MCP] Process spawned');
 
-    _stdoutController = createStringStreamFromReadable(_process!.stdout);
-    _stdoutSub = _stdoutController!.stream.listen(
-      (data) {
-        _log('[MCP] stdout received: ${data.length} chars');
-        _onData(data);
-      },
-      onError: _onError,
-    );
+    // CRITICAL: Use direct callback instead of StreamController!
+    // dart2js doesn't deliver stream events while awaiting a Future.
+    // This calls _onData directly from the JS 'data' event callback.
+    _log('[MCP] Setting up direct stdout callback...');
+    setupDirectStdoutCallback(_process!.stdout, _onData);
+    _log('[MCP] Direct stdout callback attached');
 
+    // stderr can use stream since we don't await on it
     _stderrController = createStringStreamFromReadable(_process!.stderr);
     _stderrSub = _stderrController!.stream.listen((msg) {
       _log('[MCP] stderr: $msg');
@@ -219,16 +220,15 @@ class McpClientImpl implements McpClient {
   }
 
   void _onData(String chunk) {
+    _log('[MCP] _onData called with ${chunk.length} chars');
     _buffer += chunk;
     _processBuffer();
   }
 
-  void _onError(Object error) {
-    _errors.add(error);
-  }
-
   void _processBuffer() {
+    _log('[MCP] _processBuffer: buffer length=${_buffer.length}');
     var newlineIndex = _buffer.indexOf('\n');
+    _log('[MCP] newlineIndex=$newlineIndex');
     while (newlineIndex != -1) {
       var line = _buffer.substring(0, newlineIndex);
       _buffer = _buffer.substring(newlineIndex + 1);
@@ -242,12 +242,18 @@ class McpClientImpl implements McpClient {
         continue;
       }
 
+      final preview = line.substring(0, line.length.clamp(0, 80));
+      _log('[MCP] Processing line: $preview...');
       try {
         final decoded = jsonDecode(line);
+        _log('[MCP] Decoded type: ${decoded.runtimeType}');
         if (decoded case final Map<String, Object?> message) {
           _handleMessage(message);
+        } else {
+          _log('[MCP] WARNING: decoded is not a Map!');
         }
       } on Object catch (e) {
+        _log('[MCP] JSON parse error: $e');
         _errors.add(e);
       }
       newlineIndex = _buffer.indexOf('\n');
@@ -255,10 +261,16 @@ class McpClientImpl implements McpClient {
   }
 
   void _handleMessage(Map<String, Object?> msg) {
-    final id = switch (msg['id']) {
+    _log('[MCP] _handleMessage: ${msg.keys.toList()}');
+    final rawId = msg['id'];
+    _log('[MCP] rawId=$rawId type=${rawId.runtimeType}');
+    // JSON numbers can be int or double in dart2js
+    final id = switch (rawId) {
       final int i => i,
+      final double d => d.toInt(),
       _ => null,
     };
+    _log('[MCP] parsed id=$id, pending keys=${_pending.keys.toList()}');
 
     if (id != null && _pending.containsKey(id)) {
       final handler = _pending.remove(id);
@@ -310,9 +322,8 @@ class McpClientImpl implements McpClient {
     }
     _pending.clear();
 
-    await _stdoutSub?.cancel();
+    // stdout uses direct callback - no subscription to cancel
     await _stderrSub?.cancel();
-    await _stdoutController?.close();
     await _stderrController?.close();
 
     _process?.kill();

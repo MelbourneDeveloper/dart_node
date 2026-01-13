@@ -63,32 +63,44 @@ ChildProcess spawn(String command, List<String> args, {bool shell = false}) {
 external JSAny _callSpawn(JSFunction fn, JSObject thisArg, JSArray args);
 
 /// Create a stream controller that listens to a Node.js readable stream.
+/// Uses Timer.run to dispatch events on the next event loop tick,
+/// ensuring the Dart listener is ready before events are delivered.
 StreamController<String> createStringStreamFromReadable(JSObject readable) {
   _log('[STREAM] createStringStreamFromReadable called');
-  final controller = StreamController<String>.broadcast();
+  final controller = StreamController<String>();
 
   // Set encoding to utf8
   _call(readable, 'setEncoding'.toJS, ['utf8'.toJS].toJS);
   _log('[STREAM] Set encoding to utf8');
 
-  // Listen to 'data' event
+  // Listen to 'data' event.
+  // Use Timer.run to ensure Dart listener is attached before delivery.
   _on(
     readable,
     'data'.toJS,
     ((JSString chunk) {
-      _log('[STREAM] Data received: ${chunk.toDart.length} chars');
-      controller.add(chunk.toDart);
+      final data = chunk.toDart;
+      _log('[STREAM] Data received: ${data.length} chars');
+      // Timer.run schedules on next event loop tick - gives Dart time to
+      // attach listener
+      Timer.run(() {
+        _log('[STREAM] Timer.run firing, adding data to controller');
+        controller.add(data);
+        _log('[STREAM] Data added to controller');
+      });
     }).toJS,
   );
   _log('[STREAM] Registered data listener');
 
   // Listen to 'error' event
-  void onError(JSAny error) {
-    _log('[STREAM] Error: $error');
-    controller.addError(error);
-  }
-
-  _on(readable, 'error'.toJS, onError.toJS);
+  _on(
+    readable,
+    'error'.toJS,
+    ((JSAny error) {
+      _log('[STREAM] Error: $error');
+      Timer.run(() => controller.addError(error));
+    }).toJS,
+  );
 
   // Listen to 'end' event
   _on(
@@ -96,10 +108,11 @@ StreamController<String> createStringStreamFromReadable(JSObject readable) {
     'end'.toJS,
     (() {
       _log('[STREAM] End event');
-      unawaited(controller.close());
+      Timer.run(() => unawaited(controller.close()));
     }).toJS,
   );
 
+  _log('[STREAM] StreamController created, returning');
   return controller;
 }
 
@@ -108,6 +121,29 @@ void writeToStream(JSObject writable, String data) {
   _log('[STREAM] writeToStream: ${data.length} chars');
   _call(writable, 'write'.toJS, [data.toJS].toJS);
   _log('[STREAM] writeToStream completed');
+}
+
+/// Set up a direct callback for stdout data - bypasses StreamController.
+/// CRITICAL: In dart2js, StreamController events don't fire while awaiting
+/// a Future. This calls the Dart callback directly from the JS event handler.
+void setupDirectStdoutCallback(
+  JSObject readable,
+  void Function(String) onData,
+) {
+  _log('[DIRECT] Setting up direct stdout callback');
+  _call(readable, 'setEncoding'.toJS, ['utf8'.toJS].toJS);
+
+  _on(
+    readable,
+    'data'.toJS,
+    ((JSString chunk) {
+      final data = chunk.toDart;
+      _log('[DIRECT] Data received: ${data.length} chars, calling onData');
+      onData(data);
+      _log('[DIRECT] onData returned');
+    }).toJS,
+  );
+  _log('[DIRECT] Callback registered');
 }
 
 @JS('eval')
