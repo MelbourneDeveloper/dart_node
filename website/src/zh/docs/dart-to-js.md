@@ -191,5 +191,5 @@ dart compile js lib/main.dart -o build/main.js --dump-info
 ## 下一步
 
 - [JS 互操作](/zh/docs/js-interop/) - 从 Dart 调用 JavaScript
-- [dart_node_core](/docs/core/) - Node.js 核心工具
-- [dart_node_express](/docs/express/) - 构建 Express 服务器
+- [dart_node_core](/zh/docs/core/) - Node.js 核心工具
+- [dart_node_express](/zh/docs/express/) - 构建 Express 服务器

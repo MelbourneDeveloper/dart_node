@@ -320,4 +320,4 @@ external JSObject get globalThis;
 
 - [官方 JS 互操作文档](https://dart.dev/interop/js-interop)
 - [Extension Types](https://dart.dev/language/extension-types)
-- [dart_node_core 源码](/api/dart_node_core/) - 查看实际互操作示例
+- [dart_node_core 源码](/zh/api/dart_node_core/) - 查看实际互操作示例

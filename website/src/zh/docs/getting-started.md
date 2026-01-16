@@ -134,9 +134,9 @@ Dart 代码在运行时使用 JS 互操作来调用这些 npm 包。
 现在您已经有了一个基本的服务器运行，继续探索：
 
 - [为什么选择 Dart？](/zh/docs/why-dart/) - 了解相对于 TypeScript 的优势
-- [Dart 到 JS 编译](/docs/dart-to-js/) - dart2js 的工作原理
-- [JS 互操作](/docs/js-interop/) - 从 Dart 调用 JavaScript
-- [dart_node_express](/docs/express/) - 完整的 Express.js API 参考
+- [Dart 到 JS 编译](/zh/docs/dart-to-js/) - dart2js 的工作原理
+- [JS 互操作](/zh/docs/js-interop/) - 从 Dart 调用 JavaScript
+- [dart_node_express](/zh/docs/express/) - 完整的 Express.js API 参考
 
 ## 示例项目
 

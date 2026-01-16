@@ -16,6 +16,15 @@ examples/mobile/rn/.expo/
 # Website generated files
 website/_site/
 website/src/api/
+website/src/zh/api/dart_node_core/
+website/src/zh/api/dart_node_express/
+website/src/zh/api/dart_node_react/
+website/src/zh/api/dart_node_react_native/
+website/src/zh/api/dart_node_ws/
+website/src/zh/api/dart_node_better_sqlite3/
+website/src/zh/api/dart_node_mcp/
+website/src/zh/api/dart_logging/
+website/src/zh/api/reflux/
 website/.dart-doc-temp/
 
 examples/frontend/coverage/
