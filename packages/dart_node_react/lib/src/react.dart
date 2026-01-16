@@ -12,7 +12,10 @@ import 'dart:js_interop_unsafe';
 // Typed React Element Hierarchy
 // =============================================================================
 
-/// Base type for all React elements - provides type safety over raw JSObject
+/// Base type for all React elements - provides type safety over raw JSObject.
+///
+/// - [createElement documentation](https://react.dev/reference/react/createElement)
+/// - [createElement 允许你创建一个 React 元素，它可以作为 JSX 的替代方案](https://zh-hans.react.dev/reference/react/createElement)
 extension type ReactElement._(JSObject _) implements JSObject, JSAny {
   /// Wrap a raw JSObject as a ReactElement
   factory ReactElement.fromJS(JSObject js) = ReactElement._;
@@ -34,6 +37,9 @@ extension type ReactElement._(JSObject _) implements JSObject, JSAny {
 }
 
 /// React global object providing access to React's core APIs.
+///
+/// - [React documentation](https://react.dev/reference/react)
+/// - [本部分提供了使用 React 的详细参考文档](https://zh-hans.react.dev/reference/react)
 @JS('React')
 extension type React._(JSObject _) implements JSObject {
   /// Creates and returns a new React element of the given type.
@@ -70,6 +76,9 @@ extension type React._(JSObject _) implements JSObject {
 }
 
 /// ReactDOM global object providing DOM-specific methods.
+///
+/// - [ReactDOM documentation](https://react.dev/reference/react-dom/client)
+/// - [react-dom/client API 允许你在客户端（浏览器）渲染 React 组件](https://zh-hans.react.dev/reference/react-dom/client)
 @JS('ReactDOM')
 extension type ReactDOM._(JSObject _) implements JSObject {
   /// Creates a root for displaying React components inside a DOM element.
@@ -77,6 +86,9 @@ extension type ReactDOM._(JSObject _) implements JSObject {
 }
 
 /// A React root for rendering React elements into the DOM.
+///
+/// - [createRoot documentation](https://react.dev/reference/react-dom/client/createRoot)
+/// - [createRoot 允许在浏览器的 DOM 节点中创建根节点以显示 React 组件](https://zh-hans.react.dev/reference/react-dom/client/createRoot)
 extension type ReactRoot._(JSObject _) implements JSObject {
   /// Renders a React element into the root's DOM container.
   external void render(JSObject element);
@@ -93,7 +105,10 @@ extension type Document._(JSObject _) implements JSObject {
 // Helper Functions
 // =============================================================================
 
-/// Create a React element (convenience wrapper)
+/// Create a React element (convenience wrapper).
+///
+/// - [createElement documentation](https://react.dev/reference/react/createElement)
+/// - [createElement 允许你创建一个 React 元素，它可以作为 JSX 的替代方案](https://zh-hans.react.dev/reference/react/createElement)
 ReactElement createElement(JSAny type, [JSObject? props, JSAny? children]) =>
     ReactElement._(
       (children != null)
@@ -163,7 +178,8 @@ JSAny? _toJS(Object? value) => switch (value) {
 /// print(isValidElement('string')); // false
 /// ```
 ///
-/// See: https://react.dev/reference/react/isValidElement
+/// - [isValidElement documentation](https://react.dev/reference/react/isValidElement)
+/// - [isValidElement 检测参数值是否为 React 元素](https://zh-hans.react.dev/reference/react/isValidElement)
 bool isValidElement(JSAny? object) => React.isValidElement(object);
 
 /// Clones and returns a new React element using element as the starting point.
@@ -177,7 +193,8 @@ bool isValidElement(JSAny? object) => React.isValidElement(object);
 /// final cloned = cloneElement(original, {'className': 'cloned'});
 /// ```
 ///
-/// See: https://react.dev/reference/react/cloneElement
+/// - [cloneElement documentation](https://react.dev/reference/react/cloneElement)
+/// - [cloneElement 允许你使用一个元素作为初始值创建一个新的 React 元素](https://zh-hans.react.dev/reference/react/cloneElement)
 ReactElement cloneElement(
   ReactElement element, [
   Map<String, Object?>? props,

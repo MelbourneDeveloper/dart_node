@@ -11,7 +11,8 @@ import 'package:dart_node_react/src/react.dart';
 /// - Only call Hooks at the top level.
 /// - Only call Hooks from inside a function component.
 ///
-/// Learn more: https://reactjs.org/docs/hooks-state.html
+/// - [useState documentation](https://react.dev/reference/react/useState)
+/// - [useState 是一个 React Hook，它允许你向组件添加一个状态变量](https://zh-hans.react.dev/reference/react/useState)
 final class StateHook<T> {
   StateHook._(this._value, this._setValue);
 
@@ -23,12 +24,14 @@ final class StateHook<T> {
 
   /// The current value of the state.
   ///
-  /// See: https://reactjs.org/docs/hooks-reference.html#usestate
+  /// - [useState documentation](https://react.dev/reference/react/useState)
+  /// - [useState 是一个 React Hook，它允许你向组件添加一个状态变量](https://zh-hans.react.dev/reference/react/useState)
   T get value => _value;
 
   /// Updates [value] to [newValue].
   ///
-  /// See: https://reactjs.org/docs/hooks-state.html#updating-state
+  /// - [setState documentation](https://react.dev/reference/react/useState#setstate)
+  /// - [useState 是一个 React Hook，它允许你向组件添加一个状态变量](https://zh-hans.react.dev/reference/react/useState#setstate)
   void set(T newValue) {
     final jsValue = switch (newValue) {
       null => null,
@@ -39,7 +42,8 @@ final class StateHook<T> {
 
   /// Updates [value] to the return value of [computeNewValue].
   ///
-  /// See: https://reactjs.org/docs/hooks-reference.html#functional-updates
+  /// - [Updating state based on previous state](https://react.dev/reference/react/useState#updating-state-based-on-the-previous-state)
+  /// - [useState 是一个 React Hook，它允许你向组件添加一个状态变量](https://zh-hans.react.dev/reference/react/useState#updating-state-based-on-the-previous-state)
   void setWithUpdater(T Function(T oldValue) computeNewValue) {
     JSAny? updater(JSAny? oldValue) {
       final dartOld = switch (oldValue) {
@@ -81,7 +85,8 @@ final class StateHook<T> {
 /// });
 /// ```
 ///
-/// Learn more: https://reactjs.org/docs/hooks-state.html
+/// - [useState documentation](https://react.dev/reference/react/useState)
+/// - [useState 是一个 React Hook，它允许你向组件添加一个状态变量](https://zh-hans.react.dev/reference/react/useState)
 StateHook<T> useState<T>(T initialValue) {
   final jsInitial = switch (initialValue) {
     null => null,
@@ -121,7 +126,8 @@ StateHook<T> useState<T>(T initialValue) {
 /// });
 /// ```
 ///
-/// Learn more: https://reactjs.org/docs/hooks-reference.html#lazy-initial-state
+/// - [Avoiding recreating the initial state](https://react.dev/reference/react/useState#avoiding-recreating-the-initial-state)
+/// - [useState 是一个 React Hook，它允许你向组件添加一个状态变量](https://zh-hans.react.dev/reference/react/useState#avoiding-recreating-the-initial-state)
 StateHook<T> useStateLazy<T>(T Function() init) {
   JSAny? jsInit() {
     final val = init();

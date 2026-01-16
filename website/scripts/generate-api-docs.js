@@ -24,7 +24,14 @@ const WEBSITE_DIR = path.dirname(__dirname);
 const PROJECT_ROOT = path.dirname(WEBSITE_DIR);
 const PACKAGES_DIR = path.join(PROJECT_ROOT, 'packages');
 const API_OUTPUT_DIR = path.join(WEBSITE_DIR, 'src', 'api');
+const API_OUTPUT_DIR_ZH = path.join(WEBSITE_DIR, 'src', 'zh', 'api');
 const TEMP_DIR = path.join(WEBSITE_DIR, '.dart-doc-temp');
+
+// Supported languages for API docs
+const LANGUAGES = [
+  { code: '', outputDir: API_OUTPUT_DIR, langAttr: null },
+  { code: 'zh', outputDir: API_OUTPUT_DIR_ZH, langAttr: 'zh' },
+];
 
 const PACKAGES = [
   'dart_node_core',
@@ -227,7 +234,7 @@ const runDartDoc = (packageDir, outputDir) => {
 
 const escapeYaml = (str) => str.replace(/"/g, '\\"').replace(/\n/g, ' ');
 
-const extractContent = (htmlPath, packageName) => {
+const extractContent = (htmlPath, packageName, langPrefix = '') => {
   const html = fs.readFileSync(htmlPath, 'utf-8');
   const dom = new JSDOM(html);
   const doc = dom.window.document;
@@ -242,11 +249,11 @@ const extractContent = (htmlPath, packageName) => {
   const mainContent = doc.querySelector('#dartdoc-main-content');
 
   return mainContent
-    ? { title, description, content: processContent(mainContent, packageName, dom) }
+    ? { title, description, content: processContent(mainContent, packageName, dom, langPrefix) }
     : null;
 };
 
-const processContent = (element, packageName, dom) => {
+const processContent = (element, packageName, dom, langPrefix = '') => {
   const h1 = element.querySelector('h1');
   h1?.remove();
 
@@ -273,7 +280,8 @@ const processContent = (element, packageName, dom) => {
 
       // Links like ../dart_node_ws/Foo.html -> /api/dart_node_ws/Foo/
       // (removing the duplicate package/package structure)
-      newHref.startsWith('../') && (newHref = newHref.replace(/^\.\.\//, `/api/`));
+      // Apply language prefix for non-English versions
+      newHref.startsWith('../') && (newHref = newHref.replace(/^\.\.\//, `${langPrefix}/api/`));
 
       // Links like Foo.html -> Foo/ (relative, stays same level)
       // Links like Foo/bar.html -> Foo/bar/
