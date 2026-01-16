@@ -3,6 +3,12 @@ import pluginRss from "@11ty/eleventy-plugin-rss";
 import eleventyNavigationPlugin from "@11ty/eleventy-navigation";
 import markdownIt from "markdown-it";
 import markdownItAnchor from "markdown-it-anchor";
+import { execSync } from "child_process";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const packagesDir = resolve(__dirname, "..", "packages");
 
 const supportedLanguages = ['en', 'zh'];
 const defaultLanguage = 'en';
@@ -39,6 +45,14 @@ export default function(eleventyConfig) {
 
   // Watch targets
   eleventyConfig.addWatchTarget("src/assets/");
+
+  // Watch READMEs and copy when they change
+  eleventyConfig.addWatchTarget(packagesDir);
+  eleventyConfig.on("eleventy.beforeWatch", (changedFiles) => {
+    if (changedFiles.some(f => f.endsWith("README.md"))) {
+      execSync("node scripts/copy-readmes.js", { stdio: "inherit" });
+    }
+  });
 
   // Collections
   eleventyConfig.addCollection("posts", function(collectionApi) {

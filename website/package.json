@@ -10,7 +10,8 @@
     "rebuild": "bash scripts/rebuild.sh",
     "build:docs": "bash scripts/generate-api-docs.sh",
     "build:site": "eleventy",
-    "copy:readmes": "node scripts/copy-readmes.js"
+    "copy:readmes": "node scripts/copy-readmes.js",
+    "watch:readmes": "fswatch -o ../packages/*/README.md | xargs -n1 -I{} node scripts/copy-readmes.js"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.1.2",
