@@ -78,6 +78,10 @@
         {
           "text": "reflux",
           "url": "/docs/reflux/"
+        },
+        {
+          "text": "dart_jsx",
+          "url": "/docs/jsx/"
         }
       ]
     },

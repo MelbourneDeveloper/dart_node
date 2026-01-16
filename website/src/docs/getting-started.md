@@ -13,7 +13,7 @@ Welcome to dart_node! This guide will help you build your first application usin
 
 Before you begin, make sure you have:
 
-- **Dart SDK** (3.0 or higher) - [Install Dart](https://dart.dev/get-dart)
+- **Dart SDK** (3.10 or higher) - [Install Dart](https://dart.dev/get-dart)
 - **Node.js** (18 or higher) - [Install Node.js](https://nodejs.org/)
 - A code editor (VS Code with Dart extension recommended)
 
@@ -36,11 +36,11 @@ Edit your `pubspec.yaml`:
 ```yaml
 name: my_dart_server
 environment:
-  sdk: ^3.0.0
+  sdk: ^3.10.0
 
 dependencies:
-  dart_node_core: ^0.2.0
-  dart_node_express: ^0.2.0
+  dart_node_core: ^0.11.0-beta
+  dart_node_express: ^0.11.0-beta
 ```
 
 Then run:
@@ -54,34 +54,36 @@ dart pub get
 Create `lib/server.dart`:
 
 ```dart
+import 'dart:js_interop';
 import 'package:dart_node_express/dart_node_express.dart';
 
 void main() {
-  final app = createExpressApp();
+  final app = express();
 
   // Simple GET endpoint
-  app.get('/', (req, res) {
-    res.json({
+  app.get('/', handler((req, res) {
+    res.jsonMap({
       'message': 'Hello from Dart!',
       'timestamp': DateTime.now().toIso8601String(),
     });
-  });
+  }));
 
-  // POST endpoint with body parsing
-  app.use(jsonMiddleware());
+  // POST endpoint - Express's JSON middleware must be used from JS
+  // The body is available via req.body after configuring express.json()
 
-  app.post('/users', (req, res) {
+  app.post('/users', handler((req, res) {
     final body = req.body;
-    res.status(201).json({
+    res.status(201);
+    res.jsonMap({
       'created': true,
       'user': body,
     });
-  });
+  }));
 
   // Start the server
   app.listen(3000, () {
     print('Server running at http://localhost:3000');
-  });
+  }.toJS);
 }
 ```
 
@@ -141,4 +143,3 @@ Check out the [examples directory](https://github.com/melbournedeveloper/dart_no
 - **backend/** - Express server with REST API
 - **frontend/** - React web application
 - **mobile/** - React Native + Expo mobile app
-- **shared/** - Shared models across platforms

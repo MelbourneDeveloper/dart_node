@@ -22,15 +22,15 @@ description: "Write React, React Native, and Express apps entirely in Dart. Runt
 import 'package:dart_node_express/dart_node_express.dart';
 
 void main() {
-  final app = createExpressApp();
+  final app = express();
 
-  app.get('/', (req, res) {
-    res.json({'message': 'Hello from Dart!'});
-  });
+  app.get('/', handler((req, res) {
+    res.jsonMap({'message': 'Hello from Dart!'});
+  }));
 
   app.listen(3000, () {
     print('Server running on port 3000');
-  });
+  }.toJS);
 }
 {% endhighlight %}
     </div>
@@ -69,11 +69,11 @@ const Counter: React.FC = () => {
           <div class="code-block-header">React (Dart)</div>
 {% highlight "dart" %}
 ReactElement counter() {
-  final (count, setCount) = useState(0);
+  final count = useState(0);
 
   return button(
-    onClick: (_) => setCount((c) => c + 1),
-    children: [text('Count: $count')],
+    text: 'Count: ${count.value}',
+    onClick: () => count.setWithUpdater((c) => c + 1),
   );
 }
 {% endhighlight %}
@@ -126,11 +126,11 @@ class _CounterState extends State<Counter> {
           <div class="code-block-header">dart_node React</div>
 {% highlight "dart" %}
 ReactElement counter() {
-  final (count, setCount) = useState(0);
+  final count = useState(0);
 
   return button(
-    onClick: (_) => setCount((c) => c + 1),
-    children: [text('Count: $count')],
+    text: 'Count: ${count.value}',
+    onClick: () => count.setWithUpdater((c) => c + 1),
   );
 }
 {% endhighlight %}
@@ -205,30 +205,35 @@ ReactElement counter() {
         <div class="feature-icon" style="background: #9b59b6;">M</div>
         <h3>dart_node_mcp</h3>
         <p>Model Context Protocol server bindings for building AI tool servers.</p>
+        <a href="/docs/mcp/">Learn more &rarr;</a>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon" style="background: #3498db;">S</div>
         <h3>dart_node_better_sqlite3</h3>
         <p>Typed bindings for better-sqlite3 with synchronous SQLite3 and WAL mode.</p>
+        <a href="/docs/sqlite/">Learn more &rarr;</a>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon" style="background: #e74c3c;">X</div>
         <h3>reflux</h3>
         <p>Redux-style predictable state container with exhaustive pattern matching.</p>
+        <a href="/docs/reflux/">Learn more &rarr;</a>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon" style="background: #1abc9c;">L</div>
         <h3>dart_logging</h3>
         <p>Pino-style structured logging with child loggers and transports.</p>
+        <a href="/docs/logging/">Learn more &rarr;</a>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon" style="background: #f39c12;">J</div>
         <h3>dart_jsx</h3>
         <p>JSX transpiler for Dart &mdash; write JSX syntax that compiles to dart_node_react calls.</p>
+        <a href="/docs/jsx/">Learn more &rarr;</a>
       </div>
 
       <div class="feature-card">
@@ -311,8 +316,8 @@ cat > lib/server.dart << 'EOF'
 import 'package:dart_node_express/dart_node_express.dart';
 
 void main() {
-  final app = createExpressApp();
-  app.get('/', (req, res) => res.send('Hello, Dart!'));
+  final app = express();
+  app.get('/', handler((req, res) => res.send('Hello, Dart!')));
   app.listen(3000);
 }
 EOF

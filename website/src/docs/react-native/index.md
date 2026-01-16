@@ -14,8 +14,8 @@ eleventyNavigation:
 
 ```yaml
 dependencies:
-  dart_node_react_native: ^0.2.0
-  dart_node_react: ^0.2.0  # Required peer dependency
+  dart_node_react_native: ^0.11.0-beta
+  dart_node_react: ^0.11.0-beta  # Required peer dependency
 ```
 
 Set up your Expo project:
@@ -28,8 +28,8 @@ cd my-app
 ## Quick Start
 
 ```dart
-import 'package:dart_node_react_native/dart_node_react_native.dart';
 import 'package:dart_node_react/dart_node_react.dart';
+import 'package:dart_node_react_native/dart_node_react_native.dart';
 
 ReactElement app() {
   return safeAreaView(
@@ -38,13 +38,11 @@ ReactElement app() {
       view(
         style: {'padding': 20},
         children: [
-          rnText(
+          text(
+            'Hello, Dart!',
             style: {'fontSize': 24, 'fontWeight': 'bold'},
-            children: [text('Hello, Dart!')],
           ),
-          rnText(
-            children: [text('Welcome to React Native with Dart.')],
-          ),
+          text('Welcome to React Native with Dart.'),
         ],
       ),
     ],
@@ -73,17 +71,17 @@ view(
 
 ### Text
 
-For displaying text (note: `rnText` to avoid conflict with React's `text()`):
+For displaying text:
 
 ```dart
-rnText(
+text(
+  'Hello, World!',
   style: {
     'fontSize': 18,
     'fontWeight': '600',
     'color': '#333',
     'textAlign': 'center',
   },
-  children: [text('Hello, World!')],
 )
 ```
 
@@ -93,11 +91,11 @@ For user text input:
 
 ```dart
 ReactElement searchInput() {
-  final (query, setQuery) = useState('');
+  final query = useState('');
 
   return textInput(
-    value: query,
-    onChangeText: setQuery,
+    value: query.value,
+    onChangeText: (value) => query.set(value),
     placeholder: 'Search...',
     style: {
       'height': 40,
@@ -292,21 +290,21 @@ import 'package:dart_node_react_native/dart_node_react_native.dart';
 import 'package:dart_node_react/dart_node_react.dart';
 
 ReactElement todoApp() {
-  final (todos, setTodos) = useState<List<Todo>>([]);
-  final (input, setInput) = useState('');
+  final todos = useState<List<Todo>>([]);
+  final inputValue = useState('');
 
   void addTodo() {
-    if (input.trim().isEmpty) return;
+    if (inputValue.value.trim().isEmpty) return;
 
-    setTodos((prev) => [
+    todos.setWithUpdater((prev) => [
       ...prev,
-      Todo(id: DateTime.now().toString(), title: input, completed: false),
+      Todo(id: DateTime.now().toString(), title: inputValue.value, completed: false),
     ]);
-    setInput('');
+    inputValue.set('');
   }
 
   void toggleTodo(String id) {
-    setTodos((prev) => prev.map((todo) =>
+    todos.setWithUpdater((prev) => prev.map((todo) =>
       todo.id == id
           ? Todo(id: todo.id, title: todo.title, completed: !todo.completed)
           : todo
@@ -351,8 +349,8 @@ ReactElement todoApp() {
               'borderRadius': 8,
               'paddingHorizontal': 12,
             },
-            value: input,
-            onChangeText: setInput,
+            value: inputValue.value,
+            onChangeText: (value) => inputValue.set(value),
             placeholder: 'Add a todo...',
           ),
           touchableOpacity(
