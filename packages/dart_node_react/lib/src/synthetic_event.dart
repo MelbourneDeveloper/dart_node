@@ -16,7 +16,8 @@ import 'dart:js_interop';
 /// [stopPropagation] and [preventDefault], except the events work identically
 /// across all browsers.
 ///
-/// See: https://reactjs.org/docs/events.html#syntheticevent
+/// - [SyntheticEvent documentation](https://react.dev/reference/react-dom/components/common#react-event-object)
+/// - [React 事件对象 – React 中文文档](https://zh-hans.react.dev/reference/react-dom/components/common#react-event-object)
 extension type SyntheticEvent._(JSObject _) implements JSObject {
   /// Creates a SyntheticEvent from a raw JSObject.
   factory SyntheticEvent.fromJs(JSObject jsObject) = SyntheticEvent._;
