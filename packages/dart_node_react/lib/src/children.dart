@@ -48,7 +48,7 @@ external JSArray _childrenToArray(JSAny? children);
 /// ```
 ///
 /// - [React.Children documentation](https://react.dev/reference/react/Children)
-/// - [Children 允许你处理和转化作为 children 的 JSX](https://zh-hans.react.dev/reference/react/Children)
+/// - [Children – React 中文文档](https://zh-hans.react.dev/reference/react/Children)
 
 // This class mirrors React's Children API which is a namespace with static
 // methods, so the lint is intentionally ignored.
@@ -67,7 +67,7 @@ abstract final class Children {
   /// ```
   ///
   /// - [Children.map documentation](https://react.dev/reference/react/Children#children-map)
-  /// - [Children 允许你处理和转化作为 children 的 JSX](https://zh-hans.react.dev/reference/react/Children#children-map)
+  /// - [Children.map – React 中文文档](https://zh-hans.react.dev/reference/react/Children#children-map)
   static List<ReactElement>? map(
     JSAny? children,
     ReactElement Function(ReactElement child, int index) fn,
@@ -98,7 +98,7 @@ abstract final class Children {
   /// ```
   ///
   /// - [Children.forEach documentation](https://react.dev/reference/react/Children#children-foreach)
-  /// - [Children 允许你处理和转化作为 children 的 JSX](https://zh-hans.react.dev/reference/react/Children#children-foreach)
+  /// - [Children.forEach – React 中文文档](https://zh-hans.react.dev/reference/react/Children#children-foreach)
   static void forEach(
     JSAny? children,
     void Function(ReactElement child, int index) fn,
@@ -121,7 +121,7 @@ abstract final class Children {
   /// ```
   ///
   /// - [Children.count documentation](https://react.dev/reference/react/Children#children-count)
-  /// - [Children 允许你处理和转化作为 children 的 JSX](https://zh-hans.react.dev/reference/react/Children#children-count)
+  /// - [Children.count – React 中文文档](https://zh-hans.react.dev/reference/react/Children#children-count)
   static int count(JSAny? children) => _childrenCount(children);
 
   /// Verifies that children has only one child and returns it.
@@ -134,7 +134,7 @@ abstract final class Children {
   /// ```
   ///
   /// - [Children.only documentation](https://react.dev/reference/react/Children#children-only)
-  /// - [Children 允许你处理和转化作为 children 的 JSX](https://zh-hans.react.dev/reference/react/Children#children-only)
+  /// - [Children.only – React 中文文档](https://zh-hans.react.dev/reference/react/Children#children-only)
   static ReactElement only(JSAny? children) =>
       ReactElement.fromJS(_childrenOnly(children));
 
@@ -150,7 +150,7 @@ abstract final class Children {
   /// ```
   ///
   /// - [Children.toArray documentation](https://react.dev/reference/react/Children#children-toarray)
-  /// - [Children 允许你处理和转化作为 children 的 JSX](https://zh-hans.react.dev/reference/react/Children#children-toarray)
+  /// - [Children.toArray – React 中文文档](https://zh-hans.react.dev/reference/react/Children#children-toarray)
   static List<ReactElement> toArray(JSAny? children) =>
       _childrenToArray(children).toDart
           .map(
