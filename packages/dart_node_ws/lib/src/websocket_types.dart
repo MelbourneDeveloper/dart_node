@@ -12,7 +12,7 @@ external JSString _jsStringify(JSAny? value);
 /// WebSocket connection ready states as defined by the WebSocket API.
 ///
 /// - [WebSocket.readyState (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState)
-/// - [WebSocket.readyState – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/WebSocket/readyState)
+/// - [WebSocket：readyState 属性 (MDN)](https://developer.mozilla.org/zh-CN/docs/Web/API/WebSocket/readyState)
 enum WebSocketReadyState {
   /// Socket has been created. The connection is not yet open.
   connecting(0),
@@ -47,7 +47,7 @@ enum WebSocketReadyState {
 /// - 4000-4999: Private use codes
 ///
 /// - [CloseEvent.code (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code)
-/// - [CloseEvent.code – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/CloseEvent/code)
+/// - [CloseEvent (MDN)](https://developer.mozilla.org/zh-CN/docs/Web/API/CloseEvent)
 typedef CloseEventData = ({
   /// The close code (1000-4999) indicating why the connection closed.
   int code,

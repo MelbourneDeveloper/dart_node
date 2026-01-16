@@ -4,6 +4,8 @@ title: "dart_node 介绍：JavaScript 生态系统中的全栈 Dart"
 description: "我们很高兴地宣布 dart_node，一个完全使用 Dart 构建 React、React Native 和 Express 应用程序的框架。"
 date: 2024-01-15
 author: "dart_node 团队"
+lang: zh
+permalink: /zh/blog/introducing-dart-node/
 category: announcements
 tags:
   - announcement

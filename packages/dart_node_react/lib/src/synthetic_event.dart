@@ -73,7 +73,7 @@ extension type SyntheticEvent._(JSObject _) implements JSObject {
 /// A SyntheticEvent wrapper backed by a ClipboardEvent.
 ///
 /// - [ClipboardEvent (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/ClipboardEvent)
-/// - [ClipboardEvent – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/ClipboardEvent)
+/// - [ClipboardEvent (MDN 中文)](https://developer.mozilla.org/zh-CN/docs/Web/API/ClipboardEvent)
 extension type SyntheticClipboardEvent._(JSObject _) implements SyntheticEvent {
   /// Creates a SyntheticClipboardEvent from a raw JSObject.
   factory SyntheticClipboardEvent.fromJs(JSObject jsObject) =

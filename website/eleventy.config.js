@@ -55,8 +55,16 @@ export default function(eleventyConfig) {
   });
 
   // Collections
+  // English posts only (from src/blog/)
   eleventyConfig.addCollection("posts", function(collectionApi) {
     return collectionApi.getFilteredByGlob("src/blog/*.md").sort((a, b) => {
+      return b.date - a.date;
+    });
+  });
+
+  // Chinese posts only (from src/zh/blog/)
+  eleventyConfig.addCollection("zhPosts", function(collectionApi) {
+    return collectionApi.getFilteredByGlob("src/zh/blog/*.md").sort((a, b) => {
       return b.date - a.date;
     });
   });

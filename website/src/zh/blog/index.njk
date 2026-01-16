@@ -19,7 +19,7 @@ description: dart_node 团队的最新新闻、教程和更新。
     </div>
 
     <div class="blog-grid">
-      {% for post in collections.posts %}
+      {% for post in collections.zhPosts %}
       <article class="blog-card">
         <div class="blog-card-content">
           <p class="blog-card-meta">
@@ -43,7 +43,7 @@ description: dart_node 团队的最新新闻、教程和更新。
       {% endfor %}
     </div>
 
-    {% if collections.posts.length == 0 %}
+    {% if collections.zhPosts.length == 0 %}
     <div class="text-center" style="padding: var(--space-16) 0;">
       <p>暂无博客文章，请稍后再来！</p>
     </div>
