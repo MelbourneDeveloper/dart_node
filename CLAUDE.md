@@ -36,6 +36,13 @@ Dart packages for building Node.js apps. Typed Dart layer over JS interop.
 
 ## Codebase Structure
 
+# Translation
+
+- Always translate the English version to the target language directly. 
+- Be careful of cultural differences. 
+- Avoid literal translations that may offend the reader. 
+- Keep the code examples the same as the original but translate the comments to the target language
+
 ```
 packages/
   dart_node_core/       # Core Node.js interop

@@ -6,11 +6,11 @@
     },
     {
       "text": "API",
-      "url": "/api/"
+      "url": "/zh/api/"
     },
     {
       "text": "博客",
-      "url": "/blog/"
+      "url": "/zh/blog/"
     },
     {
       "text": "GitHub",
@@ -45,11 +45,11 @@
       "items": [
         {
           "text": "dart_node_core",
-          "url": "/docs/core/"
+          "url": "/zh/docs/core/"
         },
         {
           "text": "dart_node_express",
-          "url": "/docs/express/"
+          "url": "/zh/docs/express/"
         },
         {
           "text": "dart_node_react",
@@ -57,27 +57,31 @@
         },
         {
           "text": "dart_node_react_native",
-          "url": "/docs/react-native/"
+          "url": "/zh/docs/react-native/"
         },
         {
           "text": "dart_node_ws",
-          "url": "/docs/websockets/"
+          "url": "/zh/docs/websockets/"
         },
         {
           "text": "dart_node_better_sqlite3",
-          "url": "/docs/sqlite/"
+          "url": "/zh/docs/sqlite/"
         },
         {
           "text": "dart_node_mcp",
-          "url": "/docs/mcp/"
+          "url": "/zh/docs/mcp/"
         },
         {
           "text": "dart_logging",
-          "url": "/docs/logging/"
+          "url": "/zh/docs/logging/"
         },
         {
           "text": "reflux",
-          "url": "/docs/reflux/"
+          "url": "/zh/docs/reflux/"
+        },
+        {
+          "text": "dart_jsx",
+          "url": "/zh/docs/jsx/"
         }
       ]
     },
@@ -86,7 +90,7 @@
       "items": [
         {
           "text": "Too Many Cooks",
-          "url": "/docs/too-many-cooks/"
+          "url": "/zh/docs/too-many-cooks/"
         }
       ]
     }
@@ -101,11 +105,11 @@
         },
         {
           "text": "API 参考",
-          "url": "/api/"
+          "url": "/zh/api/"
         },
         {
           "text": "示例",
-          "url": "/docs/examples/"
+          "url": "/zh/docs/examples/"
         }
       ]
     },
@@ -131,7 +135,7 @@
       "items": [
         {
           "text": "博客",
-          "url": "/blog/"
+          "url": "/zh/blog/"
         },
         {
           "text": "Dart 官网",

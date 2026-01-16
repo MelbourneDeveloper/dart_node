@@ -80,7 +80,8 @@
       </a>
 
       <ul class="nav-links">
-        {% for item in navigation.main %}
+        {% set navData = navigation_zh if lang == 'zh' else navigation %}
+        {% for item in navData.main %}
         <li>
           <a href="{{ item.url }}" {% if item.external %}target="_blank" rel="noopener noreferrer"{% endif %}
              class="nav-link {% if page.url.startsWith(item.url) %}active{% endif %}">
@@ -149,7 +150,8 @@
 
   <footer class="footer">
     <div class="container footer-grid">
-      {% for section in navigation.footer %}
+      {% set footerNav = navigation_zh if lang == 'zh' else navigation %}
+      {% for section in footerNav.footer %}
       <div class="footer-section">
         <h3>{{ section.title }}</h3>
         <ul>
