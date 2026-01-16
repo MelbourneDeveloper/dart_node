@@ -207,27 +207,23 @@ test.describe('System Theme Preference', () => {
   });
 
   test('system theme change listener updates theme when no saved preference', async ({ page }) => {
-    // This test specifically targets lines 39-43 of main.js
-    // We emulate light first, then switch to dark and reload
+    // This test verifies the getPreferredTheme function (lines 14-19)
+    // which checks system preference when no saved theme exists
 
     // Start with light mode
     await page.emulateMedia({ colorScheme: 'light' });
     await page.goto('/docs/core/');
 
-    // Clear localStorage completely
-    await page.evaluate(() => localStorage.clear());
-    await page.reload();
+    // The setTheme function saves to localStorage, so clear it AFTER initial load
+    await page.evaluate(() => localStorage.removeItem('theme'));
 
-    // Verify no saved theme and theme is light
-    const savedTheme = await page.evaluate(() => localStorage.getItem('theme'));
-    expect(savedTheme).toBeNull();
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-
-    // Now emulate dark mode and reload - this triggers the system preference logic
+    // Emulate dark mode
     await page.emulateMedia({ colorScheme: 'dark' });
+
+    // Reload - this re-runs the initialization which will check system preference
     await page.reload();
 
-    // Theme should be dark (no saved preference, system preference is dark)
+    // Theme should be dark because system preference is dark
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   });
 

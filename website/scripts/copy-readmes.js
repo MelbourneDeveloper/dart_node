@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, '..', '..');
 const docsDir = join(__dirname, '..', 'src', 'docs');
+const zhDocsDir = join(__dirname, '..', 'src', 'zh', 'docs');
 
 // Mapping from package directory name to docs slug
 const packageToDocsMap = {
@@ -29,7 +30,21 @@ const packageToDocsMap = {
   'dart_jsx': { slug: 'jsx', title: 'dart_jsx', order: 10 },
 };
 
-function generateFrontmatter(config) {
+function generateFrontmatter(config, lang = 'en') {
+  if (lang === 'zh') {
+    return `---
+layout: layouts/docs.njk
+title: ${config.title}
+lang: zh
+permalink: /zh/docs/${config.slug}/
+eleventyNavigation:
+  key: ${config.title}
+  parent: Packages
+  order: ${config.order}
+---
+
+`;
+  }
   return `---
 layout: layouts/docs.njk
 title: ${config.title}
@@ -62,8 +77,8 @@ function processReadme(content, packageName) {
   return lines.slice(startIndex).join('\n').trim();
 }
 
-function main() {
-  console.log('Copying package READMEs to docs...\n');
+function copyEnglishReadmes() {
+  console.log('Copying English package READMEs to docs...\n');
 
   for (const [packageDir, config] of Object.entries(packageToDocsMap)) {
     const readmePath = join(rootDir, 'packages', packageDir, 'README.md');
@@ -92,7 +107,43 @@ function main() {
     writeFileSync(outputPath, finalContent);
     console.log(`  COPY: ${packageDir}/README.md -> docs/${config.slug}/index.md`);
   }
+}
 
+function copyChineseReadmes() {
+  console.log('\nCopying Chinese package READMEs to zh/docs...\n');
+
+  for (const [packageDir, config] of Object.entries(packageToDocsMap)) {
+    const readmePath = join(rootDir, 'packages', packageDir, 'README_zh.md');
+    const docsPath = join(zhDocsDir, config.slug);
+    const outputPath = join(docsPath, 'index.md');
+
+    if (!existsSync(readmePath)) {
+      console.log(`  SKIP: ${packageDir} (no README_zh.md)`);
+      continue;
+    }
+
+    // Ensure docs directory exists
+    if (!existsSync(docsPath)) {
+      mkdirSync(docsPath, { recursive: true });
+      console.log(`  CREATE: zh/docs/${config.slug}/`);
+    }
+
+    // Read README content
+    const readmeContent = readFileSync(readmePath, 'utf-8');
+
+    // Process and write to docs
+    const frontmatter = generateFrontmatter(config, 'zh');
+    const processedContent = processReadme(readmeContent, packageDir);
+    const finalContent = frontmatter + processedContent + '\n';
+
+    writeFileSync(outputPath, finalContent);
+    console.log(`  COPY: ${packageDir}/README_zh.md -> zh/docs/${config.slug}/index.md`);
+  }
+}
+
+function main() {
+  copyEnglishReadmes();
+  copyChineseReadmes();
   console.log('\nDone!');
 }
 

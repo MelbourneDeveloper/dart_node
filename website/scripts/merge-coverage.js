@@ -41,30 +41,58 @@ for (const file of files) {
         url: entry.url,
         scriptId: entry.scriptId || '0',
         source: entry.source,
-        functions: [],
+        functions: new Map(), // Use Map to properly merge function coverage
       };
     }
 
-    // Merge functions
+    // Merge functions by their offset ranges
     if (entry.functions) {
-      mergedV8[key].functions.push(...entry.functions);
+      for (const func of entry.functions) {
+        const rangeKey = `${func.ranges[0].startOffset}-${func.ranges[0].endOffset}`;
+        const existing = mergedV8[key].functions.get(rangeKey);
+
+        if (!existing) {
+          // Clone the function data
+          mergedV8[key].functions.set(rangeKey, JSON.parse(JSON.stringify(func)));
+        } else {
+          // Merge counts for each range
+          for (let i = 0; i < func.ranges.length; i++) {
+            if (existing.ranges[i]) {
+              existing.ranges[i].count = Math.max(
+                existing.ranges[i].count,
+                func.ranges[i].count
+              );
+            }
+          }
+        }
+      }
     }
   }
+}
+
+// Convert Map back to array for v8-to-istanbul
+for (const key of Object.keys(mergedV8)) {
+  mergedV8[key].functions = Array.from(mergedV8[key].functions.values());
 }
 
 // Convert to Istanbul format and generate reports
 const istanbulCoverage = {};
 
+// Use a temp directory for v8-to-istanbul source files
+const tempDir = path.join(coverageDir, '.temp-sources');
+if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
 for (const [url, v8Data] of Object.entries(mergedV8)) {
   const fileName = url.split('/').pop() || 'unknown.js';
-  // Use the actual source file path so nyc can find it
-  const sourceFile = path.join(srcDir, fileName);
+  // Use a temp file for v8-to-istanbul, but map to real source path
+  const tempFile = path.join(tempDir, fileName);
+  const realSourceFile = path.join(srcDir, fileName);
 
-  // Make sure source file exists with the exact content
-  fs.writeFileSync(sourceFile, v8Data.source);
+  // Write source to temp file for v8-to-istanbul to read
+  fs.writeFileSync(tempFile, v8Data.source);
 
   try {
-    const converter = v8toIstanbul(sourceFile, 0, { source: v8Data.source });
+    const converter = v8toIstanbul(tempFile, 0, { source: v8Data.source });
     await converter.load();
 
     // Apply V8 coverage
@@ -72,11 +100,19 @@ for (const [url, v8Data] of Object.entries(mergedV8)) {
 
     // Get Istanbul format
     const istanbul = converter.toIstanbul();
-    Object.assign(istanbulCoverage, istanbul);
+
+    // Remap the path to the real source file
+    for (const [tempPath, data] of Object.entries(istanbul)) {
+      data.path = realSourceFile;
+      istanbulCoverage[realSourceFile] = data;
+    }
   } catch (err) {
     console.error(`Error converting ${fileName}:`, err.message);
   }
 }
+
+// Clean up temp directory
+fs.rmSync(tempDir, { recursive: true, force: true });
 
 // Write Istanbul coverage
 const istanbulFile = path.join(nycOutputDir, 'coverage.json');
