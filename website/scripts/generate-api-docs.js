@@ -377,13 +377,16 @@ const processLibraryDir = (libDir, outputDir, packageName, lang = LANGUAGES[0]) 
   const entries = fs.readdirSync(libDir, { withFileTypes: true });
   const langPrefix = lang.code ? `/${lang.code}` : '';
 
+  // Helper to check if a file should be skipped (sidebar files, library index)
+  const shouldSkipFile = (fileName) =>
+    fileName.endsWith('-sidebar.html') ||
+    fileName === `${packageName}-library.html` ||
+    fileName === 'index.html';
+
   entries.forEach(entry => {
     const fullPath = path.join(libDir, entry.name);
 
-    // Skip the library index files - already processed as package index
-    const skipFiles = [`${packageName}-library.html`, `${packageName}-library-sidebar.html`, 'index.html'];
-
-    entry.isFile() && entry.name.endsWith('.html') && !skipFiles.includes(entry.name) && (() => {
+    entry.isFile() && entry.name.endsWith('.html') && !shouldSkipFile(entry.name) && (() => {
       const data = extractContent(fullPath, packageName, langPrefix);
       const baseName = path.basename(entry.name, '.html');
       // Put class files directly under package: /api/package/ClassName/
@@ -410,7 +413,7 @@ const processLibraryDir = (libDir, outputDir, packageName, lang = LANGUAGES[0]) 
       ensureDir(subOutputDir);
 
       fs.readdirSync(fullPath)
-        .filter(f => f.endsWith('.html'))
+        .filter(f => f.endsWith('.html') && !shouldSkipFile(f))
         .forEach(file => {
           const data = extractContent(path.join(fullPath, file), packageName, langPrefix);
           const baseName = path.basename(file, '.html');
