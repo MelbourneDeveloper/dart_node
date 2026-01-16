@@ -8,6 +8,9 @@ const supportedLanguages = ['en', 'zh'];
 const defaultLanguage = 'en';
 
 export default function(eleventyConfig) {
+  // Don't use .gitignore to ignore files (we want to process generated docs)
+  eleventyConfig.setUseGitIgnore(false);
+
   // Configure markdown-it with anchor plugin for header IDs
   const mdOptions = {
     html: true,

@@ -4,10 +4,12 @@
   "description": "Documentation website for dart_node - Full-stack Dart for the JavaScript ecosystem",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/copy-readmes.js && eleventy --serve",
-    "build": "node scripts/copy-readmes.js && bash scripts/generate-api-docs.sh && eleventy",
+    "dev": "eleventy --serve",
+    "build": "bash scripts/build.sh",
+    "clean": "bash scripts/clean.sh",
+    "rebuild": "bash scripts/rebuild.sh",
     "build:docs": "bash scripts/generate-api-docs.sh",
-    "build:site": "node scripts/copy-readmes.js && eleventy",
+    "build:site": "eleventy",
     "copy:readmes": "node scripts/copy-readmes.js"
   },
   "devDependencies": {
