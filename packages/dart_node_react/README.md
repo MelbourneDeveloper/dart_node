@@ -1,5 +1,6 @@
+# dart_node_react
 
-`dart_node_react` provides type-safe React bindings for building web applications in Dart. If you know React, you'll feel right at home.
+Type-safe React bindings for building web applications in Dart. If you know React, you'll feel right at home.
 
 ## Installation
 
@@ -79,41 +80,62 @@ ReactElement userCard({
 
 ### useState
 
+Returns a `StateHook<T>` with `.value`, `.set()`, and `.setWithUpdater()`:
+
 ```dart
 ReactElement counter() {
-  final (count, setCount) = useState(0);
+  final count = useState(0);
 
   return div(children: [
-    p(children: [text('Count: $count')]),
+    p(children: [text('Count: ${count.value}')]),
     button(
-      onClick: (_) => setCount((c) => c + 1),
+      onClick: (_) => count.setWithUpdater((c) => c + 1),
       children: [text('Increment')],
     ),
     button(
-      onClick: (_) => setCount((c) => c - 1),
+      onClick: (_) => count.setWithUpdater((c) => c - 1),
       children: [text('Decrement')],
     ),
   ]);
 }
 ```
 
+### useStateLazy
+
+For expensive initial state computation:
+
+```dart
+final data = useStateLazy(() => expensiveComputation());
+```
+
 ### useEffect
 
 ```dart
 ReactElement timer() {
-  final (seconds, setSeconds) = useState(0);
+  final seconds = useState(0);
 
   useEffect(() {
     final timer = Timer.periodic(Duration(seconds: 1), (_) {
-      setSeconds((s) => s + 1);
+      seconds.setWithUpdater((s) => s + 1);
     });
 
     // Cleanup function
     return () => timer.cancel();
   }, []); // Empty deps = run once on mount
 
-  return p(children: [text('Seconds: $seconds')]);
+  return p(children: [text('Seconds: ${seconds.value}')]);
 }
+```
+
+### useLayoutEffect
+
+Synchronous version of useEffect that runs before screen updates:
+
+```dart
+useLayoutEffect(() {
+  // DOM measurements
+  return () { /* cleanup */ };
+}, [dependency]);
 ```
 
 ### useRef
@@ -140,15 +162,17 @@ ReactElement focusInput() {
 
 ```dart
 ReactElement expensiveList({required List<int> numbers}) {
-  // Only recalculate when numbers changes
-  final sorted = useMemo(
-    () => numbers.toList()..sort(),
-    [numbers],
+  final count = useState(0);
+
+  // Only recalculate when count.value changes
+  final fib = useMemo(
+    () => fibonacci(count.value),
+    [count.value],
   );
 
-  return ul(
-    children: sorted.map((n) => li(children: [text('$n')])).toList(),
-  );
+  return div(children: [
+    p(children: [text('Fibonacci of ${count.value} is $fib')]),
+  ]);
 }
 ```
 
@@ -156,25 +180,36 @@ ReactElement expensiveList({required List<int> numbers}) {
 
 ```dart
 ReactElement searchBox({required void Function(String) onSearch}) {
-  final (query, setQuery) = useState('');
+  final query = useState('');
 
   // Memoize the callback
   final handleSubmit = useCallback(
-    () => onSearch(query),
-    [query, onSearch],
+    () => onSearch(query.value),
+    [query.value, onSearch],
   );
 
   return form(
     onSubmit: (_) => handleSubmit(),
     children: [
       input(
-        value: query,
-        onChange: (e) => setQuery(e.target.value),
+        value: query.value,
+        onChange: (e) => query.set(e.target.value),
       ),
       button(type: 'submit', children: [text('Search')]),
     ],
   );
 }
+```
+
+### useDebugValue
+
+Display custom labels in React DevTools:
+
+```dart
+useDebugValue<bool>(
+  isOnline.value,
+  (isOnline) => isOnline ? 'Online' : 'Not Online',
+);
 ```
 
 ## Elements
@@ -264,12 +299,12 @@ ReactElement interactiveButton() {
 
 ```dart
 ReactElement loginForm() {
-  final (email, setEmail) = useState('');
-  final (password, setPassword) = useState('');
+  final email = useState('');
+  final password = useState('');
 
   void handleSubmit(Event e) {
     e.preventDefault();
-    print('Login: $email / $password');
+    print('Login: ${email.value} / ${password.value}');
   }
 
   return form(
@@ -277,14 +312,14 @@ ReactElement loginForm() {
     children: [
       input(
         type: 'email',
-        value: email,
-        onChange: (e) => setEmail(e.target.value),
+        value: email.value,
+        onChange: (e) => email.set(e.target.value),
         placeholder: 'Email',
       ),
       input(
         type: 'password',
-        value: password,
-        onChange: (e) => setPassword(e.target.value),
+        value: password.value,
+        onChange: (e) => password.set(e.target.value),
         placeholder: 'Password',
       ),
       button(type: 'submit', children: [text('Log In')]),
@@ -323,21 +358,21 @@ div(
 import 'package:dart_node_react/dart_node_react.dart';
 
 ReactElement todoApp() {
-  final (todos, setTodos) = useState<List<Todo>>([]);
-  final (input, setInput) = useState('');
+  final todos = useState<List<Todo>>([]);
+  final input = useState('');
 
   void addTodo() {
-    if (input.trim().isEmpty) return;
+    if (input.value.trim().isEmpty) return;
 
-    setTodos((prev) => [
+    todos.setWithUpdater((prev) => [
       ...prev,
-      Todo(id: DateTime.now().toString(), title: input, completed: false),
+      Todo(id: DateTime.now().toString(), title: input.value, completed: false),
     ]);
-    setInput('');
+    input.set('');
   }
 
   void toggleTodo(String id) {
-    setTodos((prev) => prev.map((todo) =>
+    todos.setWithUpdater((prev) => prev.map((todo) =>
       todo.id == id
           ? Todo(id: todo.id, title: todo.title, completed: !todo.completed)
           : todo
@@ -356,8 +391,8 @@ ReactElement todoApp() {
         },
         children: [
           input(
-            value: input,
-            onChange: (e) => setInput(e.target.value),
+            value: input.value,
+            onChange: (e) => input.set(e.target.value),
             placeholder: 'What needs to be done?',
           ),
           button(type: 'submit', children: [text('Add')]),
@@ -365,7 +400,7 @@ ReactElement todoApp() {
       ),
 
       ul(
-        children: todos.map((todo) =>
+        children: todos.value.map((todo) =>
           li(
             key: todo.id,
             className: todo.completed ? 'completed' : '',
@@ -376,7 +411,7 @@ ReactElement todoApp() {
       ),
 
       p(children: [
-        text('${todos.where((t) => !t.completed).length} items left'),
+        text('${todos.value.where((t) => !t.completed).length} items left'),
       ]),
     ],
   );
@@ -391,11 +426,11 @@ class Todo {
 }
 
 void main() {
-  final root = ReactDOM.createRoot(document.getElementById('root')!);
+  final root = ReactDOM.createRoot(document.getElementById('root'));
   root.render(todoApp());
 }
 ```
 
-## API Reference
+## Source Code
 
-See the [full API documentation](/api/dart_node_react/) for all available functions and types.
+The source code is available on [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_react).

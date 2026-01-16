@@ -32,11 +32,11 @@
         },
         {
           "text": "Dart 到 JavaScript",
-          "url": "/docs/dart-to-js/"
+          "url": "/zh/docs/dart-to-js/"
         },
         {
           "text": "JS 互操作",
-          "url": "/docs/js-interop/"
+          "url": "/zh/docs/js-interop/"
         }
       ]
     },

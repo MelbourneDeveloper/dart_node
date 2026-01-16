@@ -5,7 +5,7 @@ Reflux is a state management library for **React with Dart** and **Flutter**. It
 
 ```yaml
 dependencies:
-  reflux: ^0.9.0
+  reflux: ^0.11.0-beta
 ```
 
 ## Core Concepts

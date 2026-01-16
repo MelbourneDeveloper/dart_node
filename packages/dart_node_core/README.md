@@ -16,9 +16,8 @@ dependencies:
 import 'package:dart_node_core/dart_node_core.dart';
 
 void main() {
-  consoleLog('Hello, world!');
-  consoleError('Something went wrong');
-  consoleWarn('This is a warning');
+  consoleLog('Hello, world!');           // stdout
+  consoleError('Something went wrong');  // stderr
 }
 ```
 
@@ -29,10 +28,10 @@ import 'package:dart_node_core/dart_node_core.dart';
 
 void main() {
   // Load a Node.js built-in module
-  final fs = require('fs');
+  final fs = requireModule('fs');
 
   // Load an npm package
-  final express = require('express');
+  final express = requireModule('express');
 }
 ```
 
@@ -43,8 +42,7 @@ import 'package:dart_node_core/dart_node_core.dart';
 
 void main() {
   // Access global JavaScript objects
-  final global = getGlobal('process');
-  final env = global['env'];
+  final process = getGlobal('process');
 }
 ```
 
@@ -52,24 +50,43 @@ void main() {
 
 ### Converting Between Dart and JavaScript
 
+Uses `dart:js_interop` for type-safe conversions:
+
 ```dart
-import 'package:dart_node_core/dart_node_core.dart';
+import 'dart:js_interop';
 
 void main() {
   // Dart to JS
   final jsString = 'hello'.toJS;
   final jsNumber = 42.toJS;
-  final jsList = [1, 2, 3].toJS;
+  final jsList = [1, 2, 3].jsify();
 
   // JS to Dart
   final dartString = jsString.toDart;
-  final dartList = jsList.toDart;
 }
 ```
 
-## API Reference
+## FP Extensions
 
-See the [full API documentation](/api/dart_node_core/) for all available functions and types.
+Functional programming utilities:
+
+```dart
+import 'package:dart_node_core/dart_node_core.dart';
+
+String? getName() => 'World';
+
+void main() {
+  // Pattern match on nullable values
+  String? name = getName();
+  final result = name.match(
+    some: (n) => 'Hello, $n',
+    none: () => 'No name provided',
+  );
+
+  // Apply transformations
+  final length = 'hello'.let((s) => s.length);
+}
+```
 
 ## Source Code
 

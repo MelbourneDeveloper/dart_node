@@ -1,5 +1,6 @@
+# dart_node_express
 
-`dart_node_express` provides type-safe bindings for Express.js, letting you build HTTP servers and REST APIs entirely in Dart.
+Type-safe Express.js bindings for Dart. Build HTTP servers and REST APIs entirely in Dart.
 
 ## Installation
 
@@ -17,18 +18,19 @@ npm install express
 ## Quick Start
 
 ```dart
+import 'dart:js_interop';
 import 'package:dart_node_express/dart_node_express.dart';
 
 void main() {
-  final app = createExpressApp();
+  final app = express();
 
-  app.get('/', (req, res) {
+  app.get('/', handler((req, res) {
     res.send('Hello, Dart!');
-  });
+  }));
 
   app.listen(3000, () {
     print('Server running on port 3000');
-  });
+  }.toJS);
 }
 ```
 
@@ -37,51 +39,53 @@ void main() {
 ### Basic Routes
 
 ```dart
-app.get('/users', (req, res) {
-  res.json({'users': []});
-});
+app.get('/users', handler((req, res) {
+  res.jsonMap({'users': []});
+}));
 
-app.post('/users', (req, res) {
+app.post('/users', handler((req, res) {
   final body = req.body;
-  res.status(201).json({'created': true});
-});
+  res.status(201);
+  res.jsonMap({'created': true});
+}));
 
-app.put('/users/:id', (req, res) {
+app.put('/users/:id', handler((req, res) {
   final id = req.params['id'];
-  res.json({'updated': id});
-});
+  res.jsonMap({'updated': id});
+}));
 
-app.delete('/users/:id', (req, res) {
-  res.status(204).end();
-});
+app.delete('/users/:id', handler((req, res) {
+  res.status(204);
+  res.end();
+}));
 ```
 
 ### Route Parameters
 
 ```dart
-app.get('/users/:userId/posts/:postId', (req, res) {
+app.get('/users/:userId/posts/:postId', handler((req, res) {
   final userId = req.params['userId'];
   final postId = req.params['postId'];
 
-  res.json({
+  res.jsonMap({
     'userId': userId,
     'postId': postId,
   });
-});
+}));
 ```
 
 ### Query Parameters
 
 ```dart
-app.get('/search', (req, res) {
+app.get('/search', handler((req, res) {
   final query = req.query['q'];
   final page = int.tryParse(req.query['page'] ?? '1') ?? 1;
 
-  res.json({
+  res.jsonMap({
     'query': query,
     'page': page,
   });
-});
+}));
 ```
 
 ## Request Object
@@ -89,7 +93,7 @@ app.get('/search', (req, res) {
 The `Request` object provides access to incoming request data:
 
 ```dart
-app.post('/api/data', (req, res) {
+app.post('/api/data', handler((req, res) {
   // Request body (requires body-parsing middleware)
   final body = req.body;
 
@@ -105,8 +109,8 @@ app.post('/api/data', (req, res) {
   // Query string parameters
   final params = req.query;
 
-  res.json({'received': body});
-});
+  res.jsonMap({'received': body});
+}));
 ```
 
 ## Response Object
@@ -117,61 +121,66 @@ The `Response` object provides methods for sending responses:
 // Send text
 res.send('Hello!');
 
-// Send JSON
-res.json({'message': 'Hello!'});
+// Send JSON (for Dart Maps, use jsonMap)
+res.jsonMap({'message': 'Hello!'});
 
-// Set status code
-res.status(201).json({'created': true});
+// Set status code (separate call from response)
+res.status(201);
+res.jsonMap({'created': true});
 
 // Set headers
-res.setHeader('X-Custom-Header', 'value');
+res.set('X-Custom-Header', 'value');
 
 // Redirect
 res.redirect('/new-location');
 
 // End response without body
-res.status(204).end();
+res.status(204);
+res.end();
 ```
 
 ## Middleware
 
-### Built-in Middleware
-
-```dart
-// JSON body parsing
-app.use(jsonMiddleware());
-
-// URL-encoded body parsing
-app.use(urlencodedMiddleware(extended: true));
-
-// Static files
-app.use(staticMiddleware('public'));
-
-// CORS
-app.use(corsMiddleware());
-```
-
 ### Custom Middleware
 
 ```dart
-void loggingMiddleware(Request req, Response res, NextFunction next) {
+app.use(middleware((req, res, next) {
   print('${req.method} ${req.path}');
   next();
-}
-
-app.use(loggingMiddleware);
+}));
 ```
 
-### Error Handling Middleware
+### Chaining Middleware
 
 ```dart
-void errorHandler(dynamic error, Request req, Response res, NextFunction next) {
-  print('Error: $error');
-  res.status(500).json({'error': 'Internal Server Error'});
-}
+app.use(chain([
+  middleware((req, res, next) {
+    print('First middleware');
+    next();
+  }),
+  middleware((req, res, next) {
+    print('Second middleware');
+    next();
+  }),
+]));
+```
 
-// Error handlers have 4 parameters
-app.use(errorHandler);
+### Request Context
+
+Store and retrieve values in the request context:
+
+```dart
+// Set context in middleware
+app.use(middleware((req, res, next) {
+  setContext(req, 'userId', '123');
+  next();
+}));
+
+// Get context in handler
+app.get('/profile', handler((req, res) {
+  final userId = getContext<String>(req, 'userId');
+  res.jsonMap({'userId': userId});
+}));
 ```
 
 ## Router
@@ -180,28 +189,30 @@ Organize routes with the Router:
 
 ```dart
 Router createUserRouter() {
-  final router = createRouter();
+  final router = Router();
 
-  router.get('/', (req, res) {
-    res.json({'users': []});
-  });
+  router.get('/', handler((req, res) {
+    res.jsonMap({'users': []});
+  }));
 
-  router.post('/', (req, res) {
-    res.status(201).json({'created': true});
-  });
+  router.post('/', handler((req, res) {
+    res.status(201);
+    res.jsonMap({'created': true});
+  }));
 
-  router.get('/:id', (req, res) {
-    res.json({'user': req.params['id']});
-  });
+  router.get('/:id', handler((req, res) {
+    res.jsonMap({'user': req.params['id']});
+  }));
 
   return router;
 }
 
 void main() {
-  final app = createExpressApp();
+  final app = express();
 
   // Mount the router
-  app.use('/api/users', createUserRouter());
+  final router = createUserRouter();
+  app.use('/api/users', router);
 
   app.listen(3000);
 }
@@ -214,7 +225,7 @@ Use async handlers for database calls and other async operations:
 ```dart
 app.get('/users', asyncHandler((req, res) async {
   final users = await database.fetchUsers();
-  res.json({'users': users});
+  res.jsonMap({'users': users});
 }));
 ```
 
@@ -222,73 +233,94 @@ The `asyncHandler` wrapper ensures errors are properly caught and passed to erro
 
 ## Validation
 
-Validate request data:
+Use the schema-based validation system:
 
 ```dart
-app.post('/users', (req, res) {
-  final body = req.body;
+// Define a validated data type
+typedef CreateUserData = ({String name, String email, int? age});
 
-  // Validate required fields
-  final validation = validateRequired(body, ['name', 'email']);
+// Create a schema
+final createUserSchema = schema<CreateUserData>(
+  {
+    'name': string().minLength(2).maxLength(50),
+    'email': string().email(),
+    'age': optional(int_().positive()),
+  },
+  (data) => (
+    name: data['name'] as String,
+    email: data['email'] as String,
+    age: data['age'] as int?,
+  ),
+);
 
-  if (validation.isErr) {
-    return res.status(400).json({
-      'error': 'Validation failed',
-      'details': validation.err,
-    });
+// Use validation middleware
+app.post('/users', validateBody(createUserSchema));
+app.post('/users', handler((req, res) {
+  final result = getValidatedBody<CreateUserData>(req);
+  switch (result) {
+    case Success(:final value):
+      res.status(201);
+      res.jsonMap({'name': value.name, 'email': value.email});
+    case Error(:final error):
+      res.status(400);
+      res.jsonMap({'error': error});
   }
+}));
+```
 
-  // Create user...
-  res.status(201).json({'created': true});
-});
+### Available Validators
+
+```dart
+// String validators
+string().minLength(2).maxLength(100).notEmpty().email().alphanumeric()
+
+// Integer validators
+int_().min(0).max(100).positive().range(1, 10)
+
+// Boolean validators
+bool_()
+
+// Optional wrapper
+optional(string())
 ```
 
 ## Complete Example
 
 ```dart
+import 'dart:js_interop';
 import 'package:dart_node_express/dart_node_express.dart';
 
 void main() {
-  final app = createExpressApp();
+  final app = express();
 
-  // Middleware
-  app.use(jsonMiddleware());
-  app.use(corsMiddleware());
-
-  // Logging
-  app.use((req, res, next) {
+  // Logging middleware
+  app.use(middleware((req, res, next) {
     print('[${DateTime.now()}] ${req.method} ${req.path}');
     next();
-  });
+  }));
 
   // Routes
-  app.get('/', (req, res) {
-    res.json({
+  app.get('/', handler((req, res) {
+    res.jsonMap({
       'name': 'My API',
       'version': '1.0.0',
     });
-  });
+  }));
 
-  app.get('/health', (req, res) {
-    res.json({'status': 'ok'});
-  });
+  app.get('/health', handler((req, res) {
+    res.jsonMap({'status': 'ok'});
+  }));
 
+  // Mount routers
   app.use('/api/users', createUserRouter());
 
-  // Error handler
-  app.use((error, req, res, next) {
-    print('Error: $error');
-    res.status(500).json({'error': 'Something went wrong'});
-  });
-
   // Start server
-  final port = int.tryParse(Platform.environment['PORT'] ?? '3000') ?? 3000;
-  app.listen(port, () {
-    print('Server running on port $port');
-  });
+  app.listen(3000, () {
+    print('Server running on port 3000');
+  }.toJS);
 }
 ```
 
-## API Reference
+## Source Code
 
-See the [full API documentation](/api/dart_node_express/) for all available functions and types.
+The source code is available on [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_express).

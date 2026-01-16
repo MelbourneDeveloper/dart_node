@@ -45,6 +45,7 @@
   // Language switcher
   const languageSwitcher = document.querySelector('.language-switcher');
   const languageBtn = document.querySelector('.language-btn');
+  const languageDropdown = document.querySelector('.language-dropdown');
 
   if (languageSwitcher && languageBtn) {
     languageBtn.addEventListener('click', (e) => {
@@ -52,6 +53,16 @@
       languageSwitcher.classList.toggle('open');
       languageBtn.setAttribute('aria-expanded', languageSwitcher.classList.contains('open'));
     });
+
+    // Save language preference when clicked
+    if (languageDropdown) {
+      languageDropdown.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          const lang = link.getAttribute('lang');
+          if (lang) localStorage.setItem('lang', lang);
+        });
+      });
+    }
 
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {

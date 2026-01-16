@@ -1,6 +1,14 @@
 <!DOCTYPE html>
-<html lang="{{ lang | default('en') }}" data-theme="light">
+<html lang="{{ lang | default('en') }}">
 <head>
+  <script>
+    (function() {
+      var theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      var lang = localStorage.getItem('lang');
+      if (lang) document.documentElement.setAttribute('lang', lang);
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 

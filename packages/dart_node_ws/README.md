@@ -1,5 +1,6 @@
+# dart_node_ws
 
-`dart_node_ws` provides type-safe WebSocket bindings for Node.js, enabling real-time bidirectional communication in your Dart applications.
+Type-safe WebSocket bindings for Node.js, enabling real-time bidirectional communication in your Dart applications.
 
 ## Installation
 
@@ -24,18 +25,17 @@ import 'package:dart_node_ws/dart_node_ws.dart';
 void main() {
   final server = createWebSocketServer(port: 8080);
 
-  server.on('connection', (WebSocketClient client) {
-    print('Client connected');
+  server.onConnection((client, url) {
+    print('Client connected from $url');
 
-    client.on('message', (data) {
-      print('Received: $data');
-
+    client.onMessage((message) {
+      print('Received: ${message.text}');
       // Echo back
-      client.send('You said: $data');
+      client.send('You said: ${message.text}');
     });
 
-    client.on('close', () {
-      print('Client disconnected');
+    client.onClose((data) {
+      print('Client disconnected: ${data.code} ${data.reason}');
     });
 
     // Send welcome message
@@ -46,31 +46,6 @@ void main() {
 }
 ```
 
-### Integrating with Express
-
-```dart
-import 'package:dart_node_express/dart_node_express.dart';
-import 'package:dart_node_ws/dart_node_ws.dart';
-
-void main() {
-  final app = express();
-
-  // HTTP routes still work
-  app.get('/', handler((req, res) {
-    res.send('HTTP server with WebSocket support');
-  }));
-
-  final httpServer = app.listen(3000);
-
-  // Attach WebSocket server to the HTTP server
-  final wss = createWebSocketServer(server: httpServer);
-
-  wss.onConnection((WebSocketClient client) {
-    // Handle WebSocket connections
-  });
-}
-```
-
 ## WebSocket Server API
 
 ### Creating a Server
@@ -78,45 +53,24 @@ void main() {
 ```dart
 // Standalone server on a port
 final server = createWebSocketServer(port: 8080);
-
-// Attached to an existing HTTP server
-final server = createWebSocketServer(server: httpServer);
-
-// With path filtering
-final server = createWebSocketServer(
-  server: httpServer,
-  path: '/ws',  // Only accept connections to /ws
-);
 ```
 
 ### Server Events
 
 ```dart
-server.on('connection', (WebSocketClient client, Request req) {
+server.onConnection((WebSocketClient client, String? url) {
   // New client connected
-  // req contains the HTTP upgrade request
-  print('Connection from ${req.headers['origin']}');
-});
-
-server.on('error', (error) {
-  print('Server error: $error');
-});
-
-server.on('close', () {
-  print('Server closed');
+  // url contains the request URL (e.g., '/ws?token=abc')
+  print('Connection from $url');
 });
 ```
 
-### Broadcasting to All Clients
+### Closing the Server
 
 ```dart
-void broadcast(String message) {
-  for (final client in server.clients) {
-    if (client.readyState == WebSocket.OPEN) {
-      client.send(message);
-    }
-  }
-}
+server.close(() {
+  print('Server closed');
+});
 ```
 
 ## WebSocket Client API
@@ -124,25 +78,20 @@ void broadcast(String message) {
 ### Client Events
 
 ```dart
-client.on('message', (data) {
-  // Handle incoming message
-  // data can be String or Buffer
+client.onMessage((WebSocketMessage message) {
+  // message.text - string content
+  // message.bytes - binary data (if applicable)
+  print('Received: ${message.text}');
 });
 
-client.on('close', (code, reason) {
-  print('Closed with code $code: $reason');
+client.onClose((CloseEventData data) {
+  // data.code - close code (1000 = normal)
+  // data.reason - close reason
+  print('Closed with code ${data.code}: ${data.reason}');
 });
 
-client.on('error', (error) {
-  print('Client error: $error');
-});
-
-client.on('ping', (data) {
-  // Ping received (pong sent automatically)
-});
-
-client.on('pong', (data) {
-  // Pong received (response to our ping)
+client.onError((WebSocketError error) {
+  print('Client error: ${error.message}');
 });
 ```
 
@@ -152,84 +101,85 @@ client.on('pong', (data) {
 // Send text
 client.send('Hello, client!');
 
-// Send JSON
-client.send(jsonEncode({'type': 'update', 'data': someData}));
-
-// Send binary data
-client.send(Uint8List.fromList([0x01, 0x02, 0x03]));
+// Send JSON (automatically serialized)
+client.sendJson({'type': 'update', 'data': someData});
 ```
 
 ### Client State
 
 ```dart
-// Check connection state
-if (client.readyState == WebSocket.OPEN) {
+// Check if connection is open
+if (client.isOpen) {
   client.send('Connected!');
 }
 
-// States: CONNECTING, OPEN, CLOSING, CLOSED
+// userId can be set for identification
+client.userId = 'user123';
 ```
 
 ### Closing Connection
 
 ```dart
-// Close gracefully
+// Close with default code (1000 = normal)
 client.close();
 
-// Close with code and reason
+// Close with custom code and reason
 client.close(1000, 'Normal closure');
 ```
+
+## Close Codes
+
+Standard WebSocket close codes:
+- `1000`: Normal closure
+- `1001`: Going away (server shutdown)
+- `1002`: Protocol error
+- `1006`: Abnormal closure (no close frame)
+- `1011`: Internal error
+- `3000-3999`: Library/framework codes
+- `4000-4999`: Private use codes
 
 ## Chat Server Example
 
 ```dart
+import 'dart:convert';
 import 'package:dart_node_ws/dart_node_ws.dart';
-import 'package:dart_node_express/dart_node_express.dart';
 
 void main() {
-  final app = express();
-
-  final httpServer = app.listen(3000, () {
-    print('Server running on http://localhost:3000');
-  });
-
-  // WebSocket server
-  final wss = createWebSocketServer(server: httpServer);
+  final server = createWebSocketServer(port: 8080);
   final clients = <String, WebSocketClient>{};
 
-  wss.on('connection', (WebSocketClient client) {
+  server.onConnection((client, url) {
     String? username;
 
-    client.on('message', (data) {
-      final message = jsonDecode(data);
+    client.onMessage((message) {
+      final data = jsonDecode(message.text ?? '{}');
 
-      switch (message['type']) {
+      switch (data['type']) {
         case 'join':
-          username = message['username'];
+          username = data['username'];
+          client.userId = username;
           clients[username!] = client;
-          broadcast({
+          broadcast(clients, {
             'type': 'system',
             'text': '$username joined the chat',
           });
-          break;
 
         case 'message':
           if (username != null) {
-            broadcast({
+            broadcast(clients, {
               'type': 'message',
               'username': username,
-              'text': message['text'],
+              'text': data['text'],
               'timestamp': DateTime.now().toIso8601String(),
             });
           }
-          break;
       }
     });
 
-    client.on('close', () {
+    client.onClose((data) {
       if (username != null) {
         clients.remove(username);
-        broadcast({
+        broadcast(clients, {
           'type': 'system',
           'text': '$username left the chat',
         });
@@ -237,12 +187,14 @@ void main() {
     });
   });
 
-  void broadcast(Map<String, dynamic> message) {
-    final json = jsonEncode(message);
-    for (final client in clients.values) {
-      if (client.readyState == WebSocket.OPEN) {
-        client.send(json);
-      }
+  print('Chat server running on port 8080');
+}
+
+void broadcast(Map<String, WebSocketClient> clients, Map<String, dynamic> message) {
+  final json = jsonEncode(message);
+  for (final client in clients.values) {
+    if (client.isOpen) {
+      client.send(json);
     }
   }
 }
@@ -252,6 +204,8 @@ void main() {
 
 ```dart
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 import 'package:dart_node_ws/dart_node_ws.dart';
 
 void main() {
@@ -269,23 +223,23 @@ void main() {
 
     final json = jsonEncode(data);
     for (final client in subscribers) {
-      if (client.readyState == WebSocket.OPEN) {
+      if (client.isOpen) {
         client.send(json);
       }
     }
   });
 
-  server.on('connection', (WebSocketClient client) {
+  server.onConnection((client, url) {
     print('Dashboard client connected');
     subscribers.add(client);
 
     // Send initial state
-    client.send(jsonEncode({
+    client.sendJson({
       'type': 'init',
       'serverTime': DateTime.now().toIso8601String(),
-    }));
+    });
 
-    client.on('close', () {
+    client.onClose((data) {
       subscribers.remove(client);
       print('Dashboard client disconnected');
     });
@@ -298,30 +252,23 @@ void main() {
 ## Error Handling
 
 ```dart
-server.on('connection', (WebSocketClient client) {
-  client.on('message', (data) {
+server.onConnection((client, url) {
+  client.onMessage((message) {
     try {
-      final message = jsonDecode(data);
+      final data = jsonDecode(message.text ?? '{}');
       // Process message...
     } catch (e) {
-      client.send(jsonEncode({
-        'error': 'Invalid message format',
-      }));
+      client.sendJson({'error': 'Invalid message format'});
     }
   });
 
-  client.on('error', (error) {
-    print('Client error: $error');
+  client.onError((error) {
+    print('Client error: ${error.message}');
     // Don't crash the server
   });
 });
-
-server.on('error', (error) {
-  print('Server error: $error');
-  // Handle server-level errors
-});
 ```
 
-## API Reference
+## Source Code
 
-See the [full API documentation](/api/dart_node_ws/) for all available functions and types.
+The source code is available on [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_ws).

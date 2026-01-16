@@ -43,13 +43,15 @@ final context = createLoggingContext(
 
 ### Log Levels
 
-Standard log levels are available:
+Standard log levels are available (from lowest to highest severity):
 
 ```dart
+logger.trace('Very detailed trace info');
 logger.debug('Debugging info');
 logger.info('Information');
 logger.warn('Warning');
 logger.error('Error occurred');
+logger.fatal('Fatal error');
 ```
 
 ### Structured Data
@@ -57,7 +59,7 @@ logger.error('Error occurred');
 Pass structured data with log messages:
 
 ```dart
-logger.info('User logged in', {'userId': 123, 'email': 'user@example.com'});
+logger.info('User logged in', structuredData: {'userId': 123, 'email': 'user@example.com'});
 ```
 
 ### Child Loggers
@@ -92,6 +94,7 @@ final context = createLoggingContext(
 ## Example: Express Server Logging
 
 ```dart
+import 'dart:js_interop';
 import 'package:dart_node_express/dart_node_express.dart';
 import 'package:dart_logging/dart_logging.dart';
 
@@ -109,8 +112,8 @@ void main() {
   }));
 
   app.listen(3000, () {
-    logger.info('Server started', {'port': 3000});
-  });
+    logger.info('Server started', structuredData: {'port': 3000});
+  }.toJS);
 }
 ```
 
