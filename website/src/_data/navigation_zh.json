@@ -1,0 +1,147 @@
+{
+  "main": [
+    {
+      "text": "文档",
+      "url": "/zh/docs/getting-started/"
+    },
+    {
+      "text": "API",
+      "url": "/api/"
+    },
+    {
+      "text": "博客",
+      "url": "/blog/"
+    },
+    {
+      "text": "GitHub",
+      "url": "https://github.com/melbournedeveloper/dart_node",
+      "external": true
+    }
+  ],
+  "docs": [
+    {
+      "title": "简介",
+      "items": [
+        {
+          "text": "快速开始",
+          "url": "/zh/docs/getting-started/"
+        },
+        {
+          "text": "为什么选择 Dart？",
+          "url": "/zh/docs/why-dart/"
+        },
+        {
+          "text": "Dart 到 JavaScript",
+          "url": "/docs/dart-to-js/"
+        },
+        {
+          "text": "JS 互操作",
+          "url": "/docs/js-interop/"
+        }
+      ]
+    },
+    {
+      "title": "包",
+      "items": [
+        {
+          "text": "dart_node_core",
+          "url": "/docs/core/"
+        },
+        {
+          "text": "dart_node_express",
+          "url": "/docs/express/"
+        },
+        {
+          "text": "dart_node_react",
+          "url": "/docs/react/"
+        },
+        {
+          "text": "dart_node_react_native",
+          "url": "/docs/react-native/"
+        },
+        {
+          "text": "dart_node_ws",
+          "url": "/docs/websockets/"
+        },
+        {
+          "text": "dart_node_better_sqlite3",
+          "url": "/docs/sqlite/"
+        },
+        {
+          "text": "dart_node_mcp",
+          "url": "/docs/mcp/"
+        },
+        {
+          "text": "dart_logging",
+          "url": "/docs/logging/"
+        },
+        {
+          "text": "reflux",
+          "url": "/docs/reflux/"
+        }
+      ]
+    },
+    {
+      "title": "工具",
+      "items": [
+        {
+          "text": "Too Many Cooks",
+          "url": "/docs/too-many-cooks/"
+        }
+      ]
+    }
+  ],
+  "footer": [
+    {
+      "title": "文档",
+      "items": [
+        {
+          "text": "快速开始",
+          "url": "/zh/docs/getting-started/"
+        },
+        {
+          "text": "API 参考",
+          "url": "/api/"
+        },
+        {
+          "text": "示例",
+          "url": "/docs/examples/"
+        }
+      ]
+    },
+    {
+      "title": "社区",
+      "items": [
+        {
+          "text": "GitHub",
+          "url": "https://github.com/melbournedeveloper/dart_node"
+        },
+        {
+          "text": "Discord",
+          "url": "#"
+        },
+        {
+          "text": "Twitter",
+          "url": "https://twitter.com/dart_node"
+        }
+      ]
+    },
+    {
+      "title": "更多",
+      "items": [
+        {
+          "text": "博客",
+          "url": "/blog/"
+        },
+        {
+          "text": "Dart 官网",
+          "url": "https://dart.dev"
+        },
+        {
+          "text": "Flutter",
+          "url": "https://flutter.dev"
+        }
+      ]
+    }
+  ]
+}

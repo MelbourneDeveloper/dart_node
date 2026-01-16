@@ -1,0 +1,352 @@
+---
+layout: layouts/base.njk
+title: "dart_node - 面向 JavaScript 生态系统的全栈 Dart"
+description: "完全使用 Dart 编写 React、React Native 和 Express 应用程序。运行时类型安全，健全的空安全，一种语言即可完成所有工作。"
+lang: zh
+permalink: /zh/
+---
+
+<section class="hero">
+  <div class="container">
+    <h1>面向 JavaScript 生态系统的<br>全栈 Dart</h1>
+    <p class="hero-subtitle">
+      完全使用 Dart 编写 React、React Native 和 Express 应用程序。
+      一种语言。运行时类型安全。健全的空安全。无妥协。
+    </p>
+    <div class="hero-buttons">
+      <a href="/zh/docs/getting-started/" class="btn btn-primary btn-large">快速开始</a>
+      <a href="/zh/docs/why-dart/" class="btn btn-secondary btn-large">为什么选择 Dart？</a>
+    </div>
+
+    <div class="hero-code">
+{% highlight "dart" %}
+// 使用 Dart 编写的完整 Express 服务器
+import 'package:dart_node_express/dart_node_express.dart';
+
+void main() {
+  final app = createExpressApp();
+
+  app.get('/', (req, res) {
+    res.json({'message': '来自 Dart 的问候！'});
+  });
+
+  app.listen(3000, () {
+    print('服务器运行在端口 3000');
+  });
+}
+{% endhighlight %}
+    </div>
+  </div>
+</section>
+
+<section class="audience-section">
+  <div class="container">
+    <div class="section-title">
+      <h2>为您打造</h2>
+      <p>无论您来自 React 还是 Flutter，dart_node 都能说您的语言。</p>
+    </div>
+
+    <div class="audience-tabs">
+      <button class="audience-tab active" data-audience="react">React / React Native 开发者</button>
+      <button class="audience-tab" data-audience="flutter">Flutter 开发者</button>
+    </div>
+
+    <div class="audience-content active" id="react-content">
+      <div class="code-comparison">
+        <div class="code-block">
+          <div class="code-block-header">React (TypeScript)</div>
+{% highlight "tsx" %}
+const Counter: React.FC = () => {
+  const [count, setCount] = useState<number>(0);
+
+  return (
+    <button onClick={() => setCount(c => c + 1)}>
+      Count: {count}
+    </button>
+  );
+};
+{% endhighlight %}
+        </div>
+        <div class="code-block">
+          <div class="code-block-header">React (Dart)</div>
+{% highlight "dart" %}
+ReactElement counter() {
+  final (count, setCount) = useState(0);
+
+  return button(
+    onClick: (_) => setCount((c) => c + 1),
+    children: [text('计数: $count')],
+  );
+}
+{% endhighlight %}
+        </div>
+      </div>
+
+      <div class="features-grid" style="margin-top: var(--space-8);">
+        <div class="feature-card">
+          <div class="feature-icon">1</div>
+          <h3>相同的范式</h3>
+          <p>Hooks、组件、props、状态 &mdash; 您在 React 中了解的一切在 Dart 中以相同的方式工作。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">2</div>
+          <h3>运行时类型安全</h3>
+          <p>与 TypeScript 不同，Dart 在运行时保留类型。不再有 <code>any</code> 转义或被擦除的泛型。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">3</div>
+          <h3>更简单的工具链</h3>
+          <p>无需 webpack、babel、tsconfig。只需 <code>dart compile js</code> 即可完成。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="audience-content" id="flutter-content">
+      <div class="code-comparison">
+        <div class="code-block">
+          <div class="code-block-header">Flutter</div>
+{% highlight "dart" %}
+class Counter extends StatefulWidget {
+  @override
+  State<Counter> createState() => _CounterState();
+}
+
+class _CounterState extends State<Counter> {
+  int count = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => setState(() => count++),
+      child: Text('计数: $count'),
+    );
+  }
+}
+{% endhighlight %}
+        </div>
+        <div class="code-block">
+          <div class="code-block-header">dart_node React</div>
+{% highlight "dart" %}
+ReactElement counter() {
+  final (count, setCount) = useState(0);
+
+  return button(
+    onClick: (_) => setCount((c) => c + 1),
+    children: [text('计数: $count')],
+  );
+}
+{% endhighlight %}
+        </div>
+      </div>
+
+      <div class="features-grid" style="margin-top: var(--space-8);">
+        <div class="feature-card">
+          <div class="feature-icon">1</div>
+          <h3>相同的语言</h3>
+          <p>使用您现有的 Dart 技能。跨平台共享模型、工具和业务逻辑。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">2</div>
+          <h3>Web 生态系统访问</h3>
+          <p>在编写纯 Dart 代码的同时，利用庞大的 React 和 npm 生态系统。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">3</div>
+          <h3>全栈 Dart</h3>
+          <p>后端（Express）、Web（React）、移动端（React Native）&mdash; 全部使用一种语言。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="container">
+    <div class="section-title">
+      <h2>dart_node 技术栈</h2>
+      <p>为您提供全栈超能力的包和工具。</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon" style="background: var(--color-primary);">C</div>
+        <h3>dart_node_core</h3>
+        <p>包含 JS 互操作工具、Node.js 绑定和控制台助手的基础层。</p>
+        <a href="/zh/docs/core/">了解更多 &rarr;</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: var(--color-secondary);">E</div>
+        <h3>dart_node_express</h3>
+        <p>用于构建 HTTP 服务器和 REST API 的类型安全 Express.js 绑定。</p>
+        <a href="/zh/docs/express/">了解更多 &rarr;</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: var(--color-accent);">R</div>
+        <h3>dart_node_react</h3>
+        <p>支持 hooks、类 JSX 语法和完整组件的 React 绑定。</p>
+        <a href="/zh/docs/react/">了解更多 &rarr;</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: var(--color-warning);">N</div>
+        <h3>dart_node_react_native</h3>
+        <p>用于跨平台移动开发的 React Native + Expo 绑定。</p>
+        <a href="/zh/docs/react-native/">了解更多 &rarr;</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: var(--color-success);">W</div>
+        <h3>dart_node_ws</h3>
+        <p>用于 Node.js 实时通信的 WebSocket 绑定。</p>
+        <a href="/zh/docs/websockets/">了解更多 &rarr;</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #9b59b6;">M</div>
+        <h3>dart_node_mcp</h3>
+        <p>用于构建 AI 工具服务器的模型上下文协议服务器绑定。</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #3498db;">S</div>
+        <h3>dart_node_better_sqlite3</h3>
+        <p>支持同步 SQLite3 和 WAL 模式的 better-sqlite3 类型化绑定。</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #e74c3c;">X</div>
+        <h3>reflux</h3>
+        <p>具有穷尽模式匹配的 Redux 风格可预测状态容器。</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #1abc9c;">L</div>
+        <h3>dart_logging</h3>
+        <p>支持子日志器和传输器的 Pino 风格结构化日志。</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #f39c12;">J</div>
+        <h3>dart_jsx</h3>
+        <p>Dart 的 JSX 转译器 &mdash; 编写编译为 dart_node_react 调用的 JSX 语法。</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #8e44ad;">T</div>
+        <h3>too-many-cooks</h3>
+        <p>用于 AI 代理同时编辑代码库的多代理协调 MCP 服务器。</p>
+        <a href="/zh/docs/too-many-cooks/">了解更多 &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features" style="background: var(--bg-secondary);">
+  <div class="container">
+    <div class="section-title">
+      <h2>为什么运行时类型很重要</h2>
+      <p>TypeScript 在编译为 JavaScript 时会擦除类型。Dart 不会。</p>
+    </div>
+
+    <div class="code-comparison">
+      <div class="code-block">
+        <div class="code-block-header">TypeScript（类型被擦除）</div>
+{% highlight "ts" %}
+interface User {
+  id: number;
+  name: string;
+}
+
+// 在运行时，这只是一个普通对象
+// 无法验证其结构！
+const user: User = JSON.parse(data);
+
+// 这可能会静默失败
+console.log(user.name.toUpperCase());
+// 如果 name 未定义则运行时错误！
+{% endhighlight %}
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">Dart（类型被保留）</div>
+{% highlight "dart" %}
+class User {
+  final int id;
+  final String name;
+  User({required this.id, required this.name});
+}
+
+// 类型在运行时存在 - 您可以验证！
+final user = User.fromJson(jsonDecode(data));
+
+// 如果 name 为 null，这会在
+// 反序列化时失败，而不是在使用时
+print(user.name.toUpperCase());
+{% endhighlight %}
+      </div>
+    </div>
+
+    <div class="text-center" style="margin-top: var(--space-8);">
+      <a href="/zh/docs/why-dart/" class="btn btn-primary">了解更多关于 Dart 类型系统</a>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="container">
+    <div class="section-title">
+      <h2>几分钟内开始使用</h2>
+    </div>
+
+    <div style="max-width: 700px; margin: 0 auto;">
+{% highlight "bash" %}
+# 创建新项目
+mkdir my_dart_app && cd my_dart_app
+dart create -t package .
+
+# 添加 dart_node 包
+dart pub add dart_node_core dart_node_express
+
+# 编写您的服务器
+cat > lib/server.dart << 'EOF'
+import 'package:dart_node_express/dart_node_express.dart';
+
+void main() {
+  final app = createExpressApp();
+  app.get('/', (req, res) => res.send('你好，Dart！'));
+  app.listen(3000);
+}
+EOF
+
+# 编译为 JavaScript 并运行
+dart compile js lib/server.dart -o build/server.js
+node build/server.js
+{% endhighlight %}
+    </div>
+
+    <div class="text-center" style="margin-top: var(--space-8);">
+      <a href="/zh/docs/getting-started/" class="btn btn-primary btn-large">阅读完整指南</a>
+    </div>
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const tabs = document.querySelectorAll('.audience-tab');
+  const contents = document.querySelectorAll('.audience-content');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const audience = tab.dataset.audience;
+
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      contents.forEach(content => {
+        content.classList.toggle('active', content.id === `${audience}-content`);
+      });
+    });
+  });
+});
+</script>

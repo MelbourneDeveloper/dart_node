@@ -42,6 +42,34 @@
     }
   });
 
+  // Language switcher
+  const languageSwitcher = document.querySelector('.language-switcher');
+  const languageBtn = document.querySelector('.language-btn');
+
+  if (languageSwitcher && languageBtn) {
+    languageBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      languageSwitcher.classList.toggle('open');
+      languageBtn.setAttribute('aria-expanded', languageSwitcher.classList.contains('open'));
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!languageSwitcher.contains(e.target)) {
+        languageSwitcher.classList.remove('open');
+        languageBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Close on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && languageSwitcher.classList.contains('open')) {
+        languageSwitcher.classList.remove('open');
+        languageBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
   // Mobile menu toggle
   const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
   const navLinks = document.querySelector('.nav-links');
