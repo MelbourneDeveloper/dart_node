@@ -14,7 +14,7 @@ Pino-style structured logging with child loggers. Provides hierarchical logging 
 
 ```yaml
 dependencies:
-  dart_logging: ^0.2.0
+  dart_logging: ^0.11.0-beta
 ```
 
 ## Quick Start
@@ -109,13 +109,13 @@ void main() {
     createLoggingContext(transports: [logTransport(logToConsole)]),
   );
 
-  final app = createExpressApp();
+  final app = express();
 
-  app.use((req, res, next) {
+  app.use(middleware((req, res, next) {
     final reqLogger = logger.child({'path': req.path, 'method': req.method});
     reqLogger.info('Request received');
     next();
-  });
+  }));
 
   app.listen(3000, () {
     logger.info('Server started', {'port': 3000});

@@ -121,9 +121,9 @@ touchableOpacity(
     'borderRadius': 8,
   },
   children: [
-    rnText(
+    text(
+      'Press Me',
       style: {'color': '#fff', 'textAlign': 'center'},
-      children: [text('Press Me')],
     ),
   ],
 )
@@ -262,10 +262,10 @@ Use with React Navigation (via JS interop):
 // Define screens
 ReactElement homeScreen({required NavigationProps nav}) {
   return view(children: [
-    rnText(children: [text('Home Screen')]),
+    text('Home Screen'),
     touchableOpacity(
       onPress: () => nav.navigate('Details', {'id': 123}),
-      children: [rnText(children: [text('Go to Details')])],
+      children: [text('Go to Details')])],
     ),
   ]);
 }
@@ -274,10 +274,10 @@ ReactElement detailsScreen({required NavigationProps nav}) {
   final id = nav.route.params['id'];
 
   return view(children: [
-    rnText(children: [text('Details for $id')]),
+    text('Details for $id'),
     touchableOpacity(
       onPress: () => nav.goBack(),
-      children: [rnText(children: [text('Go Back')])],
+      children: [text('Go Back')])],
     ),
   ]);
 }
@@ -321,13 +321,13 @@ ReactElement todoApp() {
           'backgroundColor': '#007AFF',
         },
         children: [
-          rnText(
+          text(
+            'My Todos',
             style: {
               'fontSize': 24,
               'fontWeight': 'bold',
               'color': '#fff',
             },
-            children: [text('My Todos')],
           ),
         ],
       ),
@@ -363,9 +363,9 @@ ReactElement todoApp() {
               'borderRadius': 8,
             },
             children: [
-              rnText(
+              text(
+                'Add',
                 style: {'color': '#fff', 'fontWeight': '600'},
-                children: [text('Add')],
               ),
             ],
           ),
@@ -373,11 +373,10 @@ ReactElement todoApp() {
       ),
 
       // List
-      flatList<Todo>(
-        data: todos,
-        keyExtractor: (todo, _) => todo.id,
-        renderItem: (info) => touchableOpacity(
-          onPress: () => toggleTodo(info.item.id),
+      scrollView(
+        style: {'flex': 1},
+        children: todos.value.map((todo) => touchableOpacity(
+          onPress: () => toggleTodo(todo.id),
           style: {
             'flexDirection': 'row',
             'alignItems': 'center',
@@ -393,34 +392,31 @@ ReactElement todoApp() {
                 'height': 24,
                 'borderRadius': 12,
                 'borderWidth': 2,
-                'borderColor': info.item.completed ? '#4CAF50' : '#ccc',
-                'backgroundColor': info.item.completed ? '#4CAF50' : 'transparent',
+                'borderColor': todo.completed ? '#4CAF50' : '#ccc',
+                'backgroundColor': todo.completed ? '#4CAF50' : 'transparent',
                 'marginRight': 12,
               },
             ),
-            rnText(
+            text(
+              todo.title,
               style: {
                 'flex': 1,
                 'fontSize': 16,
-                'textDecorationLine': info.item.completed ? 'line-through' : 'none',
-                'color': info.item.completed ? '#999' : '#333',
+                'textDecorationLine': todo.completed ? 'line-through' : 'none',
+                'color': todo.completed ? '#999' : '#333',
               },
-              children: [text(info.item.title)],
             ),
           ],
-        ),
-        style: {'flex': 1},
+        )).toList(),
       ),
 
       // Footer
       view(
         style: {'padding': 16, 'backgroundColor': '#fff'},
         children: [
-          rnText(
+          text(
+            '${todos.value.where((t) => !t.completed).length} items remaining',
             style: {'textAlign': 'center', 'color': '#666'},
-            children: [
-              text('${todos.where((t) => !t.completed).length} items remaining'),
-            ],
           ),
         ],
       ),

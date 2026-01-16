@@ -14,7 +14,7 @@ eleventyNavigation:
 
 ```yaml
 dependencies:
-  dart_node_react: ^0.2.0
+  dart_node_react: ^0.11.0-beta
 ```
 
 Also install React via npm:

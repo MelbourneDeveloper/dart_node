@@ -14,7 +14,7 @@ eleventyNavigation:
 
 ```yaml
 dependencies:
-  dart_node_ws: ^0.2.0
+  dart_node_ws: ^0.11.0-beta
 ```
 
 Also install the ws package via npm:
@@ -62,19 +62,20 @@ import 'package:dart_node_express/dart_node_express.dart';
 import 'package:dart_node_ws/dart_node_ws.dart';
 
 void main() {
-  final app = createExpressApp();
+  final app = express();
+
+  // HTTP routes still work
+  app.get('/', handler((req, res) {
+    res.send('HTTP server with WebSocket support');
+  }));
+
   final httpServer = app.listen(3000);
 
   // Attach WebSocket server to the HTTP server
   final wss = createWebSocketServer(server: httpServer);
 
-  wss.on('connection', (WebSocketClient client) {
+  wss.onConnection((WebSocketClient client) {
     // Handle WebSocket connections
-  });
-
-  // HTTP routes still work
-  app.get('/', (req, res) {
-    res.send('HTTP server with WebSocket support');
   });
 }
 ```
@@ -195,10 +196,7 @@ import 'package:dart_node_ws/dart_node_ws.dart';
 import 'package:dart_node_express/dart_node_express.dart';
 
 void main() {
-  final app = createExpressApp();
-
-  // Serve static files for the chat client
-  app.use(staticMiddleware('public'));
+  final app = express();
 
   final httpServer = app.listen(3000, () {
     print('Server running on http://localhost:3000');

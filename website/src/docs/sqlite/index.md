@@ -14,7 +14,7 @@ Typed Dart bindings for [better-sqlite3](https://github.com/WiseLibs/better-sqli
 
 ```yaml
 dependencies:
-  dart_node_better_sqlite3: ^0.2.0
+  dart_node_better_sqlite3: ^0.11.0-beta
   nadz: ^0.9.0
 ```
 

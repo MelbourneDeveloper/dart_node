@@ -14,7 +14,7 @@ MCP (Model Context Protocol) server bindings for Dart on Node.js. Build AI tool 
 
 ```yaml
 dependencies:
-  dart_node_mcp: ^0.2.0
+  dart_node_mcp: ^0.11.0-beta
   nadz: ^0.9.0
 ```
 
