@@ -1,4 +1,3 @@
-# dart_jsx
 
 JSX transpiler for Dart - transforms JSX syntax to dart_node_react calls.
 
