@@ -15,7 +15,7 @@ eleventyNavigation:
 
 开始之前，请确保您已安装：
 
-- **Dart SDK**（3.0 或更高版本）- [安装 Dart](https://dart.dev/get-dart)
+- **Dart SDK**（3.10 或更高版本）- [安装 Dart](https://dart.dev/get-dart)
 - **Node.js**（18 或更高版本）- [安装 Node.js](https://nodejs.org/)
 - 代码编辑器（推荐使用带 Dart 扩展的 VS Code）
 
@@ -38,11 +38,11 @@ dart create -t package .
 ```yaml
 name: my_dart_server
 environment:
-  sdk: ^3.0.0
+  sdk: ^3.10.0
 
 dependencies:
-  dart_node_core: ^0.2.0
-  dart_node_express: ^0.2.0
+  dart_node_core: ^0.11.0-beta
+  dart_node_express: ^0.11.0-beta
 ```
 
 然后运行：
@@ -56,34 +56,36 @@ dart pub get
 创建 `lib/server.dart`：
 
 ```dart
+import 'dart:js_interop';
 import 'package:dart_node_express/dart_node_express.dart';
 
 void main() {
-  final app = createExpressApp();
+  final app = express();
 
   // 简单的 GET 端点
-  app.get('/', (req, res) {
-    res.json({
+  app.get('/', handler((req, res) {
+    res.jsonMap({
       'message': '来自 Dart 的问候！',
       'timestamp': DateTime.now().toIso8601String(),
     });
-  });
+  }));
 
-  // 带请求体解析的 POST 端点
-  app.use(jsonMiddleware());
+  // POST 端点 - Express 的 JSON 中间件必须从 JS 使用
+  // 配置 express.json() 后，body 可通过 req.body 获取
 
-  app.post('/users', (req, res) {
+  app.post('/users', handler((req, res) {
     final body = req.body;
-    res.status(201).json({
+    res.status(201);
+    res.jsonMap({
       'created': true,
       'user': body,
     });
-  });
+  }));
 
   // 启动服务器
   app.listen(3000, () {
     print('服务器运行在 http://localhost:3000');
-  });
+  }.toJS);
 }
 ```
 
@@ -143,4 +145,3 @@ Dart 代码在运行时使用 JS 互操作来调用这些 npm 包。
 - **backend/** - 带 REST API 的 Express 服务器
 - **frontend/** - React Web 应用程序
 - **mobile/** - React Native + Expo 移动应用
-- **shared/** - 跨平台共享模型
