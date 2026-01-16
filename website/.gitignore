@@ -1,0 +1,11 @@
+# Generated docs (copied from READMEs at build time)
+src/docs/core/index.md
+src/docs/express/index.md
+src/docs/react/index.md
+src/docs/react-native/index.md
+src/docs/websockets/index.md
+src/docs/sqlite/index.md
+src/docs/mcp/index.md
+src/docs/logging/index.md
+src/docs/reflux/index.md
+src/docs/jsx/index.md
