@@ -43,3 +43,5 @@ mutation-reports
 .playwright-mcp/
 
 website/playwright-report/
+
+website/test-results/
