@@ -91,7 +91,7 @@ extension type SyntheticClipboardEvent._(JSObject _) implements SyntheticEvent {
 /// A SyntheticEvent wrapper backed by a KeyboardEvent.
 ///
 /// - [KeyboardEvent (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent)
-/// - [KeyboardEvent – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/KeyboardEvent)
+/// - [KeyboardEvent (MDN 中文)](https://developer.mozilla.org/zh-CN/docs/Web/API/KeyboardEvent)
 extension type SyntheticKeyboardEvent._(JSObject _) implements SyntheticEvent {
   /// Creates a SyntheticKeyboardEvent from a raw JSObject.
   factory SyntheticKeyboardEvent.fromJs(JSObject jsObject) =
@@ -143,7 +143,7 @@ extension type SyntheticKeyboardEvent._(JSObject _) implements SyntheticEvent {
 /// A SyntheticEvent wrapper backed by a CompositionEvent.
 ///
 /// - [CompositionEvent (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent)
-/// - [CompositionEvent – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/CompositionEvent)
+/// - [CompositionEvent (MDN 中文)](https://developer.mozilla.org/zh-CN/docs/Web/API/CompositionEvent)
 extension type SyntheticCompositionEvent._(JSObject _)
     implements SyntheticEvent {
   /// Creates a SyntheticCompositionEvent from a raw JSObject.
@@ -161,7 +161,7 @@ extension type SyntheticCompositionEvent._(JSObject _)
 /// A SyntheticEvent wrapper backed by a FocusEvent.
 ///
 /// - [FocusEvent (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/FocusEvent)
-/// - [FocusEvent – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/FocusEvent)
+/// - [FocusEvent (MDN 中文)](https://developer.mozilla.org/zh-CN/docs/Web/API/FocusEvent)
 extension type SyntheticFocusEvent._(JSObject _) implements SyntheticEvent {
   /// Creates a SyntheticFocusEvent from a raw JSObject.
   factory SyntheticFocusEvent.fromJs(JSObject jsObject) = SyntheticFocusEvent._;
@@ -187,7 +187,7 @@ extension type SyntheticFormEvent._(JSObject _) implements SyntheticEvent {
 /// A SyntheticEvent wrapper backed by a MouseEvent.
 ///
 /// - [MouseEvent (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent)
-/// - [MouseEvent – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/MouseEvent)
+/// - [MouseEvent (MDN 中文)](https://developer.mozilla.org/zh-CN/docs/Web/API/MouseEvent)
 extension type SyntheticMouseEvent._(JSObject _) implements SyntheticEvent {
   /// Creates a SyntheticMouseEvent from a raw JSObject.
   factory SyntheticMouseEvent.fromJs(JSObject jsObject) = SyntheticMouseEvent._;
@@ -242,7 +242,7 @@ extension type SyntheticMouseEvent._(JSObject _) implements SyntheticEvent {
 /// A SyntheticEvent wrapper backed by a DragEvent.
 ///
 /// - [DragEvent (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/DragEvent)
-/// - [DragEvent – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/DragEvent)
+/// - [DragEvent (MDN 中文)](https://developer.mozilla.org/zh-CN/docs/Web/API/DragEvent)
 extension type SyntheticDragEvent._(JSObject _) implements SyntheticMouseEvent {
   /// Creates a SyntheticDragEvent from a raw JSObject.
   factory SyntheticDragEvent.fromJs(JSObject jsObject) = SyntheticDragEvent._;
@@ -258,7 +258,7 @@ extension type SyntheticDragEvent._(JSObject _) implements SyntheticMouseEvent {
 /// A SyntheticEvent wrapper backed by a PointerEvent.
 ///
 /// - [PointerEvent (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent)
-/// - [PointerEvent – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/PointerEvent)
+/// - [PointerEvent (MDN 中文)](https://developer.mozilla.org/zh-CN/docs/Web/API/PointerEvent)
 extension type SyntheticPointerEvent._(JSObject _)
     implements SyntheticMouseEvent {
   /// Creates a SyntheticPointerEvent from a raw JSObject.
@@ -303,7 +303,7 @@ extension type SyntheticPointerEvent._(JSObject _)
 /// A SyntheticEvent wrapper backed by a TouchEvent.
 ///
 /// - [TouchEvent (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent)
-/// - [TouchEvent – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/TouchEvent)
+/// - [TouchEvent (MDN 中文)](https://developer.mozilla.org/zh-CN/docs/Web/API/TouchEvent)
 extension type SyntheticTouchEvent._(JSObject _) implements SyntheticEvent {
   /// Creates a SyntheticTouchEvent from a raw JSObject.
   factory SyntheticTouchEvent.fromJs(JSObject jsObject) = SyntheticTouchEvent._;
@@ -342,7 +342,7 @@ extension type SyntheticTouchEvent._(JSObject _) implements SyntheticEvent {
 /// A SyntheticEvent wrapper backed by a TransitionEvent.
 ///
 /// - [TransitionEvent (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent)
-/// - [TransitionEvent – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/TransitionEvent)
+/// - [TransitionEvent (MDN 中文)](https://developer.mozilla.org/zh-CN/docs/Web/API/TransitionEvent)
 extension type SyntheticTransitionEvent._(JSObject _)
     implements SyntheticEvent {
   /// Creates a SyntheticTransitionEvent from a raw JSObject.
@@ -366,7 +366,7 @@ extension type SyntheticTransitionEvent._(JSObject _)
 /// A SyntheticEvent wrapper backed by an AnimationEvent.
 ///
 /// - [AnimationEvent (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/AnimationEvent)
-/// - [AnimationEvent – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/AnimationEvent)
+/// - [AnimationEvent (MDN 中文)](https://developer.mozilla.org/zh-CN/docs/Web/API/AnimationEvent)
 extension type SyntheticAnimationEvent._(JSObject _) implements SyntheticEvent {
   /// Creates a SyntheticAnimationEvent from a raw JSObject.
   factory SyntheticAnimationEvent.fromJs(JSObject jsObject) =
@@ -389,7 +389,7 @@ extension type SyntheticAnimationEvent._(JSObject _) implements SyntheticEvent {
 /// A SyntheticEvent wrapper backed by a UIEvent.
 ///
 /// - [UIEvent (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent)
-/// - [UIEvent – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/UIEvent)
+/// - [UIEvent (MDN 中文)](https://developer.mozilla.org/zh-CN/docs/Web/API/UIEvent)
 extension type SyntheticUIEvent._(JSObject _) implements SyntheticEvent {
   /// Creates a SyntheticUIEvent from a raw JSObject.
   factory SyntheticUIEvent.fromJs(JSObject jsObject) = SyntheticUIEvent._;
@@ -408,7 +408,7 @@ extension type SyntheticUIEvent._(JSObject _) implements SyntheticEvent {
 /// A SyntheticEvent wrapper backed by a WheelEvent.
 ///
 /// - [WheelEvent (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent)
-/// - [WheelEvent – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/WheelEvent)
+/// - [WheelEvent (MDN 中文)](https://developer.mozilla.org/zh-CN/docs/Web/API/WheelEvent)
 extension type SyntheticWheelEvent._(JSObject _)
     implements SyntheticMouseEvent {
   /// Creates a SyntheticWheelEvent from a raw JSObject.
@@ -434,7 +434,7 @@ extension type SyntheticWheelEvent._(JSObject _)
 /// A SyntheticEvent wrapper for input events.
 ///
 /// - [InputEvent (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/InputEvent)
-/// - [InputEvent – MDN 中文文档](https://developer.mozilla.org/zh-CN/docs/Web/API/InputEvent)
+/// - [InputEvent (MDN 中文)](https://developer.mozilla.org/zh-CN/docs/Web/API/InputEvent)
 extension type SyntheticInputEvent._(JSObject _) implements SyntheticEvent {
   /// Creates a SyntheticInputEvent from a raw JSObject.
   factory SyntheticInputEvent.fromJs(JSObject jsObject) = SyntheticInputEvent._;

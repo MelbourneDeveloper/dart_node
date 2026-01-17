@@ -119,6 +119,52 @@ export default function(eleventyConfig) {
     return postsByCategory;
   });
 
+  // Chinese tag collection
+  eleventyConfig.addCollection("zhTagList", function(collectionApi) {
+    const tagSet = new Set();
+    collectionApi.getFilteredByGlob("src/zh/blog/*.md").forEach(post => {
+      (post.data.tags || []).forEach(tag => {
+        tag !== 'post' && tag !== 'posts' && tagSet.add(tag);
+      });
+    });
+    return [...tagSet].sort();
+  });
+
+  // Chinese category collection
+  eleventyConfig.addCollection("zhCategoryList", function(collectionApi) {
+    const categorySet = new Set();
+    collectionApi.getFilteredByGlob("src/zh/blog/*.md").forEach(post => {
+      post.data.category && categorySet.add(post.data.category);
+    });
+    return [...categorySet].sort();
+  });
+
+  // Chinese posts by tag
+  eleventyConfig.addCollection("zhPostsByTag", function(collectionApi) {
+    const postsByTag = {};
+    collectionApi.getFilteredByGlob("src/zh/blog/*.md").forEach(post => {
+      (post.data.tags || []).forEach(tag => {
+        tag !== 'post' && tag !== 'posts' && (postsByTag[tag] = postsByTag[tag] || []).push(post);
+      });
+    });
+    Object.keys(postsByTag).forEach(tag => {
+      postsByTag[tag].sort((a, b) => b.date - a.date);
+    });
+    return postsByTag;
+  });
+
+  // Chinese posts by category
+  eleventyConfig.addCollection("zhPostsByCategory", function(collectionApi) {
+    const postsByCategory = {};
+    collectionApi.getFilteredByGlob("src/zh/blog/*.md").forEach(post => {
+      post.data.category && (postsByCategory[post.data.category] = postsByCategory[post.data.category] || []).push(post);
+    });
+    Object.keys(postsByCategory).forEach(cat => {
+      postsByCategory[cat].sort((a, b) => b.date - a.date);
+    });
+    return postsByCategory;
+  });
+
   // Filters
   eleventyConfig.addFilter("dateFormat", (dateObj) => {
     return new Date(dateObj).toLocaleDateString('en-US', {
