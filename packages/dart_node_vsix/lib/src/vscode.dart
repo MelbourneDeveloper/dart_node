@@ -1,6 +1,7 @@
 import 'dart:js_interop';
 
 import 'package:dart_node_vsix/src/commands.dart';
+import 'package:dart_node_vsix/src/extensions.dart';
 import 'package:dart_node_vsix/src/window.dart';
 import 'package:dart_node_vsix/src/workspace.dart';
 
@@ -11,6 +12,9 @@ extension type VSCode._(JSObject _) implements JSObject {
 
   /// The commands namespace.
   external Commands get commands;
+
+  /// The extensions namespace.
+  external Extensions get extensions;
 
   /// The window namespace.
   external Window get window;

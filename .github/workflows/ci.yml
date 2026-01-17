@@ -120,3 +120,49 @@ jobs:
 
       - name: Test Tier 3
         run: ./tools/test.sh --ci --tier 3
+
+  vscode-extension:
+    name: VSCode Extension Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ vars.DART_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: examples/too_many_cooks_vscode_extension_dart/package-lock.json
+
+      - name: Get dart_node_vsix dependencies
+        working-directory: packages/dart_node_vsix
+        run: dart pub get
+
+      - name: Get extension dependencies (Dart)
+        working-directory: examples/too_many_cooks_vscode_extension_dart
+        run: dart pub get
+
+      - name: Get extension dependencies (npm)
+        working-directory: examples/too_many_cooks_vscode_extension_dart
+        run: npm ci
+
+      - name: Build Too Many Cooks server
+        working-directory: examples/too_many_cooks
+        run: |
+          dart pub get
+          ./build.sh
+
+      - name: Compile extension and tests
+        working-directory: examples/too_many_cooks_vscode_extension_dart
+        run: npm run pretest
+
+      - name: Run VSCode extension tests
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: npm test
+          working-directory: examples/too_many_cooks_vscode_extension_dart

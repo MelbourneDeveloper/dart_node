@@ -11,5 +11,7 @@
   "search.exclude": {
     "out": true,
     ".dart_tool": true
-  }
+  },
+  "testing.automaticallyOpenPeekView": "never",
+  "vscode-test-explorer.enable": false
 }

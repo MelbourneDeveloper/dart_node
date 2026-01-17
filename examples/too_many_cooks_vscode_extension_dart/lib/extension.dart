@@ -625,10 +625,14 @@ class _TestAPIImpl {
     _setProp(
       obj,
       'callTool',
-      ((JSString name, JSObject args) => callTool(
-            name.toDart,
-            (args.dartify() ?? {}) as Map<String, Object?>,
-          ).toJS).toJS,
+      ((JSString name, JSObject args) {
+        // dartify() returns LinkedMap, convert to Map<String, Object?>
+        final dartified = args.dartify();
+        final argsMap = dartified is Map
+            ? Map<String, Object?>.from(dartified)
+            : <String, Object?>{};
+        return callTool(name.toDart, argsMap).toJS;
+      }).toJS,
     );
     _setProp(
       obj,

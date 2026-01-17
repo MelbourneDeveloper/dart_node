@@ -22,10 +22,13 @@
 /// ```
 library;
 
+export 'src/assert.dart';
 export 'src/commands.dart';
 export 'src/disposable.dart';
 export 'src/event_emitter.dart';
 export 'src/extension_context.dart';
+export 'src/extensions.dart';
+export 'src/mocha.dart';
 export 'src/output_channel.dart';
 export 'src/promise.dart';
 export 'src/status_bar.dart';

@@ -6,16 +6,13 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:js_interop';
 
 import 'package:reflux/reflux.dart';
 
+import 'package:too_many_cooks_vscode_extension_dart/state/log.dart' as logger;
 import 'package:too_many_cooks_vscode_extension_dart/state/state.dart';
 
-@JS('console.log')
-external void _consoleLog(JSAny? message);
-
-void _log(String msg) => _consoleLog(msg.toJS);
+void _log(String msg) => logger.log(msg);
 
 /// Local notification event type for store handling (uses string event name).
 typedef StoreNotificationEvent = ({

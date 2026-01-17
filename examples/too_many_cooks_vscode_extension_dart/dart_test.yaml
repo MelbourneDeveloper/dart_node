@@ -1,0 +1,8 @@
+# Dart test configuration
+# Run with: dart test
+
+# Timeout for all tests
+timeout: 60s
+
+# Reporter
+reporter: expanded

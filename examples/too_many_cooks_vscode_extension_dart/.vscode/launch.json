@@ -14,17 +14,11 @@
       "preLaunchTask": "dart: compile"
     },
     {
-      "name": "Extension Tests",
-      "type": "extensionHost",
+      "name": "Dart Tests",
+      "type": "dart",
       "request": "launch",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/out/test/**/*.js"
-      ],
-      "preLaunchTask": "dart: compile"
+      "program": "test/",
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

@@ -326,7 +326,8 @@ class McpClientImpl implements McpClient {
     await _stderrSub?.cancel();
     await _stderrController?.close();
 
-    _process?.kill();
+    // Kill process with SIGKILL for forceful termination
+    _process?.kill('SIGKILL');
     _process = null;
     _initialized = false;
 
