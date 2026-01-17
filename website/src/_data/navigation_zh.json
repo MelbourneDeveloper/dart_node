@@ -84,15 +84,6 @@
           "url": "/zh/docs/jsx/"
         }
       ]
-    },
-    {
-      "title": "工具",
-      "items": [
-        {
-          "text": "Too Many Cooks",
-          "url": "/zh/docs/too-many-cooks/"
-        }
-      ]
     }
   ],
   "footer": [

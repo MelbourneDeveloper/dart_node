@@ -1,5 +1,6 @@
-
 Reflux is a state management library for **React with Dart** and **Flutter**. It provides a predictable state container with full type safety using Dart's sealed classes for exhaustive pattern matching.
+
+> [**Reflux**](https://en.wikipedia.org/wiki/Reflux) is a technique where a liquid is heated in a flask with a condenser on top. The vapor rises, cools, condenses, and flows back down into the flask - a continuous cycle of transformation and return. Unidirectional State Management works the same way: the heat and energy are your dispatched actions, the rising vapor represents actions flowing through the system, the condenser is the reducer that transforms the input, the condensed liquid flowing back is the new state returning to your components, and the continuous cycle is the unidirectional data flow loop. Same substance, continuously refined.
 
 ## Installation
 

@@ -88,6 +88,7 @@
   --transition-fast: 150ms ease;
   --transition-base: 200ms ease;
   --transition-slow: 300ms ease;
+  --transition-smooth: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Layout */
   --max-width: 1200px;
@@ -1336,4 +1337,173 @@ a.tag.tag-secondary:hover {
 .tag-active {
   background: var(--color-primary) !important;
   color: white !important;
+}
+
+/* ============================================
+   Animations & Transitions
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Buttons - noticeable lift */
+.btn {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 10px 30px rgba(14, 124, 107, 0.5);
+}
+
+.btn:active {
+  transform: translateY(-1px) scale(1);
+  transition-duration: 0.1s;
+}
+
+/* Cards - clear rise effect */
+.feature-card,
+.blog-card,
+.category-card {
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.feature-card:hover,
+.blog-card:hover,
+.category-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border-color: var(--color-primary);
+}
+
+/* Navigation underline - visible slide from center */
+.nav-link {
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: var(--color-primary);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translateX(-50%);
+  border-radius: 2px;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+/* Links - visible color change */
+a {
+  transition: color 0.25s ease, opacity 0.25s ease;
+}
+
+a:hover {
+  opacity: 0.85;
+}
+
+/* Theme toggle */
+.theme-toggle {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--bg-tertiary);
+}
+
+/* Language button */
+.language-btn {
+  transition: all 0.25s ease;
+}
+
+.language-btn:hover {
+  border-color: var(--color-primary);
+  background: var(--bg-tertiary);
+}
+
+/* Tags - visible lift */
+.tag:not(.token),
+.tag-link {
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.tag-link:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+}
+
+a.tag.tag-secondary:hover {
+  transform: translateY(-2px);
+}
+
+/* Sidebar links - clear indicator */
+.sidebar-section a {
+  transition: all 0.25s ease;
+  border-left: 3px solid transparent;
+  margin-left: -3px;
+}
+
+.sidebar-section a:hover,
+.sidebar-section a.active {
+  border-left-color: var(--color-primary);
+  padding-left: calc(var(--space-3) + 6px);
+  background: rgba(14, 124, 107, 0.08);
+}
+
+/* Feature icon - noticeable scale */
+.feature-card .feature-icon {
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.15) rotate(3deg);
+}
+
+/* Logo - slight scale */
+.logo {
+  transition: all 0.25s ease;
+}
+
+.logo:hover {
+  transform: scale(1.03);
+  color: var(--color-primary);
+}
+
+/* External docs links */
+.external-docs a {
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.external-docs a:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+}
+
+/* Header */
+.header {
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+/* Dropdown */
+.language-dropdown {
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Mobile menu hamburger */
+.mobile-menu-toggle span {
+  transition: all 0.3s ease;
 }

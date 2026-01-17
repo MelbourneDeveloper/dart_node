@@ -84,15 +84,6 @@
           "url": "/docs/jsx/"
         }
       ]
-    },
-    {
-      "title": "Tools",
-      "items": [
-        {
-          "text": "Too Many Cooks",
-          "url": "/docs/too-many-cooks/"
-        }
-      ]
     }
   ],
   "footer": [
