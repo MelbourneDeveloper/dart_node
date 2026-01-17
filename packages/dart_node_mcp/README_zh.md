@@ -117,7 +117,7 @@ claude mcp add --transport stdio my-server -- node /path/to/server.js
 
 ## 示例：Too Many Cooks
 
-[Too Many Cooks](/docs/too-many-cooks/) MCP 服务器是使用 dart_node_mcp 构建的。它为编辑同一代码库的 AI 助手提供多智能体协调功能。
+[Too Many Cooks](/zh/docs/too-many-cooks/) MCP 服务器是使用 dart_node_mcp 构建的。它为编辑同一代码库的 AI 助手提供多智能体协调功能。
 
 ## 源代码
 

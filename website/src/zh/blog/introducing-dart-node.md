@@ -199,7 +199,7 @@ node build/server.js
 
 ## 试一试
 
-查看[入门指南](/docs/getting-started/)来构建你的第一个 dart_node 应用程序。浏览 [API 文档](/api/)查看可用功能。如果有问题，请在 GitHub 上提交 issue。
+查看[入门指南](/zh/docs/getting-started/)来构建你的第一个 dart_node 应用程序。浏览 [API 文档](/zh/api/)查看可用功能。如果有问题，请在 GitHub 上提交 issue。
 
 我们迫不及待想看到你的作品。
 

@@ -290,6 +290,62 @@ test.describe('Chinese Sidebar Navigation - Must Link to Chinese Pages', () => {
   });
 });
 
+test.describe('Chinese Blog Page Links - Must Use /zh/ Prefix', () => {
+  test('all internal links on Chinese blog post use /zh/ prefix', async ({ page }) => {
+    await page.goto('/zh/blog/introducing-dart-node/');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'zh');
+
+    // Get all internal links (not external, not anchors)
+    const allLinks = page.locator('a[href^="/"]');
+    const count = await allLinks.count();
+
+    const brokenLinks = [];
+    for (let i = 0; i < count; i++) {
+      const link = allLinks.nth(i);
+      const href = await link.getAttribute('href');
+
+      // Skip language switcher links
+      const isLanguageSwitcher = await link.locator('..').evaluate(el =>
+        el.closest('.language-dropdown') !== null
+      );
+
+      if (!isLanguageSwitcher && href && !href.startsWith('/zh/') && !href.startsWith('/#')) {
+        brokenLinks.push(href);
+      }
+    }
+
+    // This will FAIL if any links don't have /zh/ prefix
+    expect(brokenLinks).toEqual([]);
+  });
+
+  test('blog post docs links stay in Chinese', async ({ page }) => {
+    await page.goto('/zh/blog/introducing-dart-node/');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'zh');
+
+    // Check if there's a link to getting-started and verify it uses /zh/
+    const gettingStartedLink = page.locator('a[href*="getting-started"]').first();
+    if (await gettingStartedLink.count() > 0) {
+      const href = await gettingStartedLink.getAttribute('href');
+      expect(href).toMatch(/^\/zh\//);
+    }
+  });
+
+  test('blog post API links stay in Chinese', async ({ page }) => {
+    await page.goto('/zh/blog/introducing-dart-node/');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'zh');
+
+    // Find API link in blog content (not header/footer)
+    const contentApiLink = page.locator('article a[href*="api"], .content a[href*="api"], main a[href*="api"]').first();
+    if (await contentApiLink.count() > 0) {
+      const href = await contentApiLink.getAttribute('href');
+      // Internal API links should use /zh/
+      if (href && !href.startsWith('http')) {
+        expect(href).toMatch(/^\/zh\//);
+      }
+    }
+  });
+});
+
 test.describe('All Links on Chinese Pages Must Use /zh/ Prefix', () => {
   test('all internal links on Chinese API page use /zh/ prefix', async ({ page }) => {
     await page.goto('/zh/api/');
