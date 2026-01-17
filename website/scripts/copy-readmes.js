@@ -61,10 +61,18 @@ function processReadme(content, packageName) {
   // Remove the first heading (# package_name) as it will be in the frontmatter title
   const lines = content.split('\n');
   let startIndex = 0;
+  let inCodeBlock = false;
 
-  // Find and skip the first H1 heading
+  // Find and skip the first H1 heading (but not inside code blocks)
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].startsWith('# ')) {
+    // Track code block state
+    if (lines[i].startsWith('```')) {
+      inCodeBlock = !inCodeBlock;
+      continue;
+    }
+
+    // Only match H1 headings outside of code blocks
+    if (!inCodeBlock && lines[i].startsWith('# ')) {
       startIndex = i + 1;
       // Skip any blank lines immediately after the heading
       while (startIndex < lines.length && lines[startIndex].trim() === '') {

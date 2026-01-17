@@ -17,26 +17,40 @@
   <meta name="title" content="{{ title | default(site.title) }}">
   <meta name="description" content="{{ description | default(site.description) }}">
   <meta name="author" content="{{ site.author }}">
+  <meta name="keywords" content="{{ keywords | default('Dart, JavaScript, TypeScript, React, Express, Node.js, full-stack, web development, mobile development, React Native, dart_node, type safety') }}">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="generator" content="Eleventy">
 
   <!-- Canonical URL -->
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">
 
+  <!-- Hreflang for language alternates -->
+  <link rel="alternate" hreflang="en" href="{{ site.url }}{{ page.url | replace('/zh/', '/') | replace('/zh', '/') }}">
+  <link rel="alternate" hreflang="zh" href="{{ site.url }}/zh{{ page.url | replace('/zh/', '/') | replace('/zh', '/') }}">
+  <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ page.url | replace('/zh/', '/') | replace('/zh', '/') }}">
+
   <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="{% if layout == 'layouts/blog.njk' %}article{% else %}website{% endif %}">
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
   <meta property="og:title" content="{{ title | default(site.title) }}">
   <meta property="og:description" content="{{ description | default(site.description) }}">
   <meta property="og:image" content="{{ site.url }}/assets/images/og-image.png">
-  <meta property="og:locale" content="en_US">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="dart_node - Full-Stack Dart for the JavaScript Ecosystem">
+  <meta property="og:locale" content="{% if lang == 'zh' %}zh_CN{% else %}en_US{% endif %}">
+  <meta property="og:locale:alternate" content="{% if lang == 'zh' %}en_US{% else %}zh_CN{% endif %}">
   <meta property="og:site_name" content="{{ site.name }}">
 
   <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="{{ site.url }}{{ page.url }}">
-  <meta property="twitter:title" content="{{ title | default(site.title) }}">
-  <meta property="twitter:description" content="{{ description | default(site.description) }}">
-  <meta property="twitter:image" content="{{ site.url }}/assets/images/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="{{ site.url }}{{ page.url }}">
+  <meta name="twitter:title" content="{{ title | default(site.title) }}">
+  <meta name="twitter:description" content="{{ description | default(site.description) }}">
+  <meta name="twitter:image" content="{{ site.url }}/assets/images/og-image.png">
+  <meta name="twitter:image:alt" content="dart_node - Full-Stack Dart for the JavaScript Ecosystem">
   <meta name="twitter:site" content="{{ site.twitter }}">
+  <meta name="twitter:creator" content="{{ site.twitter }}">
 
   <!-- Theme Color -->
   <meta name="theme-color" content="{{ site.themeColor }}">
@@ -51,8 +65,29 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
 
-  <!-- JSON-LD Structured Data -->
+  <!-- RSS Feed -->
+  <link rel="alternate" type="application/atom+xml" title="{{ site.name }} Feed" href="{{ site.url }}/feed.xml">
+
+  <!-- JSON-LD Structured Data: Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "dart_node",
+    "url": "{{ site.url }}",
+    "logo": "{{ site.url }}/assets/images/og-image.png",
+    "description": "{{ site.description }}",
+    "sameAs": [
+      "{{ site.github }}",
+      "https://twitter.com/dart_node",
+      "https://pub.dev/publishers/dartnode.dev"
+    ]
+  }
+  </script>
+
+  <!-- JSON-LD Structured Data: WebSite with SearchAction -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -60,11 +95,130 @@
     "name": "{{ site.name }}",
     "url": "{{ site.url }}",
     "description": "{{ site.description }}",
+    "inLanguage": ["en", "zh"],
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "{{ site.url }}/search?q={search_term_string}",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "{{ site.url }}/search?q={search_term_string}"
+      },
       "query-input": "required name=search_term_string"
     }
+  }
+  </script>
+
+  <!-- JSON-LD Structured Data: SoftwareSourceCode -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "dart_node",
+    "description": "Full-Stack Dart for the JavaScript Ecosystem - Write React, React Native, and Express applications entirely in Dart",
+    "codeRepository": "{{ site.github }}",
+    "programmingLanguage": {
+      "@type": "ComputerLanguage",
+      "name": "Dart"
+    },
+    "runtimePlatform": ["Node.js", "Browser"],
+    "targetProduct": {
+      "@type": "SoftwareApplication",
+      "name": "dart_node packages",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": ["Windows", "macOS", "Linux"]
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "dart_node team"
+    },
+    "license": "https://opensource.org/licenses/MIT"
+  }
+  </script>
+
+  {% if "/docs/" in page.url %}
+  <!-- JSON-LD Structured Data: TechArticle for documentation pages -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "{{ title }}",
+    "description": "{{ description | default(site.description) }}",
+    "url": "{{ site.url }}{{ page.url }}",
+    "author": {
+      "@type": "Organization",
+      "name": "dart_node team"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "dart_node",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ site.url }}/assets/images/og-image.png"
+      }
+    },
+    "datePublished": "{{ page.date | isoDate }}",
+    "dateModified": "{{ page.date | isoDate }}",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "{{ site.url }}{{ page.url }}"
+    },
+    "about": {
+      "@type": "Thing",
+      "name": "Dart programming language"
+    },
+    "proficiencyLevel": "Beginner to Advanced"
+  }
+  </script>
+  {% endif %}
+
+  <!-- BreadcrumbList for navigation -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "{{ site.url }}{% if lang == 'zh' %}/zh{% endif %}/"
+      }
+      {% if "/docs/" in page.url %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Documentation",
+        "item": "{{ site.url }}{% if lang == 'zh' %}/zh{% endif %}/docs/getting-started/"
+      }
+      ,{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ title }}",
+        "item": "{{ site.url }}{{ page.url }}"
+      }
+      {% elif "/blog/" in page.url %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Blog",
+        "item": "{{ site.url }}{% if lang == 'zh' %}/zh{% endif %}/blog/"
+      }
+      {% if title != "Blog" %}
+      ,{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ title }}",
+        "item": "{{ site.url }}{{ page.url }}"
+      }
+      {% endif %}
+      {% elif "/api/" in page.url %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "API Reference",
+        "item": "{{ site.url }}{{ page.url }}"
+      }
+      {% endif %}
+    ]
   }
   </script>
 
