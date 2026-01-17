@@ -1,6 +1,14 @@
 <!DOCTYPE html>
-<html lang="{{ site.language }}" data-theme="light">
+<html lang="{{ lang | default('en') }}">
 <head>
+  <script>
+    (function() {
+      var theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      var lang = localStorage.getItem('lang');
+      if (lang) document.documentElement.setAttribute('lang', lang);
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -9,26 +17,40 @@
   <meta name="title" content="{{ title | default(site.title) }}">
   <meta name="description" content="{{ description | default(site.description) }}">
   <meta name="author" content="{{ site.author }}">
+  <meta name="keywords" content="{{ keywords | default('Dart, JavaScript, TypeScript, React, Express, Node.js, full-stack, web development, mobile development, React Native, dart_node, type safety') }}">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="generator" content="Eleventy">
 
   <!-- Canonical URL -->
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">
 
+  <!-- Hreflang for language alternates -->
+  <link rel="alternate" hreflang="en" href="{{ site.url }}{{ page.url | replace('/zh/', '/') | replace('/zh', '/') }}">
+  <link rel="alternate" hreflang="zh" href="{{ site.url }}/zh{{ page.url | replace('/zh/', '/') | replace('/zh', '/') }}">
+  <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ page.url | replace('/zh/', '/') | replace('/zh', '/') }}">
+
   <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="{% if layout == 'layouts/blog.njk' %}article{% else %}website{% endif %}">
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
   <meta property="og:title" content="{{ title | default(site.title) }}">
   <meta property="og:description" content="{{ description | default(site.description) }}">
   <meta property="og:image" content="{{ site.url }}/assets/images/og-image.png">
-  <meta property="og:locale" content="en_US">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="dart_node - Full-Stack Dart for the JavaScript Ecosystem">
+  <meta property="og:locale" content="{% if lang == 'zh' %}zh_CN{% else %}en_US{% endif %}">
+  <meta property="og:locale:alternate" content="{% if lang == 'zh' %}en_US{% else %}zh_CN{% endif %}">
   <meta property="og:site_name" content="{{ site.name }}">
 
   <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="{{ site.url }}{{ page.url }}">
-  <meta property="twitter:title" content="{{ title | default(site.title) }}">
-  <meta property="twitter:description" content="{{ description | default(site.description) }}">
-  <meta property="twitter:image" content="{{ site.url }}/assets/images/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="{{ site.url }}{{ page.url }}">
+  <meta name="twitter:title" content="{{ title | default(site.title) }}">
+  <meta name="twitter:description" content="{{ description | default(site.description) }}">
+  <meta name="twitter:image" content="{{ site.url }}/assets/images/og-image.png">
+  <meta name="twitter:image:alt" content="dart_node - Full-Stack Dart for the JavaScript Ecosystem">
   <meta name="twitter:site" content="{{ site.twitter }}">
+  <meta name="twitter:creator" content="{{ site.twitter }}">
 
   <!-- Theme Color -->
   <meta name="theme-color" content="{{ site.themeColor }}">
@@ -43,8 +65,29 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
 
-  <!-- JSON-LD Structured Data -->
+  <!-- RSS Feed -->
+  <link rel="alternate" type="application/atom+xml" title="{{ site.name }} Feed" href="{{ site.url }}/feed.xml">
+
+  <!-- JSON-LD Structured Data: Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "dart_node",
+    "url": "{{ site.url }}",
+    "logo": "{{ site.url }}/assets/images/og-image.png",
+    "description": "{{ site.description }}",
+    "sameAs": [
+      "{{ site.github }}",
+      "https://twitter.com/dart_node",
+      "https://pub.dev/publishers/dartnode.dev"
+    ]
+  }
+  </script>
+
+  <!-- JSON-LD Structured Data: WebSite with SearchAction -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -52,12 +95,140 @@
     "name": "{{ site.name }}",
     "url": "{{ site.url }}",
     "description": "{{ site.description }}",
+    "inLanguage": ["en", "zh"],
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "{{ site.url }}/search?q={search_term_string}",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "{{ site.url }}/search?q={search_term_string}"
+      },
       "query-input": "required name=search_term_string"
     }
   }
+  </script>
+
+  <!-- JSON-LD Structured Data: SoftwareSourceCode -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "dart_node",
+    "description": "Full-Stack Dart for the JavaScript Ecosystem - Write React, React Native, and Express applications entirely in Dart",
+    "codeRepository": "{{ site.github }}",
+    "programmingLanguage": {
+      "@type": "ComputerLanguage",
+      "name": "Dart"
+    },
+    "runtimePlatform": ["Node.js", "Browser"],
+    "targetProduct": {
+      "@type": "SoftwareApplication",
+      "name": "dart_node packages",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": ["Windows", "macOS", "Linux"]
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "dart_node team"
+    },
+    "license": "https://opensource.org/licenses/MIT"
+  }
+  </script>
+
+  {% if "/docs/" in page.url %}
+  <!-- JSON-LD Structured Data: TechArticle for documentation pages -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "{{ title }}",
+    "description": "{{ description | default(site.description) }}",
+    "url": "{{ site.url }}{{ page.url }}",
+    "author": {
+      "@type": "Organization",
+      "name": "dart_node team"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "dart_node",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ site.url }}/assets/images/og-image.png"
+      }
+    },
+    "datePublished": "{{ page.date | isoDate }}",
+    "dateModified": "{{ page.date | isoDate }}",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "{{ site.url }}{{ page.url }}"
+    },
+    "about": {
+      "@type": "Thing",
+      "name": "Dart programming language"
+    },
+    "proficiencyLevel": "Beginner to Advanced"
+  }
+  </script>
+  {% endif %}
+
+  <!-- BreadcrumbList for navigation -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "{{ site.url }}{% if lang == 'zh' %}/zh{% endif %}/"
+      }
+      {% if "/docs/" in page.url %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Documentation",
+        "item": "{{ site.url }}{% if lang == 'zh' %}/zh{% endif %}/docs/getting-started/"
+      }
+      ,{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ title }}",
+        "item": "{{ site.url }}{{ page.url }}"
+      }
+      {% elif "/blog/" in page.url %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Blog",
+        "item": "{{ site.url }}{% if lang == 'zh' %}/zh{% endif %}/blog/"
+      }
+      {% if title != "Blog" %}
+      ,{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ title }}",
+        "item": "{{ site.url }}{{ page.url }}"
+      }
+      {% endif %}
+      {% elif "/api/" in page.url %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "API Reference",
+        "item": "{{ site.url }}{{ page.url }}"
+      }
+      {% endif %}
+    ]
+  }
+  </script>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1EDXMWNNRQ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1EDXMWNNRQ');
   </script>
 
   {% block head %}{% endblock %}
@@ -67,12 +238,13 @@
 
   <header class="header">
     <nav class="nav container">
-      <a href="/" class="logo">
+      <a href="{% if lang == 'zh' %}/zh/{% else %}/{% endif %}" class="logo">
         <span class="logo-text">dart_node</span>
       </a>
 
       <ul class="nav-links">
-        {% for item in navigation.main %}
+        {% set navData = navigation_zh if lang == 'zh' else navigation %}
+        {% for item in navData.main %}
         <li>
           <a href="{{ item.url }}" {% if item.external %}target="_blank" rel="noopener noreferrer"{% endif %}
              class="nav-link {% if page.url.startsWith(item.url) %}active{% endif %}">
@@ -84,6 +256,31 @@
       </ul>
 
       <div class="nav-actions">
+        <div class="language-switcher">
+          <button class="language-btn" aria-label="Select language" aria-expanded="false">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            <span>{{ languages[lang | default('en')].nativeName }}</span>
+            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <ul class="language-dropdown" role="menu">
+            {% for langCode, langData in languages %}
+            <li role="menuitem">
+              <a href="{% if langCode == 'en' %}{{ page.url | replace('/zh/', '/') | replace('/zh', '/') }}{% else %}/{{ langCode }}{{ page.url | replace('/zh/', '/') | replace('/zh', '/') }}{% endif %}"
+                 class="{% if (lang | default('en')) == langCode %}active{% endif %}"
+                 lang="{{ langCode }}">
+                {{ langData.nativeName }}
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+
         <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
           <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="5"></circle>
@@ -116,7 +313,8 @@
 
   <footer class="footer">
     <div class="container footer-grid">
-      {% for section in navigation.footer %}
+      {% set footerNav = navigation_zh if lang == 'zh' else navigation %}
+      {% for section in footerNav.footer %}
       <div class="footer-section">
         <h3>{{ section.title }}</h3>
         <ul>

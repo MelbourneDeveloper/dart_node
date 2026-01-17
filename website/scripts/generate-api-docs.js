@@ -24,7 +24,14 @@ const WEBSITE_DIR = path.dirname(__dirname);
 const PROJECT_ROOT = path.dirname(WEBSITE_DIR);
 const PACKAGES_DIR = path.join(PROJECT_ROOT, 'packages');
 const API_OUTPUT_DIR = path.join(WEBSITE_DIR, 'src', 'api');
+const API_OUTPUT_DIR_ZH = path.join(WEBSITE_DIR, 'src', 'zh', 'api');
 const TEMP_DIR = path.join(WEBSITE_DIR, '.dart-doc-temp');
+
+// Supported languages for API docs
+const LANGUAGES = [
+  { code: '', outputDir: API_OUTPUT_DIR, langAttr: null },
+  { code: 'zh', outputDir: API_OUTPUT_DIR_ZH, langAttr: 'zh' },
+];
 
 const PACKAGES = [
   'dart_node_core',
@@ -227,7 +234,7 @@ const runDartDoc = (packageDir, outputDir) => {
 
 const escapeYaml = (str) => str.replace(/"/g, '\\"').replace(/\n/g, ' ');
 
-const extractContent = (htmlPath, packageName) => {
+const extractContent = (htmlPath, packageName, langPrefix = '') => {
   const html = fs.readFileSync(htmlPath, 'utf-8');
   const dom = new JSDOM(html);
   const doc = dom.window.document;
@@ -242,11 +249,11 @@ const extractContent = (htmlPath, packageName) => {
   const mainContent = doc.querySelector('#dartdoc-main-content');
 
   return mainContent
-    ? { title, description, content: processContent(mainContent, packageName, dom) }
+    ? { title, description, content: processContent(mainContent, packageName, dom, langPrefix) }
     : null;
 };
 
-const processContent = (element, packageName, dom) => {
+const processContent = (element, packageName, dom, langPrefix = '') => {
   const h1 = element.querySelector('h1');
   h1?.remove();
 
@@ -273,7 +280,8 @@ const processContent = (element, packageName, dom) => {
 
       // Links like ../dart_node_ws/Foo.html -> /api/dart_node_ws/Foo/
       // (removing the duplicate package/package structure)
-      newHref.startsWith('../') && (newHref = newHref.replace(/^\.\.\//, `/api/`));
+      // Apply language prefix for non-English versions
+      newHref.startsWith('../') && (newHref = newHref.replace(/^\.\.\//, `${langPrefix}/api/`));
 
       // Links like Foo.html -> Foo/ (relative, stays same level)
       // Links like Foo/bar.html -> Foo/bar/
@@ -285,7 +293,7 @@ const processContent = (element, packageName, dom) => {
   return element.innerHTML;
 };
 
-const createMdFile = (outputPath, title, description, packageName, content, elementName = null) => {
+const createMdFile = (outputPath, title, description, packageName, content, elementName = null, langOptions = {}) => {
   // Get element-specific docs only - no fallbacks
   const externalLinks = elementName
     ? (getExternalDocs(elementName, packageName) || [])
@@ -302,11 +310,15 @@ ${externalLinks.map(link => `<li><a href="${link.url}" target="_blank" rel="noop
 `
     : '';
 
+  // Build frontmatter with optional lang and permalink for non-English versions
+  const langAttr = langOptions.langAttr ? `\nlang: ${langOptions.langAttr}` : '';
+  const permalink = langOptions.permalink ? `\npermalink: ${langOptions.permalink}` : '';
+
   const md = `---
 layout: layouts/api.njk
 title: "${escapeYaml(title)}"
 description: "${escapeYaml(description)}"
-package: "${packageName}"
+package: "${packageName}"${langAttr}${permalink}
 ---
 
 ${linksHtml}${content}
@@ -326,54 +338,71 @@ const processPackage = async (packageName) => {
     ensureDir(tempDocDir);
     runDartDoc(packageDir, tempDocDir);
 
-    const outputDir = path.join(API_OUTPUT_DIR, packageName);
-    ensureDir(outputDir);
+    // Process for each language
+    LANGUAGES.forEach(lang => {
+      const langPrefix = lang.code ? `/${lang.code}` : '';
+      const outputDir = path.join(lang.outputDir, packageName);
+      ensureDir(outputDir);
 
-    // Use LIBRARY index.html as the package index
-    // dart doc creates: tempDocDir/packageName/index.html (the library page)
-    const indexHtml = path.join(tempDocDir, packageName, 'index.html');
+      // Use LIBRARY index.html as the package index
+      // dart doc creates: tempDocDir/packageName/index.html (the library page)
+      const indexHtml = path.join(tempDocDir, packageName, 'index.html');
 
-    fs.existsSync(indexHtml) && (() => {
-      const data = extractContent(indexHtml, packageName);
-      data && createMdFile(
-        path.join(outputDir, 'index.md'),
-        `${packageName} library`,
-        data.description,
-        packageName,
-        data.content
-      );
-    })();
+      fs.existsSync(indexHtml) && (() => {
+        const data = extractContent(indexHtml, packageName, langPrefix);
+        const langOptions = lang.langAttr
+          ? { langAttr: lang.langAttr, permalink: `${langPrefix}/api/${packageName}/` }
+          : {};
+        data && createMdFile(
+          path.join(outputDir, 'index.md'),
+          `${packageName} library`,
+          data.description,
+          packageName,
+          data.content,
+          null,
+          langOptions
+        );
+      })();
 
-    // Process all other files in library directory - put them DIRECTLY under package
-    const libDir = path.join(tempDocDir, packageName);
-    fs.existsSync(libDir) && processLibraryDir(libDir, outputDir, packageName);
+      // Process all other files in library directory - put them DIRECTLY under package
+      const libDir = path.join(tempDocDir, packageName);
+      fs.existsSync(libDir) && processLibraryDir(libDir, outputDir, packageName, lang);
+    });
 
     console.log(`Documentation processed for ${packageName}`);
   })();
 };
 
-const processLibraryDir = (libDir, outputDir, packageName) => {
+const processLibraryDir = (libDir, outputDir, packageName, lang = LANGUAGES[0]) => {
   const entries = fs.readdirSync(libDir, { withFileTypes: true });
+  const langPrefix = lang.code ? `/${lang.code}` : '';
+
+  // Helper to check if a file should be skipped (sidebar files, library index)
+  const shouldSkipFile = (fileName) =>
+    fileName.endsWith('-sidebar.html') ||
+    fileName === `${packageName}-library.html` ||
+    fileName === 'index.html';
 
   entries.forEach(entry => {
     const fullPath = path.join(libDir, entry.name);
 
-    // Skip the library index files - already processed as package index
-    const skipFiles = [`${packageName}-library.html`, `${packageName}-library-sidebar.html`, 'index.html'];
-
-    entry.isFile() && entry.name.endsWith('.html') && !skipFiles.includes(entry.name) && (() => {
-      const data = extractContent(fullPath, packageName);
+    entry.isFile() && entry.name.endsWith('.html') && !shouldSkipFile(entry.name) && (() => {
+      const data = extractContent(fullPath, packageName, langPrefix);
       const baseName = path.basename(entry.name, '.html');
       // Put class files directly under package: /api/package/ClassName/
       const classDir = path.join(outputDir, baseName);
       ensureDir(classDir);
+      const langOptions = lang.langAttr
+        ? { langAttr: lang.langAttr, permalink: `${langPrefix}/api/${packageName}/${baseName}/` }
+        : {};
       data && createMdFile(
         path.join(classDir, 'index.md'),
         data.title,
         data.description,
         packageName,
         data.content,
-        baseName  // Pass element name for specific external docs
+        baseName,  // Pass element name for specific external docs
+        langOptions
       );
     })();
 
@@ -384,19 +413,23 @@ const processLibraryDir = (libDir, outputDir, packageName) => {
       ensureDir(subOutputDir);
 
       fs.readdirSync(fullPath)
-        .filter(f => f.endsWith('.html'))
+        .filter(f => f.endsWith('.html') && !shouldSkipFile(f))
         .forEach(file => {
-          const data = extractContent(path.join(fullPath, file), packageName);
+          const data = extractContent(path.join(fullPath, file), packageName, langPrefix);
           const baseName = path.basename(file, '.html');
           const methodDir = path.join(subOutputDir, baseName);
           ensureDir(methodDir);
+          const langOptions = lang.langAttr
+            ? { langAttr: lang.langAttr, permalink: `${langPrefix}/api/${packageName}/${entry.name}/${baseName}/` }
+            : {};
           data && createMdFile(
             path.join(methodDir, 'index.md'),
             data.title,
             data.description,
             packageName,
             data.content,
-            parentElementName  // Use parent class name for external docs
+            parentElementName,  // Use parent class name for external docs
+            langOptions
           );
         });
     })();
@@ -467,10 +500,16 @@ description: Complete API documentation for all dart_node packages
 const main = async () => {
   console.log('Generating API documentation for dart_node packages...');
   console.log(`Packages directory: ${PACKAGES_DIR}`);
-  console.log(`Output directory: ${API_OUTPUT_DIR}`);
+  console.log(`Output directories: ${API_OUTPUT_DIR}, ${API_OUTPUT_DIR_ZH}`);
 
   cleanDir(TEMP_DIR);
   cleanDir(API_OUTPUT_DIR);
+  // Clean zh/api but preserve zh/api/index.md (hand-written Chinese API index)
+  // Only clean package subdirectories, not the index
+  PACKAGES.forEach(pkg => {
+    const zhPkgDir = path.join(API_OUTPUT_DIR_ZH, pkg);
+    fs.existsSync(zhPkgDir) && fs.rmSync(zhPkgDir, { recursive: true });
+  });
 
   for (const pkg of PACKAGES) {
     await processPackage(pkg);
@@ -480,7 +519,7 @@ const main = async () => {
   fs.rmSync(TEMP_DIR, { recursive: true });
 
   console.log('\n=== API documentation generation complete ===');
-  console.log(`Output: ${API_OUTPUT_DIR}`);
+  console.log(`Output: ${API_OUTPUT_DIR}, ${API_OUTPUT_DIR_ZH}`);
 };
 
 main().catch(err => {

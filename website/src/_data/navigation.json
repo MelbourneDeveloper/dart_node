@@ -78,15 +78,10 @@
         {
           "text": "reflux",
           "url": "/docs/reflux/"
-        }
-      ]
-    },
-    {
-      "title": "Tools",
-      "items": [
+        },
         {
-          "text": "Too Many Cooks",
-          "url": "/docs/too-many-cooks/"
+          "text": "dart_jsx",
+          "url": "/docs/jsx/"
         }
       ]
     }

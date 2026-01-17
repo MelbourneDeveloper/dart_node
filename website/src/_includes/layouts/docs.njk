@@ -2,9 +2,11 @@
 layout: layouts/base.njk
 ---
 
+{% set currentNav = navigation_zh.docs if lang == 'zh' else navigation.docs %}
+
 <div class="docs-layout">
   <aside class="docs-sidebar" id="docs-sidebar">
-    {% for section in navigation.docs %}
+    {% for section in currentNav %}
     <div class="sidebar-section">
       <h4>{{ section.title }}</h4>
       <ul>
