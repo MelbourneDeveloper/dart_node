@@ -36,7 +36,7 @@ Dart packages for building Node.js apps. Typed Dart layer over JS interop.
 
 # Web & Translation
 
-- Optimise for AI Search and SEO
+- Optimize for AI Search and SEO
 https://developers.google.com/search/blog/2025/05/succeeding-in-ai-search
 https://developers.google.com/search/docs/fundamentals/seo-starter-guide
 
