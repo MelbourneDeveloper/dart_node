@@ -1,0 +1,14 @@
+{
+  "en": {
+    "code": "en",
+    "name": "English",
+    "nativeName": "English",
+    "dir": "ltr"
+  },
+  "zh": {
+    "code": "zh",
+    "name": "Chinese",
+    "nativeName": "中文",
+    "dir": "ltr"
+  }
+}

@@ -92,10 +92,9 @@ packages:
   dart_node_core:
     dependency: "direct main"
     description:
-      name: dart_node_core
-      sha256: "225e474698d27fa53f8e363b6f94ed87709fc9af57e97c0dfe7942594fd92aa3"
-      url: "https://pub.dev"
-    source: hosted
+      path: "../dart_node_core"
+      relative: true
+    source: path
     version: "0.11.0-beta"
   dart_node_coverage:
     dependency: "direct dev"
@@ -107,10 +106,9 @@ packages:
   dart_node_react:
     dependency: "direct main"
     description:
-      name: dart_node_react
-      sha256: "23a0c53b1b378002d8569111841b9217becb7fbd0eb6a65998777924c25bd737"
-      url: "https://pub.dev"
-    source: hosted
+      path: "../dart_node_react"
+      relative: true
+    source: path
     version: "0.11.0-beta"
   file:
     dependency: transitive

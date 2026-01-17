@@ -2,6 +2,13 @@
 
 JSX transpiler for Dart - transforms JSX syntax to dart_node_react calls.
 
+## Installation
+
+```yaml
+dependencies:
+  dart_jsx: ^0.1.0
+```
+
 ## Usage
 
 Write JSX inside `jsx()` calls in your Dart files:

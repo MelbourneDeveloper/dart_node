@@ -71,7 +71,8 @@ JSAny? _toJsAny(Object? value) => (value == null) ? null : value.jsify();
 /// });
 /// ```
 ///
-/// Learn more: https://reactjs.org/docs/hooks-effect.html
+/// - [useEffect documentation](https://react.dev/reference/react/useEffect)
+/// - [useEffect 是一个 React Hook，它允许你将组件与外部系统同步](https://zh-hans.react.dev/reference/react/useEffect)
 void useEffect(Object? Function() sideEffect, [List<Object?>? dependencies]) {
   JSAny? wrappedSideEffect() {
     final result = sideEffect();
@@ -110,7 +111,8 @@ void useEffect(Object? Function() sideEffect, [List<Object?>? dependencies]) {
 /// });
 /// ```
 ///
-/// Learn more: https://reactjs.org/docs/hooks-reference.html#uselayouteffect
+/// - [useLayoutEffect documentation](https://react.dev/reference/react/useLayoutEffect)
+/// - [useLayoutEffect 是 useEffect 的一个版本，在浏览器重新绘制屏幕之前触发](https://zh-hans.react.dev/reference/react/useLayoutEffect)
 void useLayoutEffect(
   Object? Function() sideEffect, [
   List<Object?>? dependencies,
@@ -155,7 +157,8 @@ void useLayoutEffect(
 /// });
 /// ```
 ///
-/// Learn more: https://reactjs.org/docs/hooks-reference.html#useref
+/// - [useRef documentation](https://react.dev/reference/react/useRef)
+/// - [useRef 是一个 React Hook，它能帮助引用一个不需要渲染的值](https://zh-hans.react.dev/reference/react/useRef)
 Ref<T?> useRef<T>([T? initialValue]) => useRefInit<T?>(initialValue);
 
 /// Returns a mutable [Ref] object with [Ref.current] property initialized to
@@ -186,7 +189,8 @@ Ref<T?> useRef<T>([T? initialValue]) => useRefInit<T?>(initialValue);
 /// });
 /// ```
 ///
-/// Learn more: https://reactjs.org/docs/hooks-reference.html#useref
+/// - [useRef documentation](https://react.dev/reference/react/useRef)
+/// - [useRef 是一个 React Hook，它能帮助引用一个不需要渲染的值](https://zh-hans.react.dev/reference/react/useRef)
 Ref<T> useRefInit<T>(T initialValue) {
   final jsInitial = _toJsAny(initialValue);
   final jsRef = React.useRef(jsInitial);
@@ -226,7 +230,8 @@ Ref<T> useRefInit<T>(T initialValue) {
 /// });
 /// ```
 ///
-/// Learn more: https://reactjs.org/docs/hooks-reference.html#useimperativehandle
+/// - [useImperativeHandle documentation](https://react.dev/reference/react/useImperativeHandle)
+/// - [useImperativeHandle 是 React 中的一个 Hook，它能让你自定义由 ref 暴露出来的句柄](https://zh-hans.react.dev/reference/react/useImperativeHandle)
 void useImperativeHandle<T>(
   Object? ref,
   T Function() createHandle, [
@@ -280,7 +285,8 @@ void useImperativeHandle<T>(
 /// });
 /// ```
 ///
-/// Learn more: https://reactjs.org/docs/hooks-reference.html#usememo
+/// - [useMemo documentation](https://react.dev/reference/react/useMemo)
+/// - [useMemo 是一个 React Hook，它在每次重新渲染的时候能够缓存计算的结果](https://zh-hans.react.dev/reference/react/useMemo)
 T useMemo<T>(T Function() createFunction, [List<Object?>? dependencies]) {
   JSAny? jsCreateFunction() => _toJsAny(createFunction());
 
@@ -317,7 +323,8 @@ T useMemo<T>(T Function() createFunction, [List<Object?>? dependencies]) {
 /// });
 /// ```
 ///
-/// Learn more: https://reactjs.org/docs/hooks-reference.html#usecallback
+/// - [useCallback documentation](https://react.dev/reference/react/useCallback)
+/// - [useCallback 是一个允许你在多次渲染中缓存函数的 React Hook](https://zh-hans.react.dev/reference/react/useCallback)
 JSFunction useCallback(Function callback, List<Object?> dependencies) {
   final jsCallback = switch (callback) {
     final void Function() fn => fn.toJS,
@@ -367,7 +374,8 @@ JSFunction useCallback(Function callback, List<Object?> dependencies) {
 /// }
 /// ```
 ///
-/// Learn more: https://reactjs.org/docs/hooks-reference.html#usedebugvalue
+/// - [useDebugValue documentation](https://react.dev/reference/react/useDebugValue)
+/// - [useDebugValue 是一个 React Hook，可以让你在 React 开发工具中为自定义 Hook 添加标签](https://zh-hans.react.dev/reference/react/useDebugValue)
 void useDebugValue<T>(T value, [String Function(T)? format]) {
   final jsValue = _toJsAny(value);
   JSString jsFormatFn(JSAny? v) {

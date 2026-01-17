@@ -1,0 +1,45 @@
+---
+pagination:
+  data: collections.zhCategoryList
+  size: 1
+  alias: category
+permalink: /zh/blog/categories/{{ category | slugify }}/
+layout: layouts/base.njk
+lang: zh
+eleventyComputed:
+  title: "{{ category | capitalize }}"
+  description: "所有 {{ category }} 分类的博客文章。"
+---
+
+<section class="blog-list">
+  <div class="container">
+    <div class="section-title">
+      <h1>{{ category | capitalize }}</h1>
+      <p><a href="/zh/blog/categories/">← 所有分类</a></p>
+    </div>
+
+    <div class="blog-grid">
+      {% for post in collections.zhPostsByCategory[category] %}
+      <article class="blog-card">
+        <div class="blog-card-content">
+          <p class="blog-card-meta">
+            <time datetime="{{ post.date | isoDate }}">{{ post.date | dateFormat }}</time>
+            {% if post.data.author %} &middot; {{ post.data.author }}{% endif %}
+          </p>
+          <h3><a href="{{ post.url }}">{{ post.data.title }}</a></h3>
+          <p>{{ post.data.description }}</p>
+          {% if post.data.tags %}
+          <div style="margin-top: var(--space-3);">
+            {% for tag in post.data.tags %}
+            {% if tag != 'post' and tag != 'posts' %}
+            <a href="/zh/blog/tags/{{ tag | slugify }}/" class="tag tag-secondary">{{ tag }}</a>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>

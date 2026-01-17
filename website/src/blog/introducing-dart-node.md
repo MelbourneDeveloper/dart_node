@@ -79,14 +79,19 @@ The foundation layer. Provides JavaScript interop utilities, Node.js bindings, a
 Type-safe Express.js bindings. Build REST APIs with the same patterns you know from Express, but with Dart's type safety.
 
 ```dart
-final app = createExpressApp();
+import 'dart:js_interop';
+import 'package:dart_node_express/dart_node_express.dart';
 
-app.get('/users/:id', (req, res) {
+final app = express();
+
+app.get('/users/:id', handler((req, res) {
   final id = req.params['id'];
-  res.json({'user': {'id': id}});
-});
+  res.jsonMap({'user': {'id': id}});
+}));
 
-app.listen(3000);
+app.listen(3000, () {
+  print('Server running on port 3000');
+}.toJS);
 ```
 
 ### dart_node_react
@@ -95,11 +100,11 @@ React bindings with hooks, components, and JSX-like syntax. Everything you love 
 
 ```dart
 ReactElement counter() {
-  final (count, setCount) = useState(0);
+  final count = useState(0);
 
   return button(
-    onClick: (_) => setCount((c) => c + 1),
-    children: [text('Count: $count')],
+    onClick: (_) => count.setWithUpdater((c) => c + 1),
+    children: [text('Count: ${count.value}')],
   );
 }
 ```
@@ -125,9 +130,9 @@ WebSocket bindings for real-time communication. Build chat apps, dashboards, and
 ```dart
 final server = createWebSocketServer(port: 8080);
 
-server.on('connection', (client) {
-  client.on('message', (data) {
-    client.send('Echo: $data');
+server.onConnection((client, url) {
+  client.onMessage((message) {
+    client.send('Echo: ${message.text}');
   });
 });
 ```
@@ -145,18 +150,19 @@ dart pub add dart_node_core dart_node_express
 Write your server:
 
 ```dart
+import 'dart:js_interop';
 import 'package:dart_node_express/dart_node_express.dart';
 
 void main() {
-  final app = createExpressApp();
+  final app = express();
 
-  app.get('/', (req, res) {
-    res.json({'message': 'Hello from Dart!'});
-  });
+  app.get('/', handler((req, res) {
+    res.jsonMap({'message': 'Hello from Dart!'});
+  }));
 
   app.listen(3000, () {
     print('Server running on port 3000');
-  });
+  }.toJS);
 }
 ```
 

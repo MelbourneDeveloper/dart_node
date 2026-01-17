@@ -1,0 +1,21 @@
+# Generated docs (copied from READMEs at build time)
+src/docs/core/index.md
+src/docs/express/index.md
+src/docs/react/index.md
+src/docs/react-native/index.md
+src/docs/websockets/index.md
+src/docs/sqlite/index.md
+src/docs/mcp/index.md
+src/docs/logging/index.md
+src/docs/reflux/index.md
+src/docs/jsx/index.md
+src/zh/docs/core/index.md
+src/zh/docs/express/index.md
+src/zh/docs/react/index.md
+src/zh/docs/react-native/index.md
+src/zh/docs/websockets/index.md
+src/zh/docs/sqlite/index.md
+src/zh/docs/mcp/index.md
+src/zh/docs/logging/index.md
+src/zh/docs/reflux/index.md
+src/zh/docs/jsx/index.md
