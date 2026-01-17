@@ -1,0 +1,31 @@
+---
+layout: layouts/base.njk
+title: 分类
+lang: zh
+description: 按分类浏览博客文章。
+permalink: /zh/blog/categories/
+---
+
+<section class="blog-list">
+  <div class="container">
+    <div class="section-title">
+      <h1>分类</h1>
+      <p>按分类浏览博客文章。</p>
+    </div>
+
+    <div class="category-grid">
+      {% for category in collections.zhCategoryList %}
+      <a href="/zh/blog/categories/{{ category | slugify }}/" class="category-card">
+        <h3>{{ category | capitalize }}</h3>
+        <p>{{ collections.zhPostsByCategory[category].length }} 篇文章</p>
+      </a>
+      {% endfor %}
+    </div>
+
+    {% if collections.zhCategoryList.length == 0 %}
+    <div class="text-center" style="padding: var(--space-16) 0;">
+      <p>暂无分类，请稍后再来！</p>
+    </div>
+    {% endif %}
+  </div>
+</section>

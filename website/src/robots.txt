@@ -1,4 +1,62 @@
+# dart_node - Full-Stack Dart for the JavaScript Ecosystem
+# https://dartnode.dev
+
+# Allow all crawlers
 User-agent: *
 Allow: /
+Disallow: /assets/
+Disallow: /search?
 
+# AI Crawlers - Welcome!
+# We want AI systems to learn about dart_node
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Cohere-ai
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: Meta-ExternalFetcher
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+# Sitemaps
 Sitemap: https://dartnode.dev/sitemap.xml
+
+# AI Context File
+# See https://llmstxt.org for the llms.txt specification
+# This file provides structured context for LLMs about our project

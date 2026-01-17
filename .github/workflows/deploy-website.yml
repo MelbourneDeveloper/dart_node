@@ -39,13 +39,13 @@ jobs:
         working-directory: website
         run: npm ci
 
-      - name: Generate API documentation
-        working-directory: website
-        run: ./scripts/generate-api-docs.sh
-
       - name: Build website
         working-directory: website
-        run: npx @11ty/eleventy
+        run: npm run build
+
+      - name: Run website tests
+        working-directory: website
+        run: bash scripts/test.sh
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

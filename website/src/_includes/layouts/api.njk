@@ -2,28 +2,30 @@
 layout: layouts/base.njk
 ---
 
+{% set langPrefix = '/zh' if lang == 'zh' else '' %}
+
 <div class="docs-layout">
   <aside class="docs-sidebar" id="docs-sidebar">
     <div class="sidebar-section">
-      <h4>API Reference</h4>
+      <h4>{% if lang == 'zh' %}API 参考{% else %}API Reference{% endif %}</h4>
       <ul>
-        <li><a href="/api/dart_node_core/">dart_node_core</a></li>
-        <li><a href="/api/dart_node_express/">dart_node_express</a></li>
-        <li><a href="/api/dart_node_react/">dart_node_react</a></li>
-        <li><a href="/api/dart_node_react_native/">dart_node_react_native</a></li>
-        <li><a href="/api/dart_node_ws/">dart_node_ws</a></li>
-        <li><a href="/api/dart_node_better_sqlite3/">dart_node_better_sqlite3</a></li>
-        <li><a href="/api/dart_node_mcp/">dart_node_mcp</a></li>
-        <li><a href="/api/dart_logging/">dart_logging</a></li>
-        <li><a href="/api/reflux/">reflux</a></li>
+        <li><a href="{{ langPrefix }}/api/dart_node_core/">dart_node_core</a></li>
+        <li><a href="{{ langPrefix }}/api/dart_node_express/">dart_node_express</a></li>
+        <li><a href="{{ langPrefix }}/api/dart_node_react/">dart_node_react</a></li>
+        <li><a href="{{ langPrefix }}/api/dart_node_react_native/">dart_node_react_native</a></li>
+        <li><a href="{{ langPrefix }}/api/dart_node_ws/">dart_node_ws</a></li>
+        <li><a href="{{ langPrefix }}/api/dart_node_better_sqlite3/">dart_node_better_sqlite3</a></li>
+        <li><a href="{{ langPrefix }}/api/dart_node_mcp/">dart_node_mcp</a></li>
+        <li><a href="{{ langPrefix }}/api/dart_logging/">dart_logging</a></li>
+        <li><a href="{{ langPrefix }}/api/reflux/">reflux</a></li>
       </ul>
     </div>
 
     <div class="sidebar-section">
-      <h4>Documentation</h4>
+      <h4>{% if lang == 'zh' %}文档{% else %}Documentation{% endif %}</h4>
       <ul>
-        <li><a href="/docs/getting-started/">Getting Started</a></li>
-        <li><a href="/docs/why-dart/">Why Dart?</a></li>
+        <li><a href="{{ langPrefix }}/docs/getting-started/">{% if lang == 'zh' %}快速入门{% else %}Getting Started{% endif %}</a></li>
+        <li><a href="{{ langPrefix }}/docs/why-dart/">{% if lang == 'zh' %}为什么选择 Dart？{% else %}Why Dart?{% endif %}</a></li>
       </ul>
     </div>
   </aside>

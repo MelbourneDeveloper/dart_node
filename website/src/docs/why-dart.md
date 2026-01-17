@@ -2,10 +2,71 @@
 layout: layouts/docs.njk
 title: Why Dart?
 description: A respectful comparison of Dart and TypeScript. Learn why Dart's runtime type safety and sound null safety make it an excellent choice for full-stack development.
+keywords: Dart vs TypeScript, type safety, null safety, runtime types, JavaScript alternative, full-stack Dart
 eleventyNavigation:
   key: Why Dart
   order: 2
+faq:
+  - question: What is the main difference between Dart and TypeScript?
+    answer: TypeScript erases types at compile time (they don't exist at runtime), while Dart preserves types at runtime. This means Dart can validate types when deserializing JSON or checking generics, something TypeScript cannot do.
+  - question: Does Dart have null safety?
+    answer: Yes, Dart has sound null safety. Unlike TypeScript's strictNullChecks which can be bypassed, Dart's null safety is enforced at both compile time and runtime, preventing null reference errors.
+  - question: Can I use React with Dart?
+    answer: Yes! dart_node_react provides full React bindings for Dart, including hooks (useState, useEffect, etc.), component creation, and JSX-like syntax. You get all React's power with Dart's type safety.
+  - question: Why choose Dart over TypeScript for a new project?
+    answer: Choose Dart when runtime type safety matters (API boundaries, serialization), when you want one language for frontend, backend, and mobile, or when you're already familiar with Dart from Flutter.
+  - question: Can Dart use npm packages?
+    answer: Yes, dart_node compiles to JavaScript and runs on Node.js, giving you access to the entire npm ecosystem while writing pure Dart code.
 ---
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is the main difference between Dart and TypeScript?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "TypeScript erases types at compile time (they don't exist at runtime), while Dart preserves types at runtime. This means Dart can validate types when deserializing JSON or checking generics, something TypeScript cannot do."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Dart have null safety?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, Dart has sound null safety. Unlike TypeScript's strictNullChecks which can be bypassed, Dart's null safety is enforced at both compile time and runtime, preventing null reference errors."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use React with Dart?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes! dart_node_react provides full React bindings for Dart, including hooks (useState, useEffect, etc.), component creation, and JSX-like syntax. You get all React's power with Dart's type safety."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why choose Dart over TypeScript for a new project?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Choose Dart when runtime type safety matters (API boundaries, serialization), when you want one language for frontend, backend, and mobile, or when you're already familiar with Dart from Flutter."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can Dart use npm packages?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, dart_node compiles to JavaScript and runs on Node.js, giving you access to the entire npm ecosystem while writing pure Dart code."
+      }
+    }
+  ]
+}
+</script>
 
 If you're a TypeScript developer, you already appreciate the value of types. Dart takes that appreciation further with features that TypeScript, due to its design constraints, cannot provide.
 

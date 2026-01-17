@@ -38,7 +38,8 @@ external ReactRoot _reactDomHydrateRoot(
 /// Portals provide a first-class way to render children into a DOM node that
 /// exists outside the DOM hierarchy of the parent component.
 ///
-/// See: https://reactjs.org/docs/portals.html
+/// - [Portal documentation](https://react.dev/reference/react-dom/createPortal)
+/// - [Portal – React 中文文档](https://zh-hans.react.dev/reference/react-dom/createPortal)
 extension type ReactPortal._(JSObject _) implements JSObject {
   /// Creates a ReactPortal from a raw JSObject.
   factory ReactPortal.fromJs(JSObject jsObject) = ReactPortal._;
@@ -67,7 +68,8 @@ extension type ReactPortal._(JSObject _) implements JSObject {
 /// root.render(myApp);
 /// ```
 ///
-/// See: https://react.dev/reference/react-dom/client/createRoot
+/// - [createRoot documentation](https://react.dev/reference/react-dom/client/createRoot)
+/// - [createRoot – React 中文文档](https://zh-hans.react.dev/reference/react-dom/client/createRoot)
 ReactRoot createRoot(JSObject container) => _reactDomCreateRoot(container);
 
 /// Creates a React root for hydrating server-rendered content (React 18+).
@@ -81,7 +83,8 @@ ReactRoot createRoot(JSObject container) => _reactDomCreateRoot(container);
 /// final root = hydrateRoot(container, myApp);
 /// ```
 ///
-/// See: https://react.dev/reference/react-dom/client/hydrateRoot
+/// - [hydrateRoot documentation](https://react.dev/reference/react-dom/client/hydrateRoot)
+/// - [hydrateRoot – React 中文文档](https://zh-hans.react.dev/reference/react-dom/client/hydrateRoot)
 ReactRoot hydrateRoot(JSObject container, ReactElement initialChildren) =>
     _reactDomHydrateRoot(container, initialChildren);
 
@@ -100,7 +103,8 @@ ReactRoot hydrateRoot(JSObject container, ReactElement initialChildren) =>
 /// );
 /// ```
 ///
-/// See: https://react.dev/reference/react-dom/createPortal
+/// - [createPortal documentation](https://react.dev/reference/react-dom/createPortal)
+/// - [createPortal – React 中文文档](https://zh-hans.react.dev/reference/react-dom/createPortal)
 ReactPortal createPortal(ReactElement children, JSObject container) =>
     ReactPortal.fromJs(_reactDomCreatePortal(children, container));
 
@@ -118,7 +122,8 @@ ReactPortal createPortal(ReactElement children, JSObject container) =>
 /// // DOM has been updated
 /// ```
 ///
-/// See: https://react.dev/reference/react-dom/flushSync
+/// - [flushSync documentation](https://react.dev/reference/react-dom/flushSync)
+/// - [flushSync – React 中文文档](https://zh-hans.react.dev/reference/react-dom/flushSync)
 void flushSync(void Function() callback) {
   _reactDomFlushSync(callback.toJS);
 }

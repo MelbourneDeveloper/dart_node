@@ -42,7 +42,8 @@ external JSAny _reactLazy(JSFunction factory);
 /// createElement(Fragment, null, [child1, child2, child3]);
 /// ```
 ///
-/// See: https://reactjs.org/docs/fragments.html
+/// - [Fragment documentation](https://react.dev/reference/react/Fragment)
+/// - [Fragment – React 中文文档](https://zh-hans.react.dev/reference/react/Fragment)
 JSAny get Fragment => _reactFragment;
 
 /// Creates a Fragment element that groups children without adding extra
@@ -56,7 +57,8 @@ JSAny get Fragment => _reactFragment;
 /// ]);
 /// ```
 ///
-/// See: https://reactjs.org/docs/fragments.html
+/// - [Fragment documentation](https://react.dev/reference/react/Fragment)
+/// - [Fragment – React 中文文档](https://zh-hans.react.dev/reference/react/Fragment)
 ReactElement fragment({List<ReactElement>? children}) =>
     (children != null && children.isNotEmpty)
     ? createElementWithChildren(_reactFragment, null, children)
@@ -79,7 +81,8 @@ ReactElement fragment({List<ReactElement>? children}) =>
 /// );
 /// ```
 ///
-/// See: https://reactjs.org/docs/concurrent-mode-suspense.html
+/// - [Suspense documentation](https://react.dev/reference/react/Suspense)
+/// - [Suspense – React 中文文档](https://zh-hans.react.dev/reference/react/Suspense)
 JSAny get Suspense => _reactSuspense;
 
 /// Creates a Suspense element that displays [fallback] while [child] is
@@ -93,7 +96,8 @@ JSAny get Suspense => _reactSuspense;
 /// );
 /// ```
 ///
-/// See: https://reactjs.org/docs/concurrent-mode-suspense.html
+/// - [Suspense documentation](https://react.dev/reference/react/Suspense)
+/// - [Suspense – React 中文文档](https://zh-hans.react.dev/reference/react/Suspense)
 ReactElement suspense({
   required ReactElement fallback,
   ReactElement? child,
@@ -124,7 +128,8 @@ ReactElement suspense({
 /// createElement(StrictMode, null, appRoot);
 /// ```
 ///
-/// See: https://reactjs.org/docs/strict-mode.html
+/// - [StrictMode documentation](https://react.dev/reference/react/StrictMode)
+/// - [StrictMode – React 中文文档](https://zh-hans.react.dev/reference/react/StrictMode)
 JSAny get StrictMode => _reactStrictMode;
 
 /// Creates a StrictMode wrapper element.
@@ -134,7 +139,8 @@ JSAny get StrictMode => _reactStrictMode;
 /// strictMode(child: myApp);
 /// ```
 ///
-/// See: https://reactjs.org/docs/strict-mode.html
+/// - [StrictMode documentation](https://react.dev/reference/react/StrictMode)
+/// - [StrictMode – React 中文文档](https://zh-hans.react.dev/reference/react/StrictMode)
 ReactElement strictMode({ReactElement? child, List<ReactElement>? children}) =>
     (children != null && children.isNotEmpty)
     ? createElementWithChildren(_reactStrictMode, null, children)
@@ -172,7 +178,8 @@ typedef ForwardRefRenderFunction =
 /// }));
 /// ```
 ///
-/// See: https://reactjs.org/docs/forwarding-refs.html
+/// - [forwardRef documentation](https://react.dev/reference/react/forwardRef)
+/// - [forwardRef – React 中文文档](https://zh-hans.react.dev/reference/react/forwardRef)
 JSAny forwardRef2(ForwardRefRenderFunction render, {String? displayName}) {
   JSAny jsRender(JSObject jsProps, JSAny? jsRef) {
     final dartified = jsProps.dartify();
@@ -220,7 +227,8 @@ JSAny forwardRef2(ForwardRefRenderFunction render, {String? displayName}) {
 /// );
 /// ```
 ///
-/// See: https://reactjs.org/docs/react-api.html#reactmemo
+/// - [memo documentation](https://react.dev/reference/react/memo)
+/// - [memo – React 中文文档](https://zh-hans.react.dev/reference/react/memo)
 JSAny memo2(
   JSAny component, {
   bool Function(Map<String, Object?> prevProps, Map<String, Object?> nextProps)?
@@ -268,7 +276,8 @@ JSAny memo2(
 /// );
 /// ```
 ///
-/// See: https://reactjs.org/docs/code-splitting.html#reactlazy
+/// - [lazy documentation](https://react.dev/reference/react/lazy)
+/// - [lazy – React 中文文档](https://zh-hans.react.dev/reference/react/lazy)
 JSAny lazy(Future<JSAny> Function() load) {
   Future<JSObject> jsLoad() async {
     final component = await load();

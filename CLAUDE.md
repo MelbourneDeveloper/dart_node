@@ -34,6 +34,19 @@ Dart packages for building Node.js apps. Typed Dart layer over JS interop.
 - All packages require: `austerity` (linting), `nadz` (Result types)
 - `node_preamble` for dart2js Node.js compatibility
 
+# Web & Translation
+
+- Optimize for AI Search and SEO
+https://developers.google.com/search/blog/2025/05/succeeding-in-ai-search
+https://developers.google.com/search/docs/fundamentals/seo-starter-guide
+
+- Always translate the English version to the target language directly. 
+- Be careful of cultural differences. 
+- Avoid literal translations that may offend the reader. 
+- Keep the code examples the same as the original but translate the comments to the target language
+- Minimize CSS. 
+- Don't name CSS after sections. Name them after the HTML element
+
 ## Codebase Structure
 
 ```

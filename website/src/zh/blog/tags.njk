@@ -1,0 +1,31 @@
+---
+layout: layouts/base.njk
+title: 标签
+lang: zh
+description: 按标签浏览博客文章。
+permalink: /zh/blog/tags/
+---
+
+<section class="blog-list">
+  <div class="container">
+    <div class="section-title">
+      <h1>标签</h1>
+      <p>按标签浏览博客文章。</p>
+    </div>
+
+    <div class="tag-cloud">
+      {% for tag in collections.zhTagList %}
+      <a href="/zh/blog/tags/{{ tag | slugify }}/" class="tag-link">
+        {{ tag }}
+        <span class="tag-count">({{ collections.zhPostsByTag[tag].length }})</span>
+      </a>
+      {% endfor %}
+    </div>
+
+    {% if collections.zhTagList.length == 0 %}
+    <div class="text-center" style="padding: var(--space-16) 0;">
+      <p>暂无标签，请稍后再来！</p>
+    </div>
+    {% endif %}
+  </div>
+</section>

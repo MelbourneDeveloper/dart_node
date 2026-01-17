@@ -8,7 +8,58 @@ env:
   MIN_COVERAGE: ${{ vars.MIN_COVERAGE }}
 
 jobs:
-  ci:
+  website:
+    name: Website Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ vars.DART_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: Get Playwright version
+        id: playwright-version
+        working-directory: website
+        run: echo "version=$(npm ls @playwright/test --json | jq -r '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: website
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright deps only (cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Build website
+        working-directory: website
+        run: npm run build
+
+      - name: Run tests
+        working-directory: website
+        run: npm test
+
+  packages:
     name: Lint, Test & Build
     runs-on: ubuntu-latest
     steps:

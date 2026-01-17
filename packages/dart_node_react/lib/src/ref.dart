@@ -22,6 +22,9 @@ final Expando<Object> _dartObjectStore = Expando<Object>('refDartValue');
 /// component will be available via [current].
 ///
 /// See [createRef] for usage examples and more info.
+///
+/// - [createRef documentation](https://react.dev/reference/react/createRef)
+/// - [createRef – React 中文文档](https://zh-hans.react.dev/reference/react/createRef)
 final class Ref<T> {
   /// Creates a Ref from a JavaScript ref object.
   Ref._(this.jsRef);
@@ -44,8 +47,8 @@ final class Ref<T> {
 
   /// Sets the value of [current].
   ///
-  /// See:
-  /// https://reactjs.org/docs/hooks-faq.html#is-there-something-like-instance-variables
+  /// - [Referencing values with refs](https://react.dev/learn/referencing-values-with-refs)
+  /// - [使用 ref 引用值 – React 中文文档](https://zh-hans.react.dev/learn/referencing-values-with-refs)
   set current(T value) {
     if (value != null) _dartObjectStore[jsRef] = value;
     jsRef.current = (value == null) ? null : (value as Object).jsify();
@@ -70,5 +73,6 @@ external JsRef _reactCreateRef();
 /// inputRef.current?.focus();
 /// ```
 ///
-/// Learn more: https://reactjs.org/docs/refs-and-the-dom.html#creating-refs
+/// - [createRef documentation](https://react.dev/reference/react/createRef)
+/// - [createRef – React 中文文档](https://zh-hans.react.dev/reference/react/createRef)
 Ref<T?> createRef<T>() => Ref<T?>.fromJs(_reactCreateRef());
