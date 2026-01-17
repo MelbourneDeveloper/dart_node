@@ -2,7 +2,74 @@
 layout: layouts/base.njk
 title: "dart_node - Full-Stack Dart for the JavaScript Ecosystem"
 description: "Write React, React Native, and Express apps entirely in Dart. Runtime type safety, sound null safety, and one language for everything."
+keywords: "dart_node, Dart JavaScript, Dart React, Dart Express, Dart Node.js, TypeScript alternative, full-stack Dart, Dart type safety, Dart null safety"
 ---
+
+{# Homepage FAQ Schema for AI Search #}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is dart_node?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "dart_node is a collection of Dart packages that let you write React, React Native, and Express.js applications entirely in Dart. It provides typed bindings to JavaScript libraries, enabling full-stack development with runtime type safety and sound null safety."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is Dart different from TypeScript?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Unlike TypeScript which erases types at compile time, Dart preserves types at runtime. This means Dart can validate types when deserializing JSON, check generic type parameters, and catch type errors that TypeScript would miss. Dart also has sound null safety enforced at both compile and runtime."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use React with Dart?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes! dart_node_react provides full React bindings including useState, useEffect, useCallback, useMemo, useRef, and other hooks. You write components in Dart using the same patterns as React - just with better type safety."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I get started with dart_node?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Install Dart SDK 3.10+ and Node.js 18+, create a project with 'dart create -t package .', add dart_node_express to pubspec.yaml, write your server in Dart, compile with 'dart compile js', and run with Node.js."
+      }
+    }
+  ]
+}
+</script>
+
+{# ItemList Schema for Packages #}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "dart_node Packages",
+  "description": "The complete dart_node package ecosystem for full-stack Dart development",
+  "numberOfItems": 11,
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "dart_node_core", "description": "Foundation layer with JS interop utilities and Node.js bindings", "url": "https://dartnode.dev/docs/core/"},
+    {"@type": "ListItem", "position": 2, "name": "dart_node_express", "description": "Type-safe Express.js bindings for HTTP servers and REST APIs", "url": "https://dartnode.dev/docs/express/"},
+    {"@type": "ListItem", "position": 3, "name": "dart_node_react", "description": "React bindings with hooks and JSX-like syntax", "url": "https://dartnode.dev/docs/react/"},
+    {"@type": "ListItem", "position": 4, "name": "dart_node_react_native", "description": "React Native + Expo bindings for mobile development", "url": "https://dartnode.dev/docs/react-native/"},
+    {"@type": "ListItem", "position": 5, "name": "dart_node_ws", "description": "WebSocket bindings for real-time communication", "url": "https://dartnode.dev/docs/websockets/"},
+    {"@type": "ListItem", "position": 6, "name": "dart_node_better_sqlite3", "description": "Synchronous SQLite3 bindings with WAL mode", "url": "https://dartnode.dev/docs/sqlite/"},
+    {"@type": "ListItem", "position": 7, "name": "dart_node_mcp", "description": "Model Context Protocol server for AI tools", "url": "https://dartnode.dev/docs/mcp/"},
+    {"@type": "ListItem", "position": 8, "name": "reflux", "description": "Redux-style state container with pattern matching", "url": "https://dartnode.dev/docs/reflux/"},
+    {"@type": "ListItem", "position": 9, "name": "dart_logging", "description": "Pino-style structured logging", "url": "https://dartnode.dev/docs/logging/"},
+    {"@type": "ListItem", "position": 10, "name": "dart_jsx", "description": "JSX transpiler for Dart", "url": "https://dartnode.dev/docs/jsx/"},
+    {"@type": "ListItem", "position": 11, "name": "too-many-cooks", "description": "Multi-agent coordination MCP server", "url": "https://dartnode.dev/docs/too-many-cooks/"}
+  ]
+}
+</script>
 
 <section class="hero">
   <div class="container">
@@ -37,6 +104,18 @@ void main() {
   </div>
 </section>
 
+{# Direct answer snippet for AI - visible text #}
+<section class="ai-summary" style="background: var(--bg-secondary); padding: var(--space-6) 0;">
+  <div class="container">
+    <p style="font-size: 1.1rem; line-height: 1.7; max-width: 800px; margin: 0 auto; text-align: center;">
+      <strong>dart_node</strong> is a collection of Dart packages for full-stack JavaScript development.
+      It provides typed bindings to React, React Native, Express.js, WebSockets, and SQLite.
+      Unlike TypeScript, Dart preserves types at runtime and has sound null safety.
+      Use one language for frontend, backend, and mobile with access to the entire npm ecosystem.
+    </p>
+  </div>
+</section>
+
 <section class="audience-section">
   <div class="container">
     <div class="section-title">
@@ -44,12 +123,11 @@ void main() {
       <p>Whether you're coming from React or Flutter, dart_node speaks your language.</p>
     </div>
 
-    <div class="audience-tabs">
-      <button class="audience-tab active" data-audience="react">React / React Native Developers</button>
-      <button class="audience-tab" data-audience="flutter">Flutter Developers</button>
-    </div>
+    {# For React/TypeScript Developers - Always visible #}
+    <div class="audience-block" id="react-developers">
+      <h3 style="margin-bottom: var(--space-4);">For React &amp; TypeScript Developers</h3>
+      <p style="margin-bottom: var(--space-6);">Same hooks, components, and patterns you know - with runtime type safety TypeScript cannot provide.</p>
 
-    <div class="audience-content active" id="react-content">
       <div class="code-comparison">
         <div class="code-block">
           <div class="code-block-header">React (TypeScript)</div>
@@ -99,7 +177,11 @@ ReactElement counter() {
       </div>
     </div>
 
-    <div class="audience-content" id="flutter-content">
+    {# For Flutter Developers - Always visible #}
+    <div class="audience-block" id="flutter-developers" style="margin-top: var(--space-12); padding-top: var(--space-8); border-top: 1px solid var(--border-color);">
+      <h3 style="margin-bottom: var(--space-4);">For Flutter Developers</h3>
+      <p style="margin-bottom: var(--space-6);">Use your Dart skills for web and Node.js. Access the React and npm ecosystems while writing pure Dart.</p>
+
       <div class="code-comparison">
         <div class="code-block">
           <div class="code-block-header">Flutter</div>
@@ -246,8 +328,58 @@ ReactElement counter() {
   </div>
 </section>
 
+{# Comparison Table - Microsoft recommends tables for complex details #}
 <section class="features" style="background: var(--bg-secondary);">
   <div class="container">
+    <div class="section-title">
+      <h2>Dart vs TypeScript: Feature Comparison</h2>
+      <p>A direct comparison of type system capabilities.</p>
+    </div>
+
+    <div style="max-width: 800px; margin: 0 auto var(--space-12);">
+      <table style="width: 100%; border-collapse: collapse; background: var(--bg-primary); border-radius: 8px; overflow: hidden;">
+        <thead>
+          <tr style="background: var(--color-primary); color: white;">
+            <th style="padding: var(--space-4); text-align: left;">Feature</th>
+            <th style="padding: var(--space-4); text-align: center;">TypeScript</th>
+            <th style="padding: var(--space-4); text-align: center;">Dart</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color);">Runtime type preservation</td>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color); text-align: center;">No (erased)</td>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color); text-align: center;"><strong>Yes</strong></td>
+          </tr>
+          <tr>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color);">Sound null safety</td>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color); text-align: center;">Partial (!)</td>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color); text-align: center;"><strong>Yes</strong></td>
+          </tr>
+          <tr>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color);">Generic type checking at runtime</td>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color); text-align: center;">No</td>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color); text-align: center;"><strong>Yes</strong></td>
+          </tr>
+          <tr>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color);">JSON validation at boundary</td>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color); text-align: center;">Needs Zod/io-ts</td>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color); text-align: center;"><strong>Built-in</strong></td>
+          </tr>
+          <tr>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color);">Build tooling required</td>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color); text-align: center;">Webpack/Babel/etc</td>
+            <td style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-color); text-align: center;"><strong>dart compile js</strong></td>
+          </tr>
+          <tr>
+            <td style="padding: var(--space-3) var(--space-4);">npm ecosystem access</td>
+            <td style="padding: var(--space-3) var(--space-4); text-align: center;"><strong>Native</strong></td>
+            <td style="padding: var(--space-3) var(--space-4); text-align: center;"><strong>Via JS interop</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <div class="section-title">
       <h2>Why Types Matter at Runtime</h2>
       <p>TypeScript erases types when it compiles to JavaScript. Dart doesn't.</p>
@@ -334,22 +466,3 @@ node build/server.js
   </div>
 </section>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const tabs = document.querySelectorAll('.audience-tab');
-  const contents = document.querySelectorAll('.audience-content');
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const audience = tab.dataset.audience;
-
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-
-      contents.forEach(content => {
-        content.classList.toggle('active', content.id === `${audience}-content`);
-      });
-    });
-  });
-});
-</script>
