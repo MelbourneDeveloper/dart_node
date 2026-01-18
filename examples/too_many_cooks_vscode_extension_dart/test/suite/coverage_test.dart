@@ -290,7 +290,8 @@ void main() {
       assertOk(msgItem != null, 'Message should appear in tree');
       final label = _getLabel(msgItem!);
       // Label format is "from → to", content is in description
-      assertOk(label.isNotEmpty, 'Message should have label');
+      assertOk(label.contains(senderName), 'Message should show sender');
+      assertOk(label.contains(receiverName), 'Message should show receiver');
 
       _log('[STORE ERROR] PASSED: sendMessage creates message in state');
     }));

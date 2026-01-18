@@ -28,6 +28,37 @@ export 'src/disposable.dart';
 export 'src/event_emitter.dart';
 export 'src/extension_context.dart';
 export 'src/extensions.dart';
+// Export only helper functions from js_helpers, NOT the JS interop types
+// (JSAgentIdentity, JSFileLock, etc.) which would conflict with app types.
+// Tests should import js_helpers.dart directly when they need the JS types.
+export 'src/js_helpers.dart'
+    show
+        consoleError,
+        consoleLog,
+        consoleWarn,
+        countTreeItemChildren,
+        createJsObject,
+        dateNow,
+        dirname,
+        dumpTreeSnapshot,
+        evalCreateObject,
+        extractAgentKeyFromResult,
+        extractMessageIdFromResult,
+        findTreeItemChildByLabel,
+        getArrayProp,
+        getBoolProp,
+        getIntProp,
+        getObjectProp,
+        getStringProp,
+        getStringPropOrNull,
+        getTreeItemChildren,
+        getTreeItemDescription,
+        getTreeItemLabel,
+        globalThis,
+        promiseResolve,
+        reflectGet,
+        reflectSet,
+        treeItemHasChildWithLabel;
 export 'src/mocha.dart';
 export 'src/output_channel.dart';
 export 'src/promise.dart';

@@ -27,4 +27,8 @@ extension type Commands._(JSObject _) implements JSObject {
     String command, [
     JSAny? args,
   ]);
+
+  /// Returns all registered commands.
+  /// If [filterInternal] is true (default), internal commands are filtered out.
+  external JSPromise<JSArray<JSString>> getCommands([bool filterInternal]);
 }

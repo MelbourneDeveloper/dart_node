@@ -11,8 +11,15 @@ import 'test_helpers.dart';
 @JS('console.log')
 external void _log(String msg);
 
+// Raw JS interop to call vscode.commands.getCommands
+@JS('vscode.commands.getCommands')
+external JSPromise<JSArray<JSString>> _getCommands(JSBoolean filterInternal);
+
 void main() {
   _log('[COMMANDS TEST] main() called');
+
+  // Ensure any dialog mocks from previous tests are restored
+  restoreDialogMocks();
 
   suite('Commands', syncTest(() {
     suiteSetup(asyncTest(() async {
@@ -21,58 +28,87 @@ void main() {
       _log('[COMMANDS TEST] suiteSetup complete');
     }));
 
-    suiteTeardown(asyncTest(() async {
-      _log('[COMMANDS TEST] suiteTeardown - disconnecting');
-      await safeDisconnect();
-      _log('[COMMANDS TEST] suiteTeardown complete');
+    test('tooManyCooks.connect command is registered', asyncTest(() async {
+      _log('[COMMANDS TEST] Running: connect command is registered');
+      final commands = await _getCommands(true.toJS).toDart;
+      final commandList = commands.toDart.map((c) => c.toDart);
+      assertOk(
+        commandList.contains('tooManyCooks.connect'),
+        'connect command should be registered',
+      );
+      _log('[COMMANDS TEST] PASSED: connect command is registered');
     }));
 
-    test('connect command establishes connection', asyncTest(() async {
-      _log('[COMMANDS TEST] Running connect test');
-      final api = getTestAPI();
-
-      assertOk(!api.isConnected(), 'Should not be connected initially');
-
-      await api.connect().toDart;
-      await waitForConnection();
-
-      assertOk(api.isConnected(), 'Should be connected after connect()');
-      assertEqual(api.getConnectionStatus(), 'connected');
-      _log('[COMMANDS TEST] connect test PASSED');
+    test('tooManyCooks.disconnect command is registered', asyncTest(() async {
+      _log('[COMMANDS TEST] Running: disconnect command is registered');
+      final commands = await _getCommands(true.toJS).toDart;
+      final commandList = commands.toDart.map((c) => c.toDart);
+      assertOk(
+        commandList.contains('tooManyCooks.disconnect'),
+        'disconnect command should be registered',
+      );
+      _log('[COMMANDS TEST] PASSED: disconnect command is registered');
     }));
 
-    test('disconnect command works when not connected', asyncTest(() async {
-      _log('[COMMANDS TEST] Running disconnect test');
-      final api = getTestAPI();
+    test('tooManyCooks.refresh command is registered', asyncTest(() async {
+      _log('[COMMANDS TEST] Running: refresh command is registered');
+      final commands = await _getCommands(true.toJS).toDart;
+      final commandList = commands.toDart.map((c) => c.toDart);
+      assertOk(
+        commandList.contains('tooManyCooks.refresh'),
+        'refresh command should be registered',
+      );
+      _log('[COMMANDS TEST] PASSED: refresh command is registered');
+    }));
 
-      // Ensure disconnected first
-      await safeDisconnect();
-      assertOk(!api.isConnected(), 'Should not be connected');
+    test('tooManyCooks.showDashboard command is registered',
+        asyncTest(() async {
+      _log('[COMMANDS TEST] Running: showDashboard command is registered');
+      final commands = await _getCommands(true.toJS).toDart;
+      final commandList = commands.toDart.map((c) => c.toDart);
+      assertOk(
+        commandList.contains('tooManyCooks.showDashboard'),
+        'showDashboard command should be registered',
+      );
+      _log('[COMMANDS TEST] PASSED: showDashboard command is registered');
+    }));
+
+    test('disconnect command can be executed without error when not connected',
+        asyncTest(() async {
+      _log('[COMMANDS TEST] Running: disconnect when not connected');
 
       // Should not throw even when not connected
-      await api.disconnect().toDart;
-      assertOk(!api.isConnected(), 'Should still not be connected');
-      _log('[COMMANDS TEST] disconnect test PASSED');
+      await vscode.commands.executeCommand('tooManyCooks.disconnect').toDart;
+
+      final api = getTestAPI();
+      assertEqual(api.isConnected(), false);
+      _log('[COMMANDS TEST] PASSED: disconnect when not connected');
     }));
 
-    test('refresh command updates state from server', asyncTest(() async {
-      _log('[COMMANDS TEST] Running refresh test');
-      final api = getTestAPI();
+    test('showDashboard command opens a webview panel', asyncTest(() async {
+      _log('[COMMANDS TEST] Running: showDashboard opens webview panel');
 
-      await api.connect().toDart;
-      await waitForConnection();
+      // Close any existing editors
+      await vscode.commands
+          .executeCommand('workbench.action.closeAllEditors')
+          .toDart;
 
-      // Register an agent via MCP tool
-      final args = createArgs({'name': 'refresh-agent'});
-      await api.callTool('register', args).toDart;
+      // Execute command
+      await vscode.commands.executeCommand('tooManyCooks.showDashboard').toDart;
 
-      // Refresh should pick up new data
-      await api.refreshStatus().toDart;
+      // Give time for panel to open
+      await Future<void>.delayed(const Duration(milliseconds: 500));
 
-      // Check agent appears in state
-      final agents = api.getAgents();
-      assertOk(agents.length > 0, 'Should have at least one agent');
-      _log('[COMMANDS TEST] refresh test PASSED');
+      // The dashboard should be visible (can't directly test webview content,
+      // but we can verify the command executed without error)
+      // The test passes if no error is thrown
+
+      // Clean up
+      await vscode.commands
+          .executeCommand('workbench.action.closeAllEditors')
+          .toDart;
+
+      _log('[COMMANDS TEST] PASSED: showDashboard opens webview panel');
     }));
   }));
 

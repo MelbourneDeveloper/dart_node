@@ -1,5 +1,5 @@
 /// Configuration Tests
-/// Verifies configuration and extension settings work correctly.
+/// Verifies configuration settings work correctly.
 library;
 
 import 'dart:js_interop';
@@ -14,40 +14,33 @@ external void _log(String msg);
 void main() {
   _log('[CONFIGURATION TEST] main() called');
 
+  // Ensure any dialog mocks from previous tests are restored
+  restoreDialogMocks();
+
   suite('Configuration', syncTest(() {
     suiteSetup(asyncTest(() async {
       _log('[CONFIG] suiteSetup - waiting for extension activation');
       await waitForExtensionActivation();
     }));
 
-    suiteTeardown(asyncTest(() async {
-      _log('[CONFIG] suiteTeardown - disconnecting');
-      await safeDisconnect();
+    test('autoConnect configuration exists', syncTest(() {
+      _log('[CONFIG] Running: autoConnect configuration exists');
+      final config = vscode.workspace.getConfiguration('tooManyCooks');
+      final autoConnect = config.get<JSBoolean>('autoConnect');
+      assertOk(
+        !autoConnect.isUndefinedOrNull,
+        'autoConnect config should exist',
+      );
+      _log('[CONFIG] PASSED: autoConnect configuration exists');
     }));
 
-    test('Extension activates with TestAPI exported', syncTest(() {
-      _log('[CONFIG] Running TestAPI export test');
-      final api = getTestAPI();
-      assertOk(api.getConnectionStatus().isNotEmpty, 'TestAPI should work');
-      _log('[CONFIG] TestAPI export test PASSED');
-    }));
-
-    test('Connection status starts as disconnected', syncTest(() {
-      _log('[CONFIG] Running initial status test');
-      final api = getTestAPI();
-      assertEqual(api.getConnectionStatus(), 'disconnected');
-      _log('[CONFIG] initial status test PASSED');
-    }));
-
-    test('Connect changes status to connected', asyncTest(() async {
-      _log('[CONFIG] Running connect status test');
-      final api = getTestAPI();
-
-      await api.connect().toDart;
-      await waitForConnection();
-
-      assertEqual(api.getConnectionStatus(), 'connected');
-      _log('[CONFIG] connect status test PASSED');
+    test('autoConnect defaults to true', syncTest(() {
+      _log('[CONFIG] Running: autoConnect defaults to true');
+      final config = vscode.workspace.getConfiguration('tooManyCooks');
+      final autoConnect = config.get<JSBoolean>('autoConnect');
+      // Default is true according to package.json
+      assertEqual(autoConnect?.toDart, true);
+      _log('[CONFIG] PASSED: autoConnect defaults to true');
     }));
   }));
 

@@ -15,6 +15,84 @@ external void _log(String msg);
 @JS('Date.now')
 external int _dateNow();
 
+// JS interop helper to get property from JSObject.
+@JS('Reflect.get')
+external JSAny? _reflectGet(JSObject target, JSString key);
+
+// JS interop helper to set property on JSObject.
+@JS('Reflect.set')
+external void _reflectSetRaw(JSObject target, JSString key, JSAny? value);
+
+void _jsSet(JSObject target, String key, JSAny? value) =>
+    _reflectSetRaw(target, key.toJS, value);
+
+// Helper to get label from tree item snapshot (returned by TestAPI).
+String _getLabel(JSObject item) {
+  final value = _reflectGet(item, 'label'.toJS);
+  if (value == null || value.isUndefinedOrNull) return '';
+  if (value.typeofEquals('string')) return (value as JSString).toDart;
+  return value.dartify()?.toString() ?? '';
+}
+
+/// Create a LockTreeItem-like object for command testing.
+/// This mimics the TypeScript LockTreeItem class.
+JSObject _createLockTreeItem({
+  required String filePath,
+  String? agentName,
+  int acquiredAt = 0,
+  int expiresAt = 0,
+  String? reason,
+}) {
+  // Create a TreeItem with the filePath as label
+  final item = TreeItem(filePath);
+
+  // Add the filePath property that the command handler looks for
+  _jsSet(item, 'filePath', filePath.toJS);
+
+  // Set contextValue for command registration matching
+  item.contextValue = 'lockItem';
+
+  // Add the lock data if provided
+  if (agentName != null) {
+    final lockData = _createJsObject();
+    _jsSet(lockData, 'filePath', filePath.toJS);
+    _jsSet(lockData, 'agentName', agentName.toJS);
+    _jsSet(lockData, 'acquiredAt', acquiredAt.toJS);
+    _jsSet(lockData, 'expiresAt', expiresAt.toJS);
+    if (reason != null) _jsSet(lockData, 'reason', reason.toJS);
+    _jsSet(item, 'lock', lockData);
+  }
+
+  return item;
+}
+
+/// Create an AgentTreeItem-like object for command testing.
+/// This mimics the TypeScript AgentTreeItem class.
+JSObject _createAgentTreeItem({
+  required String label,
+  required String itemType,
+  String? description,
+  int collapsibleState = TreeItemCollapsibleState.none,
+  String? agentName,
+  String? filePath,
+}) {
+  final item = TreeItem(label, collapsibleState)
+    ..description = description
+    ..contextValue = itemType;
+
+  // Add properties the command handlers look for
+  if (agentName != null) _jsSet(item, 'agentName', agentName.toJS);
+  if (filePath != null) _jsSet(item, 'filePath', filePath.toJS);
+
+  return item;
+}
+
+/// Create a plain JS object.
+@JS('Object.create')
+external JSObject _createJsObjectFromProto(JSAny? proto);
+
+JSObject _createJsObject() => _createJsObjectFromProto(null);
+
 void main() {
   _log('[COMMAND INTEGRATION TEST] main() called');
 
@@ -42,9 +120,9 @@ void main() {
       await safeDisconnect();
     }));
 
-    // Note: setup() and teardown() for dialog mocks would go here
-    // but dialog mocking is not yet implemented in Dart
-    // The TS version uses: installDialogMocks() / restoreDialogMocks()
+    setup(syncTest(installDialogMocks));
+
+    teardown(syncTest(restoreDialogMocks));
 
     test('Setup: Connect and register agent', asyncTest(() async {
       _log('[CMD DIALOG] Running: Setup - Connect and register agent');
@@ -58,8 +136,10 @@ void main() {
           await api.callTool('register', createArgs({'name': agentName}))
               .toDart;
       agentKey = extractKeyFromResult(result.toDart);
-      assertOk(agentKey != null && agentKey!.isNotEmpty, 'Agent should have '
-          'key');
+      assertOk(
+        agentKey != null && agentKey!.isNotEmpty,
+        'Agent should have key',
+      );
 
       _log('[CMD DIALOG] PASSED: Setup - Connect and register agent');
     }));
@@ -84,10 +164,22 @@ void main() {
 
       await waitForLockInTree(api, lockPath);
 
-      // Note: In TS version, mockWarningMessage('Release') is called here
-      // Since we can't mock dialogs yet, we use forceReleaseLock directly
-      // This still tests the store's force release functionality
-      await api.forceReleaseLock(lockPath).toDart;
+      // Mock the confirmation dialog to return 'Release'
+      mockWarningMessage('Release');
+
+      // Create a LockTreeItem for the command
+      final lockItem = _createLockTreeItem(
+        filePath: lockPath,
+        agentName: agentName,
+        acquiredAt: _dateNow(),
+        expiresAt: _dateNow() + 60000,
+        reason: 'test',
+      );
+
+      // Execute the actual VSCode command
+      await vscode.commands
+          .executeCommand<JSAny?>('tooManyCooks.deleteLock', lockItem)
+          .toDart;
 
       await waitForLockGone(api, lockPath);
 
@@ -120,8 +212,21 @@ void main() {
 
       await waitForLockInTree(api, lockPath);
 
-      // Force release via store method
-      await api.forceReleaseLock(lockPath).toDart;
+      // Mock the confirmation dialog to return 'Release'
+      mockWarningMessage('Release');
+
+      // Create an AgentTreeItem with filePath for the command
+      final agentItem = _createAgentTreeItem(
+        label: lockPath,
+        agentName: agentName,
+        itemType: 'lock',
+        filePath: lockPath,
+      );
+
+      // Execute the actual VSCode command
+      await vscode.commands
+          .executeCommand<JSAny?>('tooManyCooks.deleteLock', agentItem)
+          .toDart;
 
       await waitForLockGone(api, lockPath);
 
@@ -137,18 +242,14 @@ void main() {
     test('deleteLock command - no filePath shows error', asyncTest(() async {
       _log('[CMD DIALOG] Running: deleteLock - no filePath shows error');
 
-      // In TS, this creates a LockTreeItem without a lock
-      // We verify the command handles missing filePath gracefully
-      // by calling with an empty path (should not crash)
-      final api = getTestAPI();
+      // Create a LockTreeItem without a lock (no filePath)
+      final emptyItem = _createLockTreeItem(filePath: 'No locks');
 
-      // Attempt to force release a non-existent lock
-      // This should not throw but also should do nothing
-      try {
-        await api.forceReleaseLock('/nonexistent/path.ts').toDart;
-      } on Object {
-        // May throw if lock doesn't exist, that's OK
-      }
+      // Execute the command - should show error message
+      // (mock returns undefined)
+      await vscode.commands
+          .executeCommand<JSAny?>('tooManyCooks.deleteLock', emptyItem)
+          .toDart;
 
       // Command should have returned early, no crash
       assertOk(true, 'Command handled empty filePath gracefully');
@@ -175,8 +276,23 @@ void main() {
 
       await waitForLockInTree(api, lockPath);
 
-      // In TS, mockWarningMessage(undefined) is called to simulate cancel
-      // Here we verify the lock still exists (no action taken)
+      // Mock the dialog to return undefined (cancelled)
+      mockWarningMessage(null);
+
+      final lockItem = _createLockTreeItem(
+        filePath: lockPath,
+        agentName: agentName,
+        acquiredAt: _dateNow(),
+        expiresAt: _dateNow() + 60000,
+        reason: 'test',
+      );
+
+      // Execute command (should be cancelled)
+      await vscode.commands
+          .executeCommand<JSAny?>('tooManyCooks.deleteLock', lockItem)
+          .toDart;
+
+      // Lock should still exist (command was cancelled)
       assertOk(
         api.findLockInTree(lockPath) != null,
         'Lock should still exist after cancel',
@@ -215,8 +331,22 @@ void main() {
 
       await waitForAgentInTree(api, targetName);
 
-      // Delete using store method
-      await api.deleteAgent(targetName).toDart;
+      // Mock the confirmation dialog to return 'Remove'
+      mockWarningMessage('Remove');
+
+      // Create an AgentTreeItem for the command
+      final agentItem = _createAgentTreeItem(
+        label: targetName,
+        description: 'idle',
+        collapsibleState: TreeItemCollapsibleState.collapsed,
+        itemType: 'agent',
+        agentName: targetName,
+      );
+
+      // Execute the actual VSCode command
+      await vscode.commands
+          .executeCommand<JSAny?>('tooManyCooks.deleteAgent', agentItem)
+          .toDart;
 
       await waitForAgentGone(api, targetName);
 
@@ -232,14 +362,17 @@ void main() {
     test('deleteAgent command - no agentName shows error', asyncTest(() async {
       _log('[CMD DIALOG] Running: deleteAgent - no agentName shows error');
 
-      // Attempt to delete with empty/invalid agent name
-      final api = getTestAPI();
+      // Create an AgentTreeItem without agentName
+      final emptyItem = _createAgentTreeItem(
+        label: 'No agent',
+        itemType: 'agent',
+        // No agentName provided
+      );
 
-      try {
-        await api.deleteAgent('').toDart;
-      } on Object {
-        // May throw, that's expected
-      }
+      // Execute the command - should show error message
+      await vscode.commands
+          .executeCommand<JSAny?>('tooManyCooks.deleteAgent', emptyItem)
+          .toDart;
 
       // Command should have returned early, no crash
       assertOk(true, 'Command handled empty agentName gracefully');
@@ -257,8 +390,23 @@ void main() {
 
       await waitForAgentInTree(api, targetName);
 
-      // In TS, mockWarningMessage(undefined) simulates cancel
-      // Here we verify the agent still exists (no action taken)
+      // Mock the dialog to return undefined (cancelled)
+      mockWarningMessage(null);
+
+      final agentItem = _createAgentTreeItem(
+        label: targetName,
+        description: 'idle',
+        collapsibleState: TreeItemCollapsibleState.collapsed,
+        itemType: 'agent',
+        agentName: targetName,
+      );
+
+      // Execute command (should be cancelled)
+      await vscode.commands
+          .executeCommand<JSAny?>('tooManyCooks.deleteAgent', agentItem)
+          .toDart;
+
+      // Agent should still exist
       assertOk(
         api.findAgentInTree(targetName) != null,
         'Agent should still exist after cancel',
@@ -277,13 +425,24 @@ void main() {
         'name': recipientName,
       })).toDart;
 
-      // Send message using store method
-      final senderName = 'sender-with-target-$testId';
-      await api.sendMessage(
-        senderName,
-        recipientName,
-        'Test message with target',
-      ).toDart;
+      // Mock the dialogs for sendMessage flow
+      // (no quickpick when target provided)
+      mockInputBox('sender-with-target-$testId'); // Sender name
+      mockInputBox('Test message with target'); // Message content
+
+      // Create an AgentTreeItem as target
+      final targetItem = _createAgentTreeItem(
+        label: recipientName,
+        description: 'idle',
+        collapsibleState: TreeItemCollapsibleState.collapsed,
+        itemType: 'agent',
+        agentName: recipientName,
+      );
+
+      // Execute the actual VSCode command with target
+      await vscode.commands
+          .executeCommand<JSAny?>('tooManyCooks.sendMessage', targetItem)
+          .toDart;
 
       await waitForMessageInTree(api, 'Test message with target');
 
@@ -304,13 +463,15 @@ void main() {
         'name': recipientName,
       })).toDart;
 
-      // Send message via store (simulates what would happen after quickpick)
-      final senderName = 'sender-no-target-$testId';
-      await api.sendMessage(
-        senderName,
-        recipientName,
-        'Test message without target',
-      ).toDart;
+      // Mock all dialogs for sendMessage flow
+      mockQuickPick(recipientName); // Select recipient
+      mockInputBox('sender-no-target-$testId'); // Sender name
+      mockInputBox('Test message without target'); // Message content
+
+      // Execute the command without a target item
+      await vscode.commands
+          .executeCommand<JSAny?>('tooManyCooks.sendMessage')
+          .toDart;
 
       await waitForMessageInTree(api, 'Test message without target');
 
@@ -324,21 +485,22 @@ void main() {
       _log('[CMD DIALOG] Running: sendMessage - broadcast to all');
       final api = getTestAPI();
 
-      // Send broadcast via store
-      final senderName = 'broadcast-sender-$testId';
-      await api.sendMessage(
-        senderName,
-        '*',
-        'Broadcast test message',
-      ).toDart;
+      // Mock dialogs for broadcast
+      mockQuickPick('* (broadcast to all)');
+      mockInputBox('broadcast-sender-$testId');
+      mockInputBox('Broadcast test message');
+
+      // Execute command for broadcast
+      await vscode.commands
+          .executeCommand<JSAny?>('tooManyCooks.sendMessage')
+          .toDart;
 
       await waitForMessageInTree(api, 'Broadcast test');
 
       final msgItem = api.findMessageInTree('Broadcast test');
       assertOk(msgItem != null, 'Broadcast should be in tree');
       final label = _getLabel(msgItem!);
-      assertOk(label.contains('all') || label.contains('*'),
-          'Should show "all" or "*" as recipient');
+      assertOk(label.contains('all'), 'Should show "all" as recipient');
 
       _log('[CMD DIALOG] PASSED: sendMessage - broadcast to all');
     }));
@@ -348,9 +510,15 @@ void main() {
       _log('[CMD DIALOG] Running: sendMessage - cancelled at recipient '
           'selection');
 
-      // In TS, mockQuickPick(undefined) simulates cancel
-      // Command should return early without action
-      // We just verify the test doesn't crash
+      // Mock quickpick to return undefined (cancelled)
+      mockQuickPick(null);
+
+      // Execute command - should return early
+      await vscode.commands
+          .executeCommand<JSAny?>('tooManyCooks.sendMessage')
+          .toDart;
+
+      // Command should have returned early, no crash
       assertOk(true, 'Command handled cancelled recipient selection');
 
       _log('[CMD DIALOG] PASSED: sendMessage - cancelled at recipient '
@@ -367,8 +535,16 @@ void main() {
         'name': recipientName,
       })).toDart;
 
-      // In TS, mockInputBox(undefined) simulates cancel after recipient select
-      // Command should return early without action
+      // Mock recipient selection but cancel sender input
+      mockQuickPick(recipientName);
+      mockInputBox(null); // Cancel sender
+
+      // Execute command
+      await vscode.commands
+          .executeCommand<JSAny?>('tooManyCooks.sendMessage')
+          .toDart;
+
+      // Command should have returned early
       assertOk(true, 'Command handled cancelled sender input');
 
       _log('[CMD DIALOG] PASSED: sendMessage - cancelled at sender input');
@@ -385,8 +561,17 @@ void main() {
         'name': recipientName,
       })).toDart;
 
-      // In TS, mockInputBox(undefined) simulates cancel after sender input
-      // Command should return early without action
+      // Mock recipient and sender but cancel message
+      mockQuickPick(recipientName);
+      mockInputBox('sender-cancel-msg-$testId');
+      mockInputBox(null); // Cancel message
+
+      // Execute command
+      await vscode.commands
+          .executeCommand<JSAny?>('tooManyCooks.sendMessage')
+          .toDart;
+
+      // Command should have returned early
       assertOk(true, 'Command handled cancelled message input');
 
       _log('[CMD DIALOG] PASSED: sendMessage - cancelled at message input');
@@ -394,16 +579,4 @@ void main() {
   }));
 
   _log('[COMMAND INTEGRATION TEST] main() completed - all tests registered');
-}
-
-// JS interop helper to get property from JSObject
-@JS('Reflect.get')
-external JSAny? _reflectGet(JSObject target, JSString key);
-
-// Helper to get label from tree item snapshot (returned by TestAPI)
-String _getLabel(JSObject item) {
-  final value = _reflectGet(item, 'label'.toJS);
-  if (value == null || value.isUndefinedOrNull) return '';
-  if (value.typeofEquals('string')) return (value as JSString).toDart;
-  return value.dartify()?.toString() ?? '';
 }

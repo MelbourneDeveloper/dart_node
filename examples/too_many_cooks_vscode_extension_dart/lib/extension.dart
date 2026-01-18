@@ -337,15 +337,37 @@ void _registerCommands(ExtensionContext context) {
 }
 
 /// Extracts file path from a tree item.
-String? _getFilePathFromItem(TreeItem item) =>
-    _getCustomProperty(item, 'filePath');
+/// Handles both LockTreeItem (lock.filePath) and AgentTreeItem (filePath).
+String? _getFilePathFromItem(TreeItem item) {
+  // Try direct filePath property first (AgentTreeItem case)
+  final direct = _reflectGetProp(item, 'filePath'.toJS);
+  if (direct != null && !direct.isUndefinedOrNull) {
+    if (direct.typeofEquals('string')) return (direct as JSString).toDart;
+  }
+  // Try lock.filePath (LockTreeItem case)
+  final lock = _reflectGetProp(item, 'lock'.toJS);
+  if (lock != null && !lock.isUndefinedOrNull) {
+    final lockFilePath = _reflectGetProp(lock as JSObject, 'filePath'.toJS);
+    if (lockFilePath != null && !lockFilePath.isUndefinedOrNull) {
+      if (lockFilePath.typeofEquals('string')) {
+        return (lockFilePath as JSString).toDart;
+      }
+    }
+  }
+  return null;
+}
 
 /// Extracts agent name from a tree item.
-String? _getAgentNameFromItem(TreeItem item) =>
-    _getCustomProperty(item, 'agentName');
+String? _getAgentNameFromItem(TreeItem item) {
+  final value = _reflectGetProp(item, 'agentName'.toJS);
+  if (value == null || value.isUndefinedOrNull) return null;
+  if (value.typeofEquals('string')) return (value as JSString).toDart;
+  return null;
+}
 
-@JS()
-external String? _getCustomProperty(JSObject item, String property);
+/// Get a property from a JS object via Reflect.get.
+@JS('Reflect.get')
+external JSAny? _reflectGetProp(JSObject target, JSString key);
 
 /// Creates the test API object for integration tests.
 /// This matches the TypeScript TestAPI interface exactly.

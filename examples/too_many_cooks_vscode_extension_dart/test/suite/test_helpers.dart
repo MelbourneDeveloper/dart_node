@@ -8,8 +8,27 @@ import 'dart:async';
 import 'dart:js_interop';
 
 import 'package:dart_node_vsix/dart_node_vsix.dart';
+import 'package:dart_node_vsix/src/js_helpers.dart' as js;
 
 import 'test_api.dart';
+
+// Re-export commonly used helpers from js_helpers for convenience.
+export 'package:dart_node_vsix/src/js_helpers.dart'
+    show
+        consoleError,
+        consoleLog,
+        countTreeItemChildren,
+        dateNow,
+        dumpTreeSnapshot,
+        extractAgentKeyFromResult,
+        findTreeItemChildByLabel,
+        getStringProp,
+        getTreeItemChildren,
+        getTreeItemDescription,
+        getTreeItemLabel,
+        reflectGet,
+        reflectSet,
+        treeItemHasChildWithLabel;
 
 /// Extension ID for the Dart extension.
 const extensionId = 'Nimblesite.too-many-cooks-dart';
@@ -18,7 +37,7 @@ const extensionId = 'Nimblesite.too-many-cooks-dart';
 TestAPI? _cachedTestAPI;
 
 /// Server path for tests.
-late String _serverPath;
+var _serverPath = '';
 
 /// Path module.
 @JS('require')
@@ -46,25 +65,13 @@ final _fs = _requireFs('fs');
 @JS('process.env.HOME')
 external String? get _envHome;
 
-/// Console.log.
-@JS('console.log')
-external void _consoleLog(String message);
-
-/// Console.error.
-@JS('console.error')
-external void _consoleError(String message);
-
-/// globalThis.
-@JS('globalThis')
-external JSObject get _globalThis;
-
-/// Reflect.set.
-@JS('Reflect.set')
-external void _reflectSet(JSObject target, String key, JSAny? value);
-
-/// __dirname (may be null in some environments).
-@JS('__dirname')
-external String? get _dirnameNullable;
+// Private aliases that delegate to js_helpers (for internal use).
+void _consoleLog(String msg) => js.consoleLog(msg);
+void _consoleError(String msg) => js.consoleError(msg);
+void _reflectSet(JSObject target, String key, JSAny? value) =>
+    js.reflectSet(target, key, value);
+JSObject get _globalThis => js.globalThis;
+String? get _dirnameNullable => js.dirname;
 
 /// Initialize paths and set test server path.
 void _initPaths() {
@@ -343,9 +350,171 @@ void cleanDatabase() {
   _consoleLog('[TEST HELPER] Database cleaned');
 }
 
-/// Restore any dialog mocks (no-op in Dart - kept for API compatibility).
+// =============================================================================
+// Dialog Mocking Infrastructure
+// =============================================================================
+
+/// Get the vscode.window object for mocking.
+@JS('require')
+external JSObject _requireVscodeModule(String module);
+
+@JS('Reflect.get')
+external JSAny? _reflectGetAny(JSObject target, JSString key);
+
+/// Get a property from a JS object.
+JSAny? _jsGet(JSObject target, String key) => _reflectGetAny(target, key.toJS);
+
+JSObject _getVscodeWindow() {
+  final vscodeModule = _requireVscodeModule('vscode');
+  final window = _jsGet(vscodeModule, 'window');
+  if (window == null) throw StateError('vscode.window is null');
+  return window as JSObject;
+}
+
+/// Create a resolved Promise with a value.
+@JS('Promise.resolve')
+external JSPromise<T> _createResolvedPromise<T extends JSAny?>(T? value);
+
+/// Eval for creating JS functions.
+@JS('eval')
+external JSAny _eval(String code);
+
+/// Stored original methods (captured at first mock install).
+JSAny? _storedShowWarningMessage;
+JSAny? _storedShowQuickPick;
+JSAny? _storedShowInputBox;
+
+/// Mock response queues.
+final List<String?> _warningMessageResponses = [];
+final List<String?> _quickPickResponses = [];
+final List<String?> _inputBoxResponses = [];
+
+/// Whether mocks are currently installed.
+bool _mocksInstalled = false;
+
+/// Queue a response for the next showWarningMessage call.
+void mockWarningMessage(String? response) {
+  _warningMessageResponses.add(response);
+}
+
+/// Queue a response for the next showQuickPick call.
+void mockQuickPick(String? response) {
+  _quickPickResponses.add(response);
+}
+
+/// Queue a response for the next showInputBox call.
+void mockInputBox(String? response) {
+  _inputBoxResponses.add(response);
+}
+
+/// Create a mock function via eval that accesses a global Dart callback.
+/// This avoids issues with Dart closure conversion by using pure JS.
+JSFunction _createPureJsMockFn(String globalName) =>
+    // Create a JS function that calls back to our Dart getter
+    _eval('''
+    (function() {
+      return Promise.resolve(globalThis.$globalName());
+    })
+  ''') as JSFunction;
+
+/// Global callbacks for mock functions (accessible from JS via globalThis).
+@JS('globalThis._mockWarningMsgCb')
+external set _globalMockWarningMsgCb(JSFunction? f);
+
+@JS('globalThis._mockQuickPickCb')
+external set _globalMockQuickPickCb(JSFunction? f);
+
+@JS('globalThis._mockInputBoxCb')
+external set _globalMockInputBoxCb(JSFunction? f);
+
+/// Install dialog mocks on vscode.window.
+void installDialogMocks() {
+  if (_mocksInstalled) return;
+
+  final window = _getVscodeWindow();
+
+  // Store originals on first install
+  _storedShowWarningMessage ??= _jsGet(window, 'showWarningMessage');
+  _storedShowQuickPick ??= _jsGet(window, 'showQuickPick');
+  _storedShowInputBox ??= _jsGet(window, 'showInputBox');
+
+  // Set up global callbacks that return the next response from each queue
+  _globalMockWarningMsgCb = (() {
+    final response = _warningMessageResponses.isNotEmpty
+        ? _warningMessageResponses.removeAt(0)
+        : null;
+    return response?.toJS;
+  }).toJS;
+
+  _globalMockQuickPickCb = (() {
+    final response = _quickPickResponses.isNotEmpty
+        ? _quickPickResponses.removeAt(0)
+        : null;
+    return response?.toJS;
+  }).toJS;
+
+  _globalMockInputBoxCb = (() {
+    final response = _inputBoxResponses.isNotEmpty
+        ? _inputBoxResponses.removeAt(0)
+        : null;
+    return response?.toJS;
+  }).toJS;
+
+  // Install pure JS mock functions that call back to our globals
+  _reflectSet(
+    window,
+    'showWarningMessage',
+    _createPureJsMockFn('_mockWarningMsgCb'),
+  );
+
+  _reflectSet(
+    window,
+    'showQuickPick',
+    _createPureJsMockFn('_mockQuickPickCb'),
+  );
+
+  _reflectSet(
+    window,
+    'showInputBox',
+    _createPureJsMockFn('_mockInputBoxCb'),
+  );
+
+  _mocksInstalled = true;
+  _consoleLog('[TEST HELPER] Dialog mocks installed');
+}
+
+/// Restore original dialog methods.
 void restoreDialogMocks() {
-  // Dialog mocking not implemented in Dart tests yet
+  if (!_mocksInstalled) return;
+
+  final window = _getVscodeWindow();
+
+  if (_storedShowWarningMessage != null) {
+    _reflectSet(window, 'showWarningMessage', _storedShowWarningMessage);
+  }
+  if (_storedShowQuickPick != null) {
+    _reflectSet(window, 'showQuickPick', _storedShowQuickPick);
+  }
+  if (_storedShowInputBox != null) {
+    _reflectSet(window, 'showInputBox', _storedShowInputBox);
+  }
+
+  _warningMessageResponses.clear();
+  _quickPickResponses.clear();
+  _inputBoxResponses.clear();
+  _mocksInstalled = false;
+  _consoleLog('[TEST HELPER] Dialog mocks restored');
+}
+
+/// Helper to open the Too Many Cooks panel.
+Future<void> openTooManyCooksPanel() async {
+  _consoleLog('[TEST HELPER] Opening Too Many Cooks panel...');
+  await vscode.commands
+      .executeCommand('workbench.view.extension.tooManyCooks')
+      .toDart;
+  // Wait for panel to be visible
+  await Future<void>.delayed(const Duration(milliseconds: 500));
+  _consoleLog('[TEST HELPER] Panel opened');
 }
 
 /// Create a plain JS object via eval (JSObject() constructor doesn't work).
