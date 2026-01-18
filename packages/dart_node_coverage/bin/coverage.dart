@@ -137,6 +137,8 @@ Result<List<String>, String> _findDartFiles(String packageDir) {
       .listSync(recursive: true)
       .whereType<File>()
       .where((f) => f.path.endsWith('.dart'))
+      // Skip runtime.dart to avoid infinite recursion when instrumenting cov()
+      .where((f) => !f.path.endsWith('runtime.dart'))
       .map((f) => f.path)
       .toList();
 
@@ -203,10 +205,16 @@ Future<Result<void, String>> _runTests(String packageDir) async {
     if (hasAllTests) 'test/all_tests.dart',
   ];
 
+  // Set NODE_PATH for Node.js tests so native modules can be found
+  final environment = useNodePlatform
+      ? {'NODE_PATH': p.join(packageDir, 'node_modules')}
+      : <String, String>{};
+
   final result = await Process.run(
     'dart',
     testArgs,
     workingDirectory: packageDir,
+    environment: environment,
   );
 
   stdout.writeln('Test stdout: ${result.stdout}');

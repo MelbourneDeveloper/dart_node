@@ -1,20 +1,20 @@
 # CLAUDE.md
 
-Dart packages for building Node.js apps. Typed Dart layer over JS interop.
+Dart packages for building Node.js apps. Strongly Typed Dart layer over JS interop.
+
+## Rules
+
+⛔️ NEVER KILL (pkill) THE VSCODE PROCESS!!!
+- Do not use Git unless asked by user
 
 ## Multi-Agent Coordination (Too Many Cooks)
 - Keep your key! It's critical. Do not lose it!
 - Check messages regularly, lock files before editing, unlock after
 - Don't edit locked files; signal intent via plans and messages
-- Coordinator: keep delegating via messages. Worker: keep asking for tasks via messages
-- Clean up expired locks routinely
-- Do not use Git unless asked by user
-
-## Code Rules
 
 **Language & Types**
 - All Dart, minimal JS. Use `dart:js_interop` (not deprecated `dart:js_util`/`package:js`)
-- Never expose `JSObject`/`JSAny`/`dynamic` in public APIs—always typed
+- AVOID `JSObject`/`JSAny`/`dynamic`!
 - Prefer typedef records over classes for data (structural typing)
 - ILLEGAL: `as`, `late`, `!`, `.then()`, global state
 
@@ -23,11 +23,12 @@ Dart packages for building Node.js apps. Typed Dart layer over JS interop.
 - Return `Result<T,E>` (nadz) instead of throwing exceptions
 - Functions < 20 lines, files < 500 LOC
 - Switch expressions/ternaries over if/else (except in declarative contexts)
+- Where Typescript code exists with no Dart wrapper, create the Dart wrapper APIs and add to the appropriate packages.
 
 **Testing**
 - 100% coverage with high-level integration tests, not unit tests/mocks
 - Tests in separate files, not groups. Dart only (JS only for interop testing)
-- Never skip tests. Never remove assertions. Failing tests OK, silent failures ILLEGAL
+- Never skip tests. Never remove assertions. Failing tests OK, silent failures = ⛔️ ILLEGAL. Aggressively unskip tests.
 - NO PLACEHOLDERS—throw if incomplete
 
 **Dependencies**
@@ -68,11 +69,4 @@ examples/
   mobile/               # React Native example
   too_many_cooks/       # Multi-agent coordination server
   jsx_demo/             # JSX syntax demo
-```
-
-## Build & Test
-```bash
-dart run tools/build/build.dart    # Build all
-dart test                          # Run tests
-dart analyze                       # Lint check
 ```

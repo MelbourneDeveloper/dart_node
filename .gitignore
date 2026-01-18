@@ -30,6 +30,7 @@ website/.dart-doc-temp/
 examples/frontend/coverage/
 
 *.mjs
+!.vscode-test.mjs
 
 examples/too_many_cooks_vscode_extension/.vscode-test/user-data/
 
@@ -49,8 +50,28 @@ examples/reflux_demo/flutter_counter/test/failures/
 
 
 mutation-reports
+
+out/
+
+
+.vscode-test/
 .playwright-mcp/
+
+# dart_node_vsix build artifacts
+packages/dart_node_vsix/out/
+packages/dart_node_vsix/build/
 
 website/playwright-report/
 
 website/test-results/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Dart metadata
+.metadata
+
+# Flutter web scaffolding (not needed for VSCode extension)
+examples/too_many_cooks_vscode_extension/web/
+examples/too_many_cooks_vscode_extension/lib/main.dart

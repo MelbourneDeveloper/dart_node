@@ -1,19 +1,16 @@
 {
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "dart.lineLength": 80,
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  "[dart]": {
+    "editor.defaultFormatter": "Dart-Code.dart-code"
   },
-  "eslint.enable": true,
-  "eslint.validate": ["typescript"],
   "files.exclude": {
     "out": false,
-    "node_modules": true
+    ".dart_tool": true
   },
   "search.exclude": {
     "out": true,
-    "node_modules": true
-  }
+    ".dart_tool": true
+  },
+  "testing.automaticallyOpenPeekView": "never"
 }

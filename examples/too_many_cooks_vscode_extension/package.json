@@ -148,26 +148,19 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "lint": "eslint src --ext ts",
-    "pretest": "npm run compile",
-    "test": "vscode-test"
-  },
-  "dependencies": {
-    "@preact/signals-core": "^1.5.0"
+    "compile": "dart pub get && dart compile js -O2 -o out/extension.dart.js lib/extension.dart && node scripts/wrap-extension.js",
+    "compile:tests": "dart pub get && mkdir -p out/test/suite && for f in test/suite/*_test.dart; do dart compile js -O0 -o out/test/suite/$(basename ${f%.dart}.dart.js) $f; done && node scripts/wrap-tests.js && node scripts/generate-test-manifest.js && cp test/suite/index.js out/test/suite/",
+    "watch": "dart pub get && dart compile js -O0 -o out/extension.js lib/extension.dart",
+    "pretest": "npm run compile && npm run compile:tests",
+    "test": "vscode-test",
+    "test:unit": "dart test",
+    "package": "vsce package"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.6",
-    "@types/node": "^20.0.0",
-    "@types/vscode": "^1.85.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@playwright/test": "^1.57.0",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.3.9",
-    "eslint": "^8.0.0",
     "glob": "^10.3.10",
-    "mocha": "^10.2.0",
-    "typescript": "^5.3.0"
+    "mocha": "^10.2.0"
   }
 }

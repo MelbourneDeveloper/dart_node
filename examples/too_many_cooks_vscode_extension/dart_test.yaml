@@ -1,0 +1,12 @@
+# Dart test configuration
+# Run with: dart test
+
+# Only run pure Dart tests (not js_interop test/suite files)
+paths:
+  - test/extension_activation_test.dart
+
+# Timeout for all tests
+timeout: 60s
+
+# Reporter
+reporter: expanded

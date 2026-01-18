@@ -19,7 +19,7 @@ dart run tools/build/build.dart too_many_cooks
 cd "$REPO_ROOT/examples/too_many_cooks_vscode_extension"
 SERVER_PATH="$(cd ../too_many_cooks && pwd)/build/bin/server.js"
 
-echo "=== Building VSCode extension ==="
+echo "=== Building VSCode extension (Dart) ==="
 npm install
 npm run compile
 npx @vscode/vsce package

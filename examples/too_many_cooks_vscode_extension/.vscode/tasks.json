@@ -12,10 +12,9 @@
       "problemMatcher": []
     },
     {
-      "label": "npm: compile",
-      "type": "npm",
-      "script": "compile",
-      "problemMatcher": "$tsc",
+      "label": "dart: compile",
+      "type": "shell",
+      "command": "dart compile js -O2 -o out/extension.js lib/src/extension.dart",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -26,19 +25,19 @@
       "dependsOn": ["Kill Extension Hosts"]
     },
     {
-      "label": "npm: watch",
-      "type": "npm",
-      "script": "watch",
-      "problemMatcher": "$tsc-watch",
-      "isBackground": true,
+      "label": "dart: watch",
+      "type": "shell",
+      "command": "dart compile js -O0 -o out/extension.js lib/src/extension.dart",
+      "problemMatcher": [],
+      "isBackground": false,
       "presentation": {
         "reveal": "never"
       }
     },
     {
-      "label": "npm: test",
-      "type": "npm",
-      "script": "test",
+      "label": "dart: test",
+      "type": "shell",
+      "command": "dart test",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always"

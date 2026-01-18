@@ -11,20 +11,14 @@
       "outFiles": [
         "${workspaceFolder}/out/**/*.js"
       ],
-      "preLaunchTask": "npm: compile"
+      "preLaunchTask": "dart: compile"
     },
     {
-      "name": "Extension Tests",
-      "type": "extensionHost",
+      "name": "Dart Tests",
+      "type": "dart",
       "request": "launch",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/out/test/**/*.js"
-      ],
-      "preLaunchTask": "npm: compile"
+      "program": "test/",
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

@@ -120,3 +120,106 @@ jobs:
 
       - name: Test Tier 3
         run: ./tools/test.sh --ci --tier 3
+
+  too-many-cooks-mcp:
+    name: Too Many Cooks MCP Server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ vars.DART_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: examples/too_many_cooks/package-lock.json
+
+      - name: Get tools/build dependencies
+        working-directory: tools/build
+        run: dart pub get
+
+      - name: Get MCP server dependencies
+        working-directory: examples/too_many_cooks
+        run: |
+          dart pub get
+          npm ci
+
+      - name: Compile MCP server
+        run: |
+          set -e
+          dart compile js -o examples/too_many_cooks/build/bin/server.js examples/too_many_cooks/bin/server.dart
+          dart run tools/build/add_preamble.dart \
+            examples/too_many_cooks/build/bin/server.js \
+            examples/too_many_cooks/build/bin/server_node.js \
+            --shebang
+
+      - name: Verify server exists
+        run: |
+          set -e
+          test -f examples/too_many_cooks/build/bin/server_node.js || (echo "Server build failed!" && exit 1)
+          echo "MCP server built successfully"
+
+  vscode-extension:
+    name: VSCode Extension Tests
+    runs-on: ubuntu-latest
+    needs: too-many-cooks-mcp
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ vars.DART_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: examples/too_many_cooks_vscode_extension/package-lock.json
+
+      - name: Get tools/build dependencies
+        working-directory: tools/build
+        run: dart pub get
+
+      - name: Build Too Many Cooks MCP server
+        run: |
+          set -e
+          cd examples/too_many_cooks
+          dart pub get
+          npm ci
+          dart compile js -o build/bin/server.js bin/server.dart
+          cd ../..
+          dart run tools/build/add_preamble.dart \
+            examples/too_many_cooks/build/bin/server.js \
+            examples/too_many_cooks/build/bin/server_node.js \
+            --shebang
+
+      - name: Get dart_node_vsix dependencies
+        working-directory: packages/dart_node_vsix
+        run: dart pub get
+
+      - name: Get extension dependencies (Dart)
+        working-directory: examples/too_many_cooks_vscode_extension
+        run: dart pub get
+
+      - name: Get extension dependencies (npm)
+        working-directory: examples/too_many_cooks_vscode_extension
+        run: npm ci
+
+      - name: Compile extension and tests
+        working-directory: examples/too_many_cooks_vscode_extension
+        run: |
+          set -e
+          npm run pretest
+
+      - name: Run VSCode extension tests
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: npm test
+          working-directory: examples/too_many_cooks_vscode_extension

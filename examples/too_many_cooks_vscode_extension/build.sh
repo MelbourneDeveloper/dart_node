@@ -11,7 +11,7 @@ dart run tools/build/add_preamble.dart \
   examples/too_many_cooks/build/bin/server_node.js \
   --shebang
 
-echo "=== Building VSCode Extension ==="
+echo "=== Building VSCode Extension (Dart) ==="
 cd examples/too_many_cooks_vscode_extension
 npm install
 npm run compile

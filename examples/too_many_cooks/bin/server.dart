@@ -2,6 +2,7 @@
 library;
 
 import 'dart:async';
+import 'dart:js_interop';
 
 import 'package:dart_node_core/dart_node_core.dart';
 import 'package:dart_node_mcp/dart_node_mcp.dart';
@@ -17,6 +18,11 @@ Future<void> main() async {
     rethrow;
   }
 }
+
+/// Keep the Node.js event loop alive using setInterval.
+/// dart2js Completer.future doesn't keep the JS event loop running.
+@JS('setInterval')
+external void _setInterval(JSFunction callback, int delay);
 
 Future<void> _startServer() async {
   final serverResult = createTooManyCooksServer();
@@ -34,7 +40,11 @@ Future<void> _startServer() async {
 
   await server.connect(transport);
 
-  // Keep the Dart event loop alive - stdio transport handles stdin listening
-  // in the JS layer, but dart2js needs pending async work to stay running.
+  // Keep the Node.js event loop alive - setInterval creates pending work
+  // that prevents the process from exiting. The stdio transport handles
+  // stdin listening in the JS layer.
+  _setInterval((() {}).toJS, 60000);
+
+  // Never resolve - server runs until killed
   await Completer<void>().future;
 }
