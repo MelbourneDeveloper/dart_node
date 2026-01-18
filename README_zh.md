@@ -27,7 +27,7 @@
 | 工具 | 描述 |
 |------|-------------|
 | [too-many-cooks](examples/too_many_cooks) | 多智能体协调 MCP 服务器 ([npm](https://www.npmjs.com/package/too-many-cooks)) |
-| [Too Many Cooks VSCode](examples/too_many_cooks_vscode_extension_dart) | 智能体可视化 VSCode 扩展 |
+| [Too Many Cooks VSCode](examples/too_many_cooks_vscode_extension) | 智能体可视化 VSCode 扩展 |
 
 ## 快速开始
 

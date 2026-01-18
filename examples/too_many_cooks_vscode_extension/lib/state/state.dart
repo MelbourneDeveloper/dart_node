@@ -6,10 +6,10 @@ library;
 
 import 'package:reflux/reflux.dart';
 
-import 'package:too_many_cooks_vscode_extension_dart/mcp/types.dart';
+import 'package:too_many_cooks_vscode_extension/mcp/types.dart';
 
 // Re-export types for convenience
-export 'package:too_many_cooks_vscode_extension_dart/mcp/types.dart'
+export 'package:too_many_cooks_vscode_extension/mcp/types.dart'
     show AgentIdentity, AgentPlan, FileLock, Message;
 
 /// Connection status to the MCP server.

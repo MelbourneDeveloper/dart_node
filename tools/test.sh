@@ -23,7 +23,7 @@ MIN_COVERAGE="${MIN_COVERAGE:-80}"
 NODE_PACKAGES="dart_node_core dart_node_express dart_node_ws dart_node_better_sqlite3"
 NODE_INTEROP_PACKAGES="dart_node_mcp dart_node_react_native too_many_cooks"
 BROWSER_PACKAGES="dart_node_react frontend"
-NPM_PACKAGES="too_many_cooks_vscode_extension_dart"
+NPM_PACKAGES="too_many_cooks_vscode_extension"
 BUILD_FIRST="too_many_cooks"
 
 # Tier definitions (space-separated paths)

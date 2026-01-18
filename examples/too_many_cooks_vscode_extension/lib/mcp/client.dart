@@ -8,8 +8,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:js_interop';
 
-import 'package:too_many_cooks_vscode_extension_dart/mcp/child_process.dart';
-import 'package:too_many_cooks_vscode_extension_dart/state/store.dart';
+import 'package:too_many_cooks_vscode_extension/mcp/child_process.dart';
+import 'package:too_many_cooks_vscode_extension/state/store.dart';
 
 @JS('console.log')
 external void _consoleLog(JSAny? message);

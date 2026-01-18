@@ -7,8 +7,8 @@ library;
 import 'dart:js_interop';
 
 import 'package:dart_node_vsix/dart_node_vsix.dart';
-import 'package:too_many_cooks_vscode_extension_dart/state/state.dart';
-import 'package:too_many_cooks_vscode_extension_dart/state/store.dart';
+import 'package:too_many_cooks_vscode_extension/state/state.dart';
+import 'package:too_many_cooks_vscode_extension/state/store.dart';
 
 /// Dashboard webview panel.
 final class DashboardPanel {

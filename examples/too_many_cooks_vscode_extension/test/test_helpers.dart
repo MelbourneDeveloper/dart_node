@@ -8,11 +8,11 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:test/test.dart';
-import 'package:too_many_cooks_vscode_extension_dart/state/state.dart';
-import 'package:too_many_cooks_vscode_extension_dart/state/store.dart';
+import 'package:too_many_cooks_vscode_extension/state/state.dart';
+import 'package:too_many_cooks_vscode_extension/state/store.dart';
 
-export 'package:too_many_cooks_vscode_extension_dart/state/state.dart';
-export 'package:too_many_cooks_vscode_extension_dart/state/store.dart'
+export 'package:too_many_cooks_vscode_extension/state/state.dart';
+export 'package:too_many_cooks_vscode_extension/state/store.dart'
     show StoreManager, StoreNotificationEvent;
 
 /// Extract string from args map, returns null if not found or wrong type.

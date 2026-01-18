@@ -12,7 +12,7 @@ examples/
 ├── reflux_demo/                  → State management demo
 ├── jsx_demo/                     → JSX syntax demo
 ├── too_many_cooks/               → Multi-agent coordination MCP server
-└── too_many_cooks_vscode_extension_dart/ → VSCode extension for agent visualization
+└── too_many_cooks_vscode_extension/ → VSCode extension for agent visualization
 ```
 
 ## Quick Start
@@ -30,4 +30,4 @@ The `too_many_cooks` example is a production MCP server published to npm:
 npm install -g too-many-cooks
 ```
 
-The `too_many_cooks_vscode_extension_dart` provides real-time visualization of agent coordination.
+The `too_many_cooks_vscode_extension` provides real-time visualization of agent coordination.

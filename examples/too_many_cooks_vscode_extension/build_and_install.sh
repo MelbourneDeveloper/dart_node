@@ -16,7 +16,7 @@ echo "=== Building MCP Server ==="
 REPO_ROOT="$(cd ../.. && pwd)"
 cd "$REPO_ROOT"
 dart run tools/build/build.dart too_many_cooks
-cd "$REPO_ROOT/examples/too_many_cooks_vscode_extension_dart"
+cd "$REPO_ROOT/examples/too_many_cooks_vscode_extension"
 SERVER_PATH="$(cd ../too_many_cooks && pwd)/build/bin/server.js"
 
 echo "=== Building VSCode extension (Dart) ==="

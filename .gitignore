@@ -32,9 +32,9 @@ examples/frontend/coverage/
 *.mjs
 !.vscode-test.mjs
 
-examples/too_many_cooks_vscode_extension_dart/.vscode-test/user-data/
+examples/too_many_cooks_vscode_extension/.vscode-test/user-data/
 
-examples/too_many_cooks_vscode_extension_dart/.vscode-test/vscode-darwin-arm64-1.106.3/
+examples/too_many_cooks_vscode_extension/.vscode-test/vscode-darwin-arm64-1.106.3/
 
 *.db
 
@@ -44,7 +44,7 @@ examples/too_many_cooks_vscode_extension_dart/.vscode-test/vscode-darwin-arm64-1
 
 *.vsix
 
-examples/too_many_cooks_vscode_extension_dart/.vscode-test/
+examples/too_many_cooks_vscode_extension/.vscode-test/
 
 examples/reflux_demo/flutter_counter/test/failures/
 
@@ -69,5 +69,5 @@ website/test-results/
 .metadata
 
 # Flutter web scaffolding (not needed for VSCode extension)
-examples/too_many_cooks_vscode_extension_dart/web/
-examples/too_many_cooks_vscode_extension_dart/lib/main.dart
+examples/too_many_cooks_vscode_extension/web/
+examples/too_many_cooks_vscode_extension/lib/main.dart

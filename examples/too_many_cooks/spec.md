@@ -496,4 +496,4 @@ Retryable errors: `disk I/O error`, `database is locked`, `SQLITE_BUSY`
 
 The implementation is **complete and tested**. All core features work: agent registration, file locking, messaging, plans, and status. The architecture follows all project rules (Result<T,E>, no exceptions, typedef records, async/await). Ready for production use with MCP clients.
 
-**VSCode Extension**: Located at `examples/too_many_cooks_vscode_extension_dart/` - all 38 tests passing. Provides real-time visualization of agent status, locks, and messages.
+**VSCode Extension**: Located at `examples/too_many_cooks_vscode_extension/` - all 38 tests passing. Provides real-time visualization of agent status, locks, and messages.

@@ -7,13 +7,13 @@ import 'dart:async';
 import 'dart:js_interop';
 
 import 'package:dart_node_vsix/dart_node_vsix.dart';
-import 'package:too_many_cooks_vscode_extension_dart/mcp/client.dart';
-import 'package:too_many_cooks_vscode_extension_dart/state/store.dart';
-import 'package:too_many_cooks_vscode_extension_dart/ui/status_bar/status_bar_manager.dart';
-import 'package:too_many_cooks_vscode_extension_dart/ui/tree/agents_tree_provider.dart';
-import 'package:too_many_cooks_vscode_extension_dart/ui/tree/locks_tree_provider.dart';
-import 'package:too_many_cooks_vscode_extension_dart/ui/tree/messages_tree_provider.dart';
-import 'package:too_many_cooks_vscode_extension_dart/ui/webview/dashboard_panel.dart';
+import 'package:too_many_cooks_vscode_extension/mcp/client.dart';
+import 'package:too_many_cooks_vscode_extension/state/store.dart';
+import 'package:too_many_cooks_vscode_extension/ui/status_bar/status_bar_manager.dart';
+import 'package:too_many_cooks_vscode_extension/ui/tree/agents_tree_provider.dart';
+import 'package:too_many_cooks_vscode_extension/ui/tree/locks_tree_provider.dart';
+import 'package:too_many_cooks_vscode_extension/ui/tree/messages_tree_provider.dart';
+import 'package:too_many_cooks_vscode_extension/ui/webview/dashboard_panel.dart';
 
 /// Global store manager.
 StoreManager? _storeManager;

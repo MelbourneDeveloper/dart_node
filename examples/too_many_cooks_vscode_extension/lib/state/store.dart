@@ -9,8 +9,8 @@ import 'dart:convert';
 
 import 'package:reflux/reflux.dart';
 
-import 'package:too_many_cooks_vscode_extension_dart/state/log.dart' as logger;
-import 'package:too_many_cooks_vscode_extension_dart/state/state.dart';
+import 'package:too_many_cooks_vscode_extension/state/log.dart' as logger;
+import 'package:too_many_cooks_vscode_extension/state/state.dart';
 
 void _log(String msg) => logger.log(msg);
 
