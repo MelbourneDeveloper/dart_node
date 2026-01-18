@@ -27,7 +27,7 @@ Write your entire stack in Dart: React web apps, React Native mobile apps with E
 | Tool | Description |
 |------|-------------|
 | [too-many-cooks](examples/too_many_cooks) | Multi-agent coordination MCP server ([npm](https://www.npmjs.com/package/too-many-cooks)) |
-| [Too Many Cooks VSCode](examples/too_many_cooks_vscode_extension) | VSCode extension for agent visualization |
+| [Too Many Cooks VSCode](examples/too_many_cooks_vscode_extension_dart) | VSCode extension for agent visualization |
 
 ## Quick Start
 

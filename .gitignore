@@ -30,10 +30,11 @@ website/.dart-doc-temp/
 examples/frontend/coverage/
 
 *.mjs
+!.vscode-test.mjs
 
-examples/too_many_cooks_vscode_extension/.vscode-test/user-data/
+examples/too_many_cooks_vscode_extension_dart/.vscode-test/user-data/
 
-examples/too_many_cooks_vscode_extension/.vscode-test/vscode-darwin-arm64-1.106.3/
+examples/too_many_cooks_vscode_extension_dart/.vscode-test/vscode-darwin-arm64-1.106.3/
 
 *.db
 
@@ -43,7 +44,7 @@ examples/too_many_cooks_vscode_extension/.vscode-test/vscode-darwin-arm64-1.106.
 
 *.vsix
 
-examples/too_many_cooks_vscode_extension/.vscode-test/
+examples/too_many_cooks_vscode_extension_dart/.vscode-test/
 
 examples/reflux_demo/flutter_counter/test/failures/
 

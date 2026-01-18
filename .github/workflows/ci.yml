@@ -181,7 +181,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: examples/too_many_cooks_vscode_extension/package-lock.json
+          cache-dependency-path: examples/too_many_cooks_vscode_extension_dart/package-lock.json
 
       - name: Get tools/build dependencies
         working-directory: tools/build
@@ -205,15 +205,15 @@ jobs:
         run: dart pub get
 
       - name: Get extension dependencies (Dart)
-        working-directory: examples/too_many_cooks_vscode_extension
+        working-directory: examples/too_many_cooks_vscode_extension_dart
         run: dart pub get
 
       - name: Get extension dependencies (npm)
-        working-directory: examples/too_many_cooks_vscode_extension
+        working-directory: examples/too_many_cooks_vscode_extension_dart
         run: npm ci
 
       - name: Compile extension and tests
-        working-directory: examples/too_many_cooks_vscode_extension
+        working-directory: examples/too_many_cooks_vscode_extension_dart
         run: |
           set -e
           npm run pretest
@@ -222,4 +222,4 @@ jobs:
         uses: coactions/setup-xvfb@v1
         with:
           run: npm test
-          working-directory: examples/too_many_cooks_vscode_extension
+          working-directory: examples/too_many_cooks_vscode_extension_dart
