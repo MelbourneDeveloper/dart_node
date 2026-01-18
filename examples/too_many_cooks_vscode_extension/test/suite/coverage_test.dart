@@ -28,726 +28,949 @@ void main() {
   restoreDialogMocks();
 
   // Lock State Coverage Tests
-  suite('Lock State Coverage', syncTest(() {
-    final testId = _dateNow();
-    final agentName = 'lock-cov-test-$testId';
-    String? agentKey;
+  suite(
+    'Lock State Coverage',
+    syncTest(() {
+      final testId = _dateNow();
+      final agentName = 'lock-cov-test-$testId';
+      String? agentKey;
 
-    suiteSetup(asyncTest(() async {
-      _log('[LOCK STATE] suiteSetup - waiting for extension activation');
+      suiteSetup(
+        asyncTest(() async {
+          _log('[LOCK STATE] suiteSetup - waiting for extension activation');
 
-      // waitForExtensionActivation handles server path setup and validation
-      await waitForExtensionActivation();
+          // waitForExtensionActivation handles server path setup and validation
+          await waitForExtensionActivation();
 
-      // Safely disconnect, then reconnect
-      await safeDisconnect();
-      final api = getTestAPI();
-      await api.connect().toDart;
-      await waitForConnection();
+          // Safely disconnect, then reconnect
+          await safeDisconnect();
+          final api = getTestAPI();
+          await api.connect().toDart;
+          await waitForConnection();
 
-      final result =
-          await api.callTool('register', createArgs({'name': agentName}))
+          final result = await api
+              .callTool('register', createArgs({'name': agentName}))
               .toDart;
-      agentKey = extractKeyFromResult(result.toDart);
-    }));
-
-    suiteTeardown(asyncTest(() async {
-      _log('[LOCK STATE] suiteTeardown');
-      await safeDisconnect();
-    }));
-
-    test('Active lock appears in state and tree', asyncTest(() async {
-      _log('[LOCK STATE] Running: Active lock appears in state and tree');
-      final api = getTestAPI();
-      final key = agentKey;
-      if (key == null) throw StateError('agentKey not set');
-
-      // Acquire a lock
-      await api.callTool('lock', createArgs({
-        'action': 'acquire',
-        'file_path': '/test/lock/active.ts',
-        'agent_name': agentName,
-        'agent_key': key,
-        'reason': 'Testing active lock',
-      })).toDart;
-
-      await waitForLockInTree(
-        api,
-        '/test/lock/active.ts',
-        timeout: const Duration(seconds: 5),
+          agentKey = extractKeyFromResult(result.toDart);
+        }),
       );
 
-      // Verify lock is in the state
-      final locks = api.getLocks();
-      JSObject? ourLock;
-      for (final lock in locks.toDart) {
-        final filePath = _getFilePath(lock);
-        if (filePath == '/test/lock/active.ts') {
-          ourLock = lock;
-          break;
-        }
-      }
-      assertOk(ourLock != null, 'Lock should be in state');
-      assertEqual(
-        _getAgentName(ourLock!),
-        agentName,
-        'Lock should be owned by test agent',
-      );
-      assertOk(_getReason(ourLock).isNotEmpty, 'Lock should have reason');
-      assertOk(_getExpiresAt(ourLock) > _dateNow(), 'Lock should not be '
-          'expired');
-
-      _log('[LOCK STATE] PASSED: Active lock appears in state and tree');
-    }));
-
-    test('Lock shows agent name in tree description', asyncTest(() async {
-      _log('[LOCK STATE] Running: Lock shows agent name in tree description');
-      final api = getTestAPI();
-      final key = agentKey;
-      if (key == null) throw StateError('agentKey not set');
-
-      // Create a fresh lock for this test (don't depend on previous test)
-      const lockPath = '/test/lock/description.ts';
-      await api.callTool('lock', createArgs({
-        'action': 'acquire',
-        'file_path': lockPath,
-        'agent_name': agentName,
-        'agent_key': key,
-        'reason': 'Testing lock description',
-      })).toDart;
-
-      await waitForLockInTree(
-        api,
-        lockPath,
-        timeout: const Duration(seconds: 5),
+      suiteTeardown(
+        asyncTest(() async {
+          _log('[LOCK STATE] suiteTeardown');
+          await safeDisconnect();
+        }),
       );
 
-      final lockItem = api.findLockInTree(lockPath);
-      assertOk(lockItem != null, 'Lock should exist');
-      final desc = _getDescription(lockItem!);
-      assertOk(
-        desc.contains(agentName),
-        'Lock description should include agent name, got: $desc',
+      test(
+        'Active lock appears in state and tree',
+        asyncTest(() async {
+          _log('[LOCK STATE] Running: Active lock appears in state and tree');
+          final api = getTestAPI();
+          final key = agentKey;
+          if (key == null) throw StateError('agentKey not set');
+
+          // Acquire a lock
+          await api
+              .callTool(
+                'lock',
+                createArgs({
+                  'action': 'acquire',
+                  'file_path': '/test/lock/active.ts',
+                  'agent_name': agentName,
+                  'agent_key': key,
+                  'reason': 'Testing active lock',
+                }),
+              )
+              .toDart;
+
+          await waitForLockInTree(
+            api,
+            '/test/lock/active.ts',
+            timeout: const Duration(seconds: 5),
+          );
+
+          // Verify lock is in the state
+          final locks = api.getLocks();
+          JSObject? ourLock;
+          for (final lock in locks.toDart) {
+            final filePath = _getFilePath(lock);
+            if (filePath == '/test/lock/active.ts') {
+              ourLock = lock;
+              break;
+            }
+          }
+          assertOk(ourLock != null, 'Lock should be in state');
+          assertEqual(
+            _getAgentName(ourLock!),
+            agentName,
+            'Lock should be owned by test agent',
+          );
+          assertOk(_getReason(ourLock).isNotEmpty, 'Lock should have reason');
+          assertOk(
+            _getExpiresAt(ourLock) > _dateNow(),
+            'Lock should not be '
+            'expired',
+          );
+
+          _log('[LOCK STATE] PASSED: Active lock appears in state and tree');
+        }),
       );
 
-      _log('[LOCK STATE] PASSED: Lock shows agent name in tree description');
-    }));
-  }));
+      test(
+        'Lock shows agent name in tree description',
+        asyncTest(() async {
+          _log(
+            '[LOCK STATE] Running: Lock shows agent name in tree description',
+          );
+          final api = getTestAPI();
+          final key = agentKey;
+          if (key == null) throw StateError('agentKey not set');
+
+          // Create a fresh lock for this test (don't depend on previous test)
+          const lockPath = '/test/lock/description.ts';
+          await api
+              .callTool(
+                'lock',
+                createArgs({
+                  'action': 'acquire',
+                  'file_path': lockPath,
+                  'agent_name': agentName,
+                  'agent_key': key,
+                  'reason': 'Testing lock description',
+                }),
+              )
+              .toDart;
+
+          await waitForLockInTree(
+            api,
+            lockPath,
+            timeout: const Duration(seconds: 5),
+          );
+
+          final lockItem = api.findLockInTree(lockPath);
+          assertOk(lockItem != null, 'Lock should exist');
+          final desc = _getDescription(lockItem!);
+          assertOk(
+            desc.contains(agentName),
+            'Lock description should include agent name, got: $desc',
+          );
+
+          _log(
+            '[LOCK STATE] PASSED: Lock shows agent name in tree description',
+          );
+        }),
+      );
+    }),
+  );
 
   // Store Error Handling Coverage Tests
-  suite('Store Error Handling Coverage', syncTest(() {
-    final testId = _dateNow();
-    final agentName = 'store-err-test-$testId';
-    String? agentKey;
+  suite(
+    'Store Error Handling Coverage',
+    syncTest(() {
+      final testId = _dateNow();
+      final agentName = 'store-err-test-$testId';
+      String? agentKey;
 
-    suiteSetup(asyncTest(() async {
-      _log('[STORE ERROR] suiteSetup');
+      suiteSetup(
+        asyncTest(() async {
+          _log('[STORE ERROR] suiteSetup');
 
-      // waitForExtensionActivation handles server path setup and validation
-      await waitForExtensionActivation();
+          // waitForExtensionActivation handles server path setup and validation
+          await waitForExtensionActivation();
 
-      await safeDisconnect();
-      final api = getTestAPI();
-      await api.connect().toDart;
-      await waitForConnection();
+          await safeDisconnect();
+          final api = getTestAPI();
+          await api.connect().toDart;
+          await waitForConnection();
 
-      final result =
-          await api.callTool('register', createArgs({'name': agentName}))
+          final result = await api
+              .callTool('register', createArgs({'name': agentName}))
               .toDart;
-      agentKey = extractKeyFromResult(result.toDart);
-    }));
-
-    suiteTeardown(asyncTest(() async {
-      _log('[STORE ERROR] suiteTeardown');
-      await safeDisconnect();
-    }));
-
-    test('forceReleaseLock works on existing lock', asyncTest(() async {
-      _log('[STORE ERROR] Running: forceReleaseLock works on existing lock');
-      final api = getTestAPI();
-      final key = agentKey;
-      if (key == null) throw StateError('agentKey not set');
-
-      // Create a lock to force release
-      await api.callTool('lock', createArgs({
-        'action': 'acquire',
-        'file_path': '/test/force/release.ts',
-        'agent_name': agentName,
-        'agent_key': key,
-        'reason': 'Will be force released',
-      })).toDart;
-
-      await waitForLockInTree(
-        api,
-        '/test/force/release.ts',
-        timeout: const Duration(seconds: 5),
+          agentKey = extractKeyFromResult(result.toDart);
+        }),
       );
 
-      // Force release using store method (covers store.forceReleaseLock)
-      await api.forceReleaseLock('/test/force/release.ts').toDart;
-
-      await waitForLockGone(
-        api,
-        '/test/force/release.ts',
-        timeout: const Duration(seconds: 5),
+      suiteTeardown(
+        asyncTest(() async {
+          _log('[STORE ERROR] suiteTeardown');
+          await safeDisconnect();
+        }),
       );
 
-      assertEqual(
-        api.findLockInTree('/test/force/release.ts'),
-        null,
-        'Lock should be removed after force release',
+      test(
+        'forceReleaseLock works on existing lock',
+        asyncTest(() async {
+          _log(
+            '[STORE ERROR] Running: forceReleaseLock works on existing lock',
+          );
+          final api = getTestAPI();
+          final key = agentKey;
+          if (key == null) throw StateError('agentKey not set');
+
+          // Create a lock to force release
+          await api
+              .callTool(
+                'lock',
+                createArgs({
+                  'action': 'acquire',
+                  'file_path': '/test/force/release.ts',
+                  'agent_name': agentName,
+                  'agent_key': key,
+                  'reason': 'Will be force released',
+                }),
+              )
+              .toDart;
+
+          await waitForLockInTree(
+            api,
+            '/test/force/release.ts',
+            timeout: const Duration(seconds: 5),
+          );
+
+          // Force release using store method (covers store.forceReleaseLock)
+          await api.forceReleaseLock('/test/force/release.ts').toDart;
+
+          await waitForLockGone(
+            api,
+            '/test/force/release.ts',
+            timeout: const Duration(seconds: 5),
+          );
+
+          assertEqual(
+            api.findLockInTree('/test/force/release.ts'),
+            null,
+            'Lock should be removed after force release',
+          );
+
+          _log('[STORE ERROR] PASSED: forceReleaseLock works on existing lock');
+        }),
       );
 
-      _log('[STORE ERROR] PASSED: forceReleaseLock works on existing lock');
-    }));
+      test(
+        'deleteAgent removes agent and associated data',
+        asyncTest(() async {
+          _log(
+            '[STORE ERROR] Running: deleteAgent removes agent and associated '
+            'data',
+          );
+          final api = getTestAPI();
 
-    test('deleteAgent removes agent and associated data', asyncTest(() async {
-      _log('[STORE ERROR] Running: deleteAgent removes agent and associated '
-          'data');
-      final api = getTestAPI();
+          // Create a new agent to delete
+          final deleteAgentName = 'to-delete-$testId';
+          final regResult = await api
+              .callTool('register', createArgs({'name': deleteAgentName}))
+              .toDart;
+          final deleteAgentKey = extractKeyFromResult(regResult.toDart);
 
-      // Create a new agent to delete
-      final deleteAgentName = 'to-delete-$testId';
-      final regResult = await api.callTool('register', createArgs({
-        'name': deleteAgentName,
-      })).toDart;
-      final deleteAgentKey = extractKeyFromResult(regResult.toDart);
+          // Give agent a lock and plan
+          await api
+              .callTool(
+                'lock',
+                createArgs({
+                  'action': 'acquire',
+                  'file_path': '/test/delete/agent.ts',
+                  'agent_name': deleteAgentName,
+                  'agent_key': deleteAgentKey,
+                  'reason': 'Will be deleted with agent',
+                }),
+              )
+              .toDart;
 
-      // Give agent a lock and plan
-      await api.callTool('lock', createArgs({
-        'action': 'acquire',
-        'file_path': '/test/delete/agent.ts',
-        'agent_name': deleteAgentName,
-        'agent_key': deleteAgentKey,
-        'reason': 'Will be deleted with agent',
-      })).toDart;
+          await api
+              .callTool(
+                'plan',
+                createArgs({
+                  'action': 'update',
+                  'agent_name': deleteAgentName,
+                  'agent_key': deleteAgentKey,
+                  'goal': 'Will be deleted',
+                  'current_task': 'Waiting to be deleted',
+                }),
+              )
+              .toDart;
 
-      await api.callTool('plan', createArgs({
-        'action': 'update',
-        'agent_name': deleteAgentName,
-        'agent_key': deleteAgentKey,
-        'goal': 'Will be deleted',
-        'current_task': 'Waiting to be deleted',
-      })).toDart;
+          await waitForAgentInTree(
+            api,
+            deleteAgentName,
+            timeout: const Duration(seconds: 5),
+          );
 
-      await waitForAgentInTree(
-        api,
-        deleteAgentName,
-        timeout: const Duration(seconds: 5),
+          // Delete using store method (covers store.deleteAgent)
+          await api.deleteAgent(deleteAgentName).toDart;
+
+          await waitForAgentGone(
+            api,
+            deleteAgentName,
+            timeout: const Duration(seconds: 5),
+          );
+
+          assertEqual(
+            api.findAgentInTree(deleteAgentName),
+            null,
+            'Agent should be gone after delete',
+          );
+          assertEqual(
+            api.findLockInTree('/test/delete/agent.ts'),
+            null,
+            'Agent lock should also be gone',
+          );
+
+          _log(
+            '[STORE ERROR] PASSED: deleteAgent removes agent and associated '
+            'data',
+          );
+        }),
       );
 
-      // Delete using store method (covers store.deleteAgent)
-      await api.deleteAgent(deleteAgentName).toDart;
+      test(
+        'sendMessage creates message in state',
+        asyncTest(() async {
+          _log('[STORE ERROR] Running: sendMessage creates message in state');
+          final api = getTestAPI();
 
-      await waitForAgentGone(
-        api,
-        deleteAgentName,
-        timeout: const Duration(seconds: 5),
+          // Create receiver agent
+          final receiverName = 'receiver-$testId';
+          await api
+              .callTool('register', createArgs({'name': receiverName}))
+              .toDart;
+
+          // Send message using store method (covers store.sendMessage)
+          // This method auto-registers sender and sends message
+          final senderName = 'store-sender-$testId';
+          await api
+              .sendMessage(
+                senderName,
+                receiverName,
+                'Test message via store.sendMessage',
+              )
+              .toDart;
+
+          await waitForMessageInTree(
+            api,
+            'Test message via store',
+            timeout: const Duration(seconds: 5),
+          );
+
+          // Verify message content via description (message content is in desc)
+          final msgItem = api.findMessageInTree('Test message via store');
+          assertOk(msgItem != null, 'Message should appear in tree');
+          final label = _getLabel(msgItem!);
+          // Label format is "from → to", content is in description
+          assertOk(label.contains(senderName), 'Message should show sender');
+          assertOk(
+            label.contains(receiverName),
+            'Message should show receiver',
+          );
+
+          _log('[STORE ERROR] PASSED: sendMessage creates message in state');
+        }),
       );
-
-      assertEqual(
-        api.findAgentInTree(deleteAgentName),
-        null,
-        'Agent should be gone after delete',
-      );
-      assertEqual(
-        api.findLockInTree('/test/delete/agent.ts'),
-        null,
-        'Agent lock should also be gone',
-      );
-
-      _log('[STORE ERROR] PASSED: deleteAgent removes agent and associated '
-          'data');
-    }));
-
-    test('sendMessage creates message in state', asyncTest(() async {
-      _log('[STORE ERROR] Running: sendMessage creates message in state');
-      final api = getTestAPI();
-
-      // Create receiver agent
-      final receiverName = 'receiver-$testId';
-      await api.callTool('register', createArgs({
-        'name': receiverName,
-      })).toDart;
-
-      // Send message using store method (covers store.sendMessage)
-      // This method auto-registers sender and sends message
-      final senderName = 'store-sender-$testId';
-      await api.sendMessage(
-        senderName,
-        receiverName,
-        'Test message via store.sendMessage',
-      ).toDart;
-
-      await waitForMessageInTree(
-        api,
-        'Test message via store',
-        timeout: const Duration(seconds: 5),
-      );
-
-      // Verify message content via description (message content is in desc)
-      final msgItem = api.findMessageInTree('Test message via store');
-      assertOk(msgItem != null, 'Message should appear in tree');
-      final label = _getLabel(msgItem!);
-      // Label format is "from → to", content is in description
-      assertOk(label.contains(senderName), 'Message should show sender');
-      assertOk(label.contains(receiverName), 'Message should show receiver');
-
-      _log('[STORE ERROR] PASSED: sendMessage creates message in state');
-    }));
-  }));
+    }),
+  );
 
   // Extension Commands Coverage Tests
-  suite('Extension Commands Coverage', syncTest(() {
-    suiteSetup(asyncTest(() async {
-      _log('[EXT COMMANDS] suiteSetup');
+  suite(
+    'Extension Commands Coverage',
+    syncTest(() {
+      suiteSetup(
+        asyncTest(() async {
+          _log('[EXT COMMANDS] suiteSetup');
 
-      // waitForExtensionActivation handles server path setup and validation
-      await waitForExtensionActivation();
+          // waitForExtensionActivation handles server path setup and validation
+          await waitForExtensionActivation();
 
-      // Disconnect so tests can reconnect as needed
-      await safeDisconnect();
-    }));
-
-    test('refresh command works when connected', asyncTest(() async {
-      _log('[EXT COMMANDS] Running: refresh command works when connected');
-
-      await safeDisconnect();
-      final api = getTestAPI();
-      await api.connect().toDart;
-      await waitForConnection();
-
-      // Execute refresh command
-      await vscode.commands.executeCommand('tooManyCooks.refresh').toDart;
-
-      // Should not throw and state should be valid
-      assertOk(api.isConnected(), 'Should still be connected after refresh');
-
-      _log('[EXT COMMANDS] PASSED: refresh command works when connected');
-    }));
-
-    test('connect command succeeds with valid server', asyncTest(() async {
-      _log('[EXT COMMANDS] Running: connect command succeeds with valid '
-          'server');
-
-      await safeDisconnect();
-      final api = getTestAPI();
-
-      // Execute connect command
-      await vscode.commands.executeCommand('tooManyCooks.connect').toDart;
-
-      await waitForCondition(
-        // ignore: unnecessary_lambdas - can't tearoff external extension member
-        () => api.isConnected(),
-        message: 'Connection to establish',
+          // Disconnect so tests can reconnect as needed
+          await safeDisconnect();
+        }),
       );
 
-      assertOk(api.isConnected(), 'Should be connected after connect command');
+      test(
+        'refresh command works when connected',
+        asyncTest(() async {
+          _log('[EXT COMMANDS] Running: refresh command works when connected');
 
-      _log('[EXT COMMANDS] PASSED: connect command succeeds with valid server');
-    }));
+          await safeDisconnect();
+          final api = getTestAPI();
+          await api.connect().toDart;
+          await waitForConnection();
 
-    test('deleteLock command is registered', asyncTest(() async {
-      _log('[EXT COMMANDS] Running: deleteLock command is registered');
+          // Execute refresh command
+          await vscode.commands.executeCommand('tooManyCooks.refresh').toDart;
 
-      final commands = await _getCommands(true.toJS).toDart;
-      final commandList = commands.toDart.map((c) => c.toDart);
-      assertOk(
-        commandList.contains('tooManyCooks.deleteLock'),
-        'deleteLock command should be registered',
+          // Should not throw and state should be valid
+          assertOk(
+            api.isConnected(),
+            'Should still be connected after refresh',
+          );
+
+          _log('[EXT COMMANDS] PASSED: refresh command works when connected');
+        }),
       );
 
-      _log('[EXT COMMANDS] PASSED: deleteLock command is registered');
-    }));
+      test(
+        'connect command succeeds with valid server',
+        asyncTest(() async {
+          _log(
+            '[EXT COMMANDS] Running: connect command succeeds with valid '
+            'server',
+          );
 
-    test('deleteAgent command is registered', asyncTest(() async {
-      _log('[EXT COMMANDS] Running: deleteAgent command is registered');
+          await safeDisconnect();
+          final api = getTestAPI();
 
-      final commands = await _getCommands(true.toJS).toDart;
-      final commandList = commands.toDart.map((c) => c.toDart);
-      assertOk(
-        commandList.contains('tooManyCooks.deleteAgent'),
-        'deleteAgent command should be registered',
+          // Execute connect command
+          await vscode.commands.executeCommand('tooManyCooks.connect').toDart;
+
+          await waitForCondition(
+            // ignore: unnecessary_lambdas - can't tearoff external extension member
+            () => api.isConnected(),
+            message: 'Connection to establish',
+          );
+
+          assertOk(
+            api.isConnected(),
+            'Should be connected after connect command',
+          );
+
+          _log(
+            '[EXT COMMANDS] PASSED: connect command succeeds with valid server',
+          );
+        }),
       );
 
-      _log('[EXT COMMANDS] PASSED: deleteAgent command is registered');
-    }));
+      test(
+        'deleteLock command is registered',
+        asyncTest(() async {
+          _log('[EXT COMMANDS] Running: deleteLock command is registered');
 
-    test('sendMessage command is registered', asyncTest(() async {
-      _log('[EXT COMMANDS] Running: sendMessage command is registered');
+          final commands = await _getCommands(true.toJS).toDart;
+          final commandList = commands.toDart.map((c) => c.toDart);
+          assertOk(
+            commandList.contains('tooManyCooks.deleteLock'),
+            'deleteLock command should be registered',
+          );
 
-      final commands = await _getCommands(true.toJS).toDart;
-      final commandList = commands.toDart.map((c) => c.toDart);
-      assertOk(
-        commandList.contains('tooManyCooks.sendMessage'),
-        'sendMessage command should be registered',
+          _log('[EXT COMMANDS] PASSED: deleteLock command is registered');
+        }),
       );
 
-      _log('[EXT COMMANDS] PASSED: sendMessage command is registered');
-    }));
-  }));
+      test(
+        'deleteAgent command is registered',
+        asyncTest(() async {
+          _log('[EXT COMMANDS] Running: deleteAgent command is registered');
+
+          final commands = await _getCommands(true.toJS).toDart;
+          final commandList = commands.toDart.map((c) => c.toDart);
+          assertOk(
+            commandList.contains('tooManyCooks.deleteAgent'),
+            'deleteAgent command should be registered',
+          );
+
+          _log('[EXT COMMANDS] PASSED: deleteAgent command is registered');
+        }),
+      );
+
+      test(
+        'sendMessage command is registered',
+        asyncTest(() async {
+          _log('[EXT COMMANDS] Running: sendMessage command is registered');
+
+          final commands = await _getCommands(true.toJS).toDart;
+          final commandList = commands.toDart.map((c) => c.toDart);
+          assertOk(
+            commandList.contains('tooManyCooks.sendMessage'),
+            'sendMessage command should be registered',
+          );
+
+          _log('[EXT COMMANDS] PASSED: sendMessage command is registered');
+        }),
+      );
+    }),
+  );
 
   // Tree Provider Edge Cases
-  suite('Tree Provider Edge Cases', syncTest(() {
-    final testId = _dateNow();
-    final agentName = 'edge-case-$testId';
-    String? agentKey;
+  suite(
+    'Tree Provider Edge Cases',
+    syncTest(() {
+      final testId = _dateNow();
+      final agentName = 'edge-case-$testId';
+      String? agentKey;
 
-    suiteSetup(asyncTest(() async {
-      _log('[TREE EDGE] suiteSetup');
+      suiteSetup(
+        asyncTest(() async {
+          _log('[TREE EDGE] suiteSetup');
 
-      // waitForExtensionActivation handles server path setup and validation
-      await waitForExtensionActivation();
+          // waitForExtensionActivation handles server path setup and validation
+          await waitForExtensionActivation();
 
-      await safeDisconnect();
-      final api = getTestAPI();
-      await api.connect().toDart;
-      await waitForConnection();
+          await safeDisconnect();
+          final api = getTestAPI();
+          await api.connect().toDart;
+          await waitForConnection();
 
-      final result =
-          await api.callTool('register', createArgs({'name': agentName}))
+          final result = await api
+              .callTool('register', createArgs({'name': agentName}))
               .toDart;
-      agentKey = extractKeyFromResult(result.toDart);
-    }));
-
-    suiteTeardown(asyncTest(() async {
-      _log('[TREE EDGE] suiteTeardown');
-      await safeDisconnect();
-    }));
-
-    test('Messages tree handles read messages correctly', asyncTest(() async {
-      _log('[TREE EDGE] Running: Messages tree handles read messages '
-          'correctly');
-      final api = getTestAPI();
-      final key = agentKey;
-      if (key == null) throw StateError('agentKey not set');
-
-      // Create receiver
-      final receiverName = 'edge-receiver-$testId';
-      final regResult = await api.callTool('register', createArgs({
-        'name': receiverName,
-      })).toDart;
-      final receiverKey = extractKeyFromResult(regResult.toDart);
-
-      // Send message
-      await api.callTool('message', createArgs({
-        'action': 'send',
-        'agent_name': agentName,
-        'agent_key': key,
-        'to_agent': receiverName,
-        'content': 'Edge case message',
-      })).toDart;
-
-      await waitForMessageInTree(
-        api,
-        'Edge case',
-        timeout: const Duration(seconds: 5),
+          agentKey = extractKeyFromResult(result.toDart);
+        }),
       );
 
-      // Fetch messages to mark as read
-      await api.callTool('message', createArgs({
-        'action': 'get',
-        'agent_name': receiverName,
-        'agent_key': receiverKey,
-      })).toDart;
-
-      // Refresh to get updated read status
-      await api.refreshStatus().toDart;
-
-      // Verify message exists (may or may not be unread depending on timing)
-      final msgItem = api.findMessageInTree('Edge case');
-      assertOk(msgItem != null, 'Message should still appear after being read');
-
-      _log('[TREE EDGE] PASSED: Messages tree handles read messages correctly');
-    }));
-
-    test('Agents tree shows summary counts correctly', asyncTest(() async {
-      _log('[TREE EDGE] Running: Agents tree shows summary counts correctly');
-      final api = getTestAPI();
-      final key = agentKey;
-      if (key == null) throw StateError('agentKey not set');
-
-      // Add a lock for the agent
-      await api.callTool('lock', createArgs({
-        'action': 'acquire',
-        'file_path': '/edge/case/file.ts',
-        'agent_name': agentName,
-        'agent_key': key,
-        'reason': 'Edge case lock',
-      })).toDart;
-
-      await waitForLockInTree(
-        api,
-        '/edge/case/file.ts',
-        timeout: const Duration(seconds: 5),
+      suiteTeardown(
+        asyncTest(() async {
+          _log('[TREE EDGE] suiteTeardown');
+          await safeDisconnect();
+        }),
       );
 
-      final agentItem = api.findAgentInTree(agentName);
-      assertOk(agentItem != null, 'Agent should be in tree');
-      // Agent description should include lock count
-      final desc = _getDescription(agentItem!);
-      assertOk(
-        desc.contains('lock'),
-        'Agent description should mention locks, got: $desc',
-      );
+      test(
+        'Messages tree handles read messages correctly',
+        asyncTest(() async {
+          _log(
+            '[TREE EDGE] Running: Messages tree handles read messages '
+            'correctly',
+          );
+          final api = getTestAPI();
+          final key = agentKey;
+          if (key == null) throw StateError('agentKey not set');
 
-      _log('[TREE EDGE] PASSED: Agents tree shows summary counts correctly');
-    }));
+          // Create receiver
+          final receiverName = 'edge-receiver-$testId';
+          final regResult = await api
+              .callTool('register', createArgs({'name': receiverName}))
+              .toDart;
+          final receiverKey = extractKeyFromResult(regResult.toDart);
 
-    test('Plans appear correctly as agent children', asyncTest(() async {
-      _log('[TREE EDGE] Running: Plans appear correctly as agent children');
-      final api = getTestAPI();
-      final key = agentKey;
-      if (key == null) throw StateError('agentKey not set');
+          // Send message
+          await api
+              .callTool(
+                'message',
+                createArgs({
+                  'action': 'send',
+                  'agent_name': agentName,
+                  'agent_key': key,
+                  'to_agent': receiverName,
+                  'content': 'Edge case message',
+                }),
+              )
+              .toDart;
 
-      // Update plan
-      await api.callTool('plan', createArgs({
-        'action': 'update',
-        'agent_name': agentName,
-        'agent_key': key,
-        'goal': 'Edge case goal',
-        'current_task': 'Testing edge cases',
-      })).toDart;
+          await waitForMessageInTree(
+            api,
+            'Edge case',
+            timeout: const Duration(seconds: 5),
+          );
 
-      // Wait for plan to appear, refreshing state each poll
-      final stopwatch = Stopwatch()..start();
-      while (stopwatch.elapsed < const Duration(seconds: 10)) {
-        try {
+          // Fetch messages to mark as read
+          await api
+              .callTool(
+                'message',
+                createArgs({
+                  'action': 'get',
+                  'agent_name': receiverName,
+                  'agent_key': receiverKey,
+                }),
+              )
+              .toDart;
+
+          // Refresh to get updated read status
           await api.refreshStatus().toDart;
-        } on Object {
-          // Ignore refresh errors
-        }
-        final agent = api.findAgentInTree(agentName);
-        if (agent != null) {
-          final children = _getChildren(agent);
-          if (children != null) {
-            var found = false;
-            for (final child in children.toDart) {
-              if (_getLabel(child).contains('Edge case goal')) {
-                found = true;
-                break;
+
+          // Verify message exists (may or may not be unread depending on timing)
+          final msgItem = api.findMessageInTree('Edge case');
+          assertOk(
+            msgItem != null,
+            'Message should still appear after being read',
+          );
+
+          _log(
+            '[TREE EDGE] PASSED: Messages tree handles read messages correctly',
+          );
+        }),
+      );
+
+      test(
+        'Agents tree shows summary counts correctly',
+        asyncTest(() async {
+          _log(
+            '[TREE EDGE] Running: Agents tree shows summary counts correctly',
+          );
+          final api = getTestAPI();
+          final key = agentKey;
+          if (key == null) throw StateError('agentKey not set');
+
+          // Add a lock for the agent
+          await api
+              .callTool(
+                'lock',
+                createArgs({
+                  'action': 'acquire',
+                  'file_path': '/edge/case/file.ts',
+                  'agent_name': agentName,
+                  'agent_key': key,
+                  'reason': 'Edge case lock',
+                }),
+              )
+              .toDart;
+
+          await waitForLockInTree(
+            api,
+            '/edge/case/file.ts',
+            timeout: const Duration(seconds: 5),
+          );
+
+          final agentItem = api.findAgentInTree(agentName);
+          assertOk(agentItem != null, 'Agent should be in tree');
+          // Agent description should include lock count
+          final desc = _getDescription(agentItem!);
+          assertOk(
+            desc.contains('lock'),
+            'Agent description should mention locks, got: $desc',
+          );
+
+          _log(
+            '[TREE EDGE] PASSED: Agents tree shows summary counts correctly',
+          );
+        }),
+      );
+
+      test(
+        'Plans appear correctly as agent children',
+        asyncTest(() async {
+          _log('[TREE EDGE] Running: Plans appear correctly as agent children');
+          final api = getTestAPI();
+          final key = agentKey;
+          if (key == null) throw StateError('agentKey not set');
+
+          // Update plan
+          await api
+              .callTool(
+                'plan',
+                createArgs({
+                  'action': 'update',
+                  'agent_name': agentName,
+                  'agent_key': key,
+                  'goal': 'Edge case goal',
+                  'current_task': 'Testing edge cases',
+                }),
+              )
+              .toDart;
+
+          // Wait for plan to appear, refreshing state each poll
+          final stopwatch = Stopwatch()..start();
+          while (stopwatch.elapsed < const Duration(seconds: 10)) {
+            try {
+              await api.refreshStatus().toDart;
+            } on Object {
+              // Ignore refresh errors
+            }
+            final agent = api.findAgentInTree(agentName);
+            if (agent != null) {
+              final children = _getChildren(agent);
+              if (children != null) {
+                var found = false;
+                for (final child in children.toDart) {
+                  if (_getLabel(child).contains('Edge case goal')) {
+                    found = true;
+                    break;
+                  }
+                }
+                if (found) break;
               }
             }
-            if (found) break;
+            await Future<void>.delayed(const Duration(milliseconds: 200));
           }
-        }
-        await Future<void>.delayed(const Duration(milliseconds: 200));
-      }
 
-      final agentItem = api.findAgentInTree(agentName);
-      final children = _getChildren(agentItem!);
-      assertOk(children != null, 'Agent should have children');
+          final agentItem = api.findAgentInTree(agentName);
+          final children = _getChildren(agentItem!);
+          assertOk(children != null, 'Agent should have children');
 
-      JSObject? planChild;
-      for (final child in children!.toDart) {
-        if (_getLabel(child).contains('Goal:')) {
-          planChild = child;
-          break;
-        }
-      }
-      assertOk(planChild != null, 'Agent should have plan child');
-      final planLabel = _getLabel(planChild!);
-      assertOk(
-        planLabel.contains('Edge case goal'),
-        'Plan child should contain goal, got: $planLabel',
+          JSObject? planChild;
+          for (final child in children!.toDart) {
+            if (_getLabel(child).contains('Goal:')) {
+              planChild = child;
+              break;
+            }
+          }
+          assertOk(planChild != null, 'Agent should have plan child');
+          final planLabel = _getLabel(planChild!);
+          assertOk(
+            planLabel.contains('Edge case goal'),
+            'Plan child should contain goal, got: $planLabel',
+          );
+
+          _log('[TREE EDGE] PASSED: Plans appear correctly as agent children');
+        }),
       );
-
-      _log('[TREE EDGE] PASSED: Plans appear correctly as agent children');
-    }));
-  }));
+    }),
+  );
 
   // Error Handling Coverage Tests
   // Tests error paths that are difficult to trigger normally.
-  suite('Error Handling Coverage', syncTest(() {
-    final testId = _dateNow();
-    final agentName = 'error-test-$testId';
+  suite(
+    'Error Handling Coverage',
+    syncTest(() {
+      final testId = _dateNow();
+      final agentName = 'error-test-$testId';
 
-    suiteSetup(asyncTest(() async {
-      _log('[ERROR HANDLING] suiteSetup');
-
-      // waitForExtensionActivation handles server path setup and validation
-      await waitForExtensionActivation();
-
-      await safeDisconnect();
-      final api = getTestAPI();
-      await api.connect().toDart;
-      await waitForConnection();
-
-      // Register but don't save key - we only use agentName for error tests
-      await api.callTool('register', createArgs({'name': agentName})).toDart;
-    }));
-
-    suiteTeardown(asyncTest(() async {
-      _log('[ERROR HANDLING] suiteTeardown');
-      await safeDisconnect();
-    }));
-
-    test('Tool call with isError response triggers error handling',
+      suiteSetup(
         asyncTest(() async {
-      _log('[ERROR HANDLING] Running: Tool call with isError response '
-          'triggers error handling');
-      final api = getTestAPI();
+          _log('[ERROR HANDLING] suiteSetup');
 
-      // Try to acquire a lock with invalid agent key - should fail
-      var caught = false;
-      try {
-        await api.callTool('lock', createArgs({
-          'action': 'acquire',
-          'file_path': '/error/test/file.ts',
-          'agent_name': agentName,
-          'agent_key': 'invalid-key-that-should-fail',
-          'reason': 'Testing error path',
-        })).toDart;
-        // If we get here, the call didn't fail as expected
-        // That's ok - the important thing is we exercised the code path
-      } on Object {
-        // Expected - tool call returned isError
-        caught = true;
-      }
+          // waitForExtensionActivation handles server path setup and validation
+          await waitForExtensionActivation();
 
-      _log('[ERROR HANDLING] PASSED: Tool call with isError response triggers '
-          'error handling (caught=$caught)');
-    }));
+          await safeDisconnect();
+          final api = getTestAPI();
+          await api.connect().toDart;
+          await waitForConnection();
 
-    test('Invalid tool arguments trigger error response', asyncTest(() async {
-      _log('[ERROR HANDLING] Running: Invalid tool arguments trigger error '
-          'response');
-      final api = getTestAPI();
+          // Register but don't save key - we only use agentName for error tests
+          await api
+              .callTool('register', createArgs({'name': agentName}))
+              .toDart;
+        }),
+      );
 
-      // Call a tool with missing required arguments
-      var caught = false;
-      try {
-        await api.callTool('lock', createArgs({
-          'action': 'acquire',
-          // Missing file_path, agent_name, agent_key
-        })).toDart;
-      } on Object {
-        // Expected - missing required args
-        caught = true;
-      }
+      suiteTeardown(
+        asyncTest(() async {
+          _log('[ERROR HANDLING] suiteTeardown');
+          await safeDisconnect();
+        }),
+      );
 
-      _log('[ERROR HANDLING] PASSED: Invalid tool arguments trigger error '
-          'response (caught=$caught)');
-    }));
+      test(
+        'Tool call with isError response triggers error handling',
+        asyncTest(() async {
+          _log(
+            '[ERROR HANDLING] Running: Tool call with isError response '
+            'triggers error handling',
+          );
+          final api = getTestAPI();
 
-    test('Disconnect while connected covers stop path', asyncTest(() async {
-      _log('[ERROR HANDLING] Running: Disconnect while connected covers stop '
-          'path');
-      final api = getTestAPI();
+          // Try to acquire a lock with invalid agent key - should fail
+          var caught = false;
+          try {
+            await api
+                .callTool(
+                  'lock',
+                  createArgs({
+                    'action': 'acquire',
+                    'file_path': '/error/test/file.ts',
+                    'agent_name': agentName,
+                    'agent_key': 'invalid-key-that-should-fail',
+                    'reason': 'Testing error path',
+                  }),
+                )
+                .toDart;
+            // If we get here, the call didn't fail as expected
+            // That's ok - the important thing is we exercised the code path
+          } on Object {
+            // Expected - tool call returned isError
+            caught = true;
+          }
 
-      // Ensure connected
-      assertOk(api.isConnected(), 'Should be connected');
+          _log(
+            '[ERROR HANDLING] PASSED: Tool call with isError response triggers '
+            'error handling (caught=$caught)',
+          );
+        }),
+      );
 
-      // Disconnect - exercises the stop() path including pending request
-      // rejection
-      await api.disconnect().toDart;
+      test(
+        'Invalid tool arguments trigger error response',
+        asyncTest(() async {
+          _log(
+            '[ERROR HANDLING] Running: Invalid tool arguments trigger error '
+            'response',
+          );
+          final api = getTestAPI();
 
-      assertEqual(api.isConnected(), false, 'Should be disconnected');
+          // Call a tool with missing required arguments
+          var caught = false;
+          try {
+            await api
+                .callTool(
+                  'lock',
+                  createArgs({
+                    'action': 'acquire',
+                    // Missing file_path, agent_name, agent_key
+                  }),
+                )
+                .toDart;
+          } on Object {
+            // Expected - missing required args
+            caught = true;
+          }
 
-      // Reconnect for other tests
-      await api.connect().toDart;
-      await waitForConnection();
+          _log(
+            '[ERROR HANDLING] PASSED: Invalid tool arguments trigger error '
+            'response (caught=$caught)',
+          );
+        }),
+      );
 
-      _log('[ERROR HANDLING] PASSED: Disconnect while connected covers stop '
-          'path');
-    }));
+      test(
+        'Disconnect while connected covers stop path',
+        asyncTest(() async {
+          _log(
+            '[ERROR HANDLING] Running: Disconnect while connected covers stop '
+            'path',
+          );
+          final api = getTestAPI();
 
-    test('Refresh after error state recovers', asyncTest(() async {
-      _log('[ERROR HANDLING] Running: Refresh after error state recovers');
-      final api = getTestAPI();
+          // Ensure connected
+          assertOk(api.isConnected(), 'Should be connected');
 
-      // Refresh status - exercises the refreshStatus path
-      await api.refreshStatus().toDart;
+          // Disconnect - exercises the stop() path including pending request
+          // rejection
+          await api.disconnect().toDart;
 
-      // Should still be functional
-      assertOk(api.isConnected(), 'Should still be connected after refresh');
+          assertEqual(api.isConnected(), false, 'Should be disconnected');
 
-      _log('[ERROR HANDLING] PASSED: Refresh after error state recovers');
-    }));
+          // Reconnect for other tests
+          await api.connect().toDart;
+          await waitForConnection();
 
-    test('Dashboard panel can be created and disposed', asyncTest(() async {
-      _log('[ERROR HANDLING] Running: Dashboard panel can be created and '
-          'disposed');
+          _log(
+            '[ERROR HANDLING] PASSED: Disconnect while connected covers stop '
+            'path',
+          );
+        }),
+      );
 
-      // Execute showDashboard command
-      await vscode.commands.executeCommand('tooManyCooks.showDashboard').toDart;
+      test(
+        'Refresh after error state recovers',
+        asyncTest(() async {
+          _log('[ERROR HANDLING] Running: Refresh after error state recovers');
+          final api = getTestAPI();
 
-      // Wait for panel
-      await _delay(500);
+          // Refresh status - exercises the refreshStatus path
+          await api.refreshStatus().toDart;
 
-      // Close all editors (disposes the panel)
-      await vscode.commands
-          .executeCommand('workbench.action.closeAllEditors')
-          .toDart;
+          // Should still be functional
+          assertOk(
+            api.isConnected(),
+            'Should still be connected after refresh',
+          );
 
-      // Wait for dispose
-      await _delay(200);
+          _log('[ERROR HANDLING] PASSED: Refresh after error state recovers');
+        }),
+      );
 
-      // Open again to test re-creation
-      await vscode.commands.executeCommand('tooManyCooks.showDashboard').toDart;
-      await _delay(500);
+      test(
+        'Dashboard panel can be created and disposed',
+        asyncTest(() async {
+          _log(
+            '[ERROR HANDLING] Running: Dashboard panel can be created and '
+            'disposed',
+          );
 
-      // Close again
-      await vscode.commands
-          .executeCommand('workbench.action.closeAllEditors')
-          .toDart;
+          // Execute showDashboard command
+          await vscode.commands
+              .executeCommand('tooManyCooks.showDashboard')
+              .toDart;
 
-      _log('[ERROR HANDLING] PASSED: Dashboard panel can be created and '
-          'disposed');
-    }));
+          // Wait for panel
+          await _delay(500);
 
-    test('Dashboard panel reveal when already open', asyncTest(() async {
-      _log('[ERROR HANDLING] Running: Dashboard panel reveal when already '
-          'open');
+          // Close all editors (disposes the panel)
+          await vscode.commands
+              .executeCommand('workbench.action.closeAllEditors')
+              .toDart;
 
-      // Open the dashboard first time
-      await vscode.commands.executeCommand('tooManyCooks.showDashboard').toDart;
-      await _delay(500);
+          // Wait for dispose
+          await _delay(200);
 
-      // Call show again while panel exists - exercises the reveal branch
-      await vscode.commands.executeCommand('tooManyCooks.showDashboard').toDart;
-      await _delay(300);
+          // Open again to test re-creation
+          await vscode.commands
+              .executeCommand('tooManyCooks.showDashboard')
+              .toDart;
+          await _delay(500);
 
-      // Close
-      await vscode.commands
-          .executeCommand('workbench.action.closeAllEditors')
-          .toDart;
+          // Close again
+          await vscode.commands
+              .executeCommand('workbench.action.closeAllEditors')
+              .toDart;
 
-      _log('[ERROR HANDLING] PASSED: Dashboard panel reveal when already open');
-    }));
+          _log(
+            '[ERROR HANDLING] PASSED: Dashboard panel can be created and '
+            'disposed',
+          );
+        }),
+      );
 
-    test('Configuration change handler is exercised', asyncTest(() async {
-      _log('[ERROR HANDLING] Running: Configuration change handler is '
-          'exercised');
+      test(
+        'Dashboard panel reveal when already open',
+        asyncTest(() async {
+          _log(
+            '[ERROR HANDLING] Running: Dashboard panel reveal when already '
+            'open',
+          );
 
-      final config = vscode.workspace.getConfiguration('tooManyCooks');
-      final originalAutoConnect = config.get<JSBoolean>('autoConnect');
-      final originalValue = originalAutoConnect?.toDart ?? true;
+          // Open the dashboard first time
+          await vscode.commands
+              .executeCommand('tooManyCooks.showDashboard')
+              .toDart;
+          await _delay(500);
 
-      // Change autoConnect to trigger configListener
-      await config
-          .update('autoConnect', (!originalValue).toJS, _configTargetGlobal)
-          .toDart;
+          // Call show again while panel exists - exercises the reveal branch
+          await vscode.commands
+              .executeCommand('tooManyCooks.showDashboard')
+              .toDart;
+          await _delay(300);
 
-      // Wait for handler
-      await _delay(100);
+          // Close
+          await vscode.commands
+              .executeCommand('workbench.action.closeAllEditors')
+              .toDart;
 
-      // Restore original value
-      await config
-          .update('autoConnect', originalValue.toJS, _configTargetGlobal)
-          .toDart;
+          _log(
+            '[ERROR HANDLING] PASSED: Dashboard panel reveal when already open',
+          );
+        }),
+      );
 
-      // Wait for handler
-      await _delay(100);
+      test(
+        'Configuration change handler is exercised',
+        asyncTest(() async {
+          _log(
+            '[ERROR HANDLING] Running: Configuration change handler is '
+            'exercised',
+          );
 
-      // Verify we're still functional
-      final api = getTestAPI();
-      assertOk(true, 'API should still exist: $api');
+          final config = vscode.workspace.getConfiguration('tooManyCooks');
+          final originalAutoConnect = config.get<JSBoolean>('autoConnect');
+          final originalValue = originalAutoConnect?.toDart ?? true;
 
-      _log('[ERROR HANDLING] PASSED: Configuration change handler is '
-          'exercised');
-    }));
-  }));
+          // Change autoConnect to trigger configListener
+          await config
+              .update('autoConnect', (!originalValue).toJS, _configTargetGlobal)
+              .toDart;
+
+          // Wait for handler
+          await _delay(100);
+
+          // Restore original value
+          await config
+              .update('autoConnect', originalValue.toJS, _configTargetGlobal)
+              .toDart;
+
+          // Wait for handler
+          await _delay(100);
+
+          // Verify we're still functional
+          final api = getTestAPI();
+          assertOk(true, 'API should still exist: $api');
+
+          _log(
+            '[ERROR HANDLING] PASSED: Configuration change handler is '
+            'exercised',
+          );
+        }),
+      );
+    }),
+  );
 
   _log('[COVERAGE TEST] main() completed - all suites registered');
 }

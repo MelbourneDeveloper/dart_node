@@ -187,6 +187,7 @@ void dumpTreeSnapshot(String name, JSArray<JSObject> items) {
       if (children != null) dump(children, indent + 1);
     }
   }
+
   dump(items, 0);
   consoleLog('=== END ===\n');
 }

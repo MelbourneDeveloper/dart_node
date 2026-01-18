@@ -44,8 +44,9 @@ TreeItem createAgentTreeItem({
       AgentTreeItemType.plan => ThemeIcon('target'),
       AgentTreeItemType.messageSummary => ThemeIcon('mail'),
     }
-    ..contextValue =
-        itemType == AgentTreeItemType.agent ? 'deletableAgent' : itemType.name
+    ..contextValue = itemType == AgentTreeItemType.agent
+        ? 'deletableAgent'
+        : itemType.name
     ..tooltip = tooltip;
 
   // Attach extra properties for command handlers
@@ -125,8 +126,9 @@ final class AgentsTreeProvider implements TreeDataProvider<TreeItem> {
     final itemType = getItemType(element);
     final agentName = getAgentName(element);
     if (itemType == AgentTreeItemType.agent && agentName != null) {
-      final detail =
-          details.where((d) => d.agent.agentName == agentName).firstOrNull;
+      final detail = details
+          .where((d) => d.agent.agentName == agentName)
+          .firstOrNull;
       return detail != null ? _createAgentChildren(detail) : <TreeItem>[];
     }
 
@@ -183,8 +185,9 @@ final class AgentsTreeProvider implements TreeDataProvider<TreeItem> {
       }
     }
 
-    final unread =
-        detail.receivedMessages.where((m) => m.readAt == null).length;
+    final unread = detail.receivedMessages
+        .where((m) => m.readAt == null)
+        .length;
     if (detail.sentMessages.isNotEmpty || detail.receivedMessages.isNotEmpty) {
       md
         ..appendMarkdown('\n---\n\n')
@@ -204,47 +207,56 @@ final class AgentsTreeProvider implements TreeDataProvider<TreeItem> {
 
     // Plan
     if (detail.plan case final plan?) {
-      children.add(createAgentTreeItem(
-        label: 'Goal: ${plan.goal}',
-        description: 'Task: ${plan.currentTask}',
-        collapsibleState: TreeItemCollapsibleState.none,
-        itemType: AgentTreeItemType.plan,
-        agentName: detail.agent.agentName,
-      ));
+      children.add(
+        createAgentTreeItem(
+          label: 'Goal: ${plan.goal}',
+          description: 'Task: ${plan.currentTask}',
+          collapsibleState: TreeItemCollapsibleState.none,
+          itemType: AgentTreeItemType.plan,
+          agentName: detail.agent.agentName,
+        ),
+      );
     }
 
     // Locks
     for (final lock in detail.locks) {
-      final expiresIn =
-          ((lock.expiresAt - now) / 1000).round().clamp(0, 999999);
+      final expiresIn = ((lock.expiresAt - now) / 1000).round().clamp(
+        0,
+        999999,
+      );
       final expired = lock.expiresAt <= now;
       final reason = lock.reason;
-      children.add(createAgentTreeItem(
-        label: lock.filePath,
-        description: expired
-            ? 'EXPIRED'
-            : '${expiresIn}s${reason != null ? ' ($reason)' : ''}',
-        collapsibleState: TreeItemCollapsibleState.none,
-        itemType: AgentTreeItemType.lock,
-        agentName: detail.agent.agentName,
-        filePath: lock.filePath,
-      ));
+      children.add(
+        createAgentTreeItem(
+          label: lock.filePath,
+          description: expired
+              ? 'EXPIRED'
+              : '${expiresIn}s${reason != null ? ' ($reason)' : ''}',
+          collapsibleState: TreeItemCollapsibleState.none,
+          itemType: AgentTreeItemType.lock,
+          agentName: detail.agent.agentName,
+          filePath: lock.filePath,
+        ),
+      );
     }
 
     // Message summary
-    final unread =
-        detail.receivedMessages.where((m) => m.readAt == null).length;
+    final unread = detail.receivedMessages
+        .where((m) => m.readAt == null)
+        .length;
     if (detail.sentMessages.isNotEmpty || detail.receivedMessages.isNotEmpty) {
       final sent = detail.sentMessages.length;
       final recv = detail.receivedMessages.length;
       final unreadStr = unread > 0 ? ' ($unread unread)' : '';
-      children.add(createAgentTreeItem(
-        label: 'Messages',
-        description: '$sent sent, $recv received$unreadStr',
-        collapsibleState: TreeItemCollapsibleState.none,
-        itemType: AgentTreeItemType.messageSummary,
-        agentName: detail.agent.agentName,
-      ));
+      children.add(
+        createAgentTreeItem(
+          label: 'Messages',
+          description: '$sent sent, $recv received$unreadStr',
+          collapsibleState: TreeItemCollapsibleState.none,
+          itemType: AgentTreeItemType.messageSummary,
+          agentName: detail.agent.agentName,
+        ),
+      );
     }
 
     return children;

@@ -47,32 +47,48 @@ final class DashboardPanel {
   void _updateWebview() {
     final state = _storeManager.state;
     final data = {
-      'agents': selectAgents(state).map((a) => {
-        'agentName': a.agentName,
-        'registeredAt': a.registeredAt,
-        'lastActive': a.lastActive,
-      }).toList(),
-      'locks': selectLocks(state).map((l) => {
-        'filePath': l.filePath,
-        'agentName': l.agentName,
-        'acquiredAt': l.acquiredAt,
-        'expiresAt': l.expiresAt,
-        'reason': l.reason,
-      }).toList(),
-      'messages': selectMessages(state).map((m) => {
-        'id': m.id,
-        'fromAgent': m.fromAgent,
-        'toAgent': m.toAgent,
-        'content': m.content,
-        'createdAt': m.createdAt,
-        'readAt': m.readAt,
-      }).toList(),
-      'plans': selectPlans(state).map((p) => {
-        'agentName': p.agentName,
-        'goal': p.goal,
-        'currentTask': p.currentTask,
-        'updatedAt': p.updatedAt,
-      }).toList(),
+      'agents': selectAgents(state)
+          .map(
+            (a) => {
+              'agentName': a.agentName,
+              'registeredAt': a.registeredAt,
+              'lastActive': a.lastActive,
+            },
+          )
+          .toList(),
+      'locks': selectLocks(state)
+          .map(
+            (l) => {
+              'filePath': l.filePath,
+              'agentName': l.agentName,
+              'acquiredAt': l.acquiredAt,
+              'expiresAt': l.expiresAt,
+              'reason': l.reason,
+            },
+          )
+          .toList(),
+      'messages': selectMessages(state)
+          .map(
+            (m) => {
+              'id': m.id,
+              'fromAgent': m.fromAgent,
+              'toAgent': m.toAgent,
+              'content': m.content,
+              'createdAt': m.createdAt,
+              'readAt': m.readAt,
+            },
+          )
+          .toList(),
+      'plans': selectPlans(state)
+          .map(
+            (p) => {
+              'agentName': p.agentName,
+              'goal': p.goal,
+              'currentTask': p.currentTask,
+              'updatedAt': p.updatedAt,
+            },
+          )
+          .toList(),
     };
     _panel.webview.postMessage({'type': 'update', 'data': data}.jsify());
   }

@@ -17,32 +17,43 @@ void main() {
   // Ensure any dialog mocks from previous tests are restored
   restoreDialogMocks();
 
-  suite('Configuration', syncTest(() {
-    suiteSetup(asyncTest(() async {
-      _log('[CONFIG] suiteSetup - waiting for extension activation');
-      await waitForExtensionActivation();
-    }));
-
-    test('autoConnect configuration exists', syncTest(() {
-      _log('[CONFIG] Running: autoConnect configuration exists');
-      final config = vscode.workspace.getConfiguration('tooManyCooks');
-      final autoConnect = config.get<JSBoolean>('autoConnect');
-      assertOk(
-        !autoConnect.isUndefinedOrNull,
-        'autoConnect config should exist',
+  suite(
+    'Configuration',
+    syncTest(() {
+      suiteSetup(
+        asyncTest(() async {
+          _log('[CONFIG] suiteSetup - waiting for extension activation');
+          await waitForExtensionActivation();
+        }),
       );
-      _log('[CONFIG] PASSED: autoConnect configuration exists');
-    }));
 
-    test('autoConnect defaults to true', syncTest(() {
-      _log('[CONFIG] Running: autoConnect defaults to true');
-      final config = vscode.workspace.getConfiguration('tooManyCooks');
-      final autoConnect = config.get<JSBoolean>('autoConnect');
-      // Default is true according to package.json
-      assertEqual(autoConnect?.toDart, true);
-      _log('[CONFIG] PASSED: autoConnect defaults to true');
-    }));
-  }));
+      test(
+        'autoConnect configuration exists',
+        syncTest(() {
+          _log('[CONFIG] Running: autoConnect configuration exists');
+          final config = vscode.workspace.getConfiguration('tooManyCooks');
+          final autoConnect = config.get<JSBoolean>('autoConnect');
+          assertOk(
+            !autoConnect.isUndefinedOrNull,
+            'autoConnect config should exist',
+          );
+          _log('[CONFIG] PASSED: autoConnect configuration exists');
+        }),
+      );
+
+      test(
+        'autoConnect defaults to true',
+        syncTest(() {
+          _log('[CONFIG] Running: autoConnect defaults to true');
+          final config = vscode.workspace.getConfiguration('tooManyCooks');
+          final autoConnect = config.get<JSBoolean>('autoConnect');
+          // Default is true according to package.json
+          assertEqual(autoConnect?.toDart, true);
+          _log('[CONFIG] PASSED: autoConnect defaults to true');
+        }),
+      );
+    }),
+  );
 
   _log('[CONFIGURATION TEST] main() completed');
 }

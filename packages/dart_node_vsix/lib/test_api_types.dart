@@ -12,6 +12,7 @@ import 'package:dart_node_vsix/dart_node_vsix.dart';
 extension type TestAPI._(JSObject _) implements JSObject {
   /// Creates a TestAPI from a JSObject.
   factory TestAPI(JSObject obj) => TestAPI._(obj);
+
   /// Gets the list of log messages.
   external JSArray<JSString> getLogMessages();
 

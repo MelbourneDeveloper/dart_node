@@ -133,27 +133,33 @@ final class LocksTreeProvider implements TreeDataProvider<TreeItem> {
       final expired = selectExpiredLocks(state);
 
       if (active.isNotEmpty) {
-        items.add(createLockTreeItem(
-          label: 'Active (${active.length})',
-          collapsibleState: TreeItemCollapsibleState.expanded,
-          isCategory: true,
-        ));
+        items.add(
+          createLockTreeItem(
+            label: 'Active (${active.length})',
+            collapsibleState: TreeItemCollapsibleState.expanded,
+            isCategory: true,
+          ),
+        );
       }
 
       if (expired.isNotEmpty) {
-        items.add(createLockTreeItem(
-          label: 'Expired (${expired.length})',
-          collapsibleState: TreeItemCollapsibleState.collapsed,
-          isCategory: true,
-        ));
+        items.add(
+          createLockTreeItem(
+            label: 'Expired (${expired.length})',
+            collapsibleState: TreeItemCollapsibleState.collapsed,
+            isCategory: true,
+          ),
+        );
       }
 
       if (items.isEmpty) {
-        items.add(createLockTreeItem(
-          label: 'No locks',
-          collapsibleState: TreeItemCollapsibleState.none,
-          isCategory: false,
-        ));
+        items.add(
+          createLockTreeItem(
+            label: 'No locks',
+            collapsibleState: TreeItemCollapsibleState.none,
+            isCategory: false,
+          ),
+        );
       }
 
       return items;
@@ -169,8 +175,10 @@ final class LocksTreeProvider implements TreeDataProvider<TreeItem> {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       return lockList.map((lock) {
-        final expiresIn =
-            ((lock.expiresAt - now) / 1000).round().clamp(0, 999999);
+        final expiresIn = ((lock.expiresAt - now) / 1000).round().clamp(
+          0,
+          999999,
+        );
         final expired = lock.expiresAt <= now;
         final desc = expired
             ? '${lock.agentName} - EXPIRED'

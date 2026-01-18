@@ -55,10 +55,7 @@ extension type Window._(JSObject _) implements JSObject {
   external OutputChannel createOutputChannel(String name);
 
   /// Creates a status bar item.
-  external StatusBarItem createStatusBarItem([
-    int? alignment,
-    int? priority,
-  ]);
+  external StatusBarItem createStatusBarItem([int? alignment, int? priority]);
 
   /// Creates a tree view.
   external TreeView<T> createTreeView<T extends TreeItem>(

@@ -58,8 +58,8 @@ abstract interface class McpClient {
 class StoreManager {
   /// Creates a store manager with optional server path and MCP client.
   StoreManager({this.serverPath, McpClient? client})
-      : _client = client,
-        _store = createAppStore();
+    : _client = client,
+      _store = createAppStore();
 
   /// Path to the MCP server.
   final String? serverPath;
@@ -79,8 +79,7 @@ class StoreManager {
   AppState get state => _store.getState();
 
   /// Subscribe to state changes.
-  Unsubscribe subscribe(void Function() listener) =>
-      _store.subscribe(listener);
+  Unsubscribe subscribe(void Function() listener) => _store.subscribe(listener);
 
   /// Whether connected to MCP server.
   bool get isConnected => _client?.isConnected() ?? false;

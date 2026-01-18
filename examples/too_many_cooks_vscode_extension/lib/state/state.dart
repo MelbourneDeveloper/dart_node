@@ -216,10 +216,7 @@ AppState appReducer(AppState state, Action action) => switch (action) {
   UpsertLock(:final lock) => (
     connectionStatus: state.connectionStatus,
     agents: state.agents,
-    locks: [
-      ...state.locks.where((l) => l.filePath != lock.filePath),
-      lock,
-    ],
+    locks: [...state.locks.where((l) => l.filePath != lock.filePath), lock],
     messages: state.messages,
     plans: state.plans,
   ),
@@ -275,10 +272,7 @@ AppState appReducer(AppState state, Action action) => switch (action) {
     agents: state.agents,
     locks: state.locks,
     messages: state.messages,
-    plans: [
-      ...state.plans.where((p) => p.agentName != plan.agentName),
-      plan,
-    ],
+    plans: [...state.plans.where((p) => p.agentName != plan.agentName), plan],
   ),
   ResetState() => initialState,
   _ => state,
@@ -321,57 +315,58 @@ final selectUnreadMessageCount = createSelector1<AppState, List<Message>, int>(
 
 /// Select active locks (not expired).
 final selectActiveLocks =
-    createSelector1<AppState, List<FileLock>, List<FileLock>>(
-  selectLocks,
-  (locks) {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    return locks.where((l) => l.expiresAt > now).toList();
-  },
-);
+    createSelector1<AppState, List<FileLock>, List<FileLock>>(selectLocks, (
+      locks,
+    ) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      return locks.where((l) => l.expiresAt > now).toList();
+    });
 
 /// Select expired locks.
 final selectExpiredLocks =
-    createSelector1<AppState, List<FileLock>, List<FileLock>>(
-  selectLocks,
-  (locks) {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    return locks.where((l) => l.expiresAt <= now).toList();
-  },
-);
+    createSelector1<AppState, List<FileLock>, List<FileLock>>(selectLocks, (
+      locks,
+    ) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      return locks.where((l) => l.expiresAt <= now).toList();
+    });
 
 /// Select agent details (agent with their associated data).
-final selectAgentDetails = createSelector4<
-  AppState,
-  List<AgentIdentity>,
-  List<FileLock>,
-  List<AgentPlan>,
-  List<Message>,
-  List<AgentDetails>
->(
-  selectAgents,
-  selectLocks,
-  selectPlans,
-  selectMessages,
-  (agents, locks, plans, messages) => agents
-      .map(
-        (agent) => (
-          agent: agent,
-          locks: locks
-              .where((l) => l.agentName == agent.agentName)
-              .toList(),
-          plan: plans
-              .where((p) => p.agentName == agent.agentName)
-              .firstOrNull,
-          sentMessages: messages
-              .where((m) => m.fromAgent == agent.agentName)
-              .toList(),
-          receivedMessages: messages
-              .where((m) => m.toAgent == agent.agentName || m.toAgent == '*')
-              .toList(),
-        ),
-      )
-      .toList(),
-);
+final selectAgentDetails =
+    createSelector4<
+      AppState,
+      List<AgentIdentity>,
+      List<FileLock>,
+      List<AgentPlan>,
+      List<Message>,
+      List<AgentDetails>
+    >(
+      selectAgents,
+      selectLocks,
+      selectPlans,
+      selectMessages,
+      (agents, locks, plans, messages) => agents
+          .map(
+            (agent) => (
+              agent: agent,
+              locks: locks
+                  .where((l) => l.agentName == agent.agentName)
+                  .toList(),
+              plan: plans
+                  .where((p) => p.agentName == agent.agentName)
+                  .firstOrNull,
+              sentMessages: messages
+                  .where((m) => m.fromAgent == agent.agentName)
+                  .toList(),
+              receivedMessages: messages
+                  .where(
+                    (m) => m.toAgent == agent.agentName || m.toAgent == '*',
+                  )
+                  .toList(),
+            ),
+          )
+          .toList(),
+    );
 
 // ============================================================================
 // Store creation helper

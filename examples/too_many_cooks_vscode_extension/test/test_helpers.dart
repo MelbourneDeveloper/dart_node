@@ -16,12 +16,17 @@ export 'package:too_many_cooks_vscode_extension/state/store.dart'
     show StoreManager, StoreNotificationEvent;
 
 /// Extract string from args map, returns null if not found or wrong type.
-String? _str(Map<String, Object?> args, String key) =>
-    switch (args[key]) { final String s => s, _ => null };
+String? _str(Map<String, Object?> args, String key) => switch (args[key]) {
+  final String s => s,
+  _ => null,
+};
 
 /// Extract bool from args map with default.
 bool _bool(Map<String, Object?> args, String key, {bool def = false}) =>
-    switch (args[key]) { final bool b => b, _ => def };
+    switch (args[key]) {
+      final bool b => b,
+      _ => def,
+    };
 
 /// Extract agent key from JSON response. Use instead of `as String` cast.
 String extractKey(String jsonResponse) {
@@ -57,14 +62,16 @@ class MockMcpClient implements McpClient {
 
   /// Mock messages in the "database".
   final List<
-      ({
-        String id,
-        String from,
-        String to,
-        String content,
-        int createdAt,
-        int? readAt,
-      })> messages = [];
+    ({
+      String id,
+      String from,
+      String to,
+      String content,
+      int createdAt,
+      int? readAt,
+    })
+  >
+  messages = [];
 
   /// Mock plans in the "database".
   final Map<String, ({String goal, String currentTask, int updatedAt})> plans =
@@ -84,38 +91,46 @@ class MockMcpClient implements McpClient {
       final now = DateTime.now().millisecondsSinceEpoch;
       return jsonEncode({
         'agents': agents.entries
-            .map((e) => {
-                  'agent_name': e.key,
-                  'registered_at': e.value.registeredAt,
-                  'last_active': e.value.lastActive,
-                })
+            .map(
+              (e) => {
+                'agent_name': e.key,
+                'registered_at': e.value.registeredAt,
+                'last_active': e.value.lastActive,
+              },
+            )
             .toList(),
         'locks': locks.entries
-            .map((e) => {
-                  'file_path': e.key,
-                  'agent_name': e.value.agentName,
-                  'acquired_at': now - 1000,
-                  'expires_at': e.value.expiresAt,
-                  'reason': e.value.reason,
-                })
+            .map(
+              (e) => {
+                'file_path': e.key,
+                'agent_name': e.value.agentName,
+                'acquired_at': now - 1000,
+                'expires_at': e.value.expiresAt,
+                'reason': e.value.reason,
+              },
+            )
             .toList(),
         'plans': plans.entries
-            .map((e) => {
-                  'agent_name': e.key,
-                  'goal': e.value.goal,
-                  'current_task': e.value.currentTask,
-                  'updated_at': e.value.updatedAt,
-                })
+            .map(
+              (e) => {
+                'agent_name': e.key,
+                'goal': e.value.goal,
+                'current_task': e.value.currentTask,
+                'updated_at': e.value.updatedAt,
+              },
+            )
             .toList(),
         'messages': messages
-            .map((m) => {
-                  'id': m.id,
-                  'from_agent': m.from,
-                  'to_agent': m.to,
-                  'content': m.content,
-                  'created_at': m.createdAt,
-                  'read_at': m.readAt,
-                })
+            .map(
+              (m) => {
+                'id': m.id,
+                'from_agent': m.from,
+                'to_agent': m.to,
+                'content': m.content,
+                'created_at': m.createdAt,
+                'read_at': m.readAt,
+              },
+            )
             .toList(),
       });
     });
@@ -154,8 +169,11 @@ class MockMcpClient implements McpClient {
             return jsonEncode({'error': 'Invalid agent key'});
           }
           final expiresAt = now + 60000;
-          locks[filePath] =
-              (agentName: agentName, expiresAt: expiresAt, reason: reason);
+          locks[filePath] = (
+            agentName: agentName,
+            expiresAt: expiresAt,
+            reason: reason,
+          );
 
           _notificationController.add((
             event: 'lock_acquired',
@@ -277,14 +295,16 @@ class MockMcpClient implements McpClient {
 
           return jsonEncode({
             'messages': agentMsgs
-                .map((m) => {
-                      'id': m.id,
-                      'from_agent': m.from,
-                      'to_agent': m.to,
-                      'content': m.content,
-                      'created_at': m.createdAt,
-                      'read_at': m.readAt,
-                    })
+                .map(
+                  (m) => {
+                    'id': m.id,
+                    'from_agent': m.from,
+                    'to_agent': m.to,
+                    'content': m.content,
+                    'created_at': m.createdAt,
+                    'read_at': m.readAt,
+                  },
+                )
                 .toList(),
           });
 
@@ -327,8 +347,11 @@ class MockMcpClient implements McpClient {
           if (agentName == null || goal == null || currentTask == null) {
             return jsonEncode({'error': 'Missing required arguments'});
           }
-          plans[agentName] =
-              (goal: goal, currentTask: currentTask, updatedAt: now);
+          plans[agentName] = (
+            goal: goal,
+            currentTask: currentTask,
+            updatedAt: now,
+          );
 
           _notificationController.add((
             event: 'plan_updated',
@@ -360,12 +383,14 @@ class MockMcpClient implements McpClient {
         case 'list':
           return jsonEncode({
             'plans': plans.entries
-                .map((e) => {
-                      'agent_name': e.key,
-                      'goal': e.value.goal,
-                      'current_task': e.value.currentTask,
-                      'updated_at': e.value.updatedAt,
-                    })
+                .map(
+                  (e) => {
+                    'agent_name': e.key,
+                    'goal': e.value.goal,
+                    'current_task': e.value.currentTask,
+                    'updated_at': e.value.updatedAt,
+                  },
+                )
                 .toList(),
           });
 
@@ -586,10 +611,11 @@ FileLock? findLock(StoreManager manager, String filePath) =>
     manager.state.locks.where((l) => l.filePath == filePath).firstOrNull;
 
 /// Find a message containing the given content.
-Message? findMessage(StoreManager manager, String contentSubstring) =>
-    manager.state.messages
-        .where((m) => m.content.contains(contentSubstring))
-        .firstOrNull;
+Message? findMessage(StoreManager manager, String contentSubstring) => manager
+    .state
+    .messages
+    .where((m) => m.content.contains(contentSubstring))
+    .firstOrNull;
 
 /// Find a plan for an agent.
 AgentPlan? findPlan(StoreManager manager, String agentName) =>
@@ -606,7 +632,10 @@ Map<String, Object?> parseJson(String json) {
 
 /// Extract string value from JSON map by key.
 String? extractString(Map<String, Object?> map, String key) =>
-    switch (map[key]) { final String s => s, _ => null };
+    switch (map[key]) {
+      final String s => s,
+      _ => null,
+    };
 
 /// Extract agent key from register result.
 String extractAgentKey(String registerResult) {

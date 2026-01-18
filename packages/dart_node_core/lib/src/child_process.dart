@@ -83,9 +83,13 @@ extension type _ChildProcess._(JSObject _) implements JSObject {
   JSObject get _stderr => stderr;
 
   void _onClose(void Function(int? code) callback) {
-    _on(this, 'close'.toJS, ((JSNumber? code) {
-      callback(code?.toDartInt);
-    }).toJS);
+    _on(
+      this,
+      'close'.toJS,
+      ((JSNumber? code) {
+        callback(code?.toDartInt);
+      }).toJS,
+    );
   }
 }
 
@@ -96,18 +100,26 @@ StreamController<String> _createStringStreamFromReadable(JSObject readable) {
   _call(readable, 'setEncoding'.toJS, ['utf8'.toJS].toJS);
 
   // Listen to 'data' event
-  _on(readable, 'data'.toJS, ((JSString chunk) {
-    controller.add(chunk.toDart);
-  }).toJS);
+  _on(
+    readable,
+    'data'.toJS,
+    ((JSString chunk) {
+      controller.add(chunk.toDart);
+    }).toJS,
+  );
 
   // Listen to 'error' event
   void handleError(JSObject err) => controller.addError(err);
   _on(readable, 'error'.toJS, handleError.toJS);
 
   // Listen to 'end' event
-  _on(readable, 'end'.toJS, (() {
-    unawaited(controller.close());
-  }).toJS);
+  _on(
+    readable,
+    'end'.toJS,
+    (() {
+      unawaited(controller.close());
+    }).toJS,
+  );
 
   return controller;
 }

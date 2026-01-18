@@ -4,11 +4,7 @@
 library;
 
 /// Agent identity (public info only - no key).
-typedef AgentIdentity = ({
-  String agentName,
-  int registeredAt,
-  int lastActive,
-});
+typedef AgentIdentity = ({String agentName, int registeredAt, int lastActive});
 
 /// File lock info.
 typedef FileLock = ({

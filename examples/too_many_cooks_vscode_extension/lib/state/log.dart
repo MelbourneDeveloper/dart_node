@@ -5,8 +5,7 @@
 library;
 
 import 'package:too_many_cooks_vscode_extension/state/log_stub.dart'
-    if (dart.library.js_interop)
-        'package:too_many_cooks_vscode_extension/state/log_js.dart'
+    if (dart.library.js_interop) 'package:too_many_cooks_vscode_extension/state/log_js.dart'
     as impl;
 
 /// Log a message. In JS, logs to console. In VM, prints to stdout.

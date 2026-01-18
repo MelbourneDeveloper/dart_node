@@ -31,8 +31,7 @@ external JSAny _reflectConstruct(JSFunction ctor, JSArray args);
 JSFunction _getEventEmitterConstructor(JSObject vscodeModule) =>
     _reflectGet(vscodeModule, 'EventEmitter'.toJS);
 
-JSAny _newInstance(JSFunction ctor) =>
-    _reflectConstruct(ctor, <JSAny>[].toJS);
+JSAny _newInstance(JSFunction ctor) => _reflectConstruct(ctor, <JSAny>[].toJS);
 
 /// An event that can be subscribed to.
 extension type Event<T extends JSAny?>._(JSFunction _) implements JSFunction {

@@ -85,9 +85,7 @@ void main() {
       await withTestStore((manager, client) async {
         await manager.connect();
 
-        final result = await manager.callTool('subscribe', {
-          'action': 'list',
-        });
+        final result = await manager.callTool('subscribe', {'action': 'list'});
 
         expect(result, contains('subscribers'));
       });

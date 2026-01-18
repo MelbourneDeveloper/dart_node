@@ -62,10 +62,10 @@ external JSObject? get _testMockedWindow;
 external JSBoolean _evalTestQueueExists(String code);
 
 bool _hasTestQuickPickResponses() => _evalTestQueueExists(
-      // Use !! to coerce to proper boolean, ensures JS returns true/false
-      '!!(globalThis._testQuickPickResponses && '
-      'globalThis._testQuickPickResponses.length > 0)',
-    ).toDart;
+  // Use !! to coerce to proper boolean, ensures JS returns true/false
+  '!!(globalThis._testQuickPickResponses && '
+  'globalThis._testQuickPickResponses.length > 0)',
+).toDart;
 
 /// Shift a value from the test QuickPick queue.
 @JS('globalThis._testQuickPickResponses.shift')
@@ -149,23 +149,30 @@ JSObject _doActivateSync(ExtensionContext context) {
   _log('Auto-connect: $autoConnect');
   if (autoConnect) {
     _log('Attempting auto-connect...');
-    unawaited(_storeManager?.connect().then((_) {
-      _log('Auto-connect successful');
-    }).catchError((Object e) {
-      _log('Auto-connect failed: $e');
-    }));
+    unawaited(
+      _storeManager
+          ?.connect()
+          .then((_) {
+            _log('Auto-connect successful');
+          })
+          .catchError((Object e) {
+            _log('Auto-connect failed: $e');
+          }),
+    );
   }
 
   _log('Extension activated');
 
   // Register disposables
-  context.addSubscription(createDisposable(() {
-    unawaited(_storeManager?.disconnect());
-    statusBar.dispose();
-    _agentsProvider?.dispose();
-    _locksProvider?.dispose();
-    _messagesProvider?.dispose();
-  }));
+  context.addSubscription(
+    createDisposable(() {
+      unawaited(_storeManager?.disconnect());
+      statusBar.dispose();
+      _agentsProvider?.dispose();
+      _locksProvider?.dispose();
+      _messagesProvider?.dispose();
+    }),
+  );
 
   // Return test API
   _consoleLog('DART EXTENSION: Creating TestAPI...');
@@ -188,8 +195,9 @@ void _registerCommands(ExtensionContext context) {
       try {
         await _storeManager?.connect();
         _log('Connected successfully');
-        vscode.window
-            .showInformationMessage('Connected to Too Many Cooks server');
+        vscode.window.showInformationMessage(
+          'Connected to Too Many Cooks server',
+        );
       } on Object catch (e) {
         _log('Connection failed: $e');
         vscode.window.showErrorMessage('Failed to connect: $e');
@@ -203,8 +211,9 @@ void _registerCommands(ExtensionContext context) {
     'tooManyCooks.disconnect',
     () async {
       await _storeManager?.disconnect();
-      vscode.window
-          .showInformationMessage('Disconnected from Too Many Cooks server');
+      vscode.window.showInformationMessage(
+        'Disconnected from Too Many Cooks server',
+      );
     },
   );
   context.addSubscription(disconnectCmd);
@@ -373,10 +382,12 @@ void _registerCommands(ExtensionContext context) {
 
       try {
         await _storeManager?.sendMessage(fromAgent, toAgent, content);
-        final preview =
-            content.length > 50 ? '${content.substring(0, 50)}...' : content;
-        vscode.window
-            .showInformationMessage('Message sent to $toAgent: "$preview"');
+        final preview = content.length > 50
+            ? '${content.substring(0, 50)}...'
+            : content;
+        vscode.window.showInformationMessage(
+          'Message sent to $toAgent: "$preview"',
+        );
         _log('Message sent from $fromAgent to $toAgent: $content');
       } on Object catch (e) {
         _log('Failed to send message: $e');
@@ -448,45 +459,57 @@ JSObject _createTestAPI() {
 /// TestAPI implementation that matches the TypeScript interface.
 class _TestAPIImpl {
   // State getters
-  List<Map<String, Object?>> getAgents() => _storeManager?.state.agents
-          .map((a) => {
-                'agentName': a.agentName,
-                'registeredAt': a.registeredAt,
-                'lastActive': a.lastActive,
-              })
+  List<Map<String, Object?>> getAgents() =>
+      _storeManager?.state.agents
+          .map(
+            (a) => {
+              'agentName': a.agentName,
+              'registeredAt': a.registeredAt,
+              'lastActive': a.lastActive,
+            },
+          )
           .toList() ??
       [];
 
-  List<Map<String, Object?>> getLocks() => _storeManager?.state.locks
-          .map((l) => {
-                'filePath': l.filePath,
-                'agentName': l.agentName,
-                'acquiredAt': l.acquiredAt,
-                'expiresAt': l.expiresAt,
-                'reason': l.reason,
-              })
+  List<Map<String, Object?>> getLocks() =>
+      _storeManager?.state.locks
+          .map(
+            (l) => {
+              'filePath': l.filePath,
+              'agentName': l.agentName,
+              'acquiredAt': l.acquiredAt,
+              'expiresAt': l.expiresAt,
+              'reason': l.reason,
+            },
+          )
           .toList() ??
       [];
 
-  List<Map<String, Object?>> getMessages() => _storeManager?.state.messages
-          .map((m) => {
-                'id': m.id,
-                'fromAgent': m.fromAgent,
-                'toAgent': m.toAgent,
-                'content': m.content,
-                'createdAt': m.createdAt,
-                'readAt': m.readAt,
-              })
+  List<Map<String, Object?>> getMessages() =>
+      _storeManager?.state.messages
+          .map(
+            (m) => {
+              'id': m.id,
+              'fromAgent': m.fromAgent,
+              'toAgent': m.toAgent,
+              'content': m.content,
+              'createdAt': m.createdAt,
+              'readAt': m.readAt,
+            },
+          )
           .toList() ??
       [];
 
-  List<Map<String, Object?>> getPlans() => _storeManager?.state.plans
-          .map((p) => {
-                'agentName': p.agentName,
-                'goal': p.goal,
-                'currentTask': p.currentTask,
-                'updatedAt': p.updatedAt,
-              })
+  List<Map<String, Object?>> getPlans() =>
+      _storeManager?.state.plans
+          .map(
+            (p) => {
+              'agentName': p.agentName,
+              'goal': p.goal,
+              'currentTask': p.currentTask,
+              'updatedAt': p.updatedAt,
+            },
+          )
           .toList() ??
       [];
 
@@ -504,13 +527,15 @@ class _TestAPIImpl {
     final state = _storeManager?.state;
     if (state == null) return [];
     return state.agents.map((agent) {
-      final locks =
-          state.locks.where((l) => l.agentName == agent.agentName).toList();
+      final locks = state.locks
+          .where((l) => l.agentName == agent.agentName)
+          .toList();
       final plan = state.plans
           .where((p) => p.agentName == agent.agentName)
           .firstOrNull;
-      final sentMessages =
-          state.messages.where((m) => m.fromAgent == agent.agentName).toList();
+      final sentMessages = state.messages
+          .where((m) => m.fromAgent == agent.agentName)
+          .toList();
       final receivedMessages = state.messages
           .where((m) => m.toAgent == agent.agentName || m.toAgent == '*')
           .toList();
@@ -521,13 +546,15 @@ class _TestAPIImpl {
           'lastActive': agent.lastActive,
         },
         'locks': locks
-            .map((l) => {
-                  'filePath': l.filePath,
-                  'agentName': l.agentName,
-                  'acquiredAt': l.acquiredAt,
-                  'expiresAt': l.expiresAt,
-                  'reason': l.reason,
-                })
+            .map(
+              (l) => {
+                'filePath': l.filePath,
+                'agentName': l.agentName,
+                'acquiredAt': l.acquiredAt,
+                'expiresAt': l.expiresAt,
+                'reason': l.reason,
+              },
+            )
             .toList(),
         'plan': plan != null
             ? {
@@ -538,24 +565,28 @@ class _TestAPIImpl {
               }
             : null,
         'sentMessages': sentMessages
-            .map((m) => {
-                  'id': m.id,
-                  'fromAgent': m.fromAgent,
-                  'toAgent': m.toAgent,
-                  'content': m.content,
-                  'createdAt': m.createdAt,
-                  'readAt': m.readAt,
-                })
+            .map(
+              (m) => {
+                'id': m.id,
+                'fromAgent': m.fromAgent,
+                'toAgent': m.toAgent,
+                'content': m.content,
+                'createdAt': m.createdAt,
+                'readAt': m.readAt,
+              },
+            )
             .toList(),
         'receivedMessages': receivedMessages
-            .map((m) => {
-                  'id': m.id,
-                  'fromAgent': m.fromAgent,
-                  'toAgent': m.toAgent,
-                  'content': m.content,
-                  'createdAt': m.createdAt,
-                  'readAt': m.readAt,
-                })
+            .map(
+              (m) => {
+                'id': m.id,
+                'fromAgent': m.fromAgent,
+                'toAgent': m.toAgent,
+                'content': m.content,
+                'createdAt': m.createdAt,
+                'readAt': m.readAt,
+              },
+            )
             .toList(),
       };
     }).toList();
@@ -578,6 +609,7 @@ class _TestAPIImpl {
     await _storeManager?.disconnect();
     _consoleLog('TestAPI.disconnect() completed');
   }
+
   Future<void> refreshStatus() async {
     try {
       await _storeManager?.refreshStatus();
@@ -586,6 +618,7 @@ class _TestAPIImpl {
       // Swallow errors - callers should check isConnected() if needed
     }
   }
+
   bool isConnected() => _storeManager?.isConnected ?? false;
   bool isConnecting() => _storeManager?.isConnecting ?? false;
 
@@ -602,8 +635,7 @@ class _TestAPIImpl {
     String fromAgent,
     String toAgent,
     String content,
-  ) async =>
-      _storeManager?.sendMessage(fromAgent, toAgent, content);
+  ) async => _storeManager?.sendMessage(fromAgent, toAgent, content);
 
   // Tree view queries
   int getLockTreeItemCount() {
@@ -752,14 +784,13 @@ class _TestAPIImpl {
             return result.toJS;
           } on Object catch (e) {
             // Return error as JSON string so JS side can inspect it
-            final escaped = e.toString().replaceAll(r'\', r'\\').replaceAll(
-                  '"',
-                  r'\"',
-                );
+            final escaped = e
+                .toString()
+                .replaceAll(r'\', r'\\')
+                .replaceAll('"', r'\"');
             return '{"error":"$escaped"}'.toJS;
           }
-        })()
-            .toJS;
+        })().toJS;
       }).toJS,
     );
     _setProp(
@@ -775,12 +806,11 @@ class _TestAPIImpl {
     _setProp(
       obj,
       'sendMessage',
-      ((JSString fromAgent, JSString toAgent, JSString content) =>
-          sendMessage(
-            fromAgent.toDart,
-            toAgent.toDart,
-            content.toDart,
-          ).toJS).toJS,
+      ((JSString fromAgent, JSString toAgent, JSString content) => sendMessage(
+        fromAgent.toDart,
+        toAgent.toDart,
+        content.toDart,
+      ).toJS).toJS,
     );
 
     // Tree view queries

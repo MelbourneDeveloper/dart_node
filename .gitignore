@@ -54,8 +54,12 @@ mutation-reports
 out/
 
 
-.vscode-test
+.vscode-test/
 .playwright-mcp/
+
+# dart_node_vsix build artifacts
+packages/dart_node_vsix/out/
+packages/dart_node_vsix/build/
 
 website/playwright-report/
 

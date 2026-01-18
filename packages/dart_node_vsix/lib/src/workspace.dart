@@ -8,9 +8,7 @@ extension type Workspace._(JSObject _) implements JSObject {
   external WorkspaceConfiguration getConfiguration([String? section]);
 
   /// Registers a listener for configuration changes.
-  external Disposable onDidChangeConfiguration(
-    JSFunction listener,
-  );
+  external Disposable onDidChangeConfiguration(JSFunction listener);
 }
 
 /// Workspace configuration.

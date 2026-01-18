@@ -219,8 +219,10 @@ Future<void> waitForConnection({
 Future<void> safeDisconnect() async {
   // Check if Test API is even initialized before trying to disconnect
   if (_cachedTestAPI == null) {
-    _consoleLog('[TEST HELPER] Safe disconnect skipped - Test API not '
-        'initialized');
+    _consoleLog(
+      '[TEST HELPER] Safe disconnect skipped - Test API not '
+      'initialized',
+    );
     return;
   }
 
@@ -394,7 +396,6 @@ JSObject _getVscodeWindow() {
   }
 }
 
-
 /// Eval for creating JS functions.
 @JS('eval')
 external JSAny _eval(String code);
@@ -477,15 +478,15 @@ external void _pushInputBoxResponse(JSAny? response);
 /// CRITICAL: Uses eval to create a pure JS async arrow function that returns
 /// a Promise, exactly matching how TypeScript mocks work.
 JSAny _createPureJsArrayMock(String arrayName) => _eval(
-      // Arrow function exactly like TypeScript mock pattern.
-      'async (items, options) => { '
-      'console.log("[MOCK] $arrayName called"); '
-      'var arr = globalThis.$arrayName || []; '
-      'var val = arr.shift(); '
-      'console.log("[MOCK] $arrayName returning:", val); '
-      'return val === undefined ? null : val; '
-      '}',
-    );
+  // Arrow function exactly like TypeScript mock pattern.
+  'async (items, options) => { '
+  'console.log("[MOCK] $arrayName called"); '
+  'var arr = globalThis.$arrayName || []; '
+  'var val = arr.shift(); '
+  'console.log("[MOCK] $arrayName returning:", val); '
+  'return val === undefined ? null : val; '
+  '}',
+);
 
 /// Install dialog mocks on vscode.window.
 void installDialogMocks() {
@@ -538,8 +539,10 @@ void installDialogMocks() {
     _createPureJsArrayMock('_mockInputBoxResponses'),
   );
 
-  _consoleLog('[MOCK INSTALL] Dialog mocks installed (QuickPick uses '
-      'extension-side queue)');
+  _consoleLog(
+    '[MOCK INSTALL] Dialog mocks installed (QuickPick uses '
+    'extension-side queue)',
+  );
 
   _mocksInstalled = true;
   _consoleLog('[TEST HELPER] Dialog mocks installed');
