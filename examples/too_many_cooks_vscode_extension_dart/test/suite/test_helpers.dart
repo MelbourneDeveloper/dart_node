@@ -31,7 +31,7 @@ export 'package:dart_node_vsix/src/js_helpers.dart'
         treeItemHasChildWithLabel;
 
 /// Extension ID for the Dart extension.
-const extensionId = 'Nimblesite.too-many-cooks-dart';
+const extensionId = 'Nimblesite.too-many-cooks';
 
 /// Cached TestAPI instance.
 TestAPI? _cachedTestAPI;
@@ -85,9 +85,10 @@ void _initPaths() {
   }
   // __dirname at runtime is out/test/suite
   // Go up 4 levels to examples/, then into too_many_cooks
+  // MUST use server_node.js (has node_preamble) not server.js!
   _serverPath = _path.resolve(
     dirname,
-    '../../../../too_many_cooks/build/bin/server.js',
+    '../../../../too_many_cooks/build/bin/server_node.js',
   );
 }
 
@@ -216,7 +217,14 @@ Future<void> waitForConnection({
 
 /// Safely disconnect from MCP server.
 Future<void> safeDisconnect() async {
-  final api = getTestAPI();
+  // Check if Test API is even initialized before trying to disconnect
+  if (_cachedTestAPI == null) {
+    _consoleLog('[TEST HELPER] Safe disconnect skipped - Test API not '
+        'initialized');
+    return;
+  }
+
+  final api = _cachedTestAPI!;
 
   // Wait a moment for any pending connection to settle
   await Future<void>.delayed(const Duration(milliseconds: 500));
@@ -456,10 +464,6 @@ external void _pushTestQuickPickResponse(JSAny? response);
 /// Push to the global JS array for warning message responses.
 @JS('globalThis._mockWarningResponses.push')
 external void _pushWarningResponse(JSAny? response);
-
-/// Push to the global JS array for quick pick responses (old mock approach).
-@JS('globalThis._mockQuickPickResponses.push')
-external void _pushQuickPickResponse(JSAny? response);
 
 /// Push to the global JS array for input box responses.
 @JS('globalThis._mockInputBoxResponses.push')

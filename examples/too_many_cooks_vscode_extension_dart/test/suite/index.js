@@ -19,8 +19,8 @@ const log = (msg) => {
 fs.writeFileSync(logFile, '');
 log('[INDEX] Test runner started!');
 
-// Set test server path
-const serverPath = path.resolve(__dirname, '../../../../too_many_cooks/build/bin/server.js');
+// Set test server path - MUST use server_node.js (has node_preamble)!
+const serverPath = path.resolve(__dirname, '../../../../too_many_cooks/build/bin/server_node.js');
 if (fs.existsSync(serverPath)) {
   globalThis._tooManyCooksTestServerPath = serverPath;
   log(`[INDEX] Set server path: ${serverPath}`);

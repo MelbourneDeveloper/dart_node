@@ -16,12 +16,12 @@ echo "=== Building MCP Server ==="
 REPO_ROOT="$(cd ../.. && pwd)"
 cd "$REPO_ROOT"
 dart run tools/build/build.dart too_many_cooks
-cd "$REPO_ROOT/examples/too_many_cooks_vscode_extension_dart"
+cd "$REPO_ROOT/examples/too_many_cooks_vscode_extension"
 SERVER_PATH="$(cd ../too_many_cooks && pwd)/build/bin/server.js"
 
 echo "=== Building VSCode extension (Dart) ==="
-dart compile js -O2 -o out/extension.dart.js lib/extension.dart
-node scripts/wrap-extension.js
+npm install
+npm run compile
 npx @vscode/vsce package
 
 echo "=== Installing MCP Server in Claude Code (LOCAL build) ==="

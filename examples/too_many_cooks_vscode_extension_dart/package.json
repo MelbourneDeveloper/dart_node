@@ -1,7 +1,7 @@
 {
-  "name": "too-many-cooks-dart",
-  "displayName": "Too Many Cooks (Dart)",
-  "description": "Visualize multi-agent coordination - Dart port",
+  "name": "too-many-cooks",
+  "displayName": "Too Many Cooks",
+  "description": "Visualize multi-agent coordination - see file locks, messages, and plans across AI agents working on your codebase",
   "version": "0.3.0",
   "publisher": "Nimblesite",
   "license": "MIT",
@@ -10,7 +10,7 @@
     "type": "git",
     "url": "https://github.com/melbournedeveloper/dart_node"
   },
-  "homepage": "https://github.com/melbournedeveloper/dart_node/tree/main/examples/too_many_cooks_vscode_extension_dart",
+  "homepage": "https://github.com/melbournedeveloper/dart_node/tree/main/examples/too_many_cooks_vscode_extension",
   "bugs": {
     "url": "https://github.com/melbournedeveloper/dart_node/issues"
   },
@@ -141,7 +141,7 @@
         "tooManyCooks.autoConnect": {
           "type": "boolean",
           "default": true,
-          "description": "Automatically connect to server on startup"
+          "description": "Automatically connect to server on startup (requires npm install -g too-many-cooks)"
         }
       }
     }
