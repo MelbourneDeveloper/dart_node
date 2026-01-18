@@ -106,9 +106,9 @@ void main() {
 </section>
 
 {# Direct answer snippet for AI - visible text #}
-<section class="ai-summary" style="background: var(--bg-secondary); padding: var(--space-6) 0;">
+<section class="summary-section">
   <div class="container">
-    <p style="font-size: 1.1rem; line-height: 1.7; max-width: 800px; margin: 0 auto; text-align: center;">
+    <p class="summary-text">
       <strong>dart_node</strong> is a collection of Dart packages for full-stack JavaScript development.
       It provides typed bindings to React, React Native, Express.js, WebSockets, and SQLite.
       Unlike TypeScript, Dart preserves types at runtime and has sound null safety.
@@ -126,8 +126,8 @@ void main() {
 
     {# For React/TypeScript Developers - Always visible #}
     <div class="audience-block" id="react-developers">
-      <h3 style="margin-bottom: var(--space-4);">For React &amp; TypeScript Developers</h3>
-      <p style="margin-bottom: var(--space-6);">Same hooks, components, and patterns you know - with runtime type safety TypeScript cannot provide.</p>
+      <h3 class="block-title">For React &amp; TypeScript Developers</h3>
+      <p class="block-subtitle">Same hooks, components, and patterns you know - with runtime type safety TypeScript cannot provide.</p>
 
       <div class="code-comparison">
         <div class="code-block">
@@ -159,7 +159,7 @@ ReactElement counter() {
         </div>
       </div>
 
-      <div class="features-grid" style="margin-top: var(--space-8);">
+      <div class="features-grid mt-8">
         <div class="feature-card">
           <div class="feature-icon">1</div>
           <h3>Same Paradigms</h3>
@@ -179,9 +179,9 @@ ReactElement counter() {
     </div>
 
     {# For Flutter Developers - Always visible #}
-    <div class="audience-block" id="flutter-developers" style="margin-top: var(--space-12); padding-top: var(--space-8); border-top: 1px solid var(--border-color);">
-      <h3 style="margin-bottom: var(--space-4);">For Flutter Developers</h3>
-      <p style="margin-bottom: var(--space-6);">Use your Dart skills for web and Node.js. Access the React and npm ecosystems while writing pure Dart.</p>
+    <div class="audience-block audience-block-border" id="flutter-developers">
+      <h3 class="block-title">For Flutter Developers</h3>
+      <p class="block-subtitle">Use your Dart skills for web and Node.js. Access the React and npm ecosystems while writing pure Dart.</p>
 
       <div class="code-comparison">
         <div class="code-block">
