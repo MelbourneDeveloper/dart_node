@@ -56,13 +56,16 @@ external JSObject? get _testMockedWindow;
 /// Check if test QuickPick queue exists and has items.
 /// Uses eval to avoid dart2js type checking issues between separately
 /// compiled test and extension code.
+/// CRITICAL: Must explicitly convert to Boolean since JS truthy/falsy values
+/// don't map properly to Dart bool through dart2js interop.
 @JS('eval')
-external bool _evalTestQueueExists(String code);
+external JSBoolean _evalTestQueueExists(String code);
 
 bool _hasTestQuickPickResponses() => _evalTestQueueExists(
-      'globalThis._testQuickPickResponses && '
-      'globalThis._testQuickPickResponses.length > 0',
-    );
+      // Use !! to coerce to proper boolean, ensures JS returns true/false
+      '!!(globalThis._testQuickPickResponses && '
+      'globalThis._testQuickPickResponses.length > 0)',
+    ).toDart;
 
 /// Shift a value from the test QuickPick queue.
 @JS('globalThis._testQuickPickResponses.shift')
@@ -295,24 +298,28 @@ void _registerCommands(ExtensionContext context) {
       // If no target, show quick pick to select one
       if (toAgent == null) {
         _consoleLog('[EXT sendMessage] No target, calling status tool...');
-        String? response;
+        // Check storeManager BEFORE awaiting to avoid dart2js type issues.
+        // Using ?. creates nullable Future checked with t.B.b() which fails.
+        // Checking null first allows instanceof check instead.
+        final sm = _storeManager;
+        if (sm == null) {
+          vscode.window.showErrorMessage('Not connected to server');
+          return;
+        }
+        String response;
         try {
-          response = await _storeManager?.callTool('status', {});
+          response = await sm.callTool('status', {});
           _consoleLog('[EXT sendMessage] Status response: $response');
         } on Object catch (e, st) {
           _consoleLog('[EXT sendMessage] Status call FAILED: $e');
           _consoleLog('[EXT sendMessage] Stack: $st');
           rethrow;
         }
-        if (response == null) {
-          vscode.window.showErrorMessage('Not connected to server');
-          return;
-        }
 
         // Check for test mode - use queue instead of real dialog
         // Use _hasTestQuickPickResponses() to avoid dart2js type check issues
         final hasTestQueue = _hasTestQuickPickResponses();
-        _consoleLog('[EXT] Checking test queue: hasTestQueue=$hasTestQueue');
+        _consoleLog('[EXT sendMessage] hasTestQueue=$hasTestQueue');
         if (hasTestQueue) {
           _consoleLog('[EXT] Test mode: using QuickPick queue');
           final testResponse = _shiftQuickPickResponse();
