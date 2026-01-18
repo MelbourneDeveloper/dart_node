@@ -17,19 +17,57 @@ const outDir = path.join(__dirname, '../out/test/suite');
 
 function parseDartTestFile(content, filename) {
   const result = { suites: [] };
-  let currentSuite = null;
 
-  const lines = content.split('\n');
-  for (const line of lines) {
-    const suiteMatch = line.match(/suite\s*\(\s*['"]([^'"]+)['"]/);
-    const testMatch = line.match(/test\s*\(\s*['"]([^'"]+)['"]/);
+  // Join all lines and normalize whitespace for multi-line matching
+  // This handles suite( and test( calls where the name is on the next line
+  const normalized = content.replace(/\n\s*/g, ' ');
 
-    if (suiteMatch) {
-      currentSuite = { name: suiteMatch[1], tests: [], file: filename };
-      result.suites.push(currentSuite);
-    } else if (testMatch && currentSuite) {
-      currentSuite.tests.push(testMatch[1]);
+  // Find all suite declarations
+  const suiteRegex = /suite\s*\(\s*['"]([^'"]+)['"]/g;
+  let suiteMatch;
+  const suitePositions = [];
+  while ((suiteMatch = suiteRegex.exec(normalized)) !== null) {
+    suitePositions.push({ name: suiteMatch[1], pos: suiteMatch.index });
+  }
+
+  // Find all test declarations (but not commented out ones)
+  // We need to check the ORIGINAL content for comments since normalization loses them
+  const testRegex = /test\s*\(\s*['"]([^'"]+)['"]/g;
+  let testMatch;
+  const tests = [];
+  while ((testMatch = testRegex.exec(normalized)) !== null) {
+    const testName = testMatch[1];
+
+    // Search for this test name in original content and check if it's commented
+    // Escape special regex chars in test name
+    const escapedName = testName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const originalTestRegex = new RegExp(`(//\\s*)?test\\s*\\(\\s*['"]${escapedName}['"]`);
+    const originalMatch = content.match(originalTestRegex);
+
+    if (originalMatch && originalMatch[1]) {
+      // This test is commented out (has // before it)
+      continue;
     }
+
+    tests.push({ name: testName, pos: testMatch.index });
+  }
+
+  // Assign tests to suites based on position
+  for (let i = 0; i < suitePositions.length; i++) {
+    const suite = suitePositions[i];
+    const nextSuitePos = i + 1 < suitePositions.length
+      ? suitePositions[i + 1].pos
+      : Infinity;
+
+    const suiteTests = tests
+      .filter(t => t.pos > suite.pos && t.pos < nextSuitePos)
+      .map(t => t.name);
+
+    result.suites.push({
+      name: suite.name,
+      tests: suiteTests,
+      file: filename
+    });
   }
 
   return result;

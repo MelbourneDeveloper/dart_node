@@ -12,8 +12,17 @@ import 'package:too_many_cooks_vscode_extension_dart/mcp/types.dart';
 export 'package:too_many_cooks_vscode_extension_dart/mcp/types.dart'
     show AgentIdentity, AgentPlan, FileLock, Message;
 
-/// Connection status.
-enum ConnectionStatus { disconnected, connecting, connected }
+/// Connection status to the MCP server.
+enum ConnectionStatus {
+  /// Not connected to the MCP server.
+  disconnected,
+
+  /// Currently establishing connection to the MCP server.
+  connecting,
+
+  /// Successfully connected to the MCP server.
+  connected,
+}
 
 /// Agent with their associated data (computed/derived state).
 typedef AgentDetails = ({
@@ -51,74 +60,112 @@ sealed class AppAction extends Action {}
 
 /// Set connection status.
 final class SetConnectionStatus extends AppAction {
+  /// Creates a set connection status action.
   SetConnectionStatus(this.status);
+
+  /// The new connection status.
   final ConnectionStatus status;
 }
 
 /// Set all agents.
 final class SetAgents extends AppAction {
+  /// Creates a set agents action.
   SetAgents(this.agents);
+
+  /// The list of agents to set.
   final List<AgentIdentity> agents;
 }
 
 /// Add a single agent.
 final class AddAgent extends AppAction {
+  /// Creates an add agent action.
   AddAgent(this.agent);
+
+  /// The agent to add.
   final AgentIdentity agent;
 }
 
 /// Remove an agent.
 final class RemoveAgent extends AppAction {
+  /// Creates a remove agent action.
   RemoveAgent(this.agentName);
+
+  /// The name of the agent to remove.
   final String agentName;
 }
 
 /// Set all locks.
 final class SetLocks extends AppAction {
+  /// Creates a set locks action.
   SetLocks(this.locks);
+
+  /// The list of locks to set.
   final List<FileLock> locks;
 }
 
 /// Add or update a lock.
 final class UpsertLock extends AppAction {
+  /// Creates an upsert lock action.
   UpsertLock(this.lock);
+
+  /// The lock to add or update.
   final FileLock lock;
 }
 
 /// Remove a lock by file path.
 final class RemoveLock extends AppAction {
+  /// Creates a remove lock action.
   RemoveLock(this.filePath);
+
+  /// The file path of the lock to remove.
   final String filePath;
 }
 
 /// Renew a lock's expiry time.
 final class RenewLock extends AppAction {
+  /// Creates a renew lock action.
   RenewLock(this.filePath, this.expiresAt);
+
+  /// The file path of the lock to renew.
   final String filePath;
+
+  /// The new expiration timestamp.
   final int expiresAt;
 }
 
 /// Set all messages.
 final class SetMessages extends AppAction {
+  /// Creates a set messages action.
   SetMessages(this.messages);
+
+  /// The list of messages to set.
   final List<Message> messages;
 }
 
 /// Add a message.
 final class AddMessage extends AppAction {
+  /// Creates an add message action.
   AddMessage(this.message);
+
+  /// The message to add.
   final Message message;
 }
 
 /// Set all plans.
 final class SetPlans extends AppAction {
+  /// Creates a set plans action.
   SetPlans(this.plans);
+
+  /// The list of plans to set.
   final List<AgentPlan> plans;
 }
 
 /// Update or add a plan.
 final class UpsertPlan extends AppAction {
+  /// Creates an upsert plan action.
   UpsertPlan(this.plan);
+
+  /// The plan to add or update.
   final AgentPlan plan;
 }
 

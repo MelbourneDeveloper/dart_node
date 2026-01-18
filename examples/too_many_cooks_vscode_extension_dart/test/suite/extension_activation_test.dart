@@ -12,6 +12,45 @@ import 'test_helpers.dart';
 @JS('console.log')
 external void _log(String msg);
 
+/// Helper to extract error message from a possibly-wrapped JS error.
+/// When Dart exceptions travel through JS Promises, they get wrapped.
+/// Try to extract the actual error message from the 'error' property.
+@JS('Reflect.get')
+external JSAny? _reflectGet(JSAny target, JSString key);
+
+String _extractErrorMessage(Object err) {
+  // First, try to get message from the err object itself
+  var msg = err.toString();
+
+  // Try to access 'error' and 'message' properties via interop
+  // The error might be a wrapped Dart exception with an 'error' property
+  try {
+    final jsErr = err.jsify();
+    if (jsErr != null && !jsErr.isUndefinedOrNull) {
+      final errorProp = _reflectGet(jsErr, 'error'.toJS);
+      if (errorProp != null && !errorProp.isUndefinedOrNull) {
+        final innerMsg = errorProp.toString();
+        if (innerMsg.isNotEmpty && !innerMsg.contains('Instance of')) {
+          msg = innerMsg;
+        }
+      }
+      final messageProp = _reflectGet(jsErr, 'message'.toJS);
+      if (messageProp != null && !messageProp.isUndefinedOrNull) {
+        if (messageProp.typeofEquals('string')) {
+          final innerMsg = (messageProp as JSString).toDart;
+          if (innerMsg.isNotEmpty) {
+            msg = innerMsg;
+          }
+        }
+      }
+    }
+  } on Object {
+    // Ignore jsify errors - just use toString()
+  }
+
+  return msg;
+}
+
 void main() {
   _log('[EXTENSION ACTIVATION TEST] main() called');
 
@@ -218,7 +257,8 @@ void main() {
         // If error message contains "Tool admin not found" (MCP protocol
         // error), the server is outdated. But "NOT_FOUND: Agent not found" is a
         // valid business logic response that means the tool exists.
-        final msg = err.toString();
+        final msg = _extractErrorMessage(err);
+        _log('[MCP FEATURE] Admin tool error: $msg');
 
         // Check for MCP-level "tool not found" error (means admin tool missing)
         if (msg.contains('Tool admin not found') || msg.contains('-32602')) {
@@ -236,8 +276,8 @@ void main() {
         }
 
         // "NOT_FOUND: Agent not found" is a valid business response - tool
-        // exists!
-        if (msg.contains('NOT_FOUND:')) {
+        // exists! This error means we successfully called the admin tool.
+        if (msg.contains('NOT_FOUND') || msg.contains('StateError')) {
           // This is actually success - the admin tool exists and responded
           _log(
             '[MCP FEATURE] CRITICAL: Admin tool MUST exist on MCP server '

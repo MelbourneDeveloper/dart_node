@@ -12,7 +12,19 @@ import 'package:too_many_cooks_vscode_extension_dart/state/state.dart';
 import 'package:too_many_cooks_vscode_extension_dart/state/store.dart';
 
 /// Tree item type enum for context menu targeting.
-enum AgentTreeItemType { agent, lock, plan, messageSummary }
+enum AgentTreeItemType {
+  /// An agent node in the tree.
+  agent,
+
+  /// A lock node belonging to an agent.
+  lock,
+
+  /// A plan node showing agent's current goal.
+  plan,
+
+  /// A message summary node for an agent.
+  messageSummary,
+}
 
 /// Creates an agent tree item (TreeItem with extra properties).
 TreeItem createAgentTreeItem({

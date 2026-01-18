@@ -15,12 +15,14 @@ extension type Commands._(JSObject _) implements JSObject {
   @JS('registerCommand')
   external Disposable _registerCommand(String command, JSFunction callback);
 
-  /// Registers a command with arguments.
+  /// Registers a command with optional arguments.
+  /// The callback receives the argument if provided, or null if not.
+  /// This handles VSCode calling the command with 0 or 1 arguments.
   Disposable registerCommandWithArgs<T extends JSAny?>(
     String command,
-    void Function(T) callback,
+    void Function(T?) callback,
   ) =>
-      _registerCommand(command, ((T arg) => callback(arg)).toJS);
+      _registerCommand(command, (([T? arg]) => callback(arg)).toJS);
 
   /// Executes a command with optional arguments.
   external JSPromise<T?> executeCommand<T extends JSAny?>(

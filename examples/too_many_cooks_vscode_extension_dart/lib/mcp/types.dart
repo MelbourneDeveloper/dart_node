@@ -38,13 +38,24 @@ typedef AgentPlan = ({
   int updatedAt,
 });
 
-/// Notification event types.
+/// Notification event types for real-time MCP server updates.
 enum NotificationEventType {
+  /// A new agent has registered with the MCP server.
   agentRegistered,
+
+  /// A file lock has been acquired by an agent.
   lockAcquired,
+
+  /// A file lock has been released by an agent.
   lockReleased,
+
+  /// A file lock's expiration time has been extended.
   lockRenewed,
+
+  /// A message has been sent between agents.
   messageSent,
+
+  /// An agent's plan has been updated.
   planUpdated,
 }
 

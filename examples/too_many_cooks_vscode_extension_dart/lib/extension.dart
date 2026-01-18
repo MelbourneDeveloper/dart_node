@@ -49,6 +49,25 @@ external set _deactivate(JSFunction f);
 @JS('globalThis._tooManyCooksTestServerPath')
 external JSString? get _testServerPath;
 
+/// Window object mocked by tests (for verification).
+@JS('globalThis._testMockedWindow')
+external JSObject? get _testMockedWindow;
+
+/// Check if test QuickPick queue exists and has items.
+/// Uses eval to avoid dart2js type checking issues between separately
+/// compiled test and extension code.
+@JS('eval')
+external bool _evalTestQueueExists(String code);
+
+bool _hasTestQuickPickResponses() => _evalTestQueueExists(
+      'globalThis._testQuickPickResponses && '
+      'globalThis._testQuickPickResponses.length > 0',
+    );
+
+/// Shift a value from the test QuickPick queue.
+@JS('globalThis._testQuickPickResponses.shift')
+external JSAny? _shiftQuickPickResponse();
+
 /// Test server path from environment variable (set in .vscode-test.mjs).
 @JS('process.env.TMC_TEST_SERVER_PATH')
 external JSString? get _envTestServerPath;
@@ -269,30 +288,55 @@ void _registerCommands(ExtensionContext context) {
   final sendMessageCmd = vscode.commands.registerCommandWithArgs<TreeItem?>(
     'tooManyCooks.sendMessage',
     (item) async {
-      var toAgent = item != null ? _getAgentNameFromItem(item) : null;
+      _consoleLog('[EXT sendMessage] Command handler started');
+      var toAgent = _getAgentNameFromItem(item);
+      _consoleLog('[EXT sendMessage] toAgent from item: $toAgent');
 
       // If no target, show quick pick to select one
       if (toAgent == null) {
-        final response = await _storeManager?.callTool('status', {});
+        _consoleLog('[EXT sendMessage] No target, calling status tool...');
+        String? response;
+        try {
+          response = await _storeManager?.callTool('status', {});
+          _consoleLog('[EXT sendMessage] Status response: $response');
+        } on Object catch (e, st) {
+          _consoleLog('[EXT sendMessage] Status call FAILED: $e');
+          _consoleLog('[EXT sendMessage] Stack: $st');
+          rethrow;
+        }
         if (response == null) {
           vscode.window.showErrorMessage('Not connected to server');
           return;
         }
-        // Parse and show agent picker
-        final agents = _storeManager?.state.agents ?? [];
-        final agentNames = [
-          '* (broadcast to all)',
-          ...agents.map((a) => a.agentName),
-        ];
-        final pickedJs = await vscode.window
-            .showQuickPick(
-              agentNames.map((n) => n.toJS).toList().toJS,
-              QuickPickOptions(placeHolder: 'Select recipient agent'),
-            )
-            .toDart;
-        if (pickedJs == null) return;
-        final picked = pickedJs.toDart;
-        toAgent = picked == '* (broadcast to all)' ? '*' : picked;
+
+        // Check for test mode - use queue instead of real dialog
+        // Use _hasTestQuickPickResponses() to avoid dart2js type check issues
+        final hasTestQueue = _hasTestQuickPickResponses();
+        _consoleLog('[EXT] Checking test queue: hasTestQueue=$hasTestQueue');
+        if (hasTestQueue) {
+          _consoleLog('[EXT] Test mode: using QuickPick queue');
+          final testResponse = _shiftQuickPickResponse();
+          final picked = _jsStringToDart(testResponse);
+          _consoleLog('[EXT] Test QuickPick response: $picked');
+          if (picked == null) return;
+          toAgent = picked == '* (broadcast to all)' ? '*' : picked;
+        } else {
+          // Normal mode - show real picker
+          final agents = _storeManager?.state.agents ?? [];
+          final agentNames = [
+            '* (broadcast to all)',
+            ...agents.map((a) => a.agentName),
+          ];
+          final pickedJs = await vscode.window
+              .showQuickPick(
+                agentNames.map((n) => n.toJS).toList().toJS,
+                QuickPickOptions(placeHolder: 'Select recipient agent'),
+              )
+              .toDart;
+          final picked = _jsStringToDart(pickedJs);
+          if (picked == null) return;
+          toAgent = picked == '* (broadcast to all)' ? '*' : picked;
+        }
       }
 
       // Get sender name
@@ -305,8 +349,8 @@ void _registerCommands(ExtensionContext context) {
             ),
           )
           .toDart;
-      if (fromAgentJs == null) return;
-      final fromAgent = fromAgentJs.toDart;
+      final fromAgent = _jsStringToDart(fromAgentJs);
+      if (fromAgent == null) return;
 
       // Get message content
       final contentJs = await vscode.window
@@ -317,8 +361,8 @@ void _registerCommands(ExtensionContext context) {
             ),
           )
           .toDart;
-      if (contentJs == null) return;
-      final content = contentJs.toDart;
+      final content = _jsStringToDart(contentJs);
+      if (content == null) return;
 
       try {
         await _storeManager?.sendMessage(fromAgent, toAgent, content);
@@ -338,7 +382,9 @@ void _registerCommands(ExtensionContext context) {
 
 /// Extracts file path from a tree item.
 /// Handles both LockTreeItem (lock.filePath) and AgentTreeItem (filePath).
-String? _getFilePathFromItem(TreeItem item) {
+/// Returns null if item is null.
+String? _getFilePathFromItem(TreeItem? item) {
+  if (item == null) return null;
   // Try direct filePath property first (AgentTreeItem case)
   final direct = _reflectGetProp(item, 'filePath'.toJS);
   if (direct != null && !direct.isUndefinedOrNull) {
@@ -358,7 +404,9 @@ String? _getFilePathFromItem(TreeItem item) {
 }
 
 /// Extracts agent name from a tree item.
-String? _getAgentNameFromItem(TreeItem item) {
+/// Returns null if item is null.
+String? _getAgentNameFromItem(TreeItem? item) {
+  if (item == null) return null;
   final value = _reflectGetProp(item, 'agentName'.toJS);
   if (value == null || value.isUndefinedOrNull) return null;
   if (value.typeofEquals('string')) return (value as JSString).toDart;
@@ -368,6 +416,20 @@ String? _getAgentNameFromItem(TreeItem item) {
 /// Get a property from a JS object via Reflect.get.
 @JS('Reflect.get')
 external JSAny? _reflectGetProp(JSObject target, JSString key);
+
+/// Safely convert a JS value to a Dart string.
+/// Handles both proper JSString and raw JS string primitives.
+/// Returns null if the value is null or undefined.
+String? _jsStringToDart(JSAny? value) {
+  if (value == null || value.isUndefinedOrNull) return null;
+  // Check if it's a proper JSString first
+  if (value.typeofEquals('string')) {
+    return (value as JSString).toDart;
+  }
+  // Fallback: try to convert via dartify
+  final dartified = value.dartify();
+  return dartified?.toString();
+}
 
 /// Creates the test API object for integration tests.
 /// This matches the TypeScript TestAPI interface exactly.
@@ -675,8 +737,22 @@ class _TestAPIImpl {
         final argsMap = dartified is Map
             ? Map<String, Object?>.from(dartified)
             : <String, Object?>{};
-        // Must explicitly convert String to JSString for the Promise result
-        return callTool(name.toDart, argsMap).then((s) => s.toJS).toJS;
+        // Use async/await to properly handle errors rather than .then()
+        // This ensures exceptions are caught and returned as JSON errors
+        return (() async {
+          try {
+            final result = await callTool(name.toDart, argsMap);
+            return result.toJS;
+          } on Object catch (e) {
+            // Return error as JSON string so JS side can inspect it
+            final escaped = e.toString().replaceAll(r'\', r'\\').replaceAll(
+                  '"',
+                  r'\"',
+                );
+            return '{"error":"$escaped"}'.toJS;
+          }
+        })()
+            .toJS;
       }).toJS,
     );
     _setProp(

@@ -26,12 +26,19 @@ external void _reflectSetRaw(JSObject target, JSString key, JSAny? value);
 void _jsSet(JSObject target, String key, JSAny? value) =>
     _reflectSetRaw(target, key.toJS, value);
 
-// Helper to get label from tree item snapshot (returned by TestAPI).
+/// Get the label property from a tree item snapshot.
 String _getLabel(JSObject item) {
-  final value = _reflectGet(item, 'label'.toJS);
-  if (value == null || value.isUndefinedOrNull) return '';
-  if (value.typeofEquals('string')) return (value as JSString).toDart;
-  return value.dartify()?.toString() ?? '';
+  final label = _reflectGet(item, 'label'.toJS);
+  if (label == null || label.isUndefinedOrNull) return '';
+  if (label.typeofEquals('string')) return (label as JSString).toDart;
+  // TreeItem label can be a TreeItemLabel object with a 'label' property
+  if (label.typeofEquals('object')) {
+    final innerLabel = _reflectGet(label as JSObject, 'label'.toJS);
+    if (innerLabel != null && innerLabel.typeofEquals('string')) {
+      return (innerLabel as JSString).toDart;
+    }
+  }
+  return label.toString();
 }
 
 /// Create a LockTreeItem-like object for command testing.
