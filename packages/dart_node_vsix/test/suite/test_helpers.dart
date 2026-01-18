@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:js_interop';
 
 import 'package:dart_node_vsix/dart_node_vsix.dart';
+import 'package:dart_node_vsix/test_api_types.dart';
 
 /// Console logging.
 @JS('console.log')
@@ -39,6 +40,9 @@ JSObject createJSObject() => _createJSObjectFromProto(null);
 /// Extension ID for the test extension.
 const extensionId = 'Nimblesite.dart-node-vsix-test';
 
+/// Cached TestAPI instance.
+TestAPI? _cachedTestAPI;
+
 /// Wait for a condition to be true, polling at regular intervals.
 Future<void> waitForCondition(
   bool Function() condition, {
@@ -52,6 +56,16 @@ Future<void> waitForCondition(
     await Future<void>.delayed(interval);
   }
   throw TimeoutException(message);
+}
+
+/// Get the cached TestAPI instance.
+TestAPI getTestAPI() {
+  if (_cachedTestAPI == null) {
+    throw StateError(
+      'Test API not initialized - call waitForExtensionActivation first',
+    );
+  }
+  return _cachedTestAPI!;
 }
 
 /// Wait for the test extension to fully activate.
@@ -76,6 +90,29 @@ Future<void> waitForExtensionActivation() async {
     consoleLog('[TEST HELPER] Extension activate() completed');
   } else {
     consoleLog('[TEST HELPER] Extension already active');
+  }
+
+  // Get exports - should be available immediately after activate
+  consoleLog('[TEST HELPER] Getting exports...');
+  final exports = extension.exports;
+  if (exports != null) {
+    _cachedTestAPI = TestAPI(exports as JSObject);
+    consoleLog('[TEST HELPER] Test API verified immediately');
+  } else {
+    consoleLog('[TEST HELPER] Waiting for exports...');
+    await waitForCondition(
+      () {
+        final exp = extension.exports;
+        if (exp != null) {
+          _cachedTestAPI = TestAPI(exp as JSObject);
+          consoleLog('[TEST HELPER] Test API verified after wait');
+          return true;
+        }
+        return false;
+      },
+      message: 'Extension exports not available within timeout',
+      timeout: const Duration(seconds: 30),
+    );
   }
 
   consoleLog('[TEST HELPER] Extension activation complete');

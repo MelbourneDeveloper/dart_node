@@ -1,0 +1,40 @@
+{
+  "name": "dart-node-vsix-test",
+  "displayName": "Dart Node VSIX Test",
+  "description": "Test extension for dart_node_vsix package",
+  "publisher": "Nimblesite",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "main": "./out/lib/extension.js",
+  "activationEvents": [
+    "*"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "dartNodeVsix.test",
+        "title": "Test dart_node_vsix"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "dartNodeVsix.testTree",
+          "name": "VSIX Test Tree"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "bash build.sh",
+    "test": "npm run compile && npx @vscode/test-cli run",
+    "package": "npx @vscode/vsce package"
+  },
+  "devDependencies": {
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.5.0"
+  }
+}
