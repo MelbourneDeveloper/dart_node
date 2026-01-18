@@ -1,29 +1,55 @@
 /// Configuration Tests
-/// Verifies configuration settings work correctly.
+/// Verifies configuration and extension settings work correctly.
 library;
 
-import 'package:test/test.dart';
+import 'dart:js_interop';
 
-import '../test_helpers.dart';
+import 'package:dart_node_vsix/dart_node_vsix.dart';
+
+import 'test_helpers.dart';
+
+@JS('console.log')
+external void _log(String msg);
 
 void main() {
-  group('Configuration', () {
-    test('StoreManager accepts serverPath configuration', () {
-      final client = MockMcpClient()..setupDefaultHandlers();
-      final manager = StoreManager(serverPath: '/custom/path', client: client);
+  _log('[CONFIGURATION TEST] main() called');
 
-      expect(manager, isNotNull);
+  suite('Configuration', syncTest(() {
+    suiteSetup(asyncTest(() async {
+      _log('[CONFIG] suiteSetup - waiting for extension activation');
+      await waitForExtensionActivation();
+    }));
 
-      client.dispose();
-    });
+    suiteTeardown(asyncTest(() async {
+      _log('[CONFIG] suiteTeardown - disconnecting');
+      await safeDisconnect();
+    }));
 
-    test('StoreManager works without serverPath (defaults to null)', () {
-      final client = MockMcpClient()..setupDefaultHandlers();
-      final manager = StoreManager(client: client);
+    test('Extension activates with TestAPI exported', syncTest(() {
+      _log('[CONFIG] Running TestAPI export test');
+      final api = getTestAPI();
+      assertOk(api.getConnectionStatus().isNotEmpty, 'TestAPI should work');
+      _log('[CONFIG] TestAPI export test PASSED');
+    }));
 
-      expect(manager, isNotNull);
+    test('Connection status starts as disconnected', syncTest(() {
+      _log('[CONFIG] Running initial status test');
+      final api = getTestAPI();
+      assertEqual(api.getConnectionStatus(), 'disconnected');
+      _log('[CONFIG] initial status test PASSED');
+    }));
 
-      client.dispose();
-    });
-  });
+    test('Connect changes status to connected', asyncTest(() async {
+      _log('[CONFIG] Running connect status test');
+      final api = getTestAPI();
+
+      await api.connect().toDart;
+      await waitForConnection();
+
+      assertEqual(api.getConnectionStatus(), 'connected');
+      _log('[CONFIG] connect status test PASSED');
+    }));
+  }));
+
+  _log('[CONFIGURATION TEST] main() completed');
 }

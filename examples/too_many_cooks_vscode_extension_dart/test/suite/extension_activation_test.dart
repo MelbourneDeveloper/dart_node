@@ -12,12 +12,25 @@ void main() {
   _log('[DART TEST] main() called');
 
   suite('VSCode API Access', syncTest(() {
-    test('can access vscode.window', syncTest(() {
-      _log('[DART TEST] Getting vscode.window...');
-      // Accessing window to verify VSCode API is available
-      vscode.window;
-      _log('[DART TEST] Window object accessed successfully');
-      assertOk(true, 'vscode.window is accessible');
+    test('Extension is loaded and vscode API is accessible', syncTest(() {
+      _log('[DART TEST] Checking VSCode API access...');
+
+      // Verify extensions API is available by checking our extension
+      const extId = 'Nimblesite.too-many-cooks-dart';
+      final ext = vscode.extensions.getExtension(extId);
+      assertOk(ext != null, 'Our extension should be loaded');
+      _log('[DART TEST] Extension found: ${ext?.id}');
+
+      // Verify workspace API is available
+      final config = vscode.workspace.getConfiguration('tooManyCooks');
+      final autoConnect = config.get<JSBoolean>('autoConnect');
+      _log('[DART TEST] Config autoConnect: $autoConnect');
+
+      // Verify we can access extension exports
+      final exports = ext?.exports;
+      assertOk(exports != null, 'Extension should have exports');
+      _log('[DART TEST] Extension exports available');
+
       _log('[DART TEST] TEST PASSED!');
     }));
   }));

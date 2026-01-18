@@ -226,6 +226,107 @@ Future<void> safeDisconnect() async {
   _consoleLog('[TEST HELPER] Safe disconnect complete');
 }
 
+/// Wait for a lock to appear in the tree, refreshing state each poll.
+Future<void> waitForLockInTree(
+  TestAPI api,
+  String filePath, {
+  Duration timeout = const Duration(seconds: 10),
+  Duration interval = const Duration(milliseconds: 200),
+}) async {
+  final stopwatch = Stopwatch()..start();
+  while (stopwatch.elapsed < timeout) {
+    // Refresh state from server before checking
+    try {
+      await api.refreshStatus().toDart;
+    } on Object {
+      // Ignore refresh errors
+    }
+    if (api.findLockInTree(filePath) != null) return;
+    await Future<void>.delayed(interval);
+  }
+  throw TimeoutException('Lock to appear: $filePath');
+}
+
+/// Wait for a lock to disappear from the tree, refreshing state each poll.
+Future<void> waitForLockGone(
+  TestAPI api,
+  String filePath, {
+  Duration timeout = const Duration(seconds: 10),
+  Duration interval = const Duration(milliseconds: 200),
+}) async {
+  final stopwatch = Stopwatch()..start();
+  while (stopwatch.elapsed < timeout) {
+    try {
+      await api.refreshStatus().toDart;
+    } on Object {
+      // Ignore refresh errors
+    }
+    if (api.findLockInTree(filePath) == null) return;
+    await Future<void>.delayed(interval);
+  }
+  throw TimeoutException('Lock to disappear: $filePath');
+}
+
+/// Wait for an agent to appear in the tree, refreshing state each poll.
+Future<void> waitForAgentInTree(
+  TestAPI api,
+  String agentName, {
+  Duration timeout = const Duration(seconds: 10),
+  Duration interval = const Duration(milliseconds: 200),
+}) async {
+  final stopwatch = Stopwatch()..start();
+  while (stopwatch.elapsed < timeout) {
+    try {
+      await api.refreshStatus().toDart;
+    } on Object {
+      // Ignore refresh errors
+    }
+    if (api.findAgentInTree(agentName) != null) return;
+    await Future<void>.delayed(interval);
+  }
+  throw TimeoutException('Agent to appear: $agentName');
+}
+
+/// Wait for an agent to disappear from the tree, refreshing state each poll.
+Future<void> waitForAgentGone(
+  TestAPI api,
+  String agentName, {
+  Duration timeout = const Duration(seconds: 10),
+  Duration interval = const Duration(milliseconds: 200),
+}) async {
+  final stopwatch = Stopwatch()..start();
+  while (stopwatch.elapsed < timeout) {
+    try {
+      await api.refreshStatus().toDart;
+    } on Object {
+      // Ignore refresh errors
+    }
+    if (api.findAgentInTree(agentName) == null) return;
+    await Future<void>.delayed(interval);
+  }
+  throw TimeoutException('Agent to disappear: $agentName');
+}
+
+/// Wait for a message to appear in the tree, refreshing state each poll.
+Future<void> waitForMessageInTree(
+  TestAPI api,
+  String content, {
+  Duration timeout = const Duration(seconds: 10),
+  Duration interval = const Duration(milliseconds: 200),
+}) async {
+  final stopwatch = Stopwatch()..start();
+  while (stopwatch.elapsed < timeout) {
+    try {
+      await api.refreshStatus().toDart;
+    } on Object {
+      // Ignore refresh errors
+    }
+    if (api.findMessageInTree(content) != null) return;
+    await Future<void>.delayed(interval);
+  }
+  throw TimeoutException('Message to appear: $content');
+}
+
 /// Clean the Too Many Cooks database for fresh test state.
 void cleanDatabase() {
   final homeDir = _envHome ?? '/tmp';
@@ -245,4 +346,27 @@ void cleanDatabase() {
 /// Restore any dialog mocks (no-op in Dart - kept for API compatibility).
 void restoreDialogMocks() {
   // Dialog mocking not implemented in Dart tests yet
+}
+
+/// Create a plain JS object via eval (JSObject() constructor doesn't work).
+@JS('eval')
+external JSObject _evalCreateObj(String code);
+
+/// Create a JSObject from a Map for tool call arguments.
+JSObject createArgs(Map<String, Object> args) {
+  final obj = _evalCreateObj('({})');
+  for (final entry in args.entries) {
+    _reflectSet(obj, entry.key, entry.value.jsify());
+  }
+  return obj;
+}
+
+/// Extract agent key from MCP register result.
+String extractKeyFromResult(String result) {
+  // Result is JSON like: {"agent_key": "xxx", ...}
+  final match = RegExp(r'"agent_key"\s*:\s*"([^"]+)"').firstMatch(result);
+  if (match == null) {
+    throw StateError('Could not extract agent_key from result: $result');
+  }
+  return match.group(1)!;
 }

@@ -12,6 +12,5 @@
     "out": true,
     ".dart_tool": true
   },
-  "testing.automaticallyOpenPeekView": "never",
-  "vscode-test-explorer.enable": false
+  "testing.automaticallyOpenPeekView": "never"
 }

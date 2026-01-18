@@ -6,7 +6,6 @@ import 'dart:js_interop';
 
 import 'package:dart_node_vsix/dart_node_vsix.dart';
 
-import 'test_api.dart';
 import 'test_helpers.dart';
 
 @JS('console.log')

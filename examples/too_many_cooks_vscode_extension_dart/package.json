@@ -148,9 +148,9 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "dart compile js -O2 -o out/extension.dart.js lib/extension.dart && node scripts/wrap-extension.js",
-    "compile:tests": "mkdir -p out/test/suite && for f in test/suite/*_test.dart; do dart compile js -O0 -o out/test/suite/$(basename ${f%.dart}.dart.js) $f; done && node scripts/wrap-tests.js && cp test/suite/index.js out/test/suite/",
-    "watch": "dart compile js -O0 -o out/extension.js lib/extension.dart",
+    "compile": "dart pub get && dart compile js -O2 -o out/extension.dart.js lib/extension.dart && node scripts/wrap-extension.js",
+    "compile:tests": "dart pub get && mkdir -p out/test/suite && for f in test/suite/*_test.dart; do dart compile js -O0 -o out/test/suite/$(basename ${f%.dart}.dart.js) $f; done && node scripts/wrap-tests.js && node scripts/generate-test-manifest.js && cp test/suite/index.js out/test/suite/",
+    "watch": "dart pub get && dart compile js -O0 -o out/extension.js lib/extension.dart",
     "pretest": "npm run compile && npm run compile:tests",
     "test": "vscode-test",
     "test:unit": "dart test",

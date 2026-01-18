@@ -53,18 +53,3 @@ extension type TestAPI(JSObject _) implements JSObject {
   // Logging
   external JSArray<JSString> getLogMessages();
 }
-
-/// Helper to create JS object for tool arguments.
-@JS('eval')
-external JSObject _eval(String code);
-
-JSObject createArgs(Map<String, Object?> args) {
-  final obj = _eval('({})');
-  for (final entry in args.entries) {
-    _setProperty(obj, entry.key, entry.value.jsify());
-  }
-  return obj;
-}
-
-@JS('Reflect.set')
-external void _setProperty(JSObject target, String key, JSAny? value);

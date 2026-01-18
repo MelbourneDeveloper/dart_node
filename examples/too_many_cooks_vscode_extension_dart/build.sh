@@ -18,14 +18,20 @@ node scripts/wrap-extension.js
 
 echo "=== Building Integration Tests (Dart) ==="
 # Compile each test file to JS
-for testfile in test/suite/*.test.dart; do
+for testfile in test/suite/*_test.dart; do
   if [ -f "$testfile" ]; then
-    outfile="out/test/suite/$(basename "${testfile%.dart}.js")"
+    outfile="out/test/suite/$(basename "${testfile}.js")"
     mkdir -p "$(dirname "$outfile")"
     echo "Compiling $testfile -> $outfile"
     dart compile js -O0 -o "$outfile" "$testfile"
   fi
 done
+
+# Wrap dart2js output with polyfills and rename to *.test.js
+node scripts/wrap-tests.js
+
+# Generate test manifest for static discovery
+node scripts/generate-test-manifest.js
 
 # Copy test runner index.js
 mkdir -p out/test/suite

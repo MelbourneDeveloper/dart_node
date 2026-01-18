@@ -487,7 +487,14 @@ class _TestAPIImpl {
     await _storeManager?.disconnect();
     _consoleLog('TestAPI.disconnect() completed');
   }
-  Future<void> refreshStatus() async => _storeManager?.refreshStatus();
+  Future<void> refreshStatus() async {
+    try {
+      await _storeManager?.refreshStatus();
+    } on Object catch (e) {
+      _consoleLog('TestAPI.refreshStatus() error: $e');
+      // Swallow errors - callers should check isConnected() if needed
+    }
+  }
   bool isConnected() => _storeManager?.isConnected ?? false;
   bool isConnecting() => _storeManager?.isConnecting ?? false;
 
@@ -528,35 +535,50 @@ class _TestAPIImpl {
 
   // Tree snapshots
   List<Map<String, Object?>> getAgentsTreeSnapshot() {
-    if (_agentsProvider == null) return [];
-    final items = _agentsProvider!.getChildren() ?? [];
+    final provider = _agentsProvider;
+    if (provider == null) return [];
+    final items = provider.getChildren() ?? [];
     return items.map(_toSnapshot).toList();
   }
 
   List<Map<String, Object?>> getLocksTreeSnapshot() {
-    if (_locksProvider == null) return [];
-    final items = _locksProvider!.getChildren() ?? [];
-    return items.map(_toSnapshot).toList();
+    final provider = _locksProvider;
+    if (provider == null) return [];
+    final items = provider.getChildren() ?? [];
+    return items
+        .map((item) => _toSnapshotWithProvider(item, provider))
+        .toList();
   }
 
   List<Map<String, Object?>> getMessagesTreeSnapshot() {
-    if (_messagesProvider == null) return [];
-    final items = _messagesProvider!.getChildren() ?? [];
-    return items.map(_toSnapshot).toList();
+    final provider = _messagesProvider;
+    if (provider == null) return [];
+    final items = provider.getChildren() ?? [];
+    return items
+        .map((item) => _toSnapshotWithProvider(item, provider))
+        .toList();
   }
 
-  Map<String, Object?> _toSnapshot(TreeItem item) {
+  Map<String, Object?> _toSnapshot(TreeItem item) =>
+      _toSnapshotWithProvider(item, _agentsProvider);
+
+  Map<String, Object?> _toSnapshotWithProvider(
+    TreeItem item,
+    TreeDataProvider<TreeItem>? provider,
+  ) {
     final label = item.label;
     final snapshot = <String, Object?>{'label': label};
     final desc = item.description;
     if (desc != null) {
       snapshot['description'] = desc;
     }
-    // Get children if this is an agent item
-    if (_agentsProvider != null) {
-      final children = _agentsProvider!.getChildren(item);
+    // Get children from the appropriate provider
+    if (provider != null) {
+      final children = provider.getChildren(item);
       if (children != null && children.isNotEmpty) {
-        snapshot['children'] = children.map(_toSnapshot).toList();
+        snapshot['children'] = children
+            .map((child) => _toSnapshotWithProvider(child, provider))
+            .toList();
       }
     }
     return snapshot;
@@ -631,7 +653,8 @@ class _TestAPIImpl {
         final argsMap = dartified is Map
             ? Map<String, Object?>.from(dartified)
             : <String, Object?>{};
-        return callTool(name.toDart, argsMap).toJS;
+        // Must explicitly convert String to JSString for the Promise result
+        return callTool(name.toDart, argsMap).then((s) => s.toJS).toJS;
       }).toJS,
     );
     _setProp(

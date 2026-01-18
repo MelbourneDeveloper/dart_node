@@ -35,6 +35,14 @@ JSFunction syncTest(void Function() fn) => fn.toJS;
 @JS('setTimeout')
 external void _setTimeout(JSFunction callback, int delay);
 
+/// console.error for logging.
+@JS('console.error')
+external void _consoleError(String msg);
+
+/// Create a JS Error object.
+@JS('Error')
+external JSObject _createJSError(String message);
+
 /// Helper to create an async test function for Mocha.
 /// Uses the Mocha done() callback pattern with setTimeout to escape
 /// Dart's async zone and properly signal completion to Mocha.
@@ -47,9 +55,14 @@ Future<void> _runAsync(Future<void> Function() fn, JSFunction done) async {
   try {
     await fn();
     _setTimeout(done, 0);
-  } on Object catch (e) {
+  } on Object catch (e, st) {
+    // Log the actual error for debugging
+    _consoleError('[ASYNC TEST ERROR] $e');
+    _consoleError('[ASYNC TEST STACK] $st');
+    // Create a proper JS Error object for Mocha
+    final jsError = _createJSError('$e\n$st');
     _setTimeout(
-      (() => done.callAsFunction(null, e.toString().toJS)).toJS,
+      (() => done.callAsFunction(null, jsError)).toJS,
       0,
     );
   }

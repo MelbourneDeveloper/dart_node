@@ -26,6 +26,11 @@ async function main() {
     
     const wrapped = `// VSCode test wrapper for dart2js output
 (function() {
+  // Polyfill self for dart2js async scheduling (uses self.setTimeout)
+  if (typeof self === 'undefined') {
+    globalThis.self = globalThis;
+  }
+
   // Polyfill navigator for dart2js runtime checks
   if (typeof navigator === 'undefined') {
     globalThis.navigator = { userAgent: 'VSCodeExtensionHost' };
