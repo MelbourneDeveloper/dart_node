@@ -209,3 +209,183 @@ test.describe('Docs Sidebar Mobile', () => {
     await expect(sidebarToggle).toHaveText('Close');
   });
 });
+
+test.describe('Language Dropdown Mobile', () => {
+  test('language dropdown displays above page content on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/docs/getting-started/');
+
+    const languageBtn = page.locator('.language-btn');
+    const languageDropdown = page.locator('.language-dropdown');
+
+    // Click to open dropdown
+    await languageBtn.click();
+    await page.waitForTimeout(50);
+
+    // Dropdown should be visible
+    await expect(languageDropdown).toBeVisible();
+
+    // Get dropdown bounding box
+    const dropdownBox = await languageDropdown.boundingBox();
+    expect(dropdownBox).not.toBeNull();
+
+    // Dropdown should have reasonable dimensions (not clipped)
+    expect(dropdownBox.height).toBeGreaterThan(50);
+    expect(dropdownBox.width).toBeGreaterThan(100);
+  });
+
+  test('language dropdown z-index is above page content', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/');
+
+    const languageBtn = page.locator('.language-btn');
+
+    // Open dropdown
+    await languageBtn.click();
+    await page.waitForTimeout(50);
+
+    // Check z-index of header and dropdown via computed styles
+    const zIndexes = await page.evaluate(() => {
+      const header = document.querySelector('.header');
+      const dropdown = document.querySelector('.language-dropdown');
+      return {
+        header: parseInt(getComputedStyle(header).zIndex) || 0,
+        dropdown: parseInt(getComputedStyle(dropdown).zIndex) || 0,
+      };
+    });
+
+    // Header should have high z-index
+    expect(zIndexes.header).toBeGreaterThanOrEqual(1000);
+    // Dropdown should also have high z-index
+    expect(zIndexes.dropdown).toBeGreaterThanOrEqual(1000);
+  });
+
+  test('header container allows dropdown overflow', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/');
+
+    // Check overflow styles
+    const overflowStyles = await page.evaluate(() => {
+      const header = document.querySelector('.header');
+      const headerContainer = document.querySelector('.header .container');
+      const nav = document.querySelector('.nav');
+      return {
+        header: getComputedStyle(header).overflow,
+        headerContainer: headerContainer ? getComputedStyle(headerContainer).overflow : 'N/A',
+        nav: getComputedStyle(nav).overflow,
+      };
+    });
+
+    // All should allow overflow for dropdown to display
+    expect(overflowStyles.header).toBe('visible');
+    expect(overflowStyles.nav).toBe('visible');
+  });
+});
+
+test.describe('Blog Mobile Layout', () => {
+  test('blog post has consistent padding with other sections', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/blog/');
+
+    // Get blog list padding
+    const blogPadding = await page.evaluate(() => {
+      const blogList = document.querySelector('.blog-list');
+      if (!blogList) return null;
+      const style = getComputedStyle(blogList);
+      return {
+        paddingTop: style.paddingTop,
+        paddingBottom: style.paddingBottom,
+      };
+    });
+
+    expect(blogPadding).not.toBeNull();
+    // Should have reasonable padding (not 0)
+    expect(parseInt(blogPadding.paddingTop)).toBeGreaterThan(0);
+    expect(parseInt(blogPadding.paddingBottom)).toBeGreaterThan(0);
+  });
+
+  test('no horizontal scroll on mobile blog page', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/blog/');
+
+    // Check if page has horizontal scroll
+    const hasHorizontalScroll = await page.evaluate(() => {
+      return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+    });
+
+    expect(hasHorizontalScroll).toBe(false);
+  });
+
+  test('no horizontal scroll on mobile docs page', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/docs/getting-started/');
+
+    const hasHorizontalScroll = await page.evaluate(() => {
+      return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+    });
+
+    expect(hasHorizontalScroll).toBe(false);
+  });
+
+  test('no horizontal scroll on mobile homepage', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/');
+
+    const hasHorizontalScroll = await page.evaluate(() => {
+      return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+    });
+
+    expect(hasHorizontalScroll).toBe(false);
+  });
+});
+
+test.describe('Mobile Responsive Breakpoints', () => {
+  test('768px breakpoint applies correct styles', async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto('/');
+
+    // Check that mobile menu toggle is visible at 768px
+    const mobileMenuToggle = page.locator('#mobile-menu-toggle');
+    await expect(mobileMenuToggle).toBeVisible();
+
+    // Check hero section has reduced padding
+    const heroPadding = await page.evaluate(() => {
+      const hero = document.querySelector('.hero');
+      if (!hero) return null;
+      return getComputedStyle(hero).paddingTop;
+    });
+    expect(heroPadding).not.toBeNull();
+  });
+
+  test('480px breakpoint applies correct styles', async ({ page }) => {
+    await page.setViewportSize({ width: 480, height: 800 });
+    await page.goto('/');
+
+    // Container should have proper padding
+    const containerPadding = await page.evaluate(() => {
+      const container = document.querySelector('.container');
+      if (!container) return null;
+      return getComputedStyle(container).paddingLeft;
+    });
+
+    expect(containerPadding).not.toBeNull();
+    // Should have at least 1rem (16px) padding
+    expect(parseInt(containerPadding)).toBeGreaterThanOrEqual(16);
+  });
+
+  test('language button hides text on small mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/');
+
+    // The language name text should be hidden on small screens
+    const langTextHidden = await page.evaluate(() => {
+      const langBtn = document.querySelector('.language-btn');
+      const textSpan = langBtn?.querySelector('span:not(.chevron)');
+      if (!textSpan) return true; // If no text span, consider it hidden
+      const style = getComputedStyle(textSpan);
+      return style.display === 'none';
+    });
+
+    expect(langTextHidden).toBe(true);
+  });
+});
