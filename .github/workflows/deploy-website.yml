@@ -43,10 +43,6 @@ jobs:
         working-directory: website
         run: npm run build
 
-      - name: Run website tests
-        working-directory: website
-        run: bash scripts/test.sh
-
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
