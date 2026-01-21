@@ -1,16 +1,16 @@
 /// Functional programming extensions for nullable and non-null types.
 ///
-/// Provides pattern matching and transformation utilities inspired by 
+/// Provides pattern matching and transformation utilities inspired by
 /// functional programming languages like Kotlin and Rust.
 library;
 
-/// Extension methods for nullable values enabling pattern matching and 
+/// Extension methods for nullable values enabling pattern matching and
 /// functional transformations.
 ///
 /// Example:
 /// ```dart
 /// String? getName() => 'World';
-/// 
+///
 /// final greeting = getName().match(
 ///   some: (name) => 'Hello, $name!',
 ///   none: () => 'Hello, stranger!',
@@ -31,7 +31,7 @@ extension NullableExtensions<T extends Object> on T? {
   /// Example:
   /// ```dart
   /// int? maybeNumber = 42;
-  /// 
+  ///
   /// final result = maybeNumber.match(
   ///   some: (n) => 'Number: $n',
   ///   none: () => 'No number',
@@ -63,7 +63,7 @@ extension ObjectExtensions<T extends Object> on T {
   /// final length = 'hello world'
   ///     .let((s) => s.split(' '))
   ///     .let((words) => words.length); // Returns: 2
-  /// 
+  ///
   /// // Instead of:
   /// final text = 'hello world';
   /// final words = text.split(' ');
