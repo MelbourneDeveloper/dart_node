@@ -1,31 +1,38 @@
 # Dev container for dart_node monorepo
-# Dart + Node.js + all build/test tooling
+# Dart + Node.js — lean image, fast startup
+#
+# ┌─────────────────────────────────────────────────┐
+# │  PINNED VERSIONS — update here, nowhere else    │
+# │                                                 │
+# │  Dart SDK:    3.10.7                            │
+# │  Node.js:     20.20.0                           │
+# │  cspell:      9.6.0                             │
+# │  coverage:    1.15.0                            │
+# │  gh CLI:      2.67.0  (in devcontainer.json)    │
+# └─────────────────────────────────────────────────┘
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
-ARG DART_VERSION=3.10.0
-ARG NODE_MAJOR=20
+ARG DART_VERSION=3.10.7
+ARG NODE_VERSION=20.20.0
+ARG CSPELL_VERSION=9.6.0
+ARG COVERAGE_VERSION=1.15.0
 
-# System dependencies
+# System dependencies (minimal)
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get install -y --no-install-recommends \
-        apt-transport-https \
         bc \
         build-essential \
         ca-certificates \
         curl \
         git \
-        gnupg \
         jq \
-        lcov \
         lsof \
         python3 \
         unzip \
-        wget \
-        xvfb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Dart SDK
+# Dart SDK (exact version)
 RUN set -eux; \
     case "$(dpkg --print-architecture)" in \
         amd64) DART_ARCH="x64" ;; \
@@ -39,30 +46,22 @@ RUN set -eux; \
 ENV PATH="/usr/lib/dart-sdk/bin:${PATH}"
 ENV PATH="/home/vscode/.pub-cache/bin:${PATH}"
 
-# Node.js via NodeSource
-RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
-    && apt-get install -y nodejs \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Node.js (exact version, direct binary)
+RUN set -eux; \
+    case "$(dpkg --print-architecture)" in \
+        amd64) NODE_ARCH="x64" ;; \
+        arm64) NODE_ARCH="arm64" ;; \
+        *) echo "Unsupported arch"; exit 1 ;; \
+    esac; \
+    curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz" -o /tmp/node.tar.xz \
+    && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 \
+    && rm /tmp/node.tar.xz \
+    && node --version && npm --version
 
-# Chromium for browser tests
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y --no-install-recommends chromium-browser \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    || true
+# Global npm tools (pinned)
+RUN npm install -g "cspell@${CSPELL_VERSION}"
 
-# Global npm tools
-RUN npm install -g cspell
-
-# Global Dart tools (as vscode user so pub-cache is in the right place)
+# Global Dart tools (pinned, as vscode user so pub-cache lands correctly)
 USER vscode
-RUN dart pub global activate coverage
+RUN dart pub global activate coverage "${COVERAGE_VERSION}"
 USER root
-
-# Playwright system deps (for website tests)
-RUN npx playwright install-deps chromium 2>/dev/null || true
-
-# Chrome/Chromium env
-ENV CHROME_EXECUTABLE="/usr/bin/chromium-browser"
-ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium-browser"
