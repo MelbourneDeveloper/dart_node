@@ -50,7 +50,7 @@ JSObject _getFileCoverage(String file) {
 
   // Type-checked cast: safe after isA<T>() verification
   if (existing != null && existing.isA<JSObject>()) {
-    return existing as JSObject;  // Required for js_interop type narrowing
+    return existing as JSObject; // Required for js_interop type narrowing
   }
 
   // Create new file coverage object if it doesn't exist or is wrong type
@@ -75,7 +75,8 @@ void cov(String file, int line) {
   // Type-checked cast: safe after isA<T>() verification
   final double newCount;
   if (currentRaw != null && currentRaw.isA<JSNumber>()) {
-    newCount = (currentRaw as JSNumber).toDartDouble + 1.0;  // Required for js_interop
+    newCount =
+        (currentRaw as JSNumber).toDartDouble + 1.0; // Required for js_interop
   } else {
     // First execution of this line
     newCount = 1.0;
