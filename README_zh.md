@@ -36,7 +36,7 @@
 dart tools/switch_deps.dart local
 
 # 运行全部
-sh run_dev.sh
+sh examples/run_taskflow.sh
 ```
 
 打开 http://localhost:8080/web/
