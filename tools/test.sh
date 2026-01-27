@@ -88,33 +88,38 @@ test_package() {
 
   cd "$full_path"
 
+  # Clear log file
+  > "$log"
+
+  echo "=== Testing $name ===" | tee -a "$log"
+
   # Build first if needed
   if is_type "$dir" "$BUILD_FIRST" && [[ -f "build.sh" ]]; then
-    ./build.sh >> "$log" 2>&1 || { echo "FAIL $name (build)"; return 1; }
+    ./build.sh 2>&1 | tee -a "$log" || { echo "FAIL $name (build)"; return 1; }
   fi
 
   # Install npm deps if needed
-  [[ -f "package.json" ]] && npm install >> "$log" 2>&1
+  [[ -f "package.json" ]] && npm install 2>&1 | tee -a "$log"
 
   local coverage=""
 
   if is_type "$dir" "$NPM_PACKAGES"; then
-    npm test >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
+    npm test 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
   elif is_type "$dir" "$NODE_INTEROP_PACKAGES"; then
     # Node interop packages: use coverage CLI like NODE_PACKAGES
-    dart run "$COVERAGE_CLI" >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
+    dart run "$COVERAGE_CLI" 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
     coverage=$(calc_coverage "coverage/lcov.info")
   elif is_type "$dir" "$NODE_PACKAGES"; then
-    dart run "$COVERAGE_CLI" >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
+    dart run "$COVERAGE_CLI" 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
     coverage=$(calc_coverage "coverage/lcov.info")
   elif is_type "$dir" "$BROWSER_PACKAGES"; then
     # Browser packages: run Chrome tests, check coverage if lcov.info exists
-    dart test -p chrome >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
+    dart test -p chrome 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
     [[ -f "coverage/lcov.info" ]] && coverage=$(calc_coverage "coverage/lcov.info")
   else
     # Standard VM package with coverage
-    dart test --coverage=coverage >> "$log" 2>&1 || { echo "FAIL $name"; return 1; }
-    dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib >> "$log" 2>&1
+    dart test --coverage=coverage 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
+    dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib 2>&1 | tee -a "$log"
     coverage=$(calc_coverage "coverage/lcov.info")
   fi
 
@@ -141,8 +146,10 @@ run_parallel() {
     (
       if test_package "$dir"; then
         touch "$results_dir/$name.pass"
+        exit 0
       else
         touch "$results_dir/$name.fail"
+        exit 1
       fi
     ) &
     pids+=($!)
