@@ -1,4 +1,3 @@
-
 /// Tests for dart_node_ws library types and APIs.
 ///
 /// These tests run in Node.js environment to get coverage for the library.
@@ -119,7 +118,7 @@ void main() {
       });
 
       final client = _createWebSocketClient('ws://localhost:$testPort');
-      
+
       await completer.future.timeout(const Duration(seconds: 2));
       await _waitForOpen(client);
       client.close();
@@ -139,8 +138,9 @@ void main() {
       await _waitForOpen(client);
       _sendMessage(client, 'Hello from client');
 
-      final receivedMessage = await messageCompleter.future
-          .timeout(const Duration(seconds: 2));
+      final receivedMessage = await messageCompleter.future.timeout(
+        const Duration(seconds: 2),
+      );
       expect(receivedMessage, equals('Hello from client'));
       client.close();
     });
@@ -159,8 +159,9 @@ void main() {
         messageCompleter.complete(message);
       });
 
-      final receivedMessage = await messageCompleter.future
-          .timeout(const Duration(seconds: 2));
+      final receivedMessage = await messageCompleter.future.timeout(
+        const Duration(seconds: 2),
+      );
       expect(receivedMessage, equals('Welcome to server'));
       client.close();
     });
@@ -180,14 +181,19 @@ JSWebSocket _createWebSocketClient(String url) {
 /// Waits for WebSocket to reach OPEN state
 Future<void> _waitForOpen(JSWebSocket ws) async {
   final completer = Completer<void>();
-  
+
   if (ws.readyState == 1) {
     completer.complete();
   } else {
     ws.on('open', (() => completer.complete()).toJS);
-    ws.on('error', ((JSAny error) => completer.completeError('Connection failed: $error')).toJS);
+    ws.on(
+      'error',
+      ((JSAny error) => completer.completeError(
+        'Connection failed: $error',
+      )).toJS,
+    );
   }
-  
+
   return completer.future.timeout(const Duration(seconds: 2));
 }
 
