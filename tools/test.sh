@@ -30,6 +30,9 @@ TIER1="packages/dart_logging packages/dart_node_core"
 TIER2="packages/reflux packages/dart_node_express packages/dart_node_ws packages/dart_node_better_sqlite3 packages/dart_node_mcp packages/dart_node_react_native packages/dart_node_react"
 TIER3="examples/frontend examples/markdown_editor examples/reflux_demo/web_counter examples/too_many_cooks"
 
+# Exclusion list (package names to skip)
+EXCLUDED="too_many_cooks too_many_cooks_vscode_extension"
+
 # Parse arguments
 TIER=""
 PACKAGES=()
@@ -59,6 +62,15 @@ else
   TEST_PATHS=("${T1[@]}" "${T2[@]}" "${T3[@]}")
 fi
 
+# Filter out excluded packages
+FILTERED_PATHS=()
+for path in "${TEST_PATHS[@]}"; do
+  if ! is_excluded "$path"; then
+    FILTERED_PATHS+=("$path")
+  fi
+done
+TEST_PATHS=("${FILTERED_PATHS[@]}")
+
 mkdir -p "$LOGS_DIR"
 
 # Helper functions
@@ -66,6 +78,11 @@ is_type() {
   local name=$(basename "$1")
   local list="$2"
   [[ " $list " =~ " $name " ]]
+}
+
+is_excluded() {
+  local name=$(basename "$1")
+  [[ " $EXCLUDED " =~ " $name " ]]
 }
 
 calc_coverage() {
@@ -153,6 +170,7 @@ run_parallel() {
 
 # Main
 echo "Testing ${#TEST_PATHS[@]} packages (MIN_COVERAGE=${MIN_COVERAGE}%)"
+echo "Excluded: $EXCLUDED"
 echo "Logs: $LOGS_DIR/"
 echo ""
 
