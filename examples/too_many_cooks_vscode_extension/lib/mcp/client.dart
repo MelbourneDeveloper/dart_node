@@ -20,10 +20,13 @@ typedef StdoutCallback = void Function(String data);
 /// Implementation of McpClient that spawns the server process.
 class McpClientImpl implements McpClient {
   /// Creates an MCP client with optional server path.
-  McpClientImpl({this.serverPath});
+  McpClientImpl({this.serverPath, this.extLog});
 
   /// Path to the server (for testing).
   final String? serverPath;
+
+  /// Optional log callback for output channel visibility.
+  final void Function(String)? extLog;
   ChildProcess? _process;
   String _buffer = '';
   final _pending = <int, Completer<Object?>>{};
@@ -124,8 +127,8 @@ class McpClientImpl implements McpClient {
   }
 
   void _log(String message) {
-    // Use console.log for debugging
     _consoleLog(message.toJS);
+    extLog?.call(message);
   }
 
   @override

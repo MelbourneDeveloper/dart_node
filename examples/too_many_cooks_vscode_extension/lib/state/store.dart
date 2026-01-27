@@ -12,7 +12,7 @@ import 'package:reflux/reflux.dart';
 import 'package:too_many_cooks_vscode_extension/state/log.dart' as logger;
 import 'package:too_many_cooks_vscode_extension/state/state.dart';
 
-void _log(String msg) => logger.log(msg);
+void _logToConsole(String msg) => logger.log(msg);
 
 /// Local notification event type for store handling (uses string event name).
 typedef StoreNotificationEvent = ({
@@ -57,20 +57,27 @@ abstract interface class McpClient {
 /// Store manager that wraps the Reflux store and MCP client.
 class StoreManager {
   /// Creates a store manager with optional server path and MCP client.
-  StoreManager({this.serverPath, McpClient? client})
+  StoreManager({this.serverPath, McpClient? client, void Function(String)? log})
     : _client = client,
-      _store = createAppStore();
+      _store = createAppStore(),
+      _extLog = log;
 
   /// Path to the MCP server.
   final String? serverPath;
   final Store<AppState> _store;
   final McpClient? _client;
+  final void Function(String)? _extLog;
   Timer? _pollTimer;
   Completer<void>? _connectCompleter;
   StreamSubscription<StoreNotificationEvent>? _notificationSub;
   StreamSubscription<void>? _closeSub;
   StreamSubscription<Object>? _errorSub;
   StreamSubscription<String>? _logSub;
+
+  void _log(String msg) {
+    _logToConsole(msg);
+    _extLog?.call(msg);
+  }
 
   /// The underlying Reflux store.
   Store<AppState> get store => _store;
@@ -111,6 +118,7 @@ class StoreManager {
       _connectCompleter?.complete();
     } catch (e) {
       _log('[StoreManager] connect error: $e');
+      _store.dispatch(SetConnectionStatus(ConnectionStatus.disconnected));
       _connectCompleter?.completeError(e);
       rethrow;
     } finally {

@@ -118,8 +118,24 @@ final class AgentsTreeProvider implements TreeDataProvider<TreeItem> {
     final details = selectAgentDetails(state);
 
     if (element == null) {
-      // Root: list all agents
-      return details.map(_createAgentItem).toList();
+      // Root: list all agents or show status placeholder
+      final items = details.map(_createAgentItem).toList();
+      if (items.isEmpty) {
+        final label = switch (state.connectionStatus) {
+          ConnectionStatus.disconnected => 'Disconnected',
+          ConnectionStatus.connecting => 'Connecting...',
+          ConnectionStatus.connected => 'No agents',
+        };
+        final icon = switch (state.connectionStatus) {
+          ConnectionStatus.disconnected => 'debug-disconnect',
+          ConnectionStatus.connecting => 'loading~spin',
+          ConnectionStatus.connected => 'person',
+        };
+        return [
+          TreeItem(label)..iconPath = ThemeIcon(icon),
+        ];
+      }
+      return items;
     }
 
     // Children: agent's plan, locks, messages

@@ -108,8 +108,8 @@ JSObject _doActivateSync(ExtensionContext context) {
   }
 
   // Create MCP client and store manager
-  final client = McpClientImpl(serverPath: serverPath);
-  _storeManager = StoreManager(client: client);
+  final client = McpClientImpl(serverPath: serverPath, extLog: _log);
+  _storeManager = StoreManager(client: client, log: _log);
 
   // Create tree providers and store globally for TestAPI
   _agentsProvider = AgentsTreeProvider(_storeManager!);
@@ -149,16 +149,7 @@ JSObject _doActivateSync(ExtensionContext context) {
   _log('Auto-connect: $autoConnect');
   if (autoConnect) {
     _log('Attempting auto-connect...');
-    unawaited(
-      _storeManager
-          ?.connect()
-          .then((_) {
-            _log('Auto-connect successful');
-          })
-          .catchError((Object e) {
-            _log('Auto-connect failed: $e');
-          }),
-    );
+    unawaited(_autoConnect());
   }
 
   _log('Extension activated');
@@ -183,6 +174,16 @@ JSObject _doActivateSync(ExtensionContext context) {
   _consoleLogObj('DART EXTENSION: TestAPI object:', api);
 
   return api;
+}
+
+/// Auto-connect to the MCP server (non-blocking).
+Future<void> _autoConnect() async {
+  try {
+    await _storeManager?.connect();
+    _log('Auto-connect successful');
+  } on Object catch (e) {
+    _log('Auto-connect failed: $e');
+  }
 }
 
 /// Registers all extension commands.
