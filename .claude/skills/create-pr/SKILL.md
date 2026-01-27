@@ -18,23 +18,9 @@ Create a PR following the dart_node template and conventions.
    git log main..HEAD --oneline
    ```
 
-2. **Analyze all commits** from the branch (NOT just the latest — ALL commits since diverging from main). Use `git diff main` to understand the full scope.
+2. **ignore all commits** do not pay attention to the commit messages
 
-3. **Draft PR using the template** from `.github/PULL_REQUEST_TEMPLATE.md`:
-
-   ```
-   ## TLDR;
-   [One sentence summary]
-
-   ## What Does This Do?
-   [Clear description of the change]
-
-   ## Brief Details?
-   [Implementation details, design decisions]
-
-   ## How Do The Tests Prove The Change Works?
-   [Describe test coverage and what the tests verify]
-   ```
+3. **Draft PR using the template** from `.github/PULL_REQUEST_TEMPLATE.md`
 
 4. **Create the PR**:
    ```bash
@@ -59,5 +45,4 @@ Create a PR following the dart_node template and conventions.
 - Keep the title under 70 chars
 - Keep documentation tight (per CLAUDE.md)
 - Only diff against `main` — ignore commit messages
-- Push to remote with `-u` flag if needed
 - Return the PR URL when done
