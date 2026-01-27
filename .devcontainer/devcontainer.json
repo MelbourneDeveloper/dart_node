@@ -5,6 +5,7 @@
     "args": {
       "DART_VERSION": "3.10.7",
       "NODE_VERSION": "20.20.0",
+      "NPM_VERSION": "11.8.0",
       "CSPELL_VERSION": "9.6.0",
       "COVERAGE_VERSION": "1.15.0"
     }

@@ -6,6 +6,7 @@
 # │                                                 │
 # │  Dart SDK:    3.10.7                            │
 # │  Node.js:     20.20.0                           │
+# │  npm:         11.8.0                            │
 # │  cspell:      9.6.0                             │
 # │  coverage:    1.15.0                            │
 # │  gh CLI:      2.67.0  (in devcontainer.json)    │
@@ -14,6 +15,7 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
 ARG DART_VERSION=3.10.7
 ARG NODE_VERSION=20.20.0
+ARG NPM_VERSION=11.8.0
 ARG CSPELL_VERSION=9.6.0
 ARG COVERAGE_VERSION=1.15.0
 
@@ -58,8 +60,8 @@ RUN set -eux; \
     && rm /tmp/node.tar.xz \
     && node --version && npm --version
 
-# Global npm tools (pinned)
-RUN npm install -g "cspell@${CSPELL_VERSION}"
+# Upgrade npm itself (pinned), then global npm tools
+RUN npm install -g "npm@${NPM_VERSION}" "cspell@${CSPELL_VERSION}"
 
 # Global Dart tools (pinned, as vscode user so pub-cache lands correctly)
 USER vscode
