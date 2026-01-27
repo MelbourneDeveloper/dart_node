@@ -20,13 +20,11 @@ extension type Window._(JSObject _) implements JSObject {
     String? item1,
     String? item2,
   ]) {
+    if (options != null && item1 != null && item2 != null) {
+      return _showWarningMessage2Items(message, options, item1, item2);
+    }
     if (options != null && item1 != null) {
-      return _showWarningMessageWithOptions(
-        message,
-        options,
-        item1,
-        item2 ?? '',
-      );
+      return _showWarningMessage1Item(message, options, item1);
     }
     return _showWarningMessage(message);
   }
@@ -35,7 +33,14 @@ extension type Window._(JSObject _) implements JSObject {
   external JSPromise<JSString?> _showWarningMessage(String message);
 
   @JS('showWarningMessage')
-  external JSPromise<JSString?> _showWarningMessageWithOptions(
+  external JSPromise<JSString?> _showWarningMessage1Item(
+    String message,
+    MessageOptions options,
+    String item1,
+  );
+
+  @JS('showWarningMessage')
+  external JSPromise<JSString?> _showWarningMessage2Items(
     String message,
     MessageOptions options,
     String item1,

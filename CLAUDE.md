@@ -29,6 +29,7 @@ Dart packages for building Node.js apps. Strongly Typed Dart layer over JS inter
 - 100% coverage with high-level integration tests, not unit tests/mocks
 - Tests in separate files, not groups. Dart only (JS only for interop testing)
 - Never skip tests. Never remove assertions. Failing tests OK, silent failures = ⛔️ ILLEGAL. Aggressively unskip tests.
+- Fixing bugs: write test that fails because of bug -> run test to verify failure -> fix bug -> run test to verify pass
 - NO PLACEHOLDERS—throw if incomplete
 
 **Dependencies**
