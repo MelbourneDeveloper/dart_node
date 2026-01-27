@@ -7,5 +7,21 @@
   "language": "en",
   "themeColor": "#0E7C6B",
   "twitter": "@dart_node",
-  "github": "https://github.com/melbournedeveloper/dart_node"
+  "twitterSite": "@dart_node",
+  "twitterCreator": "@dart_node",
+  "github": "https://github.com/melbournedeveloper/dart_node",
+  "stylesheet": "/assets/css/styles.css",
+  "ogImage": "/assets/images/og-image.png",
+  "ogImageWidth": "1200",
+  "ogImageHeight": "630",
+  "keywords": "Dart, JavaScript, TypeScript, React, Express, Node.js, full-stack, web development, mobile development, React Native, dart_node, type safety",
+  "organization": {
+    "name": "dart_node",
+    "logo": "/assets/images/og-image.png",
+    "sameAs": [
+      "https://github.com/melbournedeveloper/dart_node",
+      "https://twitter.com/dart_node",
+      "https://pub.dev/publishers/dartnode.dev"
+    ]
+  }
 }
