@@ -1,10 +1,9 @@
 #!/bin/bash
 # Unified test runner - parallel execution with fail-fast and coverage
-# Usage: ./tools/test.sh [--tier N] [--ci] [package...]
+# Usage: ./tools/test.sh [--tier N] [package...]
 #
 # Options:
 #   --tier N    Only run tier N (1, 2, or 3)
-#   --ci        CI mode: fail-fast, minimal output
 #   package...  Specific packages/examples to test
 #
 # Without arguments: runs all packages and examples
@@ -32,13 +31,11 @@ TIER2="packages/reflux packages/dart_node_express packages/dart_node_ws packages
 TIER3="examples/frontend examples/markdown_editor examples/reflux_demo/web_counter examples/too_many_cooks"
 
 # Parse arguments
-CI_MODE=false
 TIER=""
 PACKAGES=()
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --ci) CI_MODE=true; shift ;;
     --tier) TIER="$2"; shift 2 ;;
     *) PACKAGES+=("$1"); shift ;;
   esac
@@ -99,7 +96,7 @@ test_package() {
   fi
 
   # Install npm deps if needed
-  [[ -f "package.json" ]] && npm install 2>&1 | tee -a "$log"
+  [[ -f "package.json" ]] && npm install --verbose 2>&1 | tee -a "$log"
 
   local coverage=""
 
@@ -114,11 +111,11 @@ test_package() {
     coverage=$(calc_coverage "coverage/lcov.info")
   elif is_type "$dir" "$BROWSER_PACKAGES"; then
     # Browser packages: run Chrome tests, check coverage if lcov.info exists
-    dart test -p chrome 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
+    dart test -p chrome --reporter expanded --fail-fast 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
     [[ -f "coverage/lcov.info" ]] && coverage=$(calc_coverage "coverage/lcov.info")
   else
     # Standard VM package with coverage
-    dart test --coverage=coverage 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
+    dart test --coverage=coverage --reporter expanded --fail-fast 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
     dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib 2>&1 | tee -a "$log"
     coverage=$(calc_coverage "coverage/lcov.info")
   fi
@@ -136,49 +133,21 @@ test_package() {
   return 0
 }
 
-# Run tests in parallel, fail-fast on first failure
+# Run tests in parallel
 run_parallel() {
   local pids=()
-  local results_dir=$(mktemp -d)
 
   for dir in "${TEST_PATHS[@]}"; do
-    local name=$(basename "$dir")
-    (
-      if test_package "$dir"; then
-        touch "$results_dir/$name.pass"
-        exit 0
-      else
-        touch "$results_dir/$name.fail"
-        exit 1
-      fi
-    ) &
+    test_package "$dir" &
     pids+=($!)
   done
 
-  # Wait and check for failures
+  # Wait for all and fail if any failed
   local failed=0
-  for i in "${!pids[@]}"; do
-    local pid=${pids[$i]}
-    local dir=${TEST_PATHS[$i]}
-    local name=$(basename "$dir")
-
-    if ! wait "$pid"; then
-      failed=1
-      if $CI_MODE; then
-        # Kill remaining processes on first failure
-        for p in "${pids[@]}"; do
-          kill "$p" 2>/dev/null || true
-        done
-        # Show error log
-        echo ""
-        echo "=== Error log for $name ==="
-        cat "$LOGS_DIR/$name.log" 2>/dev/null || true
-        break
-      fi
-    fi
+  for pid in "${pids[@]}"; do
+    wait "$pid" || failed=1
   done
 
-  rm -rf "$results_dir"
   return $failed
 }
 
