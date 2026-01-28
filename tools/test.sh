@@ -62,33 +62,29 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Determine what to test
+# Determine what to test (as tiers)
+TIERS_TO_RUN=()
+
 if [[ ${#PACKAGES[@]} -gt 0 ]]; then
-  TEST_PATHS=("${PACKAGES[@]}")
+  # Specific packages - run as single tier
+  TIERS_TO_RUN+=("${PACKAGES[*]}")
 elif [[ -n "$TIER" ]]; then
+  # Single tier
   case $TIER in
-    1) read -ra TEST_PATHS <<< "$TIER1" ;;
-    2) read -ra TEST_PATHS <<< "$TIER2" ;;
-    3) read -ra TEST_PATHS <<< "$TIER3" ;;
+    1) TIERS_TO_RUN+=("$TIER1") ;;
+    2) TIERS_TO_RUN+=("$TIER2") ;;
+    3) TIERS_TO_RUN+=("$TIER3") ;;
     *) echo "Invalid tier: $TIER"; exit 1 ;;
   esac
 else
-  # All tiers
-  read -ra T1 <<< "$TIER1"
-  read -ra T2 <<< "$TIER2"
-  read -ra T3 <<< "$TIER3"
-  TEST_PATHS=("${T1[@]}" "${T2[@]}" "${T3[@]}")
+  # All tiers - run sequentially
+  TIERS_TO_RUN+=("$TIER1")
+  TIERS_TO_RUN+=("$TIER2")
+  TIERS_TO_RUN+=("$TIER3")
 fi
 
-# Filter out excluded packages
-FILTERED_PATHS=()
-for path in "${TEST_PATHS[@]}"; do
-  if ! is_excluded "$path"; then
-    FILTERED_PATHS+=("$path")
-  fi
-done
-TEST_PATHS=("${FILTERED_PATHS[@]}")
-
+# Clean and recreate logs directory
+rm -rf "$LOGS_DIR"
 mkdir -p "$LOGS_DIR"
 
 # Test a single package (runs in subshell)
@@ -105,81 +101,168 @@ test_package() {
   # Clear log file
   > "$log"
 
-  echo "=== Testing $name ===" | tee -a "$log"
+  echo "🏁 Starting $name"
+  echo "=== Testing $name ===" >> "$log"
 
   # Build first if needed
   if is_type "$dir" "$BUILD_FIRST" && [[ -f "build.sh" ]]; then
-    ./build.sh 2>&1 | tee -a "$log" || { echo "FAIL $name (build)"; return 1; }
+    ./build.sh >> "$log" 2>&1 || { echo "⛔️ Failed $name (build)" ; return 1; }
   fi
 
   # Install npm deps if needed
-  [[ -f "package.json" ]] && npm install --verbose 2>&1 | tee -a "$log"
+  [[ -f "package.json" ]] && npm install --silent >> "$log" 2>&1
 
   local coverage=""
 
   if is_type "$dir" "$NPM_PACKAGES"; then
-    npm test 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
+    npm test >> "$log" 2>&1 || { echo "⛔️ Failed $name"; return 1; }
   elif is_type "$dir" "$NODE_INTEROP_PACKAGES"; then
     # Node interop packages: use coverage CLI like NODE_PACKAGES
-    dart run "$COVERAGE_CLI" 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
+    dart run "$COVERAGE_CLI" >> "$log" 2>&1 || { echo "⛔️ Failed $name"; return 1; }
     coverage=$(calc_coverage "coverage/lcov.info")
   elif is_type "$dir" "$NODE_PACKAGES"; then
-    dart run "$COVERAGE_CLI" 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
+    dart run "$COVERAGE_CLI" >> "$log" 2>&1 || { echo "⛔️ Failed $name"; return 1; }
     coverage=$(calc_coverage "coverage/lcov.info")
   elif is_type "$dir" "$BROWSER_PACKAGES"; then
     # Browser packages: run Chrome tests, check coverage if lcov.info exists
-    dart test -p chrome --reporter expanded --fail-fast 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
+    dart test -p chrome --reporter expanded --fail-fast >> "$log" 2>&1 || { echo "⛔️ Failed $name"; return 1; }
     [[ -f "coverage/lcov.info" ]] && coverage=$(calc_coverage "coverage/lcov.info")
   else
     # Standard VM package with coverage
-    dart test --coverage=coverage --reporter expanded --fail-fast 2>&1 | tee -a "$log" || { echo "FAIL $name"; return 1; }
-    dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib 2>&1 | tee -a "$log"
+    dart test --coverage=coverage --reporter expanded --fail-fast >> "$log" 2>&1 || { echo "⛔️ Failed $name"; return 1; }
+    dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib >> "$log" 2>&1
     coverage=$(calc_coverage "coverage/lcov.info")
   fi
 
   # Check coverage threshold if applicable
   if [[ -n "$coverage" ]]; then
     if [[ "$coverage" == "0" ]] || (( $(echo "$coverage < $MIN_COVERAGE" | bc -l) )); then
-      echo "FAIL $name (coverage ${coverage}% < ${MIN_COVERAGE}%)"
+      echo "⛔️ Failed $name (coverage ${coverage}% < ${MIN_COVERAGE}%)"
       return 1
     fi
-    echo "PASS $name (${coverage}%)"
+    echo "✅ Succeeded $name (${coverage}%)"
   else
-    echo "PASS $name"
+    echo "✅ Succeeded $name"
   fi
   return 0
 }
 
-# Run tests in parallel
-run_parallel() {
-  local pids=()
+# Extract failure summary from a log file
+extract_failure() {
+  local log="$1"
+  local name="$2"
 
-  for dir in "${TEST_PATHS[@]}"; do
+  # Look for "Failed to load" or "Failed to run" errors
+  if grep -q "Failed to load\|Failed to run\|Some tests failed" "$log"; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "FAILURE: $name"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # Extract failed test file names
+    grep "Failed to load\|Failed to run" "$log" | head -5 | while IFS= read -r line; do
+      if [[ "$line" =~ Failed\ to\ load\ \"([^\"]+)\" ]]; then
+        echo "  Test: ${BASH_REMATCH[1]}"
+      fi
+    done
+
+    # Extract first error message
+    echo ""
+    echo "  Error:"
+    grep -A 1 "Failed to load\|Failed to run" "$log" | head -3 | sed 's/^/    /'
+    echo ""
+    echo "  Full log: $log"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  fi
+}
+
+# Run a tier of tests in parallel (wait for all, don't kill on failure)
+run_tier() {
+  local tier_paths=("$@")
+  local pids=()
+  local failed_packages=()
+
+  # Filter out excluded packages
+  local filtered=()
+  for path in "${tier_paths[@]}"; do
+    if ! is_excluded "$path"; then
+      filtered+=("$path")
+    fi
+  done
+
+  [[ ${#filtered[@]} -eq 0 ]] && return 0
+
+  # Start all tests in parallel
+  for dir in "${filtered[@]}"; do
     test_package "$dir" &
     pids+=($!)
   done
 
-  # Wait for all and fail if any failed
-  local failed=0
-  for pid in "${pids[@]}"; do
-    wait "$pid" || failed=1
+  # Wait for ALL jobs to complete, track failures
+  for i in "${!pids[@]}"; do
+    if ! wait "${pids[$i]}"; then
+      failed_packages+=("${filtered[$i]}")
+    fi
   done
 
-  return $failed
+  # Report failures with details
+  if [[ ${#failed_packages[@]} -gt 0 ]]; then
+    echo ""
+    echo "╔════════════════════════════════════════════════════════════════╗"
+    echo "║  ${#failed_packages[@]} PACKAGE(S) FAILED"
+    echo "╚════════════════════════════════════════════════════════════════╝"
+
+    for dir in "${failed_packages[@]}"; do
+      local name=$(basename "$dir")
+      local log="$LOGS_DIR/$name.log"
+      extract_failure "$log" "$name"
+    done
+
+    return 1
+  fi
+
+  return 0
 }
 
 # Main
-echo "Testing ${#TEST_PATHS[@]} packages (MIN_COVERAGE=${MIN_COVERAGE}%)"
+echo "Running ${#TIERS_TO_RUN[@]} tier(s) (MIN_COVERAGE=${MIN_COVERAGE}%)"
 echo "Excluded: $EXCLUDED"
 echo "Logs: $LOGS_DIR/"
 echo ""
 
-if run_parallel; then
-  echo ""
-  echo "All tests passed"
-  exit 0
+# Determine actual tier number for display
+if [[ -n "$TIER" ]]; then
+  TIER_LABEL="TIER $TIER"
+elif [[ ${#PACKAGES[@]} -gt 0 ]]; then
+  TIER_LABEL="CUSTOM"
 else
-  echo ""
-  echo "Tests failed"
-  exit 1
+  TIER_LABEL="ALL TIERS"
 fi
+
+tier_num=1
+for tier_spec in "${TIERS_TO_RUN[@]}"; do
+  read -ra tier_paths <<< "$tier_spec"
+
+  # Display label
+  if [[ "$TIER_LABEL" == "ALL TIERS" ]]; then
+    echo "=== TIER $tier_num: ${#tier_paths[@]} packages ==="
+  else
+    echo "=== $TIER_LABEL: ${#tier_paths[@]} packages ==="
+  fi
+
+  if ! run_tier "${tier_paths[@]}"; then
+    echo ""
+    if [[ "$TIER_LABEL" == "ALL TIERS" ]]; then
+      echo "TIER $tier_num FAILED - stopping"
+    else
+      echo "$TIER_LABEL FAILED"
+    fi
+    exit 1
+  fi
+
+  echo ""
+  ((tier_num++))
+done
+
+echo "All tests passed"
+exit 0
