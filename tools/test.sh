@@ -87,6 +87,19 @@ fi
 rm -rf "$LOGS_DIR"
 mkdir -p "$LOGS_DIR"
 
+# Format seconds into human-readable time
+format_time() {
+  local total_secs=$1
+  local mins=$((total_secs / 60))
+  local secs=$((total_secs % 60))
+
+  if [[ $mins -gt 0 ]]; then
+    echo "${mins}m ${secs}s"
+  else
+    echo "${secs}s"
+  fi
+}
+
 # Test a single package (runs in subshell)
 test_package() {
   local dir="$1"
@@ -98,6 +111,9 @@ test_package() {
 
   cd "$full_path"
 
+  # Start timer
+  local start_time=$SECONDS
+
   # Clear log file
   > "$log"
 
@@ -106,7 +122,11 @@ test_package() {
 
   # Build first if needed
   if is_type "$dir" "$BUILD_FIRST" && [[ -f "build.sh" ]]; then
-    ./build.sh >> "$log" 2>&1 || { echo "⛔️ Failed $name (build)" ; return 1; }
+    ./build.sh >> "$log" 2>&1 || {
+      local elapsed=$((SECONDS - start_time))
+      echo "⛔️ Failed $name (build) - $(format_time $elapsed)"
+      return 1
+    }
   fi
 
   # Install npm deps if needed
@@ -115,34 +135,58 @@ test_package() {
   local coverage=""
 
   if is_type "$dir" "$NPM_PACKAGES"; then
-    npm test >> "$log" 2>&1 || { echo "⛔️ Failed $name"; return 1; }
+    npm test >> "$log" 2>&1 || {
+      local elapsed=$((SECONDS - start_time))
+      echo "⛔️ Failed $name - $(format_time $elapsed)"
+      return 1
+    }
   elif is_type "$dir" "$NODE_INTEROP_PACKAGES"; then
     # Node interop packages: use coverage CLI like NODE_PACKAGES
-    dart run "$COVERAGE_CLI" >> "$log" 2>&1 || { echo "⛔️ Failed $name"; return 1; }
+    dart run "$COVERAGE_CLI" >> "$log" 2>&1 || {
+      local elapsed=$((SECONDS - start_time))
+      echo "⛔️ Failed $name - $(format_time $elapsed)"
+      return 1
+    }
     coverage=$(calc_coverage "coverage/lcov.info")
   elif is_type "$dir" "$NODE_PACKAGES"; then
-    dart run "$COVERAGE_CLI" >> "$log" 2>&1 || { echo "⛔️ Failed $name"; return 1; }
+    dart run "$COVERAGE_CLI" >> "$log" 2>&1 || {
+      local elapsed=$((SECONDS - start_time))
+      echo "⛔️ Failed $name - $(format_time $elapsed)"
+      return 1
+    }
     coverage=$(calc_coverage "coverage/lcov.info")
   elif is_type "$dir" "$BROWSER_PACKAGES"; then
     # Browser packages: run Chrome tests, check coverage if lcov.info exists
-    dart test -p chrome --reporter expanded --fail-fast >> "$log" 2>&1 || { echo "⛔️ Failed $name"; return 1; }
+    dart test -p chrome --reporter expanded --fail-fast >> "$log" 2>&1 || {
+      local elapsed=$((SECONDS - start_time))
+      echo "⛔️ Failed $name - $(format_time $elapsed)"
+      return 1
+    }
     [[ -f "coverage/lcov.info" ]] && coverage=$(calc_coverage "coverage/lcov.info")
   else
     # Standard VM package with coverage
-    dart test --coverage=coverage --reporter expanded --fail-fast >> "$log" 2>&1 || { echo "⛔️ Failed $name"; return 1; }
+    dart test --coverage=coverage --reporter expanded --fail-fast >> "$log" 2>&1 || {
+      local elapsed=$((SECONDS - start_time))
+      echo "⛔️ Failed $name - $(format_time $elapsed)"
+      return 1
+    }
     dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib >> "$log" 2>&1
     coverage=$(calc_coverage "coverage/lcov.info")
   fi
 
+  # Calculate elapsed time
+  local elapsed=$((SECONDS - start_time))
+  local time_str=$(format_time $elapsed)
+
   # Check coverage threshold if applicable
   if [[ -n "$coverage" ]]; then
     if [[ "$coverage" == "0" ]] || (( $(echo "$coverage < $MIN_COVERAGE" | bc -l) )); then
-      echo "⛔️ Failed $name (coverage ${coverage}% < ${MIN_COVERAGE}%)"
+      echo "⛔️ Failed $name (coverage ${coverage}% < ${MIN_COVERAGE}%) - $time_str"
       return 1
     fi
-    echo "✅ Succeeded $name (${coverage}%)"
+    echo "✅ Succeeded $name (${coverage}%) - $time_str"
   else
-    echo "✅ Succeeded $name"
+    echo "✅ Succeeded $name - $time_str"
   fi
   return 0
 }
@@ -225,6 +269,8 @@ run_tier() {
 }
 
 # Main
+TOTAL_START=$SECONDS
+
 echo "Running ${#TIERS_TO_RUN[@]} tier(s) (MIN_COVERAGE=${MIN_COVERAGE}%)"
 echo "Excluded: $EXCLUDED"
 echo "Logs: $LOGS_DIR/"
@@ -250,19 +296,27 @@ for tier_spec in "${TIERS_TO_RUN[@]}"; do
     echo "=== $TIER_LABEL: ${#tier_paths[@]} packages ==="
   fi
 
+  tier_start=$SECONDS
   if ! run_tier "${tier_paths[@]}"; then
     echo ""
+    local tier_elapsed=$((SECONDS - tier_start))
     if [[ "$TIER_LABEL" == "ALL TIERS" ]]; then
-      echo "TIER $tier_num FAILED - stopping"
+      echo "TIER $tier_num FAILED - $(format_time $tier_elapsed)"
     else
-      echo "$TIER_LABEL FAILED"
+      echo "$TIER_LABEL FAILED - $(format_time $tier_elapsed)"
     fi
     exit 1
+  fi
+  local tier_elapsed=$((SECONDS - tier_start))
+
+  if [[ "$TIER_LABEL" == "ALL TIERS" ]]; then
+    echo "TIER $tier_num completed - $(format_time $tier_elapsed)"
   fi
 
   echo ""
   ((tier_num++))
 done
 
-echo "All tests passed"
+local total_elapsed=$((SECONDS - TOTAL_START))
+echo "All tests passed - $(format_time $total_elapsed)"
 exit 0
