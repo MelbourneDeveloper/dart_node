@@ -18,6 +18,37 @@ COVERAGE_CLI="$ROOT_DIR/packages/dart_node_coverage/bin/coverage.dart"
 # Minimum coverage threshold (can be overridden by MIN_COVERAGE env var)
 MIN_COVERAGE="${MIN_COVERAGE:-80}"
 
+# Detect Chromium executable for browser tests (can be overridden by CHROME_EXECUTABLE env var)
+if [[ -z "${CHROME_EXECUTABLE:-}" ]]; then
+  case "$(uname -s)" in
+    Darwin)
+      for candidate in \
+        "/opt/homebrew/Caskroom/chromium/latest/chrome-mac/Chromium.app/Contents/MacOS/Chromium" \
+        "/Applications/Chromium.app/Contents/MacOS/Chromium"; do
+        [[ -x "$candidate" ]] && { CHROME_EXECUTABLE="$candidate"; break; }
+      done
+      ;;
+    Linux)
+      for candidate in chromium chromium-browser; do
+        command -v "$candidate" >/dev/null 2>&1 && { CHROME_EXECUTABLE="$(command -v "$candidate")"; break; }
+      done
+      # Dev Container Chromium cache fallback
+      if [[ -z "${CHROME_EXECUTABLE:-}" ]]; then
+        for dir in /home/vscode/.cache/chromium-*/chrome-linux; do
+          [[ -x "$dir/chrome" ]] && { CHROME_EXECUTABLE="$dir/chrome"; break; }
+        done
+      fi
+      ;;
+  esac
+fi
+
+if [[ -n "${CHROME_EXECUTABLE:-}" ]]; then
+  export CHROME_EXECUTABLE
+  echo "Chromium: $CHROME_EXECUTABLE"
+else
+  echo "WARNING: No Chromium found — browser tests will fail"
+fi
+
 # Package type definitions
 NODE_PACKAGES="dart_node_core dart_node_express dart_node_ws dart_node_better_sqlite3"
 NODE_INTEROP_PACKAGES="dart_node_mcp dart_node_react_native too_many_cooks"
