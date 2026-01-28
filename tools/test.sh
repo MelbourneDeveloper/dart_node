@@ -33,6 +33,24 @@ TIER3="examples/frontend examples/markdown_editor examples/reflux_demo/web_count
 # Exclusion list (package names to skip)
 EXCLUDED="too_many_cooks too_many_cooks_vscode_extension"
 
+# Helper functions
+is_type() {
+  local name=$(basename "$1")
+  local list="$2"
+  [[ " $list " =~ " $name " ]]
+}
+
+is_excluded() {
+  local name=$(basename "$1")
+  [[ " $EXCLUDED " =~ " $name " ]]
+}
+
+calc_coverage() {
+  local lcov="$1"
+  [[ -f "$lcov" ]] || { echo "0"; return; }
+  awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' "$lcov"
+}
+
 # Parse arguments
 TIER=""
 PACKAGES=()
@@ -72,24 +90,6 @@ done
 TEST_PATHS=("${FILTERED_PATHS[@]}")
 
 mkdir -p "$LOGS_DIR"
-
-# Helper functions
-is_type() {
-  local name=$(basename "$1")
-  local list="$2"
-  [[ " $list " =~ " $name " ]]
-}
-
-is_excluded() {
-  local name=$(basename "$1")
-  [[ " $EXCLUDED " =~ " $name " ]]
-}
-
-calc_coverage() {
-  local lcov="$1"
-  [[ -f "$lcov" ]] || { echo "0"; return; }
-  awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' "$lcov"
-}
 
 # Test a single package (runs in subshell)
 test_package() {
