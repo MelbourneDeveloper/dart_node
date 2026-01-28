@@ -45,14 +45,17 @@ JSObject _getCoverageData() {
 /// Get or create file coverage object
 JSObject _getFileCoverage(String file) {
   final data = _getCoverageData();
-  final existing = data.getProperty(file.toJS);
+  final fileJS = file.toJS;
+  final existing = data.getProperty(fileJS);
 
+  // Type-checked cast: safe after isA<T>() verification
   if (existing != null && existing.isA<JSObject>()) {
-    return existing as JSObject;
+    return existing as JSObject; // Required for js_interop type narrowing
   }
 
+  // Create new file coverage object if it doesn't exist or is wrong type
   final newFile = JSObject();
-  data.setProperty(file.toJS, newFile);
+  data.setProperty(fileJS, newFile);
   return newFile;
 }
 
@@ -68,11 +71,15 @@ void cov(String file, int line) {
   final lineKey = line.toString().toJS;
   final currentRaw = fileCov.getProperty(lineKey);
 
+  // Fast path: increment existing count
+  // Type-checked cast: safe after isA<T>() verification
   final double newCount;
-  if (currentRaw == null || !currentRaw.isA<JSNumber>()) {
-    newCount = 1.0;
+  if (currentRaw != null && currentRaw.isA<JSNumber>()) {
+    newCount =
+        (currentRaw as JSNumber).toDartDouble + 1.0; // Required for js_interop
   } else {
-    newCount = (currentRaw as JSNumber).toDartDouble + 1.0;
+    // First execution of this line
+    newCount = 1.0;
   }
 
   fileCov.setProperty(lineKey, newCount.toJS);
@@ -86,16 +93,19 @@ String getCoverageJson() {
 
 /// Write coverage data to a file (Node.js only)
 void writeCoverageFile(String outputPath) {
+  // Load Node.js modules
   final fsResult = _global.require.callAsFunction(null, 'fs'.toJS);
   if (fsResult == null || !fsResult.isA<JSObject>()) {
-    throw StateError('fs module not available');
+    throw StateError('Failed to load fs module (Node.js required)');
   }
 
   final pathResult = _global.require.callAsFunction(null, 'path'.toJS);
   if (pathResult == null || !pathResult.isA<JSObject>()) {
-    throw StateError('path module not available');
+    throw StateError('Failed to load path module (Node.js required)');
   }
 
+  // Type-checked casts: safe after isA<JSObject>() verification
+  // Extension type constructors require JSObject, casts are required for js_interop
   final fs = _NodeFS(fsResult as JSObject);
   final pathMod = _NodePath(pathResult as JSObject);
 
@@ -106,6 +116,7 @@ void writeCoverageFile(String outputPath) {
     fs.mkdirSync(dir, options);
   }
 
+  // Write coverage data
   final jsonData = getCoverageJson();
   fs.writeFileSync(outputPath.toJS, jsonData.toJS);
 }
