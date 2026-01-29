@@ -1,0 +1,21 @@
+{
+  "name": "dart_node_mcp",
+  "version": "1.0.0",
+  "description": "MCP (Model Context Protocol) server bindings for Dart on Node.js. Build AI tool servers that can be used by Claude, GPT, and other AI assistants.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.3",
+    "zod": "^4.3.6"
+  }
+}

@@ -113,13 +113,21 @@ jobs:
           done
 
       - name: Test Tier 1
-        run: ./tools/test.sh --ci --tier 1
+        run: ./tools/test.sh --tier 1
 
       - name: Test Tier 2
-        run: ./tools/test.sh --ci --tier 2
+        run: ./tools/test.sh --tier 2
 
       - name: Test Tier 3
-        run: ./tools/test.sh --ci --tier 3
+        run: ./tools/test.sh --tier 3
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: logs/
+          retention-days: 7
 
   too-many-cooks-mcp:
     name: Too Many Cooks MCP Server

@@ -36,6 +36,15 @@ for (const file of testFiles) {
     globalThis.vscode = require('vscode');
   }
 
+  // Expose Mocha TDD functions on globalThis for @JS annotations
+  // These functions are defined by Mocha in the module context
+  if (typeof suite !== 'undefined') globalThis.suite = suite;
+  if (typeof test !== 'undefined') globalThis.test = test;
+  if (typeof suiteSetup !== 'undefined') globalThis.suiteSetup = suiteSetup;
+  if (typeof suiteTeardown !== 'undefined') globalThis.suiteTeardown = suiteTeardown;
+  if (typeof setup !== 'undefined') globalThis.setup = setup;
+  if (typeof teardown !== 'undefined') globalThis.teardown = teardown;
+
   // Run the dart2js code
   ${dartJs}
 })();
