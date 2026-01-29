@@ -9,7 +9,7 @@ Multi-agent coordination MCP server - enables multiple AI agents to safely edit 
 - **Messaging**: Inter-agent communication with broadcast support
 - **Plan Visibility**: Share goals and current tasks across agents
 - **Real-time Status**: System overview of all agents, locks, and plans
-- **Written in Dart**: Made with [dart_node](https://dartnode.dev)
+- **Written in Dart**: Made with [dart_node](https://www.dartnode.org)
 
 ## Installation
 
