@@ -16,6 +16,7 @@ extension type _NodeFS(JSObject _) implements JSObject {
   external void writeFileSync(JSString path, JSString data);
   external void mkdirSync(JSString path, JSObject? options);
   external bool existsSync(JSString path);
+  external JSString readFileSync(JSString path, [JSString? encoding]);
 }
 
 /// Extension type for Node.js path module
@@ -92,6 +93,9 @@ String getCoverageJson() {
 }
 
 /// Write coverage data to a file (Node.js only)
+///
+/// CRITICAL: Merges with existing coverage data instead of overwriting.
+/// Multiple test files call this function and we accumulate coverage.
 void writeCoverageFile(String outputPath) {
   // Load Node.js modules
   final fsResult = _global.require.callAsFunction(null, 'fs'.toJS);
@@ -105,7 +109,6 @@ void writeCoverageFile(String outputPath) {
   }
 
   // Type-checked casts: safe after isA<JSObject>() verification
-  // Extension type constructors require JSObject, casts are required for js_interop
   final fs = _NodeFS(fsResult as JSObject);
   final pathMod = _NodePath(pathResult as JSObject);
 
@@ -116,7 +119,69 @@ void writeCoverageFile(String outputPath) {
     fs.mkdirSync(dir, options);
   }
 
-  // Write coverage data
+  // Get current coverage data
+  final currentData = _getCoverageData();
+
+  // If file exists, read and merge
+  if (fs.existsSync(outputPath.toJS)) {
+    try {
+      final existing = fs.readFileSync(outputPath.toJS, 'utf8'.toJS);
+      final json = (globalContext as JSObject)['JSON'] as JSObject;
+      final parse = json['parse'] as JSFunction;
+      final existingData = parse.callAsFunction(json, existing) as JSObject;
+
+      // Merge existing into current
+      _mergeData(currentData, existingData);
+    } catch (_) {
+      // Corrupt/empty file - ignore and overwrite
+    }
+  }
+
+  // Write merged data
   final jsonData = getCoverageJson();
   fs.writeFileSync(outputPath.toJS, jsonData.toJS);
+}
+
+/// Merge existing coverage data into current data
+void _mergeData(JSObject current, JSObject existing) {
+  final objClass = (globalContext as JSObject)['Object'] as JSObject;
+  final keys = objClass['keys'] as JSFunction;
+  final fileKeys = keys.callAsFunction(objClass, existing) as JSArray;
+
+  final fileCount = (fileKeys.getProperty('length'.toJS) as JSNumber).toDartInt;
+  for (var i = 0; i < fileCount; i++) {
+    final fileKeyRaw = fileKeys.getProperty(i.toJS);
+    if (fileKeyRaw == null) continue;
+    final fileKey = fileKeyRaw as JSString;
+    final existingFileCov = existing.getProperty(fileKey) as JSObject;
+
+    // Get or create file coverage
+    final hasFile = (current.hasProperty(fileKey) as JSBoolean).toDart;
+    final currentFileCov = hasFile
+        ? current.getProperty(fileKey) as JSObject
+        : JSObject();
+
+    if (!hasFile) {
+      current.setProperty(fileKey, currentFileCov);
+    }
+
+    // Merge line counts
+    final lineKeys = keys.callAsFunction(objClass, existingFileCov) as JSArray;
+    final lineCount = (lineKeys.getProperty('length'.toJS) as JSNumber).toDartInt;
+
+    for (var j = 0; j < lineCount; j++) {
+      final lineKeyRaw = lineKeys.getProperty(j.toJS);
+      if (lineKeyRaw == null) continue;
+      final lineKey = lineKeyRaw;
+      final existingCount = existingFileCov.getProperty(lineKey) as JSNumber;
+      final hasLine = (currentFileCov.hasProperty(lineKey) as JSBoolean).toDart;
+      final currentCount = hasLine
+          ? (currentFileCov.getProperty(lineKey) as JSNumber).toDartDouble
+          : 0.0;
+
+      // Add counts together
+      final merged = currentCount + existingCount.toDartDouble;
+      currentFileCov.setProperty(lineKey, merged.toJS);
+    }
+  }
 }

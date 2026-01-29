@@ -29,10 +29,18 @@ if [[ -z "${CHROME_EXECUTABLE:-}" ]]; then
       done
       ;;
     Linux)
+      # Try system chromium first
       for candidate in chromium chromium-browser; do
-        command -v "$candidate" >/dev/null 2>&1 && { CHROME_EXECUTABLE="$(command -v "$candidate")"; break; }
+        if command -v "$candidate" >/dev/null 2>&1; then
+          candidate_path="$(command -v "$candidate")"
+          # Test if it actually runs (not just a snap wrapper)
+          if "$candidate_path" --version >/dev/null 2>&1; then
+            CHROME_EXECUTABLE="$candidate_path"
+            break
+          fi
+        fi
       done
-      # Dev Container Chromium cache fallback
+      # Fallback to dev container cache if system chromium doesn't work
       if [[ -z "${CHROME_EXECUTABLE:-}" ]]; then
         for dir in /home/vscode/.cache/chromium-*/chrome-linux; do
           [[ -x "$dir/chrome" ]] && { CHROME_EXECUTABLE="$dir/chrome"; break; }
@@ -330,7 +338,7 @@ for tier_spec in "${TIERS_TO_RUN[@]}"; do
   tier_start=$SECONDS
   if ! run_tier "${tier_paths[@]}"; then
     echo ""
-    local tier_elapsed=$((SECONDS - tier_start))
+    tier_elapsed=$((SECONDS - tier_start))
     if [[ "$TIER_LABEL" == "ALL TIERS" ]]; then
       echo "TIER $tier_num FAILED - $(format_time $tier_elapsed)"
     else
@@ -338,7 +346,7 @@ for tier_spec in "${TIERS_TO_RUN[@]}"; do
     fi
     exit 1
   fi
-  local tier_elapsed=$((SECONDS - tier_start))
+  tier_elapsed=$((SECONDS - tier_start))
 
   if [[ "$TIER_LABEL" == "ALL TIERS" ]]; then
     echo "TIER $tier_num completed - $(format_time $tier_elapsed)"
@@ -348,6 +356,6 @@ for tier_spec in "${TIERS_TO_RUN[@]}"; do
   ((tier_num++))
 done
 
-local total_elapsed=$((SECONDS - TOTAL_START))
+total_elapsed=$((SECONDS - TOTAL_START))
 echo "All tests passed - $(format_time $total_elapsed)"
 exit 0
