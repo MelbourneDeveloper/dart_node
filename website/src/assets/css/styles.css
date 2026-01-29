@@ -228,7 +228,7 @@ code {
   padding: 0.2em 0.4em;
   background: var(--code-bg);
   border-radius: var(--radius-sm);
-  color: var(--color-secondary);
+  color: var(--color-primary-light);
   word-break: break-word;
 }
 
