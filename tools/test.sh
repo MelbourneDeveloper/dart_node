@@ -126,6 +126,15 @@ fi
 rm -rf "$LOGS_DIR"
 mkdir -p "$LOGS_DIR"
 
+# Ensure coverage CLI dependencies are resolved for this environment
+# (paths differ between Mac and Linux container)
+(cd "$ROOT_DIR/packages/dart_node_coverage" && dart pub get --offline 2>/dev/null || dart pub get) >/dev/null
+
+# Rebuild native npm modules if needed (architecture differs between Mac and Linux)
+if [[ -d "$ROOT_DIR/packages/dart_node_better_sqlite3/node_modules/better-sqlite3" ]]; then
+  (cd "$ROOT_DIR/packages/dart_node_better_sqlite3" && npm rebuild better-sqlite3 2>/dev/null) >/dev/null
+fi
+
 # Format seconds into human-readable time
 format_time() {
   local total_secs=$1

@@ -167,7 +167,8 @@ void _mergeData(JSObject current, JSObject existing) {
 
     // Merge line counts
     final lineKeys = keys.callAsFunction(objClass, existingFileCov) as JSArray;
-    final lineCount = (lineKeys.getProperty('length'.toJS) as JSNumber).toDartInt;
+    final lineCount =
+        (lineKeys.getProperty('length'.toJS) as JSNumber).toDartInt;
 
     for (var j = 0; j < lineCount; j++) {
       final lineKeyRaw = lineKeys.getProperty(j.toJS);

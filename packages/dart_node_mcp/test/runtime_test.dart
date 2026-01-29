@@ -34,13 +34,12 @@ void main() {
         Future<CallToolResult> callback(
           Map<String, Object?> args,
           ToolCallMeta? meta,
-        ) async =>
-            (
-              content: <Map<String, Object?>>[
-                {'type': 'text', 'text': 'Echo: ${args['message']}'},
-              ],
-              isError: false,
-            );
+        ) async => (
+          content: <Map<String, Object?>>[
+            {'type': 'text', 'text': 'Echo: ${args['message']}'},
+          ],
+          isError: false,
+        );
 
         final toolResult = server.registerTool('echo', config, callback);
 
@@ -66,10 +65,7 @@ void main() {
       if (serverResult.isSuccess) {
         final server = (serverResult as Success<McpServer, String>).value;
 
-        const metadata = (
-          description: 'Test resource',
-          mimeType: 'text/plain',
-        );
+        const metadata = (description: 'Test resource', mimeType: 'text/plain');
 
         Future<ReadResourceResult> callback(String uri) async => (
           contents: <Map<String, Object?>>[
@@ -92,7 +88,8 @@ void main() {
         expect(resourceResult.isSuccess, isTrue);
 
         if (resourceResult.isSuccess) {
-          final resource = (resourceResult as Success<RegisteredResource, String>).value;
+          final resource =
+              (resourceResult as Success<RegisteredResource, String>).value;
           expect(resource.name, equals('test-resource'));
           expect(resource.uri, equals('file:///test.txt'));
 
@@ -119,16 +116,24 @@ void main() {
         Future<GetPromptResult> callback(Map<String, String> args) async => (
           description: 'Test prompt result',
           messages: [
-            (role: 'assistant', content: {'type': 'text', 'text': 'Prompt response'}),
+            (
+              role: 'assistant',
+              content: {'type': 'text', 'text': 'Prompt response'},
+            ),
           ],
         );
 
-        final promptResult = server.registerPrompt('test-prompt', config, callback);
+        final promptResult = server.registerPrompt(
+          'test-prompt',
+          config,
+          callback,
+        );
 
         expect(promptResult.isSuccess, isTrue);
 
         if (promptResult.isSuccess) {
-          final prompt = (promptResult as Success<RegisteredPrompt, String>).value;
+          final prompt =
+              (promptResult as Success<RegisteredPrompt, String>).value;
           expect(prompt.name, equals('test-prompt'));
 
           server.sendPromptListChanged();
@@ -170,7 +175,8 @@ void main() {
       expect(result.isSuccess, isTrue);
 
       if (result.isSuccess) {
-        final transport = (result as Success<StdioServerTransport, String>).value;
+        final transport =
+            (result as Success<StdioServerTransport, String>).value;
         expect(transport, isNotNull);
       }
     });
@@ -208,13 +214,12 @@ void main() {
         Future<CallToolResult> callback1(
           Map<String, Object?> args,
           ToolCallMeta? meta,
-        ) async =>
-            (
-              content: <Map<String, Object?>>[
-                {'type': 'text', 'text': 'Tool 1'},
-              ],
-              isError: null,
-            );
+        ) async => (
+          content: <Map<String, Object?>>[
+            {'type': 'text', 'text': 'Tool 1'},
+          ],
+          isError: null,
+        );
 
         final tool1 = server.registerTool('tool1', config1, callback1);
         expect(tool1.isSuccess, isTrue);
@@ -231,13 +236,12 @@ void main() {
         Future<CallToolResult> callback2(
           Map<String, Object?> args,
           ToolCallMeta? meta,
-        ) async =>
-            (
-              content: <Map<String, Object?>>[
-                {'type': 'text', 'text': 'Tool 2'},
-              ],
-              isError: null,
-            );
+        ) async => (
+          content: <Map<String, Object?>>[
+            {'type': 'text', 'text': 'Tool 2'},
+          ],
+          isError: null,
+        );
 
         final tool2 = server.registerTool('tool2', config2, callback2);
         expect(tool2.isSuccess, isTrue);
