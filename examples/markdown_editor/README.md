@@ -20,37 +20,31 @@ A Word-style WYSIWYG document editor with a Markdown backend, built entirely in 
 
 ## Running the App
 
-### 1. Install dependencies
+### Quick Start
+
+```bash
+cd examples/markdown_editor
+./run.sh
+```
+
+Then open http://localhost:8080 in your browser.
+
+### Using npm scripts
 
 ```bash
 cd examples/markdown_editor
 dart pub get
+npm start
 ```
 
-### 2. Compile to JavaScript
+### Manual steps
 
 ```bash
+cd examples/markdown_editor
+dart pub get
 dart compile js web/app.dart -o web/build/app.js
+npx serve web -p 8080
 ```
-
-### 3. Serve the app
-
-Use any static file server to serve the `web/` directory:
-
-```bash
-# Using Python
-python3 -m http.server 8080 -d web
-
-# Using Node.js (npx)
-npx serve web
-
-# Using PHP
-php -S localhost:8080 -t web
-```
-
-### 4. Open in browser
-
-Navigate to `http://localhost:8080` (or whatever port your server uses).
 
 ## Project Structure
 

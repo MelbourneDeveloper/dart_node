@@ -29,6 +29,16 @@ Write your entire stack in Dart: React web apps, React Native mobile apps with E
 | [too-many-cooks](examples/too_many_cooks) | Multi-agent coordination MCP server ([npm](https://www.npmjs.com/package/too-many-cooks)) |
 | [Too Many Cooks VSCode](examples/too_many_cooks_vscode_extension) | VSCode extension for agent visualization |
 
+## Dev Container (Recommended)
+
+This project includes a [Dev Container](.devcontainer/devcontainer.json) that provides a fully configured development environment with Dart, Node.js, and Chromium pre-installed. Open the project in VSCode and select **Reopen in Container** when prompted.
+
+**Why use it?**
+
+- **Consistent environment** — Dart 3.10, Node 20, and Chromium are pinned and pre-configured. No version mismatches across machines.
+- **Avoids Windows + Node.js performance issues** — Node.js file-heavy operations (`npm install`, `dart2js` output, `node_modules` creation) run up to [4x slower on Windows than Linux](https://github.com/microsoft/Windows-Dev-Performance/issues/17) due to NTFS overhead and Windows Defender real-time scanning. Yo will probably get better performance running on [WSL2](https://docs.docker.com/desktop/features/wsl/). The Dev Container sidesteps this entirely by running inside a Linux container.
+- **Zero setup** — Coverage thresholds, linting, and test tooling are pre-configured via environment variables and VSCode settings.
+
 ## Quick Start
 
 ```bash
@@ -36,7 +46,7 @@ Write your entire stack in Dart: React web apps, React Native mobile apps with E
 dart tools/switch_deps.dart local
 
 # Run everything
-sh run_dev.sh
+sh examples/run_taskflow.sh
 ```
 
 Open http://localhost:8080/web/

@@ -35,6 +35,11 @@ Dart packages for building Node.js apps. Strongly Typed Dart layer over JS inter
 - All packages require: `austerity` (linting), `nadz` (Result types)
 - `node_preamble` for dart2js Node.js compatibility
 
+**Pull Requests**
+- Keep the documentation tight
+- Use the template: .github/PULL_REQUEST_TEMPLATE.md
+- Only use git diff with main. Ignore commit messages
+
 # Web & Translation
 
 - Optimize for AI Search and SEO

@@ -18,8 +18,8 @@ examples/
 ## Quick Start
 
 ```bash
-# Build everything from repo root
-sh run_dev.sh
+# Build and run the TaskFlow demo (Express + React + React Native)
+sh examples/run_taskflow.sh
 ```
 
 ## Too Many Cooks

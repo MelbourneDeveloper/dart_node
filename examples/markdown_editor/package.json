@@ -1,0 +1,14 @@
+{
+  "name": "markdown-editor",
+  "version": "0.1.0",
+  "description": "Word-style document editor with Markdown backend (Dart + React)",
+  "scripts": {
+    "build": "dart compile js web/app.dart -o web/build/app.js",
+    "serve": "npx serve web -p 8080",
+    "start": "npm run build && npm run serve",
+    "dev": "npm run build && npm run serve"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}

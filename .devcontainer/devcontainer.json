@@ -1,0 +1,44 @@
+{
+  "name": "dart_node",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "DART_VERSION": "3.10.7",
+      "NODE_VERSION": "20.20.0",
+      "NPM_VERSION": "11.8.0",
+      "CSPELL_VERSION": "9.6.0",
+      "COVERAGE_VERSION": "1.15.0"
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "2.67.0"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "MIN_COVERAGE": "80"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Dart-Code.dart-code",
+        "streetsidesoftware.code-spell-checker"
+      ],
+      "settings": {
+        "dart.sdkPath": "/usr/lib/dart-sdk",
+        "editor.formatOnSave": true,
+        "dart.lineLength": 80
+      }
+    }
+  },
+  "mounts": [
+    "source=dart_node_pub_cache,target=/home/vscode/.pub-cache,type=volume"
+  ],
+  "forwardPorts": [3000, 8080],
+  "portsAttributes": {
+    "3000": { "label": "Backend API (Express)", "onAutoForward": "notify" },
+    "8080": { "label": "Frontend", "onAutoForward": "notify" }
+  }
+}
