@@ -42,8 +42,8 @@ environment:
   sdk: ^3.0.0
 
 dependencies:
-  dart_node_core: ^0.1.0
-  dart_node_react: ^0.1.0
+  dart_node_core: ^0.11.0-beta
+  dart_node_react: ^0.11.0-beta
 ```
 
 Run `dart pub get`. Done. No webpack config. No babel. No 47 dev dependencies fighting each other.
