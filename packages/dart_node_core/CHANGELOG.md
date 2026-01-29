@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.0-beta
+
+- Improved documentation for core extensions
+
 ## 0.11.0-beta
 
 - Early release

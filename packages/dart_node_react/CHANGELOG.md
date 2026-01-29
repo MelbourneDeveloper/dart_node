@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.0-beta
+
+- Maintenance release
+
 ## 0.11.0-beta
 
 - Early release
