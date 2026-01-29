@@ -111,6 +111,7 @@ nullables
 async
 awaitable
 awaited
+unawaited
 pubsub
 socketio
 retryable
