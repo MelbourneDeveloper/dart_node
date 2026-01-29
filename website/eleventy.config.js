@@ -22,7 +22,7 @@ const techdocOptions = {
   site: {
     name: "dart_node",
     title: "dart_node - Full-Stack Dart for the JavaScript Ecosystem",
-    url: "https://dartnode.dev",
+    url: "https://dartnode.org",
     description: "Write React, React Native, and Express apps entirely in Dart. One language for frontend, backend, and mobile.",
     author: "dart_node team",
     themeColor: "#0E7C6B",
@@ -38,7 +38,7 @@ const techdocOptions = {
       sameAs: [
         "https://github.com/melbournedeveloper/dart_node",
         "https://twitter.com/dart_node",
-        "https://pub.dev/publishers/dartnode.dev"
+        "https://pub.dev/publishers/christianfindlay.com/packages"
       ]
     }
   },
