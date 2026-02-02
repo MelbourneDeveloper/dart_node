@@ -1,4 +1,3 @@
-import { createServer, type IncomingMessage, type ServerResponse } from 'http';
 import WebSocket from 'ws';
 import { randomUUID } from 'crypto';
 import type {
@@ -23,11 +22,9 @@ import {
   deleteSession,
   setSessionWebSocket,
   setSessionHttpClient,
-  addSseWriter,
-  removeSseWriter,
-  notifySession,
 } from './session.js';
 import { createHttpClient } from './http-client.js';
+import { type Transport, type TransportConfig, createTransport } from './transport.js';
 import { isMcpToolError } from './errors.js';
 
 export type Bridge = {
@@ -42,7 +39,7 @@ export type Bridge = {
   serviceErrorHandler: ServiceErrorHandler | null;
   serviceEventConfigs: ServiceEventConfig[];
   serviceWs: WebSocket | null;
-  httpServer: ReturnType<typeof createServer> | null;
+  transport: Transport | null;
   pollingIntervals: NodeJS.Timeout[];
 };
 
@@ -58,7 +55,7 @@ export const createBridge = (options: BridgeOptions): Bridge => ({
   serviceErrorHandler: null,
   serviceEventConfigs: [],
   serviceWs: null,
-  httpServer: null,
+  transport: null,
   pollingIntervals: [],
 });
 
@@ -94,8 +91,8 @@ export const onServiceEvent = (bridge: Bridge, config: ServiceEventConfig): void
   bridge.serviceEventConfigs.push(config);
 };
 
-const createNotifyAgent = (session: Session) => async (payload: unknown): Promise<void> => {
-  notifySession(session, payload);
+const createNotifyAgent = (bridge: Bridge) => async (payload: unknown): Promise<void> => {
+  bridge.transport?.send(JSON.stringify(payload));
 };
 
 const getHttpClientForSession = (bridge: Bridge): HttpClient | null => {
@@ -118,13 +115,13 @@ const buildToolCallContext = (
     sessionId: session.id,
     ws: session.ws,
     http,
-    notifyAgent: createNotifyAgent(session),
+    notifyAgent: createNotifyAgent(bridge),
   };
 };
 
-const buildServiceMessageContext = (session: Session): ServiceMessageContext => ({
+const buildServiceMessageContext = (bridge: Bridge, session: Session): ServiceMessageContext => ({
   sessionId: session.id,
-  notifyAgent: createNotifyAgent(session),
+  notifyAgent: createNotifyAgent(bridge),
   pendingRequests: session.pendingRequests,
 });
 
@@ -197,75 +194,6 @@ const handleMcpRequest = async (
   }
 };
 
-const handleHttpRequest = async (
-  bridge: Bridge,
-  req: IncomingMessage,
-  res: ServerResponse
-): Promise<void> => {
-  const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
-  const sessionId = url.searchParams.get('sessionId') ?? randomUUID();
-
-  if (req.method === 'GET' && url.pathname === '/sse') {
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
-    });
-
-    const session = getOrCreateSession(bridge.sessionStore, sessionId);
-    const writer = (data: string) => res.write(data);
-    addSseWriter(session, writer);
-
-    req.on('close', () => {
-      removeSseWriter(session, writer);
-    });
-
-    return;
-  }
-
-  if (req.method === 'POST' && url.pathname === '/mcp') {
-    const chunks: Buffer[] = [];
-    for await (const chunk of req) {
-      chunks.push(chunk);
-    }
-    const body = JSON.parse(Buffer.concat(chunks).toString());
-
-    try {
-      const result = await handleMcpRequest(bridge, sessionId, body);
-      res.writeHead(200, {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      });
-      res.end(JSON.stringify({ jsonrpc: '2.0', id: body.id, result }));
-    } catch (error) {
-      res.writeHead(500, {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      });
-      res.end(JSON.stringify({
-        jsonrpc: '2.0',
-        id: body.id,
-        error: { code: -32603, message: error instanceof Error ? error.message : 'Unknown error' },
-      }));
-    }
-    return;
-  }
-
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    });
-    res.end();
-    return;
-  }
-
-  res.writeHead(404);
-  res.end('Not found');
-};
-
 export const connectService = (
   bridge: Bridge,
   url: string,
@@ -280,19 +208,15 @@ export const connectService = (
   ws.on('message', async (data) => {
     if (!bridge.serviceMessageHandler) return;
 
-    const sessions = bridge.sessionStore.sessions;
-    for (const session of sessions.values()) {
-      const context = buildServiceMessageContext(session);
+    for (const session of bridge.sessionStore.sessions.values()) {
+      const context = buildServiceMessageContext(bridge, session);
       await bridge.serviceMessageHandler(data.toString(), context);
     }
   });
 
   ws.on('error', async (error) => {
     if (bridge.serviceErrorHandler) {
-      const sessions = bridge.sessionStore.sessions;
-      for (const session of sessions.values()) {
-        await bridge.serviceErrorHandler(error, { notifyAgent: createNotifyAgent(session) });
-      }
+      await bridge.serviceErrorHandler(error, { notifyAgent: createNotifyAgent(bridge) });
     }
   });
 
@@ -304,7 +228,6 @@ export const connectService = (
     }
   });
 
-  // Set the WebSocket for all sessions
   for (const session of bridge.sessionStore.sessions.values()) {
     setSessionWebSocket(session, ws);
   }
@@ -318,7 +241,7 @@ const startPolling = (bridge: Bridge): void => {
         const events = await response.json() as unknown[];
 
         for (const session of bridge.sessionStore.sessions.values()) {
-          const context = buildServiceMessageContext(session);
+          const context = buildServiceMessageContext(bridge, session);
           await config.handler(events, context);
         }
       } catch {
@@ -330,7 +253,7 @@ const startPolling = (bridge: Bridge): void => {
   }
 };
 
-export const listen = (bridge: Bridge, port: number, host?: string): void => {
+export const start = (bridge: Bridge, config: TransportConfig): void => {
   const httpEndpoint = bridge.options.httpEndpoints?.[0];
   if (httpEndpoint) {
     const httpClient = createHttpClient(httpEndpoint);
@@ -339,23 +262,35 @@ export const listen = (bridge: Bridge, port: number, host?: string): void => {
     }
   }
 
-  bridge.httpServer = createServer((req, res) => {
-    handleHttpRequest(bridge, req, res).catch(err => {
-      console.error('Request handling error:', err);
-      res.writeHead(500);
-      res.end('Internal server error');
-    });
+  const transport = createTransport(config);
+  bridge.transport = transport;
+
+  transport.onMessage(async (msg) => {
+    try {
+      const request = JSON.parse(msg.data);
+      const sessionId = request.sessionId ?? 'default';
+      const result = await handleMcpRequest(bridge, sessionId, request);
+      msg.respond(JSON.stringify({ jsonrpc: '2.0', id: request.id, result }));
+    } catch (error) {
+      msg.respond(JSON.stringify({
+        jsonrpc: '2.0',
+        id: null,
+        error: { code: -32603, message: error instanceof Error ? error.message : 'Unknown error' },
+      }));
+    }
   });
 
-  bridge.httpServer.listen(port, host ?? '0.0.0.0', () => {
-    console.log(`MCP-WebSocket Bridge listening on ${host ?? '0.0.0.0'}:${port}`);
-  });
-
+  transport.start();
   startPolling(bridge);
 };
 
+// Backwards compat alias
+export const listen = (bridge: Bridge, port: number, host?: string): void => {
+  start(bridge, { type: 'http', port, host });
+};
+
 export const close = (bridge: Bridge): void => {
-  bridge.httpServer?.close();
+  bridge.transport?.stop();
   bridge.serviceWs?.close();
 
   for (const interval of bridge.pollingIntervals) {

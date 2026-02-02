@@ -43,6 +43,9 @@ export {
 
 export { createHttpClient } from './http-client.js';
 
+export type { Transport, TransportConfig, TransportMessage } from './transport.js';
+export { createTransport, createStdioTransport, createHttpTransport } from './transport.js';
+
 export type { Bridge } from './bridge.js';
 export {
   createBridge,
@@ -55,6 +58,7 @@ export {
   onServiceError,
   onServiceEvent,
   connectService,
+  start,
   listen,
   close,
 } from './bridge.js';

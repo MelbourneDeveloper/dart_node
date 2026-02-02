@@ -1,11 +1,11 @@
 # MCP-WebSocket Bridge
 
-This library **IS** an MCP server. It translates between the MCP protocol (spoken to AI agents like Claude) and your existing WebSocket/HTTP service.
+This library **IS** an MCP server. It translates between MCP protocol (spoken to AI agents) and your existing WebSocket/HTTP service.
 
 ```
-┌─────────────┐      MCP (Streamable HTTP)      ┌─────────────────────┐
-│   Agent     │◄──────────────────────────────►│  MCP-WebSocket      │
-│  (Claude)   │      POST /mcp + SSE            │  Bridge             │
+┌─────────────┐                                 ┌─────────────────────┐
+│   Agent     │◄── stdio or HTTP ─────────────►│  MCP-WebSocket      │
+│  (Claude)   │     (just data in/out)          │  Bridge             │
 └─────────────┘                                 │  (THIS IS THE       │
                                                 │   MCP SERVER)       │
                                                 └──────────┬──────────┘
@@ -18,7 +18,10 @@ This library **IS** an MCP server. It translates between the MCP protocol (spoke
                                                 └─────────────────────┘
 ```
 
-**Key point:** The bridge handles all MCP protocol details. You only configure how to translate between MCP tool calls and your service's WebSocket/HTTP protocol.
+**Key points:**
+- Transport is abstracted: stdio or HTTP are just data in/out
+- The bridge handles all MCP protocol details
+- You only configure how to translate between MCP tool calls and your service
 
 ## Installation
 
@@ -35,7 +38,7 @@ import {
   onToolCall,
   onServiceMessage,
   connectService,
-  listen,
+  start,
 } from 'mcp-websocket-bridge';
 
 // Create the MCP server (the bridge)
@@ -61,7 +64,6 @@ defineTool(bridge, {
 // Translate tool calls to your service's protocol
 onToolCall(bridge, async (toolName, args, context) => {
   if (toolName === 'send_message') {
-    // Send to your service using whatever protocol it expects
     context.ws.send(JSON.stringify({
       type: 'message',
       room: args.room,
@@ -76,7 +78,6 @@ onServiceMessage(bridge, async (message, context) => {
   const data = JSON.parse(message.toString());
 
   if (data.type === 'new_message') {
-    // Push to agent via SSE
     await context.notifyAgent({
       type: 'chat_message',
       from: data.from,
@@ -88,16 +89,31 @@ onServiceMessage(bridge, async (message, context) => {
 // Connect to your existing service
 connectService(bridge, 'wss://your-service.example.com');
 
-// Start the MCP server
-listen(bridge, 3000);
+// Start with stdio (for CLI tools like Claude Desktop)
+start(bridge, { type: 'stdio' });
+
+// Or start with HTTP (for web clients)
+// start(bridge, { type: 'http', port: 3000 });
 ```
+
+## Transport Options
+
+```typescript
+// stdio - for CLI integrations (Claude Desktop, etc.)
+start(bridge, { type: 'stdio' });
+
+// HTTP - for web clients
+start(bridge, { type: 'http', port: 3000, host: '0.0.0.0' });
+```
+
+Both transports handle the same data format - the bridge doesn't care how data arrives, just what's in it.
 
 ## What This Library Does
 
-1. **Speaks MCP** - Handles `POST /mcp` and `GET /sse` endpoints per the MCP spec
+1. **Speaks MCP** - Handles JSON-RPC messages per the MCP spec
 2. **Exposes tools** - Agents discover and call tools you define
 3. **Routes calls** - Translates MCP tool calls to your service's protocol
-4. **Pushes events** - Forwards your service's messages to agents via SSE
+4. **Pushes events** - Forwards your service's messages to agents
 
 ## What You Provide
 
@@ -105,7 +121,7 @@ listen(bridge, 3000);
 2. **Translation logic** - How to convert between MCP and your service's protocol
 3. **Your service URL** - Where to connect
 
-The underlying service is a black box to this library. It could be a chat server, database, IoT controller, or anything with a WebSocket or HTTP interface.
+The underlying service is a black box. It could be a chat server, database, IoT controller, or anything with a WebSocket or HTTP interface.
 
 ## API
 

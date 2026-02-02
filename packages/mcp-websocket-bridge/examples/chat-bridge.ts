@@ -5,7 +5,7 @@ import {
   onToolCall,
   onServiceMessage,
   connectService,
-  listen,
+  start,
 } from '../src/index.js';
 
 // Create the bridge
@@ -155,6 +155,12 @@ onServiceMessage(bridge, async (raw, ctx) => {
   }
 });
 
-// Start the bridge
+// Connect to your chat service
 connectService(bridge, 'wss://chat.example.com/ws');
-listen(bridge, 3000);
+
+// Start with stdio (for Claude Desktop) or HTTP (for web)
+const transport = process.argv.includes('--http')
+  ? { type: 'http' as const, port: 3000 }
+  : { type: 'stdio' as const };
+
+start(bridge, transport);
