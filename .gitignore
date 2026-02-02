@@ -53,6 +53,8 @@ mutation-reports
 
 out/
 
+# TypeScript build output
+dist/
 
 .vscode-test/
 .playwright-mcp/
