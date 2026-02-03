@@ -24,6 +24,7 @@ Dart packages for building Node.js apps. Strongly Typed Dart layer over JS inter
 - Functions < 20 lines, files < 500 LOC
 - Switch expressions/ternaries over if/else (except in declarative contexts)
 - Where Typescript code exists with no Dart wrapper, create the Dart wrapper APIs and add to the appropriate packages.
+- Keep all app state in one place. No global state
 
 **Testing**
 - 100% coverage with high-level integration tests, not unit tests/mocks

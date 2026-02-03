@@ -1,0 +1,8 @@
+{
+  "tags": {
+    "quick": [
+      "npm:/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/package.json:compile",
+      "npm:/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/package.json:test"
+    ]
+  }
+}
