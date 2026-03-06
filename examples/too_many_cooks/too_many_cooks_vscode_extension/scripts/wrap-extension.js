@@ -50,7 +50,23 @@ if (dartNodeIsActuallyNode) {
   }
 
   // Run the dart2js code which sets activate/deactivate on globalThis
-  ${dartOutput}
+  try {
+    ${dartOutput}
+    console.log('[TMC] Dart2js code loaded successfully');
+  } catch (e) {
+    console.error('[TMC] FATAL: Dart2js code failed to load:', e);
+    console.error('[TMC] Stack:', e.stack);
+    // Provide fallback activate that logs the error
+    self.activate = function(context) {
+      const channel = globalThis.vscode.window.createOutputChannel('Too Many Cooks');
+      channel.appendLine('[ERROR] Extension failed to load: ' + e.message);
+      channel.appendLine('[ERROR] Stack: ' + (e.stack || 'no stack'));
+      channel.show(true);
+      console.error('[TMC] Extension failed to load:', e);
+      return {};
+    };
+    self.deactivate = function() {};
+  }
 })();
 
 // Bridge self to module.exports for VSCode using getters
@@ -58,7 +74,14 @@ if (dartNodeIsActuallyNode) {
 // because node_preamble does: var self = Object.create(globalThis))
 if (typeof module !== 'undefined' && module.exports) {
   Object.defineProperty(module.exports, 'activate', {
-    get: function() { return self.activate; },
+    get: function() {
+      var fn = self.activate;
+      if (!fn) {
+        console.error('[TMC] activate is undefined on self! Keys:', Object.getOwnPropertyNames(self).filter(k => k.includes('activ')));
+        console.error('[TMC] globalThis.activate:', typeof globalThis.activate);
+      }
+      return fn;
+    },
     enumerable: true,
     configurable: true
   });
@@ -68,6 +91,8 @@ if (typeof module !== 'undefined' && module.exports) {
     configurable: true
   });
 }
+
+console.log('[TMC] Extension module loaded. activate:', typeof (self.activate), 'deactivate:', typeof (self.deactivate));
 `;
 
 fs.writeFileSync(

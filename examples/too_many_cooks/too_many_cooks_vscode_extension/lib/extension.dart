@@ -44,6 +44,10 @@ external set _activate(JSFunction f);
 @JS('deactivate')
 external set _deactivate(JSFunction f);
 
+/// Console.error for error logging visible in Developer Console.
+@JS('console.error')
+external void _consoleError(String message);
+
 /// Window object mocked by tests (for verification).
 /// Used by test infrastructure, not directly by extension code.
 @JS('globalThis._testMockedWindow')
@@ -89,13 +93,24 @@ extension type _Uri._(JSObject _) implements JSObject {
 
 /// Main entry point - sets up the extension exports.
 void main() {
+  _consoleLog('[TMC-DART] main() called - setting up activate/deactivate');
   _activate = _activateExtension.toJS;
   _deactivate = _deactivateExtension.toJS;
+  _consoleLog('[TMC-DART] main() completed');
 }
 
 /// Activates the extension - returns the TestAPI directly (synchronous).
-JSObject _activateExtension(ExtensionContext context) =>
-    _doActivateSync(context);
+JSObject _activateExtension(ExtensionContext context) {
+  try {
+    _consoleLog('[TMC-DART] activate called');
+    final result = _doActivateSync(context);
+    _consoleLog('[TMC-DART] activate succeeded');
+    return result;
+  } catch (e) {
+    _consoleError('[TMC-DART] ACTIVATION FAILED: $e');
+    rethrow;
+  }
+}
 
 /// Synchronous activation to avoid dart2js async Promise issues.
 JSObject _doActivateSync(ExtensionContext context) {

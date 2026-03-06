@@ -4,7 +4,13 @@
 test/**
 lib/**
 scripts/**
-node_modules/**
+node_modules/.package-lock.json
+node_modules/@electron/**
+node_modules/@vscode/test-cli/**
+node_modules/@vscode/test-electron/**
+node_modules/@playwright/**
+node_modules/glob/**
+node_modules/mocha/**
 *.vsix
 *.yaml
 *.lock

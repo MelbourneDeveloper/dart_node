@@ -1,6 +1,8 @@
 /// MCP server setup for Too Many Cooks.
 library;
 
+import 'dart:js_interop';
+
 import 'package:dart_logging/dart_logging.dart';
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
@@ -16,13 +18,17 @@ import 'package:too_many_cooks/src/tools/subscribe_tool.dart';
 import 'package:too_many_cooks_data/too_many_cooks_data.dart'
     show TooManyCooksDb, createDb;
 
+/// Writes to stderr via process.stderr.write (safe for MCP stdio transport).
+@JS('process.stderr.write')
+external void _stderrWrite(JSString data);
+
 /// Create the Too Many Cooks MCP server.
 Result<McpServer, String> createTooManyCooksServer({
   TooManyCooksConfig? config,
   Logger? logger,
 }) {
   final cfg = config ?? defaultConfig;
-  final log = logger ?? _createNoOpLogger()
+  final log = logger ?? _createStderrLogger()
     ..info('Creating Too Many Cooks server');
 
   // Create database
@@ -92,5 +98,21 @@ Result<McpServer, String> createTooManyCooksServer({
   return Success(server);
 }
 
-/// Creates a no-op logger that supports child() for when no logger is provided
-Logger _createNoOpLogger() => createLoggerWithContext(createLoggingContext());
+/// Creates a logger that writes to stderr (safe for MCP stdio transport).
+/// MCP uses stdin/stdout, so stderr is available for diagnostics.
+Logger _createStderrLogger() => createLoggerWithContext(
+  createLoggingContext(
+    transports: [logTransport(_logToStderr)],
+    minimumLogLevel: LogLevel.debug,
+  ),
+);
+
+/// Log transport that writes to stderr using process.stderr.write.
+void _logToStderr(LogMessage message, LogLevel minimumLogLevel) {
+  if (message.logLevel.index < minimumLogLevel.index) return;
+  final level = message.logLevel.name.toUpperCase();
+  final data = message.structuredData;
+  final dataStr = data != null && data.isNotEmpty ? ' $data' : '';
+  final line = '[TMC] [$level] ${message.message}$dataStr\n';
+  _stderrWrite(line.toJS);
+}
