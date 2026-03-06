@@ -376,17 +376,25 @@ void _registerCommands(ExtensionContext context) {
         }
       }
 
-      // Get sender name
-      final fromAgentJs = await vscode.window
-          .showInputBox(
-            InputBoxOptions(
-              prompt: 'Your agent name (sender)',
-              placeHolder: 'e.g., vscode-user',
-              value: 'vscode-user',
-            ),
-          )
-          .toDart;
-      final fromAgent = _jsStringToDart(fromAgentJs);
+      // Pick sender from registered agents
+      final senderAgents = _storeManager?.state.agents ?? [];
+      if (senderAgents.isEmpty) {
+        vscode.window.showErrorMessage('No registered agents to send as');
+        return;
+      }
+      final String? fromAgent;
+      if (_hasTestQuickPickResponses()) {
+        final testResponse = _shiftQuickPickResponse();
+        fromAgent = _jsStringToDart(testResponse);
+      } else {
+        final fromAgentJs = await vscode.window
+            .showQuickPick(
+              senderAgents.map((a) => a.agentName.toJS).toList().toJS,
+              QuickPickOptions(placeHolder: 'Send as which agent?'),
+            )
+            .toDart;
+        fromAgent = _jsStringToDart(fromAgentJs);
+      }
       if (fromAgent == null) return;
 
       // Get message content

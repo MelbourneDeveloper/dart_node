@@ -344,7 +344,7 @@ void main() {
               .toDart;
 
           // Send message using store method (covers store.sendMessage)
-          // This method auto-registers sender and sends message
+          // Uses adminSendMessage - sender need not be registered
           final senderName = 'store-sender-$testId';
           await api
               .sendMessage(

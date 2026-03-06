@@ -1825,12 +1825,12 @@ void main() {
       );
 
       test(
-        'store.sendMessage sends message via registered agent',
+        'store.sendMessage sends message via adminSendMessage (no auth)',
         asyncTest(() async {
           _log('[DB STORE] Running sendMessage test');
           final api = getTestAPI();
 
-          // Create a recipient agent
+          // Create a recipient agent (sender does not need to be registered)
           final recipientName = 'recipient-$testId';
           await api
               .callTool('register', createArgs({'name': recipientName}))

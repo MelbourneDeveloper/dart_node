@@ -493,15 +493,19 @@ void main() {
           _log('[CMD DIALOG] Running: sendMessage - with target agent');
           final api = getTestAPI();
 
-          // Create recipient agent
+          // Create recipient and sender agents
           final recipientName = 'recipient-$testId';
+          final senderName = 'sender-with-target-$testId';
           await api
               .callTool('register', createArgs({'name': recipientName}))
               .toDart;
+          await api
+              .callTool('register', createArgs({'name': senderName}))
+              .toDart;
 
           // Mock the dialogs for sendMessage flow
-          // (no quickpick when target provided)
-          mockInputBox('sender-with-target-$testId'); // Sender name
+          // (no quickpick for recipient when target provided)
+          mockQuickPick(senderName); // Select sender from agent list
           mockInputBox('Test message with target'); // Message content
 
           // Create an AgentTreeItem as target
@@ -535,15 +539,19 @@ void main() {
           );
           final api = getTestAPI();
 
-          // Create recipient agent
+          // Create recipient and sender agents
           final recipientName = 'recipient2-$testId';
+          final senderName = 'sender-no-target-$testId';
           await api
               .callTool('register', createArgs({'name': recipientName}))
+              .toDart;
+          await api
+              .callTool('register', createArgs({'name': senderName}))
               .toDart;
 
           // Mock all dialogs for sendMessage flow
           mockQuickPick(recipientName); // Select recipient
-          mockInputBox('sender-no-target-$testId'); // Sender name
+          mockQuickPick(senderName); // Select sender from agent list
           mockInputBox('Test message without target'); // Message content
 
           // Execute the command without a target item
@@ -568,9 +576,14 @@ void main() {
           _log('[CMD DIALOG] Running: sendMessage - broadcast to all');
           final api = getTestAPI();
 
-          // Mock dialogs for broadcast
-          mockQuickPick('* (broadcast to all)');
-          mockInputBox('broadcast-sender-$testId');
+          // Create sender agent then mock dialogs for broadcast
+          final senderName = 'broadcast-sender-$testId';
+          await api
+              .callTool('register', createArgs({'name': senderName}))
+              .toDart;
+
+          mockQuickPick('* (broadcast to all)'); // Select recipient
+          mockQuickPick(senderName); // Select sender from agent list
           mockInputBox('Broadcast test message');
 
           // Execute command for broadcast
@@ -627,9 +640,9 @@ void main() {
               .callTool('register', createArgs({'name': recipientName}))
               .toDart;
 
-          // Mock recipient selection but cancel sender input
+          // Mock recipient selection but cancel sender quickpick
           mockQuickPick(recipientName);
-          mockInputBox(null); // Cancel sender
+          mockQuickPick(null); // Cancel sender selection
 
           // Execute command
           await vscode.commands
@@ -657,9 +670,9 @@ void main() {
               .callTool('register', createArgs({'name': recipientName}))
               .toDart;
 
-          // Mock recipient and sender but cancel message
+          // Mock recipient and sender quickpicks but cancel message
           mockQuickPick(recipientName);
-          mockInputBox('sender-cancel-msg-$testId');
+          mockQuickPick('sender-cancel-msg-$testId');
           mockInputBox(null); // Cancel message
 
           // Execute command

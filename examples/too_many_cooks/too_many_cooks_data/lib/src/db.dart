@@ -105,6 +105,12 @@ typedef TooManyCooksDb = ({
   Result<void, DbError> Function(String filePath) adminDeleteLock,
   Result<void, DbError> Function(String agentName) adminDeleteAgent,
   Result<AgentRegistration, DbError> Function(String agentName) adminResetKey,
+  Result<String, DbError> Function(
+    String fromAgent,
+    String toAgent,
+    String content,
+  )
+  adminSendMessage,
 });
 
 /// Create database instance with retry policy.
@@ -206,6 +212,8 @@ TooManyCooksDb _createDbOps(
   adminDeleteLock: (path) => _adminDeleteLock(db, log, path),
   adminDeleteAgent: (name) => _adminDeleteAgent(db, log, name),
   adminResetKey: (name) => _adminResetKey(db, log, name),
+  adminSendMessage: (from, to, content) =>
+      _adminSendMessage(db, log, from, to, content, config.maxMessageLength),
 );
 
 extension type _Crypto(JSObject _) implements JSObject {
@@ -944,6 +952,56 @@ Result<AgentRegistration, DbError> _adminResetKey(
         message: 'Agent not found',
       )),
       Success() => Success((agentName: agentName, agentKey: newKey)),
+      Error(:final error) => Error((code: errDatabase, message: error)),
+    },
+    Error(:final error) => Error((code: errDatabase, message: error)),
+  };
+}
+
+Result<String, DbError> _adminSendMessage(
+  Database db,
+  Logger log,
+  String fromAgent,
+  String toAgent,
+  String content,
+  int maxLen,
+) {
+  log.warn('Admin sending message from $fromAgent to $toAgent');
+  if (content.length > maxLen) {
+    return Error((
+      code: errValidation,
+      message: 'Content exceeds $maxLen chars',
+    ));
+  }
+  // Ensure sender exists in identity table (FK constraint) without overwriting
+  // an existing agent's key.
+  final now = _now();
+  final ensureStmt = db.prepare('''
+    INSERT OR IGNORE INTO identity (agent_name, agent_key, registered_at, last_active)
+    VALUES (?, ?, ?, ?)
+  ''');
+  if (ensureStmt case Error(:final error)) {
+    return Error((code: errDatabase, message: error));
+  }
+  final ensureResult = (ensureStmt as Success<Statement, String>).value
+      .run([fromAgent, _generateKey(), now, now]);
+  if (ensureResult case Error(:final error)) {
+    return Error((code: errDatabase, message: error));
+  }
+  final id = _generateKey().substring(0, 16);
+  final stmtResult = db.prepare('''
+    INSERT INTO messages (id, from_agent, to_agent, content, created_at)
+    VALUES (?, ?, ?, ?, ?)
+  ''');
+  return switch (stmtResult) {
+    Success(:final value) => switch (value.run([
+      id,
+      fromAgent,
+      toAgent,
+      content,
+      now,
+    ])) {
+      Success() => Success(id),
       Error(:final error) => Error((code: errDatabase, message: error)),
     },
     Error(:final error) => Error((code: errDatabase, message: error)),

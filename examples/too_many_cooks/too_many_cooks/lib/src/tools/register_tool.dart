@@ -12,9 +12,15 @@ import 'package:too_many_cooks_data/too_many_cooks_data.dart';
 const registerInputSchema = <String, Object?>{
   'type': 'object',
   'properties': {
-    'name': {'type': 'string', 'description': 'Unique agent name (1-50 chars)'},
+    'name': {
+      'type': 'string',
+      'description':
+          'MANDATORY. Your unique agent name, 1-50 chars. '
+          'This is the only valid field.',
+    },
   },
   'required': ['name'],
+  'additionalProperties': false,
 };
 
 /// Tool config for register.
@@ -22,7 +28,8 @@ const registerToolConfig = (
   title: 'Register Agent',
   description:
       'Register a new agent. Returns secret key - store it! '
-      'REQUIRED: name (string) - unique agent name 1-50 chars. '
+      'The ONLY parameter is "name" (string, MANDATORY) - your unique agent '
+      'name 1-50 chars. Do NOT pass any other fields. '
       'Example: {"name": "my-agent"}',
   inputSchema: registerInputSchema,
   outputSchema: null,

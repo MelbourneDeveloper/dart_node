@@ -187,22 +187,12 @@ class StoreManager {
     }
   }
 
-  /// Send a message from VSCode user to an agent.
+  /// Send a message as an existing registered agent (admin — no key required).
   void sendMessage(String fromAgent, String toAgent, String content) {
     final db = _db;
     if (db == null) throw StateError('Not connected');
 
-    // Register sender and get key
-    final registerResult = db.register(fromAgent);
-    final agentKey = switch (registerResult) {
-      Success(:final value) => value.agentKey,
-      Error(:final error) => throw StateError(
-        '${error.code}: ${error.message}',
-      ),
-    };
-
-    // Send the message
-    switch (db.sendMessage(fromAgent, agentKey, toAgent, content)) {
+    switch (db.adminSendMessage(fromAgent, toAgent, content)) {
       case Success():
         break;
       case Error(:final error):
