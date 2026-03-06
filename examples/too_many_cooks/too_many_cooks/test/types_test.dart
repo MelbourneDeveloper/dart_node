@@ -4,6 +4,7 @@ library;
 import 'package:test/test.dart';
 import 'package:too_many_cooks/src/config.dart';
 import 'package:too_many_cooks/src/types.dart';
+import 'package:too_many_cooks_data/too_many_cooks_data.dart' as data;
 
 void main() {
   group('TooManyCooksConfig', () {
@@ -24,6 +25,37 @@ void main() {
       );
       expect(config.dbPath, 'custom.db');
       expect(config.lockTimeoutMs, 1000);
+    });
+
+    test('defaultConfig is identical to too_many_cooks_data defaultConfig', () {
+      expect(defaultConfig.dbPath, data.defaultConfig.dbPath);
+      expect(defaultConfig.lockTimeoutMs, data.defaultConfig.lockTimeoutMs);
+      expect(
+        defaultConfig.maxMessageLength,
+        data.defaultConfig.maxMessageLength,
+      );
+      expect(defaultConfig.maxPlanLength, data.defaultConfig.maxPlanLength);
+    });
+
+    test('re-exported getWorkspaceFolder matches data package', () {
+      expect(getWorkspaceFolder(), data.getWorkspaceFolder());
+    });
+
+    test('re-exported resolveDbPath matches data package', () {
+      expect(resolveDbPath('/test'), data.resolveDbPath('/test'));
+    });
+
+    test('re-exported createDataConfigFromWorkspace matches data package', () {
+      final local = createDataConfigFromWorkspace('/test');
+      final fromData = data.createDataConfigFromWorkspace('/test');
+      expect(local.dbPath, fromData.dbPath);
+    });
+
+    test('TooManyCooksConfig is identical to TooManyCooksDataConfig', () {
+      final config = createDataConfig(dbPath: '/test.db');
+      final dataConfig =
+          data.createDataConfig(dbPath: '/test.db');
+      expect(config.dbPath, dataConfig.dbPath);
     });
   });
 

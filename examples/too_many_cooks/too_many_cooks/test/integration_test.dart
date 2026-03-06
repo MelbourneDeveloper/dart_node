@@ -750,7 +750,7 @@ class _McpClient {
         spawnFn.callAsFunction(
               null,
               'node'.toJS,
-              <String>['build/bin/server.js'].jsify(),
+              <String>['build/bin/server_node.js'].jsify(),
               <String, Object?>{
                 'stdio': ['pipe', 'pipe', 'inherit'],
               }.jsify(),

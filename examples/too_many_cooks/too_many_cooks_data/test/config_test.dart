@@ -44,4 +44,29 @@ void main() {
     expect(defaultMaxMessageLength, 200);
     expect(defaultMaxPlanLength, 100);
   });
+
+  test('getWorkspaceFolder returns a non-empty string', () {
+    final folder = getWorkspaceFolder();
+    expect(folder, isNotEmpty);
+  });
+
+  test('defaultConfig uses getWorkspaceFolder for dbPath', () {
+    final expected = resolveDbPath(getWorkspaceFolder());
+    expect(defaultConfig.dbPath, expected);
+  });
+
+  test('defaultConfig dbPath always ends with .too_many_cooks/data.db', () {
+    expect(defaultConfig.dbPath, endsWith('.too_many_cooks/data.db'));
+  });
+
+  test('defaultConfig uses default timeout and limits', () {
+    expect(defaultConfig.lockTimeoutMs, defaultLockTimeoutMs);
+    expect(defaultConfig.maxMessageLength, defaultMaxMessageLength);
+    expect(defaultConfig.maxPlanLength, defaultMaxPlanLength);
+  });
+
+  test('defaultConfig dbPath matches createDataConfigFromWorkspace', () {
+    final fromWorkspace = createDataConfigFromWorkspace(getWorkspaceFolder());
+    expect(defaultConfig.dbPath, fromWorkspace.dbPath);
+  });
 }
