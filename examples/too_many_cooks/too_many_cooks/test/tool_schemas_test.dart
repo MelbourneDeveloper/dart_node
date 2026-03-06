@@ -62,22 +62,42 @@ void main() {
   });
 
   group('register tool schema', () {
-    test('has additionalProperties false', () {
-      expect(registerInputSchema['additionalProperties'], false);
+    test('has name field for first registration', () {
+      expect(_props(registerInputSchema), contains('name'));
     });
 
-    test('name is required', () {
-      if (registerInputSchema['required'] case final List<Object?> r) {
-        expect(r, contains('name'));
-      } else {
-        fail('required is not a list');
-      }
+    test('has key field for reconnect', () {
+      expect(_props(registerInputSchema), contains('key'));
     });
 
-    test('description says name is mandatory', () {
+    test('name description says first registration only', () {
       expect(
         _desc(registerInputSchema, 'name'),
-        contains('MANDATORY'),
+        contains('FIRST'),
+      );
+    });
+
+    test('key description says reconnect only', () {
+      expect(
+        _desc(registerInputSchema, 'key'),
+        contains('RECONNECT'),
+      );
+    });
+
+    test('does not require both name and key', () {
+      // Schema should NOT have required: ['name', 'key']
+      // Either name or key, not both — validated in handler
+      expect(registerInputSchema['required'], isNull);
+    });
+
+    test('description explains both modes', () {
+      expect(
+        registerToolConfig.description,
+        allOf(
+          contains('name'),
+          contains('key'),
+          contains('RECONNECT'),
+        ),
       );
     });
   });

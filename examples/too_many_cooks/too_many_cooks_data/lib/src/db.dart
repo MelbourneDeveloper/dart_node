@@ -101,6 +101,9 @@ typedef TooManyCooksDb = ({
   Result<AgentPlan?, DbError> Function(String agentName) getPlan,
   Result<List<AgentPlan>, DbError> Function() listPlans,
   Result<List<Message>, DbError> Function() listAllMessages,
+  Result<void, DbError> Function(String agentName) activate,
+  Result<void, DbError> Function(String agentName) deactivate,
+  Result<void, DbError> Function() deactivateAll,
   Result<void, DbError> Function() close,
   // Admin operations (no auth required - for VSCode extension)
   Result<void, DbError> Function(String filePath) adminDeleteLock,
@@ -204,6 +207,9 @@ TooManyCooksDb _createDbOps(
   getPlan: (name) => _getPlan(db, log, name),
   listPlans: () => _listPlans(db, log),
   listAllMessages: () => _listAllMessages(db, log),
+  activate: (name) => _setActive(db, log, name, true),
+  deactivate: (name) => _setActive(db, log, name, false),
+  deactivateAll: () => _deactivateAll(db, log),
   close: () {
     log.info('Closing database');
     return switch (db.close()) {
@@ -855,6 +861,47 @@ Result<List<Message>, DbError> _listAllMessages(Database db, Logger log) {
             )
             .toList(),
       ),
+      Error(:final error) => Error((code: errDatabase, message: error)),
+    },
+    Error(:final error) => Error((code: errDatabase, message: error)),
+  };
+}
+
+// === Active State ===
+
+Result<void, DbError> _setActive(
+  Database db,
+  Logger log,
+  String agentName,
+  bool active,
+) {
+  log.debug('Setting agent $agentName active=$active');
+  final activeInt = active ? 1 : 0;
+  final stmtResult = db.prepare(
+    'UPDATE identity SET active = ? WHERE agent_name = ?',
+  );
+  return switch (stmtResult) {
+    Success(:final value) => switch (value.run([
+      activeInt,
+      agentName,
+    ])) {
+      Success(:final value) when value.changes == 0 => const Error((
+        code: errNotFound,
+        message: 'Agent not found',
+      )),
+      Success() => const Success(null),
+      Error(:final error) => Error((code: errDatabase, message: error)),
+    },
+    Error(:final error) => Error((code: errDatabase, message: error)),
+  };
+}
+
+Result<void, DbError> _deactivateAll(Database db, Logger log) {
+  log.debug('Deactivating all agents');
+  final stmtResult = db.prepare('UPDATE identity SET active = 0');
+  return switch (stmtResult) {
+    Success(:final value) => switch (value.run([])) {
+      Success() => const Success(null),
       Error(:final error) => Error((code: errDatabase, message: error)),
     },
     Error(:final error) => Error((code: errDatabase, message: error)),

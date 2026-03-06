@@ -255,14 +255,13 @@ void main() {
     // REGRESSION TESTS: Missing parameter validation
     // These ensure tools return proper errors instead of crashing
 
-    test('register without name returns error', () async {
+    test('register without name or key returns error', () async {
       final result = await client.callToolRaw('register', {});
       expect(result['isError'], isTrue);
       final content =
           (result['content']! as List).first as Map<String, Object?>;
       final text = content['text']! as String;
       expect(text, contains('missing_parameter'));
-      expect(text, contains('name'));
     });
 
     test('lock without action returns error', () async {
@@ -479,55 +478,38 @@ void main() {
       expect(json.containsKey('released') || json.containsKey('error'), isTrue);
     });
 
-    // SUBSCRIBE TOOL
-    test('subscribe tool - subscribe and list', () async {
-      // Subscribe
-      var result = await client.callTool('subscribe', {
-        'action': 'subscribe',
-        'subscriber_id': 'test-subscriber',
-        'events': ['lock_acquired', 'lock_released'],
-      });
-      var json = jsonDecode(result) as Map<String, Object?>;
-      expect(json['subscribed'], isTrue);
+    // REGISTER: reconnect with key only
+    test('register reconnect with key only', () async {
+      // First registration — name only
+      final regResult = await client.callTool('register', {'name': 'recon1'});
+      final regJson = jsonDecode(regResult) as Map<String, Object?>;
+      final key = regJson['agent_key']! as String;
 
-      // List subscribers
-      result = await client.callTool('subscribe', {'action': 'list'});
-      json = jsonDecode(result) as Map<String, Object?>;
-      final subscribers = json['subscribers']! as List;
-      expect(subscribers.isNotEmpty, isTrue);
+      // Reconnect — key only, no name
+      final reconResult = await client.callTool('register', {'key': key});
+      final reconJson = jsonDecode(reconResult) as Map<String, Object?>;
+      expect(reconJson['agent_name'], equals('recon1'));
+      expect(reconJson['agent_key'], equals(key));
     });
 
-    test('subscribe tool - unsubscribe', () async {
-      // Subscribe first
-      await client.callTool('subscribe', {
-        'action': 'subscribe',
-        'subscriber_id': 'unsubscribe-test',
-        'events': ['*'],
-      });
+    test('register with both name and key returns error', () async {
+      final regResult = await client.callTool('register', {'name': 'both1'});
+      final regJson = jsonDecode(regResult) as Map<String, Object?>;
+      final key = regJson['agent_key']! as String;
 
-      // Unsubscribe
-      final result = await client.callTool('subscribe', {
-        'action': 'unsubscribe',
-        'subscriber_id': 'unsubscribe-test',
-      });
-      final json = jsonDecode(result) as Map<String, Object?>;
-      expect(json['unsubscribed'], isTrue);
-    });
-
-    test('subscribe without subscriber_id returns error', () async {
-      final result = await client.callToolRaw('subscribe', {
-        'action': 'subscribe',
-        'events': ['*'],
-      });
+      // Both name AND key — spec says this is an error
+      final result = await client.callToolRaw(
+        'register',
+        {'name': 'both1', 'key': key},
+      );
       expect(result['isError'], isTrue);
     });
 
-    test('subscribe with invalid events returns error', () async {
-      final result = await client.callToolRaw('subscribe', {
-        'action': 'subscribe',
-        'subscriber_id': 'test',
-        'events': ['invalid_event_type'],
-      });
+    test('register reconnect with invalid key returns error', () async {
+      final result = await client.callToolRaw(
+        'register',
+        {'key': 'definitely-not-a-real-key'},
+      );
       expect(result['isError'], isTrue);
     });
 

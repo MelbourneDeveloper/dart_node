@@ -13,7 +13,6 @@ import 'package:too_many_cooks/src/tools/message_tool.dart';
 import 'package:too_many_cooks/src/tools/plan_tool.dart';
 import 'package:too_many_cooks/src/tools/register_tool.dart';
 import 'package:too_many_cooks/src/tools/status_tool.dart';
-import 'package:too_many_cooks/src/tools/subscribe_tool.dart';
 import 'package:too_many_cooks/src/types.dart';
 import 'package:too_many_cooks_data/too_many_cooks_data.dart'
     show TooManyCooksDb, createDb;
@@ -94,11 +93,6 @@ Result<McpServer, String> createTooManyCooksServer({
       createPlanHandler(db, emitter, log, getSession),
     )
     ..registerTool('status', statusToolConfig, createStatusHandler(db, log))
-    ..registerTool(
-      'subscribe',
-      subscribeToolConfig,
-      createSubscribeHandler(emitter),
-    )
 ;
 
   log.info('Server initialized with all tools registered');

@@ -10,6 +10,7 @@ const createTablesSql =
 CREATE TABLE IF NOT EXISTS identity (
   agent_name TEXT PRIMARY KEY,
   agent_key TEXT NOT NULL UNIQUE,
+  active INTEGER NOT NULL DEFAULT 0,
   registered_at INTEGER NOT NULL,
   last_active INTEGER NOT NULL
 );
