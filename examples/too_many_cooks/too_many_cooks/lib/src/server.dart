@@ -8,13 +8,13 @@ import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks/src/config.dart';
 import 'package:too_many_cooks/src/notifications.dart';
-import 'package:too_many_cooks/src/tools/admin_tool.dart';
 import 'package:too_many_cooks/src/tools/lock_tool.dart';
 import 'package:too_many_cooks/src/tools/message_tool.dart';
 import 'package:too_many_cooks/src/tools/plan_tool.dart';
 import 'package:too_many_cooks/src/tools/register_tool.dart';
 import 'package:too_many_cooks/src/tools/status_tool.dart';
 import 'package:too_many_cooks/src/tools/subscribe_tool.dart';
+import 'package:too_many_cooks/src/types.dart';
 import 'package:too_many_cooks_data/too_many_cooks_data.dart'
     show TooManyCooksDb, createDb;
 
@@ -63,35 +63,43 @@ Result<McpServer, String> createTooManyCooksServer({
   // Create notification emitter
   final emitter = createNotificationEmitter(server);
 
+  // Per-connection session state — set after register, used by all other tools
+  SessionIdentity? session;
+  SessionIdentity? getSession() => session;
+  void setSession(String name, String key) {
+    session = (agentName: name, agentKey: key);
+    log.info('Session established for agent: $name');
+  }
+
   // Register tools
   server
     ..registerTool(
       'register',
       registerToolConfig,
-      createRegisterHandler(db, emitter, log),
+      createRegisterHandler(db, emitter, log, setSession),
     )
     ..registerTool(
       'lock',
       lockToolConfig,
-      createLockHandler(db, cfg, emitter, log),
+      createLockHandler(db, cfg, emitter, log, getSession),
     )
     ..registerTool(
       'message',
       messageToolConfig,
-      createMessageHandler(db, emitter, log),
+      createMessageHandler(db, emitter, log, getSession),
     )
-    ..registerTool('plan', planToolConfig, createPlanHandler(db, emitter, log))
+    ..registerTool(
+      'plan',
+      planToolConfig,
+      createPlanHandler(db, emitter, log, getSession),
+    )
     ..registerTool('status', statusToolConfig, createStatusHandler(db, log))
     ..registerTool(
       'subscribe',
       subscribeToolConfig,
       createSubscribeHandler(emitter),
     )
-    ..registerTool(
-      'admin',
-      adminToolConfig,
-      createAdminHandler(db, emitter, log),
-    );
+;
 
   log.info('Server initialized with all tools registered');
 

@@ -24,3 +24,13 @@ Map<String, Object?> textContent(String text) => <String, Object?>{
   'type': 'text',
   'text': text,
 };
+
+/// Session identity stored after registration.
+/// Per-connection state so agents only authenticate once.
+typedef SessionIdentity = ({String agentName, String agentKey});
+
+/// Gets the current session identity (null if not registered).
+typedef SessionGetter = SessionIdentity? Function();
+
+/// Sets the session identity after registration.
+typedef SessionSetter = void Function(String agentName, String agentKey);

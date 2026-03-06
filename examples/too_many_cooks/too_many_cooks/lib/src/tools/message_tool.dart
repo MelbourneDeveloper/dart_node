@@ -17,15 +17,14 @@ const messageInputSchema = <String, Object?>{
       'enum': ['send', 'get', 'mark_read'],
       'description': 'Message action to perform',
     },
-    'agent_name': {'type': 'string', 'description': 'Your agent name'},
-    'agent_key': {'type': 'string', 'description': 'Your secret key'},
     'to_agent': {
       'type': 'string',
       'description': 'Recipient name or * for broadcast (for send)',
     },
     'content': {
       'type': 'string',
-      'description': 'Message content, max 200 chars (for send)',
+      'maxLength': 200,
+      'description': 'Message content (for send). MUST be 200 chars or less.',
     },
     'message_id': {
       'type': 'string',
@@ -36,18 +35,17 @@ const messageInputSchema = <String, Object?>{
       'description': 'Only return unread messages (default: true)',
     },
   },
-  'required': ['action', 'agent_name', 'agent_key'],
+  'required': ['action'],
 };
 
 /// Tool config for message.
 const messageToolConfig = (
   title: 'Message',
   description:
-      'Send/receive messages. '
-      'REQUIRED: action (send|get|mark_read), agent_name, agent_key. '
+      'Send/receive messages. You must register first. '
+      'REQUIRED: action (send|get|mark_read). '
       'For send: to_agent, content. For mark_read: message_id. '
-      'Example send: {"action":"send","agent_name":"me","agent_key":"xxx",'
-      ' "to_agent":"other","content":"hello"}',
+      'Example send: {"action":"send","to_agent":"other","content":"hello"}',
   inputSchema: messageInputSchema,
   outputSchema: null,
   annotations: null,
@@ -58,10 +56,9 @@ ToolCallback createMessageHandler(
   TooManyCooksDb db,
   NotificationEmitter emitter,
   Logger logger,
+  SessionGetter getSession,
 ) => (args, meta) async {
   final actionArg = args['action'];
-  final agentNameArg = args['agent_name'];
-  final agentKeyArg = args['agent_key'];
   if (actionArg == null || actionArg is! String) {
     return (
       content: <Object>[
@@ -70,25 +67,33 @@ ToolCallback createMessageHandler(
       isError: true,
     );
   }
-  if (agentNameArg == null || agentNameArg is! String) {
-    return (
-      content: <Object>[
-        textContent('{"error":"missing_parameter: agent_name is required"}'),
-      ],
-      isError: true,
-    );
-  }
-  if (agentKeyArg == null || agentKeyArg is! String) {
-    return (
-      content: <Object>[
-        textContent('{"error":"missing_parameter: agent_key is required"}'),
-      ],
-      isError: true,
-    );
-  }
   final action = actionArg;
-  final agentName = agentNameArg;
-  final agentKey = agentKeyArg;
+
+  // Hidden agent_key override for multi-agent integration testing
+  final keyOverride = args['agent_key'] as String?;
+  final String agentName;
+  final String agentKey;
+  if (keyOverride != null) {
+    agentKey = keyOverride;
+    switch (db.lookupByKey(keyOverride)) {
+      case Success(:final value):
+        agentName = value;
+      case Error(:final error):
+        return _errorResult(error);
+    }
+  } else {
+    final session = getSession();
+    if (session == null) {
+      return (
+        content: <Object>[
+          textContent('{"error":"not_registered: call register first"}'),
+        ],
+        isError: true,
+      );
+    }
+    agentName = session.agentName;
+    agentKey = session.agentKey;
+  }
   final log = logger.child({'tool': 'message', 'action': action});
 
   return switch (action) {

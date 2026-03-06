@@ -15,16 +15,15 @@ const lockInputSchema = <String, Object?>{
   'properties': {
     'action': {
       'type': 'string',
-      'enum': ['acquire', 'release', 'force_release', 'renew', 'query', 'list'],
+      'enum': [
+        'acquire',
+        'release',
+        'force_release',
+        'renew',
+        'query',
+        'list',
+      ],
       'description': 'Lock action to perform',
-    },
-    'agent_name': {
-      'type': 'string',
-      'description': 'Your agent name (required for acquire/release/renew)',
-    },
-    'agent_key': {
-      'type': 'string',
-      'description': 'Your secret key (required for acquire/release/renew)',
     },
     'file_path': {
       'type': 'string',
@@ -42,11 +41,11 @@ const lockInputSchema = <String, Object?>{
 const lockToolConfig = (
   title: 'File Lock',
   description:
-      'Manage file locks: acquire, release, force_release, renew, '
-      'query, list. REQUIRED: action. For acquire/release/renew: file_path, '
-      'agent_name, agent_key. For query: file_path. '
-      'Example acquire: {"action":"acquire","file_path":"/path/file.dart",'
-      ' "agent_name":"me","agent_key":"xxx","reason":"editing"}',
+      'Manage file locks. You must register first. '
+      'REQUIRED: action (acquire|release|force_release|renew|query|list). '
+      'For acquire/release/renew: file_path. For query: file_path. '
+      'Example: {"action":"acquire","file_path":"/path/file.dart",'
+      ' "reason":"editing"}',
   inputSchema: lockInputSchema,
   outputSchema: null,
   annotations: null,
@@ -58,6 +57,7 @@ ToolCallback createLockHandler(
   TooManyCooksConfig config,
   NotificationEmitter emitter,
   Logger logger,
+  SessionGetter getSession,
 ) => (args, meta) async {
   final actionArg = args['action'];
   if (actionArg == null || actionArg is! String) {
@@ -69,8 +69,6 @@ ToolCallback createLockHandler(
     );
   }
   final action = actionArg;
-  final agentName = args['agent_name'] as String?;
-  final agentKey = args['agent_key'] as String?;
   final filePath = args['file_path'] as String?;
   final reason = args['reason'] as String?;
   final log = logger.child({
@@ -78,6 +76,36 @@ ToolCallback createLockHandler(
     'action': action,
     'filePath': ?filePath,
   });
+
+  // query and list don't need auth
+  if (action == 'query') return _query(db, filePath);
+  if (action == 'list') return _list(db);
+
+  // Hidden agent_key override for multi-agent integration testing
+  final keyOverride = args['agent_key'] as String?;
+  final String agentName;
+  final String agentKey;
+  if (keyOverride != null) {
+    agentKey = keyOverride;
+    switch (db.lookupByKey(keyOverride)) {
+      case Success(:final value):
+        agentName = value;
+      case Error(:final error):
+        return _errorResult(error);
+    }
+  } else {
+    final session = getSession();
+    if (session == null) {
+      return (
+        content: <Object>[
+          textContent('{"error":"not_registered: call register first"}'),
+        ],
+        isError: true,
+      );
+    }
+    agentName = session.agentName;
+    agentKey = session.agentKey;
+  }
 
   return switch (action) {
     'acquire' => _acquire(
@@ -108,8 +136,6 @@ ToolCallback createLockHandler(
       agentKey,
       config.lockTimeoutMs,
     ),
-    'query' => _query(db, filePath),
-    'list' => _list(db),
     _ => (
       content: <Object>[textContent('{"error":"Unknown action: $action"}')],
       isError: true,
@@ -122,17 +148,15 @@ CallToolResult _acquire(
   NotificationEmitter emitter,
   Logger log,
   String? filePath,
-  String? agentName,
-  String? agentKey,
+  String agentName,
+  String agentKey,
   String? reason,
   int timeoutMs,
 ) {
-  if (filePath == null || agentName == null || agentKey == null) {
+  if (filePath == null) {
     return (
       content: <Object>[
-        textContent(
-          '{"error":"acquire requires file_path, agent_name, agent_key"}',
-        ),
+        textContent('{"error":"acquire requires file_path"}'),
       ],
       isError: true,
     );
@@ -149,7 +173,7 @@ CallToolResult _acquire(
       emitter.emit(eventLockAcquired, {
         'file_path': filePath,
         'agent_name': agentName,
-        'expires_at': value.lock!.expiresAt,
+        'expires_at': value.lock?.expiresAt,
         'reason': reason,
       });
       log.info('Lock acquired on $filePath by $agentName');
@@ -171,15 +195,13 @@ CallToolResult _release(
   NotificationEmitter emitter,
   Logger log,
   String? filePath,
-  String? agentName,
-  String? agentKey,
+  String agentName,
+  String agentKey,
 ) {
-  if (filePath == null || agentName == null || agentKey == null) {
+  if (filePath == null) {
     return (
       content: <Object>[
-        textContent(
-          '{"error":"release requires file_path, agent_name, agent_key"}',
-        ),
+        textContent('{"error":"release requires file_path"}'),
       ],
       isError: true,
     );
@@ -205,16 +227,13 @@ CallToolResult _forceRelease(
   NotificationEmitter emitter,
   Logger log,
   String? filePath,
-  String? agentName,
-  String? agentKey,
+  String agentName,
+  String agentKey,
 ) {
-  if (filePath == null || agentName == null || agentKey == null) {
+  if (filePath == null) {
     return (
       content: <Object>[
-        textContent(
-          '{"error":"force_release requires '
-          'file_path, agent_name, agent_key"}',
-        ),
+        textContent('{"error":"force_release requires file_path"}'),
       ],
       isError: true,
     );
@@ -241,16 +260,14 @@ CallToolResult _renew(
   NotificationEmitter emitter,
   Logger log,
   String? filePath,
-  String? agentName,
-  String? agentKey,
+  String agentName,
+  String agentKey,
   int timeoutMs,
 ) {
-  if (filePath == null || agentName == null || agentKey == null) {
+  if (filePath == null) {
     return (
       content: <Object>[
-        textContent(
-          '{"error":"renew requires file_path, agent_name, agent_key"}',
-        ),
+        textContent('{"error":"renew requires file_path"}'),
       ],
       isError: true,
     );

@@ -52,7 +52,6 @@ void main() {
         (a) => client.callTool('lock', {
           'action': 'acquire',
           'file_path': '/src/${a.name}.dart',
-          'agent_name': a.name,
           'agent_key': a.key,
           'reason': 'editing',
         }),
@@ -73,13 +72,11 @@ void main() {
         client.callTool('lock', {
           'action': 'acquire',
           'file_path': contested,
-          'agent_name': agents[0].name,
           'agent_key': agents[0].key,
         }),
         client.callTool('lock', {
           'action': 'acquire',
           'file_path': contested,
-          'agent_name': agents[1].name,
           'agent_key': agents[1].key,
         }),
       ]);
@@ -97,7 +94,6 @@ void main() {
       final planFutures = agents.map(
         (a) => client.callTool('plan', {
           'action': 'update',
-          'agent_name': a.name,
           'agent_key': a.key,
           'goal': 'Goal for ${a.name}',
           'current_task': 'Working on ${a.name}',
@@ -121,7 +117,6 @@ void main() {
         msgFutures.add(
           client.callTool('message', {
             'action': 'send',
-            'agent_name': sender.name,
             'agent_key': sender.key,
             'to_agent': recipient.name,
             'content': 'Hello from ${sender.name}!',
@@ -142,7 +137,6 @@ void main() {
       // Send broadcast
       final broadcastResult = await client.callTool('message', {
         'action': 'send',
-        'agent_name': agents[0].name,
         'agent_key': agents[0].key,
         'to_agent': '*',
         'content': 'Broadcast!',
@@ -153,7 +147,6 @@ void main() {
       for (var i = 1; i < agents.length; i++) {
         final inboxResult = await client.callTool('message', {
           'action': 'get',
-          'agent_name': agents[i].name,
           'agent_key': agents[i].key,
         });
         final json = jsonDecode(inboxResult) as Map<String, Object?>;
@@ -170,7 +163,6 @@ void main() {
         await client.callTool('lock', {
           'action': 'acquire',
           'file_path': '/src/${a.name}.dart',
-          'agent_name': a.name,
           'agent_key': a.key,
         });
       }
@@ -179,7 +171,6 @@ void main() {
       for (final a in agents) {
         await client.callTool('plan', {
           'action': 'update',
-          'agent_name': a.name,
           'agent_key': a.key,
           'goal': 'Goal',
           'current_task': 'Task',
@@ -192,7 +183,6 @@ void main() {
         final recipient = agents[(i + 1) % agents.length];
         await client.callTool('message', {
           'action': 'send',
-          'agent_name': sender.name,
           'agent_key': sender.key,
           'to_agent': recipient.name,
           'content': 'Test msg from ${sender.name}',
@@ -236,7 +226,6 @@ void main() {
         await client.callTool('lock', {
           'action': 'acquire',
           'file_path': '/src/${a.name}.dart',
-          'agent_name': a.name,
           'agent_key': a.key,
         });
       }
@@ -246,7 +235,6 @@ void main() {
         (a) => client.callTool('lock', {
           'action': 'release',
           'file_path': '/src/${a.name}.dart',
-          'agent_name': a.name,
           'agent_key': a.key,
         }),
       );
@@ -297,27 +285,14 @@ void main() {
       expect(text, contains('action'));
     });
 
-    test('message without agent_name returns error', () async {
+    test('message without registration returns not_registered', () async {
+      // No register call — session is empty, no hidden args either
       final result = await client.callToolRaw('message', {'action': 'get'});
       expect(result['isError'], isTrue);
       final content =
           (result['content']! as List).first as Map<String, Object?>;
       final text = content['text']! as String;
-      expect(text, contains('missing_parameter'));
-      expect(text, contains('agent_name'));
-    });
-
-    test('message without agent_key returns error', () async {
-      final result = await client.callToolRaw('message', {
-        'action': 'get',
-        'agent_name': 'test',
-      });
-      expect(result['isError'], isTrue);
-      final content =
-          (result['content']! as List).first as Map<String, Object?>;
-      final text = content['text']! as String;
-      expect(text, contains('missing_parameter'));
-      expect(text, contains('agent_key'));
+      expect(text, contains('not_registered'));
     });
 
     test('plan without action returns error', () async {
@@ -338,7 +313,6 @@ void main() {
       // Create initial plan
       await client.callTool('plan', {
         'action': 'update',
-        'agent_name': agent.name,
         'agent_key': agent.key,
         'goal': 'Initial goal',
         'current_task': 'Initial task',
@@ -354,7 +328,6 @@ void main() {
       // Update the plan
       await client.callTool('plan', {
         'action': 'update',
-        'agent_name': agent.name,
         'agent_key': agent.key,
         'goal': 'Updated goal',
         'current_task': 'Updated task',
@@ -385,7 +358,6 @@ void main() {
         for (final agent in agents) {
           await client.callTool('plan', {
             'action': 'update',
-            'agent_name': agent.name,
             'agent_key': agent.key,
             'goal': 'Goal round $round',
             'current_task': 'Task round $round',
@@ -430,7 +402,6 @@ void main() {
       await client.callTool('lock', {
         'action': 'acquire',
         'file_path': filePath,
-        'agent_name': agent.name,
         'agent_key': agent.key,
       });
 
@@ -452,7 +423,6 @@ void main() {
         await client.callTool('lock', {
           'action': 'acquire',
           'file_path': '/src/list_test_$i.dart',
-          'agent_name': agents[i].name,
           'agent_key': agents[i].key,
         });
       }
@@ -473,7 +443,6 @@ void main() {
       await client.callTool('lock', {
         'action': 'acquire',
         'file_path': filePath,
-        'agent_name': agent.name,
         'agent_key': agent.key,
       });
 
@@ -481,7 +450,6 @@ void main() {
       final result = await client.callTool('lock', {
         'action': 'renew',
         'file_path': filePath,
-        'agent_name': agent.name,
         'agent_key': agent.key,
       });
       final json = jsonDecode(result) as Map<String, Object?>;
@@ -496,7 +464,6 @@ void main() {
       await client.callTool('lock', {
         'action': 'acquire',
         'file_path': filePath,
-        'agent_name': agents[0].name,
         'agent_key': agents[0].key,
       });
 
@@ -505,7 +472,6 @@ void main() {
       final result = await client.callTool('lock', {
         'action': 'force_release',
         'file_path': filePath,
-        'agent_name': agents[1].name,
         'agent_key': agents[1].key,
       });
       final json = jsonDecode(result) as Map<String, Object?>;
@@ -565,84 +531,6 @@ void main() {
       expect(result['isError'], isTrue);
     });
 
-    // ADMIN TOOL
-    test('admin delete_lock removes a lock', () async {
-      final agents = await _registerAgents(client, 1);
-      final agent = agents.first;
-      const filePath = '/src/admin_delete_test.dart';
-
-      // Acquire lock
-      await client.callTool('lock', {
-        'action': 'acquire',
-        'file_path': filePath,
-        'agent_name': agent.name,
-        'agent_key': agent.key,
-      });
-
-      // Admin delete lock
-      final result = await client.callTool('admin', {
-        'action': 'delete_lock',
-        'file_path': filePath,
-      });
-      final json = jsonDecode(result) as Map<String, Object?>;
-      expect(json['deleted'], isTrue);
-
-      // Verify lock is gone
-      final query = await client.callTool('lock', {
-        'action': 'query',
-        'file_path': filePath,
-      });
-      final queryJson = jsonDecode(query) as Map<String, Object?>;
-      expect(queryJson['locked'], isFalse);
-    });
-
-    test('admin delete_agent removes an agent', () async {
-      final agents = await _registerAgents(client, 1);
-      final agent = agents.first;
-
-      // Delete agent
-      final result = await client.callTool('admin', {
-        'action': 'delete_agent',
-        'agent_name': agent.name,
-      });
-      final json = jsonDecode(result) as Map<String, Object?>;
-      expect(json['deleted'], isTrue);
-    });
-
-    test('admin reset_key generates new key', () async {
-      final agents = await _registerAgents(client, 1);
-      final agent = agents.first;
-
-      // Reset key
-      final result = await client.callTool('admin', {
-        'action': 'reset_key',
-        'agent_name': agent.name,
-      });
-      final json = jsonDecode(result) as Map<String, Object?>;
-      expect(json['agent_name'], equals(agent.name));
-      expect(json['agent_key'], isNotNull);
-      expect(json['agent_key'], isNot(equals(agent.key)));
-    });
-
-    test('admin without action returns error', () async {
-      final result = await client.callToolRaw('admin', {});
-      expect(result['isError'], isTrue);
-    });
-
-    test('admin delete_lock without file_path returns error', () async {
-      final result = await client.callToolRaw('admin', {
-        'action': 'delete_lock',
-      });
-      expect(result['isError'], isTrue);
-    });
-
-    test('admin delete_agent without agent_name returns error', () async {
-      final result = await client.callToolRaw('admin', {
-        'action': 'delete_agent',
-      });
-      expect(result['isError'], isTrue);
-    });
-
     // MESSAGE TOOL: mark_read action
     test('message mark_read marks message as read', () async {
       final agents = await _registerAgents(client, 2);
@@ -650,7 +538,6 @@ void main() {
       // Send a message
       final sendResult = await client.callTool('message', {
         'action': 'send',
-        'agent_name': agents[0].name,
         'agent_key': agents[0].key,
         'to_agent': agents[1].name,
         'content': 'Test message',
@@ -661,7 +548,6 @@ void main() {
       // Mark as read
       final result = await client.callTool('message', {
         'action': 'mark_read',
-        'agent_name': agents[1].name,
         'agent_key': agents[1].key,
         'message_id': messageId,
       });
@@ -677,7 +563,6 @@ void main() {
       // Create plan
       await client.callTool('plan', {
         'action': 'update',
-        'agent_name': agent.name,
         'agent_key': agent.key,
         'goal': 'Test goal',
         'current_task': 'Test task',
@@ -686,7 +571,7 @@ void main() {
       // Get plan
       final result = await client.callTool('plan', {
         'action': 'get',
-        'agent_name': agent.name,
+        'agent_key': agent.key,
       });
       final json = jsonDecode(result) as Map<String, Object?>;
       final plan = json['plan']! as Map<String, Object?>;
@@ -700,7 +585,6 @@ void main() {
       for (final agent in agents) {
         await client.callTool('plan', {
           'action': 'update',
-          'agent_name': agent.name,
           'agent_key': agent.key,
           'goal': 'Goal for ${agent.name}',
           'current_task': 'Task',

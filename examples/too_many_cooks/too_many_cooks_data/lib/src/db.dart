@@ -41,6 +41,7 @@ typedef TooManyCooksDb = ({
   Result<AgentRegistration, DbError> Function(String agentName) register,
   Result<AgentIdentity, DbError> Function(String agentName, String agentKey)
   authenticate,
+  Result<String, DbError> Function(String agentKey) lookupByKey,
   Result<List<AgentIdentity>, DbError> Function() listAgents,
   Result<LockResult, DbError> Function(
     String filePath,
@@ -182,6 +183,7 @@ TooManyCooksDb _createDbOps(
 ) => (
   register: (name) => _register(db, log, name),
   authenticate: (name, key) => _authenticate(db, log, name, key),
+  lookupByKey: (key) => _lookupByKey(db, log, key),
   listAgents: () => _listAgents(db, log),
   acquireLock: (path, name, key, reason, timeout) =>
       _acquireLock(db, log, path, name, key, reason, timeout),
@@ -323,6 +325,24 @@ Result<AgentIdentity, DbError> _getAgent(Database db, String name) {
         registeredAt: value['registered_at']! as int,
         lastActive: value['last_active']! as int,
       )),
+      Error(:final error) => Error((code: errDatabase, message: error)),
+    },
+    Error(:final error) => Error((code: errDatabase, message: error)),
+  };
+}
+
+Result<String, DbError> _lookupByKey(Database db, Logger log, String key) {
+  log.debug('Looking up agent by key');
+  final stmtResult = db.prepare(
+    'SELECT agent_name FROM identity WHERE agent_key = ?',
+  );
+  return switch (stmtResult) {
+    Success(:final value) => switch (value.get([key])) {
+      Success(:final value) when value == null => const Error((
+        code: errUnauthorized,
+        message: 'Invalid key',
+      )),
+      Success(:final value) => Success(value!['agent_name']! as String),
       Error(:final error) => Error((code: errDatabase, message: error)),
     },
     Error(:final error) => Error((code: errDatabase, message: error)),

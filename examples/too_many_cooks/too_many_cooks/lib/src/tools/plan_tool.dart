@@ -17,21 +17,17 @@ const planInputSchema = <String, Object?>{
       'enum': ['update', 'get', 'list'],
       'description': 'Plan action to perform',
     },
-    'agent_name': {
-      'type': 'string',
-      'description': 'Agent name (required for update, optional for get)',
-    },
-    'agent_key': {
-      'type': 'string',
-      'description': 'Your secret key (required for update)',
-    },
     'goal': {
       'type': 'string',
-      'description': 'Your goal, max 100 chars (for update)',
+      'maxLength': 100,
+      'description': 'Your goal (for update). MUST be 100 chars or less.',
     },
     'current_task': {
       'type': 'string',
-      'description': 'What you are doing now, max 100 chars (for update)',
+      'maxLength': 100,
+      'description':
+          'What you are doing now (for update). '
+          'MUST be 100 chars or less.',
     },
   },
   'required': ['action'],
@@ -41,10 +37,10 @@ const planInputSchema = <String, Object?>{
 const planToolConfig = (
   title: 'Plan',
   description:
-      'Manage agent plans: update, get, list. REQUIRED: action. '
-      'For update: agent_name, agent_key, goal, current_task. '
-      'For get: agent_name. Example update: {"action":"update",'
-      ' "agent_name":"me","agent_key":"xxx","goal":"Fix bug",'
+      'Manage your plan. You must register first (except list). '
+      'REQUIRED: action (update|get|list). '
+      'For update: goal, current_task. '
+      'Example: {"action":"update","goal":"Fix bug",'
       ' "current_task":"Reading code"}',
   inputSchema: planInputSchema,
   outputSchema: null,
@@ -56,6 +52,7 @@ ToolCallback createPlanHandler(
   TooManyCooksDb db,
   NotificationEmitter emitter,
   Logger logger,
+  SessionGetter getSession,
 ) => (args, meta) async {
   final actionArg = args['action'];
   if (actionArg == null || actionArg is! String) {
@@ -69,18 +66,46 @@ ToolCallback createPlanHandler(
   final action = actionArg;
   final log = logger.child({'tool': 'plan', 'action': action});
 
+  // list doesn't need auth
+  if (action == 'list') return _list(db);
+
+  // Hidden agent_key override for multi-agent integration testing
+  final keyOverride = args['agent_key'] as String?;
+  final String agentName;
+  final String agentKey;
+  if (keyOverride != null) {
+    agentKey = keyOverride;
+    switch (db.lookupByKey(keyOverride)) {
+      case Success(:final value):
+        agentName = value;
+      case Error(:final error):
+        return _errorResult(error);
+    }
+  } else {
+    final session = getSession();
+    if (session == null) {
+      return (
+        content: <Object>[
+          textContent('{"error":"not_registered: call register first"}'),
+        ],
+        isError: true,
+      );
+    }
+    agentName = session.agentName;
+    agentKey = session.agentKey;
+  }
+
   return switch (action) {
     'update' => _update(
       db,
       emitter,
       log,
-      args['agent_name'] as String?,
-      args['agent_key'] as String?,
+      agentName,
+      agentKey,
       args['goal'] as String?,
       args['current_task'] as String?,
     ),
-    'get' => _get(db, args['agent_name'] as String?),
-    'list' => _list(db),
+    'get' => _get(db, agentName),
     _ => (
       content: <Object>[textContent('{"error":"Unknown action: $action"}')],
       isError: true,
@@ -92,21 +117,15 @@ CallToolResult _update(
   TooManyCooksDb db,
   NotificationEmitter emitter,
   Logger log,
-  String? agentName,
-  String? agentKey,
+  String agentName,
+  String agentKey,
   String? goal,
   String? currentTask,
 ) {
-  if (agentName == null ||
-      agentKey == null ||
-      goal == null ||
-      currentTask == null) {
+  if (goal == null || currentTask == null) {
     return (
       content: <Object>[
-        textContent(
-          '{"error":"update requires '
-          'agent_name, agent_key, goal, current_task"}',
-        ),
+        textContent('{"error":"update requires goal, current_task"}'),
       ],
       isError: true,
     );
@@ -128,25 +147,18 @@ CallToolResult _update(
   };
 }
 
-CallToolResult _get(TooManyCooksDb db, String? agentName) {
-  if (agentName == null) {
-    return (
-      content: <Object>[textContent('{"error":"get requires agent_name"}')],
-      isError: true,
-    );
-  }
-  return switch (db.getPlan(agentName)) {
-    Success(:final value) when value == null => (
-      content: <Object>[textContent('{"plan":null}')],
-      isError: false,
-    ),
-    Success(:final value) => (
-      content: <Object>[textContent('{"plan":${agentPlanToJson(value!)}}')],
-      isError: false,
-    ),
-    Error(:final error) => _errorResult(error),
-  };
-}
+CallToolResult _get(TooManyCooksDb db, String agentName) =>
+    switch (db.getPlan(agentName)) {
+      Success(:final value) when value == null => (
+        content: <Object>[textContent('{"plan":null}')],
+        isError: false,
+      ),
+      Success(:final value) => (
+        content: <Object>[textContent('{"plan":${agentPlanToJson(value!)}}')],
+        isError: false,
+      ),
+      Error(:final error) => _errorResult(error),
+    };
 
 CallToolResult _list(TooManyCooksDb db) => switch (db.listPlans()) {
   Success(:final value) => (

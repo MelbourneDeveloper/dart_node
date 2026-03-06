@@ -28,6 +28,7 @@ const registerToolConfig = (
   title: 'Register Agent',
   description:
       'Register a new agent. Returns secret key - store it! '
+      'After registration, your identity is remembered for all other tools. '
       'The ONLY parameter is "name" (string, MANDATORY) - your unique agent '
       'name 1-50 chars. Do NOT pass any other fields. '
       'Example: {"name": "my-agent"}',
@@ -41,6 +42,7 @@ ToolCallback createRegisterHandler(
   TooManyCooksDb db,
   NotificationEmitter emitter,
   Logger logger,
+  SessionSetter setSession,
 ) => (args, meta) async {
   final nameArg = args['name'];
   if (nameArg == null || nameArg is! String || nameArg.isEmpty) {
@@ -58,6 +60,7 @@ ToolCallback createRegisterHandler(
 
   return switch (result) {
     Success(:final value) => () {
+      setSession(value.agentName, value.agentKey);
       emitter.emit(eventAgentRegistered, {
         'agent_name': value.agentName,
         'registered_at': DateTime.now().millisecondsSinceEpoch,
