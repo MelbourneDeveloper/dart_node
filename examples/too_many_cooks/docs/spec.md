@@ -12,7 +12,7 @@ MCP server enabling multiple AI agents to safely edit a git repository simultane
 
 ## Architecture
 
-Single HTTP server per workspace. **Everything** talks to the server — agents via MCP Streamable HTTP, VSCode extension via admin REST endpoints. Nothing touches the DB directly except the server.
+Single HTTP server per workspace. **Everything** talks to the server — agents via MCP Streamable HTTP, VSCode extension via admin REST + SSE. Nothing touches the DB directly except the server.
 
 ```mermaid
 graph TD
@@ -34,7 +34,7 @@ Two interfaces, one server:
 
 **Database path**: `${workspaceFolder}/.too_many_cooks/data.db` (single source of truth in `too_many_cooks_data` package).
 
-**Transport**: Streamable HTTP with SSE. Server pushes events (new messages, lock changes, etc.) to all connected agents in real-time via MCP logging notifications.
+**Transport**: Streamable HTTP with SSE. Server pushes events (new messages, lock changes, etc.) to all connected clients (agents + VSIX) in real-time. No polling anywhere.
 
 **Why HTTP, not stdio**: Stdio spawns an isolated process per agent — agents can't see each other's events. HTTP gives one shared process where the notification emitter actually works across all connected agents.
 
@@ -62,9 +62,8 @@ erDiagram
 
 ### `register`
 Register or reconnect an agent. Sets session identity for the connection.
-- **First call** (no key): creates agent, returns key ONLY once — store it!
-- **Reconnect** (with key): re-authenticates using stored key, marks agent as active again
-- Input: `{ name }` (1-50 chars, `additionalProperties: false`), optional `{ key }` for reconnect
+- **First call**: `{ name }` only (1-50 chars) — creates agent, returns key ONLY once — store it!
+- **Reconnect**: `{ key }` only — server looks up the agent name from the key. Specifying both `name` and `key` is an error.
 - Output: `{ agent_name, agent_key }`
 
 ### `lock`
@@ -100,7 +99,7 @@ There is **no subscribe tool**. Subscriptions are automatic — managed entirely
 1. **First connection** — agent calls `register` with just `name` → server creates identity, returns key, marks agent **active**, opens SSE event stream. **The agent must store this key.**
 2. **While connected** — server pushes all relevant events (lock changes, messages, plan updates, agent status changes) to the agent via SSE automatically
 3. **Connection drops** (agent disconnects, crashes, network loss) → server immediately marks agent as **deactivated** in the DB and emits `agent_deactivated` to all remaining connections (agents + VSIX)
-4. **Reconnect** — agent calls `register` with `name` + `key` → server verifies the key, marks agent **active** again, emits `agent_activated`. No new key is issued — the original key remains valid
+4. **Reconnect** — agent calls `register` with `key` only → server looks up the agent name from the key, marks agent **active** again, emits `agent_activated`. No new key is issued — the original key remains valid. Specifying `name` on reconnect is an error.
 
 ### Active agents in the DB
 
@@ -153,7 +152,7 @@ Admin operations are exposed as REST endpoints on the server, **not** as MCP too
 
 ## Key Behaviors
 
-1. **Session auth**: Register once per connection, session identity used for all subsequent calls
+1. **Session auth**: Register (name only) or reconnect (key only) per connection, session identity used for all subsequent calls
 2. **Lock expiry**: Any agent can force_release expired locks
 3. **Optimistic concurrency**: Version column on locks prevents races
 4. **Retry policy**: 3 attempts, exponential backoff for transient SQLite errors

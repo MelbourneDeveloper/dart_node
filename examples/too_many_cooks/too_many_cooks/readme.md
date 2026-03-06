@@ -41,7 +41,7 @@ dart test
 
 ```markdown
 ## Multi-Agent Coordination (Too Many Cooks)
-- Keep your key! It's critical. Do not lose it!
+- Keep your key! If disconnected, reconnect by calling register with ONLY your key
 - Check messages regularly, lock files before editing, unlock after
 - Don't edit locked files; signal intent via plans and messages
 - Do not use Git unless asked by user
