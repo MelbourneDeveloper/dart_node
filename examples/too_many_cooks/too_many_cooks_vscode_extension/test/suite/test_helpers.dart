@@ -65,6 +65,32 @@ void _reflectSet(JSObject target, String key, JSAny? value) =>
     js.reflectSet(target, key, value);
 JSObject get _globalThis => js.globalThis;
 
+/// Get Object.keys of a JS object.
+@JS('Object.keys')
+external JSArray<JSString> _jsObjectKeys(JSObject obj);
+
+String _objectKeys(JSObject obj) {
+  final keys = _jsObjectKeys(obj);
+  final result = <String>[];
+  for (var i = 0; i < keys.length; i++) {
+    result.add(keys[i].toDart);
+  }
+  return result.toString();
+}
+
+/// Get typeof a property on a JS object.
+@JS('eval')
+external JSString _evalTypeof(String code);
+
+String _typeofProp(JSObject obj, String key) {
+  // Store temporarily on globalThis to check typeof
+  _reflectSet(_globalThis, '__tmcCheckObj', obj);
+  final result = _evalTypeof(
+    'typeof globalThis.__tmcCheckObj["$key"]',
+  ).toDart;
+  return result;
+}
+
 /// Get the cached TestAPI instance.
 TestAPI getTestAPI() {
   if (_cachedTestAPI == null) {
@@ -122,7 +148,13 @@ Future<void> waitForExtensionActivation() async {
     final exports = extension.exports;
     _consoleLog('[TEST HELPER] Exports: $exports');
     if (exports != null) {
-      _cachedTestAPI = TestAPI(exports as JSObject);
+      final exportsObj = exports as JSObject;
+      _consoleLog('[TEST HELPER] Exports keys: ${_objectKeys(exportsObj)}');
+      _consoleLog(
+        '[TEST HELPER] typeof isConnected: '
+        '${_typeofProp(exportsObj, 'isConnected')}',
+      );
+      _cachedTestAPI = TestAPI(exportsObj);
       _consoleLog('[TEST HELPER] Test API verified immediately');
     } else {
       _consoleLog('[TEST HELPER] Waiting for exports...');

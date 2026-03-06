@@ -13,6 +13,29 @@ const dartOutput = fs.readFileSync(
 );
 
 const wrapped = `// VSCode extension wrapper for dart2js output
+
+// NODE PREAMBLE (from node_preamble package) - MUST be at global scope
+var dartNodeIsActuallyNode = typeof process !== "undefined" && (process.versions || {}).hasOwnProperty('node');
+var self = dartNodeIsActuallyNode ? Object.create(globalThis) : globalThis;
+self.scheduleImmediate = typeof setImmediate !== "undefined"
+    ? function (cb) { setImmediate(cb); }
+    : function(cb) { setTimeout(cb, 0); };
+if (typeof require !== "undefined") { self.require = require; }
+if (typeof exports !== "undefined") { self.exports = exports; }
+if (typeof process !== "undefined") { self.process = process; }
+if (typeof __dirname !== "undefined") { self.__dirname = __dirname; }
+if (typeof __filename !== "undefined") { self.__filename = __filename; }
+if (typeof Buffer !== "undefined") { self.Buffer = Buffer; }
+if (dartNodeIsActuallyNode) {
+  var url = require("url");
+  Object.defineProperty(self, "location", {
+    value: { get href() { return url.pathToFileURL(process.cwd()).href + "/"; } }
+  });
+  Object.defineProperty(self, "document", {
+    value: { get currentScript() { return {src: __filename}; } }
+  });
+}
+
 (function() {
   // Make require available on globalThis for dart2js
   // dart2js uses globalThis.require but VSCode has require in local scope
@@ -30,33 +53,17 @@ const wrapped = `// VSCode extension wrapper for dart2js output
   ${dartOutput}
 })();
 
-// Bridge globalThis to module.exports for VSCode using getters
-// (dart2js sets these after the main runner executes)
+// Bridge self to module.exports for VSCode using getters
+// (dart2js sets activate/deactivate on 'self', not 'globalThis',
+// because node_preamble does: var self = Object.create(globalThis))
 if (typeof module !== 'undefined' && module.exports) {
-  // Wrap activate to log and verify return value
-  var originalActivate = null;
   Object.defineProperty(module.exports, 'activate', {
-    get: function() {
-      if (!originalActivate && globalThis.activate) {
-        originalActivate = function(context) {
-          console.log('[DART WRAPPER] activate called');
-          try {
-            var result = globalThis.activate(context);
-            console.log('[DART WRAPPER] activate returned:', typeof result, result ? Object.keys(result) : 'null');
-            return result;
-          } catch (e) {
-            console.error('[DART WRAPPER] activate threw error:', e);
-            throw e;
-          }
-        };
-      }
-      return originalActivate || globalThis.activate;
-    },
+    get: function() { return self.activate; },
     enumerable: true,
     configurable: true
   });
   Object.defineProperty(module.exports, 'deactivate', {
-    get: function() { return globalThis.deactivate; },
+    get: function() { return self.deactivate; },
     enumerable: true,
     configurable: true
   });
