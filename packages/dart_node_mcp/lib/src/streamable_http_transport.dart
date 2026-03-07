@@ -12,7 +12,7 @@ import 'package:nadz/nadz.dart';
 /// Streamable HTTP server transport (matches TypeScript
 /// StreamableHTTPServerTransport).
 ///
-/// Handles MCP protocol over HTTP with SSE streaming support.
+/// Handles MCP protocol over Streamable HTTP transport.
 /// Each session gets its own transport instance.
 extension type StreamableHttpTransport._(JSObject _)
     implements Transport {

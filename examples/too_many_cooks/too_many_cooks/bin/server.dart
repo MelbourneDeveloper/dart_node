@@ -2,7 +2,8 @@
 ///
 /// Starts a single Express HTTP server on port 4040 with:
 /// - `/mcp` — MCP Streamable HTTP for agent connections
-/// - `/admin/*` — REST + SSE for the VSCode extension
+/// - `/admin/*` — REST + Streamable HTTP for the VSCode
+///   extension
 library;
 
 import 'dart:async';
@@ -47,6 +48,7 @@ String _randomUUID() => _jsRandomUUID();
 // ignore: lines_longer_than_80_chars
 const _badRequestJson = '{"jsonrpc":"2.0","error":{"code":-32000,"message":"Bad Request"},"id":null}';
 
+
 Future<void> _startServer() async {
   _stderrWrite('[TMC] Creating server...\n'.toJS);
 
@@ -61,15 +63,37 @@ Future<void> _startServer() async {
   };
   _stderrWrite('[TMC] Database created.\n'.toJS);
 
-  // Session tracking for Streamable HTTP
+  // Session tracking for MCP Streamable HTTP
   final transports =
       <String, StreamableHttpTransport>{};
+
+  // Admin event hub for Streamable HTTP push
+  final adminHub = createAdminEventHub();
 
   // Create Express app
   final app = express();
 
   // Admin REST endpoints (VSIX)
-  registerAdminRoutes(app, db);
+  registerAdminRoutes(app, db, adminHub);
+
+  // Admin Streamable HTTP routes (/admin/events)
+  final adminPostFn =
+      _adminPostHandler(adminHub);
+  final adminGetDeleteFn =
+      _adminGetDeleteHandler(adminHub);
+  app
+    ..post(
+      '/admin/events',
+      _asyncHandler(adminPostFn),
+    )
+    ..get(
+      '/admin/events',
+      _asyncHandler(adminGetDeleteFn),
+    )
+    ..delete(
+      '/admin/events',
+      _asyncHandler(adminGetDeleteFn),
+    );
 
   // MCP Streamable HTTP routes
   final postFn =
@@ -218,6 +242,121 @@ Future<void> Function(Request, Response)
     return;
   }
   await transports[sessionId]
+      ?.handleRequest(
+        req as JSObject,
+        res as JSObject,
+      )
+      .toDart;
+};
+
+/// POST /admin/events — Streamable HTTP init or
+/// existing session.
+Future<void> Function(Request, Response)
+    _adminPostHandler(
+  AdminEventHub hub,
+) => (req, res) async {
+  final sessionId =
+      _getHeader(req, 'mcp-session-id');
+  final body = req.body;
+
+  if (sessionId != null &&
+      hub.transports.containsKey(sessionId)) {
+    await hub.transports[sessionId]
+        ?.handleRequest(
+          req as JSObject,
+          res as JSObject,
+          body,
+        )
+        .toDart;
+    return;
+  }
+
+  if (sessionId == null &&
+      _isInitializeRequest(body)) {
+    late final StreamableHttpTransport transport;
+    final transportResult =
+        createStreamableHttpTransport(
+          sessionIdGenerator: _randomUUID,
+          onSessionInitialized: (sid) {
+            _stderrWrite(
+              '[TMC] Admin session init: $sid\n'
+                  .toJS,
+            );
+            hub.transports[sid] = transport;
+          },
+        );
+    transport = switch (transportResult) {
+      Success(:final value) => value,
+      Error(:final error) => throw Exception(error),
+    };
+
+    (transport as JSObject)['onclose'] = (() {
+      final sid = transport.sessionId;
+      if (sid != null) {
+        _stderrWrite(
+          '[TMC] Admin session closed: $sid\n'
+              .toJS,
+        );
+        hub.transports.remove(sid);
+        hub.servers.remove(sid);
+      }
+    }).toJS;
+
+    final serverResult = McpServer.create(
+      (name: 'too-many-cooks', version: '0.1.0'),
+      options: (
+        capabilities: (
+          tools: null,
+          resources: null,
+          prompts: null,
+          logging: (enabled: true),
+        ),
+        instructions: null,
+      ),
+    );
+    final server = switch (serverResult) {
+      Success(:final value) => value,
+      Error(:final error) => throw Exception(error),
+    };
+    await server.connect(transport);
+
+    // Track server for event pushing
+    final sid = transport.sessionId;
+    if (sid != null) {
+      hub.servers[sid] = server;
+    }
+
+    await transport
+        .handleRequest(
+          req as JSObject,
+          res as JSObject,
+          body,
+        )
+        .toDart;
+    return;
+  }
+
+  res
+    ..status(400)
+    ..send(_badRequestJson);
+};
+
+/// GET/DELETE /admin/events — requires existing admin
+/// session.
+Future<void> Function(Request, Response)
+    _adminGetDeleteHandler(
+  AdminEventHub hub,
+) => (req, res) async {
+  final sessionId =
+      _getHeader(req, 'mcp-session-id');
+  if (sessionId == null ||
+      !hub.transports.containsKey(sessionId)) {
+    res
+      ..status(400)
+      ..send('Invalid or missing session ID');
+    return;
+  }
+  await hub.transports[sessionId]
       ?.handleRequest(
         req as JSObject,
         res as JSObject,

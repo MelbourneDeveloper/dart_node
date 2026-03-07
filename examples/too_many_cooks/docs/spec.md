@@ -1,5 +1,7 @@
 # Too Many Cooks - Multi-Agent Coordination MCP Server
 
+CRITICAL: THERE IS ONLY ONE SERVER. IT SERVES BOTH MCP and ADMIN ROUTES.
+
 ## Overview
 
 MCP server enabling multiple AI agents to safely edit a git repository simultaneously. Provides advisory file locking, agent identity, inter-agent messaging, plan visibility, and real-time event notifications.
@@ -28,7 +30,7 @@ graph TD
     DB[(SQLite<br>.too_many_cooks/data.db)]
 ```
 
-Two interfaces, one server:
+ONE HTTP server:
 - **`/mcp`** — MCP Streamable HTTP endpoint for agents. Tool calls via POST, event stream via GET [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http).
 - **`/admin/*`** — REST endpoints + [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) event stream for the VSCode extension. Not exposed to MCP clients. VSIX receives all state changes via [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) push — no polling.
 

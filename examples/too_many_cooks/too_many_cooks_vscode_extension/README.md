@@ -2,7 +2,7 @@
 
 VSCode extension for visualizing multi-agent coordination. See [spec](../docs/spec.md).
 
-Talks to the TMC server via `/admin/*` REST endpoints. Receives all state changes via SSE push — no polling. Does **not** access the database directly. Provides tree views for agents, locks, messages, and plans. Admin operations (delete agent, delete lock, reset key, send message) available via command palette.
+Talks to the TMC server via `/admin/*` REST endpoints. Receives all state changes via [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) push — no polling. Does **not** access the database directly. Provides tree views for agents, locks, messages, and plans. Admin operations (delete agent, delete lock, reset key, send message) available via command palette.
 
 ## Build
 

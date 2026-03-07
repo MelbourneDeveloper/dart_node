@@ -765,7 +765,7 @@ class _McpClient {
     final response = await _postMcp(body);
     final text = await _responseText(response);
 
-    // Parse SSE or JSON
+    // Parse Streamable HTTP or JSON
     final json = _parseMcpResponse(text);
 
     if (json.containsKey('error')) {

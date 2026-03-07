@@ -1,22 +1,74 @@
 /// Admin REST endpoints for the VSCode extension.
 ///
 /// The VSIX talks to these endpoints — never touches the DB directly.
-/// SSE endpoint pushes all state changes in real-time.
+/// Streamable HTTP endpoint pushes all state changes in real-time.
 library;
 
+import 'dart:async';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
 import 'package:dart_node_core/dart_node_core.dart';
 import 'package:dart_node_express/dart_node_express.dart';
+import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks_data/too_many_cooks_data.dart';
 
-/// Active SSE connections for push events.
-final _sseClients = <Response>[];
+/// Admin event hub — manages Streamable HTTP transports
+/// for pushing real-time events to the VSIX.
+typedef AdminEventHub = ({
+  Map<String, StreamableHttpTransport> transports,
+  Map<String, McpServer> servers,
+  void Function(String event, Map<String, Object?> payload)
+      pushEvent,
+});
+
+/// Create an admin event hub for Streamable HTTP push.
+AdminEventHub createAdminEventHub() {
+  final transports =
+      <String, StreamableHttpTransport>{};
+  final servers = <String, McpServer>{};
+
+  void pushEvent(
+    String event,
+    Map<String, Object?> payload,
+  ) {
+    final data = <String, Object?>{
+      'event': event,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'payload': payload,
+    };
+
+    for (final entry in [...servers.entries]) {
+      unawaited(
+        entry.value
+            .sendLoggingMessage((
+              level: 'info',
+              logger: 'too-many-cooks-admin',
+              data: data,
+            ))
+            .then((_) {}, onError: (_) {
+              // Transport closed — remove it
+              servers.remove(entry.key);
+              transports.remove(entry.key);
+            }),
+      );
+    }
+  }
+
+  return (
+    transports: transports,
+    servers: servers,
+    pushEvent: pushEvent,
+  );
+}
 
 /// Register admin routes on an Express app.
-void registerAdminRoutes(ExpressApp app, TooManyCooksDb db) {
+void registerAdminRoutes(
+  ExpressApp app,
+  TooManyCooksDb db,
+  AdminEventHub hub,
+) {
   // JSON body parser
   final expressModule = requireModule('express') as JSObject;
   final jsonMiddleware =
@@ -66,7 +118,7 @@ void registerAdminRoutes(ExpressApp app, TooManyCooksDb db) {
       }
       switch (db.adminDeleteLock(filePath)) {
         case Success():
-          _pushEvent(
+          hub.pushEvent(
             'lock_released',
             {'file_path': filePath},
           );
@@ -86,7 +138,7 @@ void registerAdminRoutes(ExpressApp app, TooManyCooksDb db) {
       }
       switch (db.adminDeleteAgent(agentName)) {
         case Success():
-          _pushEvent(
+          hub.pushEvent(
             'agent_deleted',
             {'agent_name': agentName},
           );
@@ -134,7 +186,7 @@ void registerAdminRoutes(ExpressApp app, TooManyCooksDb db) {
         content,
       )) {
         case Success(:final value):
-          _pushEvent('message_sent', {
+          hub.pushEvent('message_sent', {
             'from_agent': fromAgent,
             'to_agent': toAgent,
             'message_id': value,
@@ -155,64 +207,7 @@ void registerAdminRoutes(ExpressApp app, TooManyCooksDb db) {
         case Error(:final error):
           _sendError(res, 500, dbErrorToJson(error));
       }
-    }))
-
-    // GET /admin/events — SSE stream
-    ..get('/admin/events', handler((req, res) {
-      res
-        ..set('Content-Type', 'text/event-stream')
-        ..set('Cache-Control', 'no-cache')
-        ..set('Connection', 'keep-alive')
-        ..set('Access-Control-Allow-Origin', '*');
-
-      _writeSSE(
-        res,
-        'connected',
-        '{"status":"connected"}',
-      );
-
-      _sseClients.add(res);
-
-      // Remove on disconnect via req.socket close event
-      final socket =
-          (req as JSObject)['socket'] as JSObject?;
-      if (socket != null) {
-        (socket['on'] as JSFunction?)?.callAsFunction(
-          socket,
-          'close'.toJS,
-          (() {
-            _sseClients.remove(res);
-          }).toJS,
-        );
-      }
     }));
-}
-
-/// Push an event to all SSE clients.
-void _pushEvent(
-  String event,
-  Map<String, Object?> payload,
-) {
-  final data =
-      '{"event":"$event",'
-      '"payload":${_simpleJsonEncode(payload)}}';
-  for (final client in [..._sseClients]) {
-    try {
-      _writeSSE(client, event, data);
-    } on Object {
-      _sseClients.remove(client);
-    }
-  }
-}
-
-/// Write an SSE event to a response.
-void _writeSSE(Response res, String event, String data) {
-  final writeFn =
-      (res as JSObject)['write'] as JSFunction?;
-  writeFn?.callAsFunction(
-    res,
-    'event: $event\ndata: $data\n\n'.toJS,
-  );
 }
 
 /// Send an error response.
@@ -220,18 +215,6 @@ void _sendError(Response res, int code, String message) {
   res
     ..status(code)
     ..send(message);
-}
-
-/// Simple JSON encoder for maps.
-String _simpleJsonEncode(Map<String, Object?> map) {
-  final entries = map.entries.map((e) => switch (e.value) {
-    final String s => '"${e.key}":"$s"',
-    final int n => '"${e.key}":$n',
-    final bool b => '"${e.key}":$b',
-    null => '"${e.key}":null',
-    _ => '"${e.key}":"${e.value}"',
-  });
-  return '{${entries.join(',')}}';
 }
 
 /// Parse request body as Map.
