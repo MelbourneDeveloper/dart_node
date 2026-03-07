@@ -1,26 +1,23 @@
 #!/bin/bash
-# VSCode extension: clean, build, and test
+# VSCode extension: clean, build, and test (MCP must already be running)
 set -euo pipefail
 SCRIPTS="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$SCRIPTS/.." && pwd)"
 VSIX_DIR="$ROOT/too_many_cooks_vscode_extension"
-source "$SCRIPTS/env.sh"
 
+# 1. Clean VSIX build artifacts
 rm -rf "$VSIX_DIR"/*.vsix "$VSIX_DIR/out"
 
 cd "$VSIX_DIR"
+
+# 2. Install npm dependencies
 npm install
+
+# 3. Compile extension source (src/ → out/)
 npm run compile
+
+# 4. Compile test source (test/ → out/test/)
 npm run compile:test
 
-MCP_PID=""
-cleanup_mcp() {
-  [ -n "$MCP_PID" ] && kill "$MCP_PID" 2>/dev/null || true
-}
-trap cleanup_mcp EXIT
-
-TMC_WORKSPACE="$ROOT/../.." node "$ROOT/too_many_cooks/$SERVER_BINARY" &
-MCP_PID=$!
-sleep 2
-
+# 5. Run VSIX e2e tests (launches VS Code with extension)
 npm run test

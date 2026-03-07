@@ -21,7 +21,7 @@ async function main() {
       extensionDevelopmentPath,
       extensionTestsPath,
       vscodeExecutablePath,
-      launchArgs: ['--user-data-dir', '/tmp/vsc-tmc-test'],
+      launchArgs: ['--user-data-dir', '/tmp/vsc-tmc-test', extensionDevelopmentPath],
       extensionTestsEnv: {
         VERBOSE_LOGGING: 'true',
       },
