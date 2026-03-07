@@ -4,11 +4,12 @@
 // - /admin/events Streamable HTTP for real-time push (no polling)
 // - /mcp Streamable HTTP for MCP tool calls (tests)
 
-import { spawn, ChildProcess } from 'child_process';
+import type { ChildProcess } from 'child_process';
+import { spawn } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Store } from '../state/store';
-import { AppState, AgentIdentity, FileLock, Message, AgentPlan } from '../state/types';
+import type { AgentIdentity, AgentPlan, AppState, FileLock, Message } from '../state/types';
 
 // Server binary relative path (output of build_mcp.sh).
 const SERVER_BINARY = 'build/bin/server_node.js';
@@ -27,7 +28,7 @@ export class StoreManager {
   private connectPromise: Promise<void> | null = null;
   private mcpSessionId: string | null = null;
   private eventAbortController: AbortController | null = null;
-  private log: LogFn;
+  private readonly log: LogFn;
 
   constructor(workspaceFolder: string, log: LogFn = console.log) {
     this.workspaceFolder = workspaceFolder;
@@ -98,7 +99,7 @@ export class StoreManager {
       this.serverProcess = proc;
       const capturedProcess = proc;
 
-      proc.stderr?.on('data', (data: Buffer) => {
+      proc.stderr.on('data', (data: Buffer) => {
         this.log(`[StoreManager] Server stderr: ${data}`);
       });
 
@@ -130,7 +131,7 @@ export class StoreManager {
 
   // Connect to /admin/events via Streamable HTTP.
   // Initializes an MCP session then opens a GET stream
-  // for server-pushed notifications. No polling.
+  // For server-pushed notifications. No polling.
   private connectEventStream(): void {
     this.eventAbortController?.abort();
     this.eventAbortController = new AbortController();
@@ -280,7 +281,7 @@ export class StoreManager {
           this.log(`[StoreManager] Poll ${i}: ${e}`);
         }
       }
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => {return setTimeout(resolve, 200)});
     }
     throw new Error('Server failed to start');
   }
@@ -335,45 +336,45 @@ export class StoreManager {
 
   private parseAndDispatchStatus(json: Record<string, unknown>): void {
     if (Array.isArray(json.agents)) {
-      const agents: AgentIdentity[] = json.agents.map((a: Record<string, unknown>) => ({
+      const agents: AgentIdentity[] = json.agents.map((a: Record<string, unknown>) => {return {
         agentName: (a.agent_name as string) ?? '',
         registeredAt: (a.registered_at as number) ?? 0,
         lastActive: (a.last_active as number) ?? 0,
-      }));
+      }});
       this.store.dispatch({ type: 'SetAgents', agents });
     }
 
     if (Array.isArray(json.locks)) {
-      const locks: FileLock[] = json.locks.map((l: Record<string, unknown>) => ({
+      const locks: FileLock[] = json.locks.map((l: Record<string, unknown>) => {return {
         filePath: (l.file_path as string) ?? '',
         agentName: (l.agent_name as string) ?? '',
         acquiredAt: (l.acquired_at as number) ?? 0,
         expiresAt: (l.expires_at as number) ?? 0,
         reason: (l.reason as string) ?? null,
         version: (l.version as number) ?? 0,
-      }));
+      }});
       this.store.dispatch({ type: 'SetLocks', locks });
     }
 
     if (Array.isArray(json.plans)) {
-      const plans: AgentPlan[] = json.plans.map((p: Record<string, unknown>) => ({
+      const plans: AgentPlan[] = json.plans.map((p: Record<string, unknown>) => {return {
         agentName: (p.agent_name as string) ?? '',
         goal: (p.goal as string) ?? '',
         currentTask: (p.current_task as string) ?? '',
         updatedAt: (p.updated_at as number) ?? 0,
-      }));
+      }});
       this.store.dispatch({ type: 'SetPlans', plans });
     }
 
     if (Array.isArray(json.messages)) {
-      const messages: Message[] = json.messages.map((m: Record<string, unknown>) => ({
+      const messages: Message[] = json.messages.map((m: Record<string, unknown>) => {return {
         id: (m.id as string) ?? '',
         fromAgent: (m.from_agent as string) ?? '',
         toAgent: (m.to_agent as string) ?? '',
         content: (m.content as string) ?? '',
         createdAt: (m.created_at as number) ?? 0,
         readAt: (m.read_at as number) ?? null,
-      }));
+      }});
       this.store.dispatch({ type: 'SetMessages', messages });
     }
   }
@@ -408,7 +409,7 @@ export class StoreManager {
       }
 
       const result = await this.mcpRequest('tools/call', { name, arguments: args });
-      const content = (result.content as Array<Record<string, unknown>>)?.[0];
+      const content = (result.content as Array<Record<string, unknown>>)[0];
       const text = (content?.text as string) ?? '{"error":"No text content"}';
 
       // Refresh state immediately so tree views update without waiting for event stream

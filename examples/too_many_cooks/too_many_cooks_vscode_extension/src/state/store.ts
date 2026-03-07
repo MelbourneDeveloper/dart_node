@@ -1,6 +1,7 @@
 // Simple Redux-style store with EventEmitter pattern.
 
-import { AppState, AppAction, initialState } from './types';
+import type { AppAction, AppState} from './types';
+import { initialState } from './types';
 
 // Main reducer for the application state.
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -14,9 +15,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'RemoveAgent':
       return {
         ...state,
-        agents: state.agents.filter(a => a.agentName !== action.agentName),
-        locks: state.locks.filter(l => l.agentName !== action.agentName),
-        plans: state.plans.filter(p => p.agentName !== action.agentName),
+        agents: state.agents.filter(a => {return a.agentName !== action.agentName}),
+        locks: state.locks.filter(l => {return l.agentName !== action.agentName}),
+        plans: state.plans.filter(p => {return p.agentName !== action.agentName}),
       };
     case 'SetLocks':
       return { ...state, locks: action.locks };
@@ -24,22 +25,22 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         locks: [
-          ...state.locks.filter(l => l.filePath !== action.lock.filePath),
+          ...state.locks.filter(l => {return l.filePath !== action.lock.filePath}),
           action.lock,
         ],
       };
     case 'RemoveLock':
       return {
         ...state,
-        locks: state.locks.filter(l => l.filePath !== action.filePath),
+        locks: state.locks.filter(l => {return l.filePath !== action.filePath}),
       };
     case 'RenewLock':
       return {
         ...state,
         locks: state.locks.map(l =>
-          l.filePath === action.filePath
+          {return l.filePath === action.filePath
             ? { ...l, expiresAt: action.expiresAt }
-            : l
+            : l}
         ),
       };
     case 'SetMessages':
@@ -52,7 +53,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         plans: [
-          ...state.plans.filter(p => p.agentName !== action.plan.agentName),
+          ...state.plans.filter(p => {return p.agentName !== action.plan.agentName}),
           action.plan,
         ],
       };
@@ -63,7 +64,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 export class Store {
   private state: AppState = initialState;
-  private listeners: Set<() => void> = new Set();
+  private readonly listeners = new Set<() => void>();
 
   getState(): AppState {
     return this.state;
@@ -71,7 +72,7 @@ export class Store {
 
   dispatch(action: AppAction): void {
     this.state = appReducer(this.state, action);
-    this.listeners.forEach(fn => fn());
+    this.listeners.forEach(fn => { fn(); });
   }
 
   subscribe(listener: () => void): () => void {

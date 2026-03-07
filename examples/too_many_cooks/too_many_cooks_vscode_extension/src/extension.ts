@@ -8,8 +8,6 @@ import { AgentsTreeProvider } from './ui/tree/agentsTreeProvider';
 import { LocksTreeProvider } from './ui/tree/locksTreeProvider';
 import { MessagesTreeProvider } from './ui/tree/messagesTreeProvider';
 import { DashboardPanel } from './ui/webview/dashboardPanel';
-import { AgentTreeItem } from './ui/tree/treeItems';
-import { LockTreeItem } from './ui/tree/treeItems';
 import { createTestAPI, TestAPI } from './testApi';
 
 const logMessages: string[] = [];
@@ -244,21 +242,24 @@ function registerCommands(context: vscode.ExtensionContext, storeManager: StoreM
 
 function getFilePathFromItem(item?: vscode.TreeItem): string | undefined {
   if (!item) { return undefined; }
+  const record = item as Record<string, unknown>;
   // AgentTreeItem with filePath
-  if (item instanceof AgentTreeItem && item.filePath) {
-    return item.filePath;
+  if (typeof record.filePath === 'string' && record.filePath) {
+    return record.filePath;
   }
   // LockTreeItem with lock.filePath
-  if (item instanceof LockTreeItem && item.lock) {
-    return item.lock.filePath;
+  const lock = record.lock as Record<string, unknown> | undefined;
+  if (lock && typeof lock.filePath === 'string') {
+    return lock.filePath;
   }
   return undefined;
 }
 
 function getAgentNameFromItem(item?: vscode.TreeItem): string | undefined {
   if (!item) { return undefined; }
-  if (item instanceof AgentTreeItem && item.agentName) {
-    return item.agentName;
+  const record = item as Record<string, unknown>;
+  if (typeof record.agentName === 'string' && record.agentName) {
+    return record.agentName;
   }
   return undefined;
 }

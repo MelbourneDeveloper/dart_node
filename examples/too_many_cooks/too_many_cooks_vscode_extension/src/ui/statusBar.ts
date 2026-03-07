@@ -1,9 +1,9 @@
 // Status bar item showing agent/lock/message counts.
 
 import * as vscode from 'vscode';
-import { StoreManager } from '../services/storeManager';
+import type { StoreManager } from '../services/storeManager';
 import {
-  selectConnectionStatus, selectAgentCount,
+  selectAgentCount, selectConnectionStatus,
   selectLockCount, selectUnreadMessageCount,
 } from '../state/selectors';
 
@@ -17,13 +17,13 @@ export class StatusBarManager {
     );
     this.statusBarItem.command = 'tooManyCooks.showDashboard';
 
-    this.unsubscribe = storeManager.subscribe(() => this.update(storeManager));
+    this.unsubscribe = storeManager.subscribe(() => { this.update(storeManager); });
     this.update(storeManager);
     this.statusBarItem.show();
   }
 
   private update(storeManager: StoreManager): void {
-    const state = storeManager.state;
+    const {state} = storeManager;
     const status = selectConnectionStatus(state);
     const agents = selectAgentCount(state);
     const locks = selectLockCount(state);

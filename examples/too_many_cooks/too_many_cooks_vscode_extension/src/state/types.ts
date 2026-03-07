@@ -36,7 +36,7 @@ export interface AgentPlan {
 }
 
 // Connection status to the MCP server.
-export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';
+export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected';
 
 // Agent with their associated data (computed/derived state).
 export interface AgentDetails {
@@ -67,16 +67,4 @@ export const initialState: AppState = {
 
 // Actions - discriminated union.
 export type AppAction =
-  | { type: 'SetConnectionStatus'; status: ConnectionStatus }
-  | { type: 'SetAgents'; agents: AgentIdentity[] }
-  | { type: 'AddAgent'; agent: AgentIdentity }
-  | { type: 'RemoveAgent'; agentName: string }
-  | { type: 'SetLocks'; locks: FileLock[] }
-  | { type: 'UpsertLock'; lock: FileLock }
-  | { type: 'RemoveLock'; filePath: string }
-  | { type: 'RenewLock'; filePath: string; expiresAt: number }
-  | { type: 'SetMessages'; messages: Message[] }
-  | { type: 'AddMessage'; message: Message }
-  | { type: 'SetPlans'; plans: AgentPlan[] }
-  | { type: 'UpsertPlan'; plan: AgentPlan }
-  | { type: 'ResetState' };
+  { type: 'AddAgent'; agent: AgentIdentity } | { type: 'AddMessage'; message: Message } | { type: 'RemoveAgent'; agentName: string } | { type: 'RemoveLock'; filePath: string } | { type: 'RenewLock'; filePath: string; expiresAt: number } | { type: 'ResetState' } | { type: 'SetAgents'; agents: AgentIdentity[] } | { type: 'SetConnectionStatus'; status: ConnectionStatus } | { type: 'SetLocks'; locks: FileLock[] } | { type: 'SetMessages'; messages: Message[] } | { type: 'SetPlans'; plans: AgentPlan[] } | { type: 'UpsertLock'; lock: FileLock } | { type: 'UpsertPlan'; plan: AgentPlan };
