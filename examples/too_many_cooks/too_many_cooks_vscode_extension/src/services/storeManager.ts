@@ -23,6 +23,7 @@ export class StoreManager {
   private readonly store: Store;
   readonly workspaceFolder: string;
   private serverProcess: ChildProcess | null = null;
+  private usingExternalServer = false;
   private connectPromise: Promise<void> | null = null;
   private mcpSessionId: string | null = null;
   private eventAbortController: AbortController | null = null;
@@ -43,7 +44,7 @@ export class StoreManager {
   }
 
   get isConnected(): boolean {
-    return this.serverProcess !== null;
+    return this.serverProcess !== null || this.usingExternalServer;
   }
 
   get isConnecting(): boolean {
@@ -77,34 +78,45 @@ export class StoreManager {
   private async doConnect(): Promise<void> {
     this.log(`[StoreManager] workspace: ${this.workspaceFolder}`);
 
-    const serverPath = this.findServerPath();
-    this.log(`[StoreManager] server path: ${serverPath}`);
+    // Check if external server is already running
+    const externalRunning = await this.isServerAvailable();
 
-    const proc = spawn('node', [serverPath], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, TMC_WORKSPACE: this.workspaceFolder },
-    });
+    if (externalRunning) {
+      this.log('[StoreManager] External server detected — resetting state');
+      await this.resetServer();
+      this.usingExternalServer = true;
+    } else {
+      this.log('[StoreManager] Spawning server...');
+      const serverPath = this.findServerPath();
+      this.log(`[StoreManager] server path: ${serverPath}`);
 
-    this.serverProcess = proc;
-    const capturedProcess = proc;
+      const proc = spawn('node', [serverPath], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: { ...process.env, TMC_WORKSPACE: this.workspaceFolder },
+      });
 
-    proc.stderr?.on('data', (data: Buffer) => {
-      this.log(`[StoreManager] Server stderr: ${data}`);
-    });
+      this.serverProcess = proc;
+      const capturedProcess = proc;
 
-    proc.on('exit', (code: number | null) => {
-      this.log(`[StoreManager] Server exited: ${code}`);
-      if (this.serverProcess === capturedProcess) {
-        this.serverProcess = null;
-        this.store.dispatch({ type: 'SetConnectionStatus', status: 'disconnected' });
-      }
-    });
+      proc.stderr?.on('data', (data: Buffer) => {
+        this.log(`[StoreManager] Server stderr: ${data}`);
+      });
 
-    proc.on('error', (err: Error) => {
-      this.log(`[StoreManager] Server error: ${err}`);
-    });
+      proc.on('exit', (code: number | null) => {
+        this.log(`[StoreManager] Server exited: ${code}`);
+        if (this.serverProcess === capturedProcess) {
+          this.serverProcess = null;
+          this.store.dispatch({ type: 'SetConnectionStatus', status: 'disconnected' });
+        }
+      });
 
-    await this.waitForServer();
+      proc.on('error', (err: Error) => {
+        this.log(`[StoreManager] Server error: ${err}`);
+      });
+
+      this.usingExternalServer = false;
+      await this.waitForServer();
+    }
 
     // Get initial state via REST
     await this.refreshStatus();
@@ -235,6 +247,24 @@ export class StoreManager {
     return fetch(url, { method: 'POST', headers, body });
   }
 
+  private async isServerAvailable(): Promise<boolean> {
+    try {
+      const response = await fetch(`${BASE_URL}/admin/status`);
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  private async resetServer(): Promise<void> {
+    this.log('[StoreManager] POST /admin/reset');
+    try {
+      await fetch(`${BASE_URL}/admin/reset`, { method: 'POST' });
+    } catch (e) {
+      this.log(`[StoreManager] Reset failed: ${e}`);
+    }
+  }
+
   private async waitForServer(): Promise<void> {
     this.log('[StoreManager] Waiting for server...');
     for (let i = 0; i < 30; i++) {
@@ -283,6 +313,7 @@ export class StoreManager {
 
     const proc = this.serverProcess;
     this.serverProcess = null;
+    this.usingExternalServer = false;
     if (proc) {
       proc.kill();
     }
@@ -292,7 +323,7 @@ export class StoreManager {
   }
 
   async refreshStatus(): Promise<void> {
-    if (this.serverProcess === null) {
+    if (!this.isConnected) {
       throw new Error('Not connected');
     }
 
@@ -347,35 +378,27 @@ export class StoreManager {
     }
   }
 
-  forceReleaseLock(filePath: string): void {
-    this.postJson(`${BASE_URL}/admin/delete-lock`, { filePath })
-      .then(() => {
-        this.log(`[StoreManager] Lock released: ${filePath}`);
-        this.store.dispatch({ type: 'RemoveLock', filePath });
-      })
-      .catch(() => {});
+  async forceReleaseLock(filePath: string): Promise<void> {
+    await this.postJson(`${BASE_URL}/admin/delete-lock`, { filePath });
+    this.log(`[StoreManager] Lock released: ${filePath}`);
+    await this.refreshStatus();
   }
 
-  deleteAgent(agentName: string): void {
-    this.postJson(`${BASE_URL}/admin/delete-agent`, { agentName })
-      .then(() => {
-        this.log(`[StoreManager] Agent deleted: ${agentName}`);
-        this.store.dispatch({ type: 'RemoveAgent', agentName });
-      })
-      .catch(() => {});
+  async deleteAgent(agentName: string): Promise<void> {
+    await this.postJson(`${BASE_URL}/admin/delete-agent`, { agentName });
+    this.log(`[StoreManager] Agent deleted: ${agentName}`);
+    await this.refreshStatus();
   }
 
-  sendMessage(fromAgent: string, toAgent: string, content: string): void {
-    this.postJson(`${BASE_URL}/admin/send-message`, { fromAgent, toAgent, content })
-      .then(() => {
-        this.log('[StoreManager] Message sent');
-      })
-      .catch(() => {});
+  async sendMessage(fromAgent: string, toAgent: string, content: string): Promise<void> {
+    await this.postJson(`${BASE_URL}/admin/send-message`, { fromAgent, toAgent, content });
+    this.log('[StoreManager] Message sent');
+    await this.refreshStatus();
   }
 
   // Call an MCP tool via Streamable HTTP at /mcp.
   async callTool(name: string, args: Record<string, unknown>): Promise<string> {
-    if (this.serverProcess === null) {
+    if (!this.isConnected) {
       return '{"error":"Not connected"}';
     }
 
@@ -386,7 +409,12 @@ export class StoreManager {
 
       const result = await this.mcpRequest('tools/call', { name, arguments: args });
       const content = (result.content as Array<Record<string, unknown>>)?.[0];
-      return (content?.text as string) ?? '{"error":"No text content"}';
+      const text = (content?.text as string) ?? '{"error":"No text content"}';
+
+      // Refresh state immediately so tree views update without waiting for event stream
+      await this.refreshStatus();
+
+      return text;
     } catch (e) {
       this.mcpSessionId = null;
       return `{"error":"${e}"}`;

@@ -152,7 +152,7 @@ function registerCommands(context: vscode.ExtensionContext, storeManager: StoreM
       );
       if (confirm !== 'Release') { return; }
       try {
-        storeManager.forceReleaseLock(filePath);
+        await storeManager.forceReleaseLock(filePath);
         log(`Force released lock: ${filePath}`);
         vscode.window.showInformationMessage(`Lock released: ${filePath}`);
       } catch (e) {
@@ -177,7 +177,7 @@ function registerCommands(context: vscode.ExtensionContext, storeManager: StoreM
       );
       if (confirm !== 'Remove') { return; }
       try {
-        storeManager.deleteAgent(agentName);
+        await storeManager.deleteAgent(agentName);
         log(`Removed agent: ${agentName}`);
         vscode.window.showInformationMessage(`Agent removed: ${agentName}`);
       } catch (e) {
@@ -230,7 +230,7 @@ function registerCommands(context: vscode.ExtensionContext, storeManager: StoreM
       if (!content) { return; }
 
       try {
-        storeManager.sendMessage(fromAgent, toAgent, content);
+        await storeManager.sendMessage(fromAgent, toAgent, content);
         const preview = content.length > 50 ? `${content.substring(0, 50)}...` : content;
         vscode.window.showInformationMessage(`Message sent to ${toAgent}: "${preview}"`);
         log(`Message sent from ${fromAgent} to ${toAgent}: ${content}`);

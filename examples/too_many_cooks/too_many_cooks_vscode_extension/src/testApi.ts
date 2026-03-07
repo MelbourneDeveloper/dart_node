@@ -118,10 +118,10 @@ export function createTestAPI(
     isConnected: () => storeManager.isConnected,
     isConnecting: () => storeManager.isConnecting,
     callTool: (name, args) => storeManager.callTool(name, args),
-    forceReleaseLock: async (filePath) => { storeManager.forceReleaseLock(filePath); },
-    deleteAgent: async (agentName) => { storeManager.deleteAgent(agentName); },
+    forceReleaseLock: async (filePath) => { await storeManager.forceReleaseLock(filePath); },
+    deleteAgent: async (agentName) => { await storeManager.deleteAgent(agentName); },
     sendMessage: async (fromAgent, toAgent, content) => {
-      storeManager.sendMessage(fromAgent, toAgent, content);
+      await storeManager.sendMessage(fromAgent, toAgent, content);
     },
 
     getLockTreeItemCount: () => {

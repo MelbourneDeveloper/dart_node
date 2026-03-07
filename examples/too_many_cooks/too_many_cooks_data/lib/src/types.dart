@@ -83,7 +83,8 @@ String fileLockToJson(FileLock l) =>
     '{"file_path":"${l.filePath}",'
     '"agent_name":"${l.agentName}",'
     '"acquired_at":${l.acquiredAt},'
-    '"expires_at":${l.expiresAt}'
+    '"expires_at":${l.expiresAt},'
+    '"version":${l.version}'
     '${l.reason != null ? ',"reason":"${escapeJson(l.reason!)}"' : ''}}';
 
 /// Serialize LockResult to JSON string.
