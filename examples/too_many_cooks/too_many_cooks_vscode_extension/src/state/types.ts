@@ -2,37 +2,37 @@
 
 // Agent identity (public info only - no key).
 export interface AgentIdentity {
-  agentName: string;
-  registeredAt: number;
-  lastActive: number;
+  readonly agentName: string;
+  readonly lastActive: number;
+  readonly registeredAt: number;
 }
 
 // File lock info.
 export interface FileLock {
-  filePath: string;
-  agentName: string;
-  acquiredAt: number;
-  expiresAt: number;
-  reason: string | null;
-  version: number;
+  readonly acquiredAt: number;
+  readonly agentName: string;
+  readonly expiresAt: number;
+  readonly filePath: string;
+  readonly reason: string | null;
+  readonly version: number;
 }
 
 // Inter-agent message.
 export interface Message {
-  id: string;
-  fromAgent: string;
-  toAgent: string;
-  content: string;
-  createdAt: number;
-  readAt: number | null;
+  readonly content: string;
+  readonly createdAt: number;
+  readonly fromAgent: string;
+  readonly id: string;
+  readonly readAt: number | null;
+  readonly toAgent: string;
 }
 
 // Agent plan (what they're doing and why).
 export interface AgentPlan {
-  agentName: string;
-  goal: string;
-  currentTask: string;
-  updatedAt: number;
+  readonly agentName: string;
+  readonly currentTask: string;
+  readonly goal: string;
+  readonly updatedAt: number;
 }
 
 // Connection status to the MCP server.
@@ -40,26 +40,26 @@ export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected';
 
 // Agent with their associated data (computed/derived state).
 export interface AgentDetails {
-  agent: AgentIdentity;
-  locks: FileLock[];
-  plan: AgentPlan | null;
-  sentMessages: Message[];
-  receivedMessages: Message[];
+  readonly agent: AgentIdentity;
+  readonly locks: readonly FileLock[];
+  readonly plan: AgentPlan | null;
+  readonly receivedMessages: readonly Message[];
+  readonly sentMessages: readonly Message[];
 }
 
 // The complete application state.
 export interface AppState {
-  connectionStatus: ConnectionStatus;
-  agents: AgentIdentity[];
-  locks: FileLock[];
-  messages: Message[];
-  plans: AgentPlan[];
+  readonly agents: readonly AgentIdentity[];
+  readonly connectionStatus: ConnectionStatus;
+  readonly locks: readonly FileLock[];
+  readonly messages: readonly Message[];
+  readonly plans: readonly AgentPlan[];
 }
 
 // Initial state.
 export const initialState: AppState = {
-  connectionStatus: 'disconnected',
   agents: [],
+  connectionStatus: 'disconnected',
   locks: [],
   messages: [],
   plans: [],
@@ -67,4 +67,4 @@ export const initialState: AppState = {
 
 // Actions - discriminated union.
 export type AppAction =
-  { type: 'AddAgent'; agent: AgentIdentity } | { type: 'AddMessage'; message: Message } | { type: 'RemoveAgent'; agentName: string } | { type: 'RemoveLock'; filePath: string } | { type: 'RenewLock'; filePath: string; expiresAt: number } | { type: 'ResetState' } | { type: 'SetAgents'; agents: AgentIdentity[] } | { type: 'SetConnectionStatus'; status: ConnectionStatus } | { type: 'SetLocks'; locks: FileLock[] } | { type: 'SetMessages'; messages: Message[] } | { type: 'SetPlans'; plans: AgentPlan[] } | { type: 'UpsertLock'; lock: FileLock } | { type: 'UpsertPlan'; plan: AgentPlan };
+  { readonly agent: AgentIdentity; readonly type: 'AddAgent' } | { readonly agentName: string; readonly type: 'RemoveAgent' } | { readonly agents: readonly AgentIdentity[]; readonly type: 'SetAgents' } | { readonly expiresAt: number; readonly filePath: string; readonly type: 'RenewLock' } | { readonly filePath: string; readonly type: 'RemoveLock' } | { readonly lock: FileLock; readonly type: 'UpsertLock' } | { readonly locks: readonly FileLock[]; readonly type: 'SetLocks' } | { readonly message: Message; readonly type: 'AddMessage' } | { readonly messages: readonly Message[]; readonly type: 'SetMessages' } | { readonly plan: AgentPlan; readonly type: 'UpsertPlan' } | { readonly plans: readonly AgentPlan[]; readonly type: 'SetPlans' } | { readonly status: ConnectionStatus; readonly type: 'SetConnectionStatus' } | { readonly type: 'ResetState' };

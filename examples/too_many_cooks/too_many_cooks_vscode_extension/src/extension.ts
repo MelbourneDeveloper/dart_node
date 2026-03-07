@@ -1,83 +1,61 @@
-// Too Many Cooks VSCode Extension - TypeScript
+// Too Many Cooks VSCode Extension - TypeScript.
 // Visualizes the Too Many Cooks multi-agent coordination system.
 
 import * as vscode from 'vscode';
-import { StoreManager } from './services/storeManager';
-import { StatusBarManager } from './ui/statusBar';
-import { AgentsTreeProvider } from './ui/tree/agentsTreeProvider';
-import { LocksTreeProvider } from './ui/tree/locksTreeProvider';
-import { MessagesTreeProvider } from './ui/tree/messagesTreeProvider';
-import { DashboardPanel } from './ui/webview/dashboardPanel';
-import { createTestAPI, TestAPI } from './testApi';
+import type { AgentIdentity } from 'state/types';
+import { AgentTreeItem } from 'ui/tree/agentTreeItem';
+import { AgentsTreeProvider } from 'ui/tree/agentsTreeProvider';
+import { DashboardPanel } from 'ui/webview/dashboardPanel';
+import { LockTreeItem } from 'ui/tree/lockTreeItem';
+import { LocksTreeProvider } from 'ui/tree/locksTreeProvider';
+import { MessagesTreeProvider } from 'ui/tree/messagesTreeProvider';
+import { StatusBarManager } from 'ui/statusBar';
+import { StoreManager } from 'services/storeManager';
+import type { TestAPI } from 'testApi';
+import { createTestAPI } from 'testApi';
+
+// eslint-disable-next-line @typescript-eslint/no-inferrable-types
+const MESSAGE_PREVIEW_LENGTH: number = 50;
 
 const logMessages: string[] = [];
-let outputChannel: vscode.OutputChannel | undefined;
+let outputChannel: vscode.OutputChannel | null = null;
 
 function log(message: string): void {
-  const timestamp = new Date().toISOString();
-  const fullMessage = `[${timestamp}] ${message}`;
+  const timestamp: string = new Date().toISOString();
+  const fullMessage: string = `[${timestamp}] ${message}`;
   outputChannel?.appendLine(fullMessage);
   logMessages.push(fullMessage);
 }
 
+// eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
 export function activate(context: vscode.ExtensionContext): TestAPI {
   outputChannel = vscode.window.createOutputChannel('Too Many Cooks');
   outputChannel.show(true);
   log('Extension activating...');
 
-  // Get configuration
-  const config = vscode.workspace.getConfiguration('tooManyCooks');
-  const autoConnect = config.get<boolean>('autoConnect') ?? true;
-
-  // Get workspace folder
-  const folders = vscode.workspace.workspaceFolders;
-  const workspaceFolder = folders && folders.length > 0
-    ? folders[0].uri.fsPath
-    : '.';
+  const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tooManyCooks');
+  const autoConnect: boolean = config.get<boolean>('autoConnect') ?? true;
+  const workspaceFolder: string = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '.';
   log(`Using workspace folder: ${workspaceFolder}`);
 
-  // Create store manager
-  const storeManager = new StoreManager(workspaceFolder, log);
+  const storeManager: StoreManager = new StoreManager(workspaceFolder, log);
+  const agentsProvider: AgentsTreeProvider = new AgentsTreeProvider(storeManager);
+  const locksProvider: LocksTreeProvider = new LocksTreeProvider(storeManager);
+  const messagesProvider: MessagesTreeProvider = new MessagesTreeProvider(storeManager);
 
-  // Create tree providers
-  const agentsProvider = new AgentsTreeProvider(storeManager);
-  const locksProvider = new LocksTreeProvider(storeManager);
-  const messagesProvider = new MessagesTreeProvider(storeManager);
+  registerTreeViews(agentsProvider, locksProvider, messagesProvider);
+  const statusBar: StatusBarManager = new StatusBarManager(storeManager);
+  registerAllCommands(context, storeManager);
 
-  // Register tree views
-  vscode.window.createTreeView('tooManyCooksAgents', {
-    treeDataProvider: agentsProvider,
-    showCollapseAll: true,
-  });
-  vscode.window.createTreeView('tooManyCooksLocks', {
-    treeDataProvider: locksProvider,
-  });
-  vscode.window.createTreeView('tooManyCooksMessages', {
-    treeDataProvider: messagesProvider,
-  });
-
-  // Create status bar
-  const statusBar = new StatusBarManager(storeManager);
-
-  // Register commands
-  registerCommands(context, storeManager);
-
-  // Auto-connect if configured
-  log(`Auto-connect: ${autoConnect}`);
   if (autoConnect) {
-    log('Attempting auto-connect...');
-    storeManager.connect().then(() => {
-      log('Auto-connect: SUCCESS');
-    }).catch(e => {
-      log(`Auto-connect FAILED: ${e}`);
-    });
+    storeManager.connect().then(
+      (): void => { log('Auto-connect: SUCCESS'); },
+      (err: unknown): void => { log(`Auto-connect FAILED: ${String(err)}`); },
+    );
   }
 
-  log('Extension activated');
-
-  // Register disposables
   context.subscriptions.push({
-    dispose: () => {
+    dispose: (): void => {
       storeManager.disconnect();
       statusBar.dispose();
       agentsProvider.dispose();
@@ -86,64 +64,101 @@ export function activate(context: vscode.ExtensionContext): TestAPI {
     },
   });
 
-  return createTestAPI(storeManager, agentsProvider, locksProvider, messagesProvider, logMessages);
+  return createTestAPI({
+    agentsProvider,
+    locksProvider,
+    logMessages,
+    messagesProvider,
+    storeManager,
+  });
 }
 
 export function deactivate(): void {
   log('Extension deactivating');
 }
 
-function registerCommands(context: vscode.ExtensionContext, storeManager: StoreManager): void {
-  // Connect
-  context.subscriptions.push(
-    vscode.commands.registerCommand('tooManyCooks.connect', async () => {
-      log('Connect command triggered');
-      try {
-        await storeManager.connect();
-        log('Connected successfully');
-        vscode.window.showInformationMessage('Connected to Too Many Cooks server');
-      } catch (e) {
-        log(`Connection failed: ${e}`);
-        vscode.window.showErrorMessage(`Failed to connect: ${e}`);
-      }
-    }),
-  );
+function registerTreeViews(
+  agentsProvider: Readonly<AgentsTreeProvider>,
+  locksProvider: Readonly<LocksTreeProvider>,
+  messagesProvider: Readonly<MessagesTreeProvider>,
+): void {
+  vscode.window.createTreeView('tooManyCooksAgents', {
+    showCollapseAll: true,
+    treeDataProvider: agentsProvider,
+  });
+  vscode.window.createTreeView('tooManyCooksLocks', {
+    treeDataProvider: locksProvider,
+  });
+  vscode.window.createTreeView('tooManyCooksMessages', {
+    treeDataProvider: messagesProvider,
+  });
+}
 
-  // Disconnect
-  context.subscriptions.push(
-    vscode.commands.registerCommand('tooManyCooks.disconnect', async () => {
-      await storeManager.disconnect();
-      vscode.window.showInformationMessage('Disconnected from Too Many Cooks server');
-    }),
-  );
+// eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+function registerAllCommands(context: vscode.ExtensionContext, sm: Readonly<StoreManager>): void {
+  context.subscriptions.push(registerConnectCommand(sm));
+  context.subscriptions.push(registerDisconnectCommand(sm));
+  context.subscriptions.push(registerRefreshCommand(sm));
+  context.subscriptions.push(registerDashboardCommand(sm));
+  context.subscriptions.push(registerDeleteLockCommand(sm));
+  context.subscriptions.push(registerDeleteAgentCommand(sm));
+  context.subscriptions.push(registerSendMessageCommand(sm));
+}
 
-  // Refresh
-  context.subscriptions.push(
-    vscode.commands.registerCommand('tooManyCooks.refresh', async () => {
-      try {
-        await storeManager.refreshStatus();
-      } catch (e) {
-        vscode.window.showErrorMessage(`Failed to refresh: ${e}`);
-      }
-    }),
-  );
+function registerConnectCommand(storeManager: Readonly<StoreManager>): vscode.Disposable {
+  return vscode.commands.registerCommand('tooManyCooks.connect', async (): Promise<void> => {
+    try {
+      await storeManager.connect();
+      log('Connected successfully');
+      await vscode.window.showInformationMessage('Connected to Too Many Cooks server');
+    } catch (err: unknown) {
+      log(`Connection failed: ${String(err)}`);
+      await vscode.window.showErrorMessage(`Failed to connect: ${String(err)}`);
+    }
+  });
+}
 
-  // Dashboard
-  context.subscriptions.push(
-    vscode.commands.registerCommand('tooManyCooks.showDashboard', () => {
-      DashboardPanel.createOrShow(storeManager);
-    }),
-  );
+function registerDisconnectCommand(storeManager: Readonly<StoreManager>): vscode.Disposable {
+  return vscode.commands.registerCommand('tooManyCooks.disconnect', (): void => {
+    storeManager.disconnect();
+    vscode.window.showInformationMessage('Disconnected from Too Many Cooks server').then(
+      (): void => {
+        // Resolved
+      },
+      (): void => {
+        // Rejected
+      },
+    );
+  });
+}
 
-  // Delete lock
-  context.subscriptions.push(
-    vscode.commands.registerCommand('tooManyCooks.deleteLock', async (item?: vscode.TreeItem) => {
-      const filePath = getFilePathFromItem(item);
-      if (!filePath) {
-        vscode.window.showErrorMessage('No lock selected');
+function registerRefreshCommand(storeManager: Readonly<StoreManager>): vscode.Disposable {
+  return vscode.commands.registerCommand('tooManyCooks.refresh', async (): Promise<void> => {
+    try {
+      await storeManager.refreshStatus();
+    } catch (err: unknown) {
+      await vscode.window.showErrorMessage(`Failed to refresh: ${String(err)}`);
+    }
+  });
+}
+
+function registerDashboardCommand(storeManager: Readonly<StoreManager>): vscode.Disposable {
+  return vscode.commands.registerCommand('tooManyCooks.showDashboard', (): void => {
+    DashboardPanel.createOrShow(storeManager);
+  });
+}
+
+function registerDeleteLockCommand(storeManager: Readonly<StoreManager>): vscode.Disposable {
+  return vscode.commands.registerCommand(
+    'tooManyCooks.deleteLock',
+    // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+    async (item?: vscode.TreeItem): Promise<void> => {
+      const filePath: string | null = getFilePathFromItem(item);
+      if (filePath === null) {
+        await vscode.window.showErrorMessage('No lock selected');
         return;
       }
-      const confirm = await vscode.window.showWarningMessage(
+      const confirm: string | undefined = await vscode.window.showWarningMessage(
         `Force release lock on ${filePath}?`,
         { modal: true },
         'Release',
@@ -152,23 +167,26 @@ function registerCommands(context: vscode.ExtensionContext, storeManager: StoreM
       try {
         await storeManager.forceReleaseLock(filePath);
         log(`Force released lock: ${filePath}`);
-        vscode.window.showInformationMessage(`Lock released: ${filePath}`);
-      } catch (e) {
-        log(`Failed to release lock: ${e}`);
-        vscode.window.showErrorMessage(`Failed to release lock: ${e}`);
+        await vscode.window.showInformationMessage(`Lock released: ${filePath}`);
+      } catch (err: unknown) {
+        log(`Failed to release lock: ${String(err)}`);
+        await vscode.window.showErrorMessage(`Failed to release lock: ${String(err)}`);
       }
-    }),
+    },
   );
+}
 
-  // Delete agent
-  context.subscriptions.push(
-    vscode.commands.registerCommand('tooManyCooks.deleteAgent', async (item?: vscode.TreeItem) => {
-      const agentName = getAgentNameFromItem(item);
-      if (!agentName) {
-        vscode.window.showErrorMessage('No agent selected');
+function registerDeleteAgentCommand(storeManager: Readonly<StoreManager>): vscode.Disposable {
+  return vscode.commands.registerCommand(
+    'tooManyCooks.deleteAgent',
+    // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+    async (item?: vscode.TreeItem): Promise<void> => {
+      const agentName: string | null = getAgentNameFromItem(item);
+      if (agentName === null) {
+        await vscode.window.showErrorMessage('No agent selected');
         return;
       }
-      const confirm = await vscode.window.showWarningMessage(
+      const confirm: string | undefined = await vscode.window.showWarningMessage(
         `Remove agent "${agentName}"? This will release all their locks.`,
         { modal: true },
         'Remove',
@@ -177,89 +195,104 @@ function registerCommands(context: vscode.ExtensionContext, storeManager: StoreM
       try {
         await storeManager.deleteAgent(agentName);
         log(`Removed agent: ${agentName}`);
-        vscode.window.showInformationMessage(`Agent removed: ${agentName}`);
-      } catch (e) {
-        log(`Failed to remove agent: ${e}`);
-        vscode.window.showErrorMessage(`Failed to remove agent: ${e}`);
+        await vscode.window.showInformationMessage(`Agent removed: ${agentName}`);
+      } catch (err: unknown) {
+        log(`Failed to remove agent: ${String(err)}`);
+        await vscode.window.showErrorMessage(`Failed to remove agent: ${String(err)}`);
       }
-    }),
-  );
-
-  // Send message
-  context.subscriptions.push(
-    vscode.commands.registerCommand('tooManyCooks.sendMessage', async (item?: vscode.TreeItem) => {
-      let toAgent = getAgentNameFromItem(item);
-
-      // If no target, show quick pick to select one
-      if (!toAgent) {
-        if (!storeManager.isConnected) {
-          vscode.window.showErrorMessage('Not connected to server');
-          return;
-        }
-        const agents = storeManager.state.agents;
-        const agentNames = [
-          '* (broadcast to all)',
-          ...agents.map(a => a.agentName),
-        ];
-        const picked = await vscode.window.showQuickPick(agentNames, {
-          placeHolder: 'Select recipient agent',
-        });
-        if (!picked) { return; }
-        toAgent = picked === '* (broadcast to all)' ? '*' : picked;
-      }
-
-      // Pick sender from registered agents
-      const senderAgents = storeManager.state.agents;
-      if (senderAgents.length === 0) {
-        vscode.window.showErrorMessage('No registered agents to send as');
-        return;
-      }
-      const fromAgent = await vscode.window.showQuickPick(
-        senderAgents.map(a => a.agentName),
-        { placeHolder: 'Send as which agent?' },
-      );
-      if (!fromAgent) { return; }
-
-      // Get message content
-      const content = await vscode.window.showInputBox({
-        prompt: `Message to ${toAgent}`,
-        placeHolder: 'Enter your message...',
-      });
-      if (!content) { return; }
-
-      try {
-        await storeManager.sendMessage(fromAgent, toAgent, content);
-        const preview = content.length > 50 ? `${content.substring(0, 50)}...` : content;
-        vscode.window.showInformationMessage(`Message sent to ${toAgent}: "${preview}"`);
-        log(`Message sent from ${fromAgent} to ${toAgent}: ${content}`);
-      } catch (e) {
-        log(`Failed to send message: ${e}`);
-        vscode.window.showErrorMessage(`Failed to send message: ${e}`);
-      }
-    }),
+    },
   );
 }
 
-function getFilePathFromItem(item?: vscode.TreeItem): string | undefined {
-  if (!item) { return undefined; }
-  const record = item as Record<string, unknown>;
-  // AgentTreeItem with filePath
-  if (typeof record.filePath === 'string' && record.filePath) {
-    return record.filePath;
-  }
-  // LockTreeItem with lock.filePath
-  const lock = record.lock as Record<string, unknown> | undefined;
-  if (lock && typeof lock.filePath === 'string') {
-    return lock.filePath;
-  }
-  return undefined;
+function registerSendMessageCommand(storeManager: Readonly<StoreManager>): vscode.Disposable {
+  return vscode.commands.registerCommand(
+    'tooManyCooks.sendMessage',
+    // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+    async (item?: vscode.TreeItem): Promise<void> => {
+      await handleSendMessage(storeManager, item);
+    },
+  );
 }
 
-function getAgentNameFromItem(item?: vscode.TreeItem): string | undefined {
-  if (!item) { return undefined; }
-  const record = item as Record<string, unknown>;
-  if (typeof record.agentName === 'string' && record.agentName) {
-    return record.agentName;
+async function handleSendMessage(
+  storeManager: Readonly<StoreManager>,
+  // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+  item?: vscode.TreeItem,
+): Promise<void> {
+  const toAgent: string | null = await selectRecipient(storeManager, item);
+  if (toAgent === null) { return; }
+
+  const fromAgent: string | undefined = await vscode.window.showQuickPick(
+    storeManager.state.agents.map(
+      (agent: Readonly<AgentIdentity>): string => { return agent.agentName; },
+    ),
+    { placeHolder: 'Send as which agent?' },
+  );
+  if (typeof fromAgent === 'undefined') { return; }
+
+  const content: string | undefined = await vscode.window.showInputBox({
+    placeHolder: 'Enter your message...',
+    prompt: `Message to ${toAgent}`,
+  });
+  if (typeof content === 'undefined') { return; }
+
+  try {
+    await storeManager.sendMessage(fromAgent, toAgent, content);
+    let preview: string = content;
+    if (content.length > MESSAGE_PREVIEW_LENGTH) {
+      preview = `${content.substring(0, MESSAGE_PREVIEW_LENGTH)}...`;
+    }
+    await vscode.window.showInformationMessage(`Message sent to ${toAgent}: "${preview}"`);
+    log(`Message sent from ${fromAgent} to ${toAgent}: ${content}`);
+  } catch (err: unknown) {
+    log(`Failed to send message: ${String(err)}`);
+    await vscode.window.showErrorMessage(`Failed to send message: ${String(err)}`);
   }
-  return undefined;
+}
+
+async function selectRecipient(
+  storeManager: Readonly<StoreManager>,
+  // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+  item?: vscode.TreeItem,
+): Promise<string | null> {
+  const fromItem: string | null = getAgentNameFromItem(item);
+  if (fromItem !== null) { return fromItem; }
+
+  if (!storeManager.isConnected) {
+    await vscode.window.showErrorMessage('Not connected to server');
+    return null;
+  }
+  const agentNames: string[] = [
+    '* (broadcast to all)',
+    ...storeManager.state.agents.map(
+      (agent: Readonly<AgentIdentity>): string => { return agent.agentName; },
+    ),
+  ];
+  const picked: string | undefined = await vscode.window.showQuickPick(agentNames, {
+    placeHolder: 'Select recipient agent',
+  });
+  if (typeof picked === 'undefined') { return null; }
+  if (picked === '* (broadcast to all)') { return '*'; }
+  return picked;
+}
+
+// eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+function getFilePathFromItem(item?: vscode.TreeItem): string | null {
+  if (typeof item === 'undefined') { return null; }
+  if (item instanceof AgentTreeItem && typeof item.filePath === 'string') {
+    return item.filePath;
+  }
+  if (item instanceof LockTreeItem && item.lock !== null) {
+    return item.lock.filePath;
+  }
+  return null;
+}
+
+// eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+function getAgentNameFromItem(item?: vscode.TreeItem): string | null {
+  if (typeof item === 'undefined') { return null; }
+  if (item instanceof AgentTreeItem && typeof item.agentName === 'string') {
+    return item.agentName;
+  }
+  return null;
 }

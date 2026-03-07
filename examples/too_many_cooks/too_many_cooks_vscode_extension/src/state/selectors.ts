@@ -1,51 +1,77 @@
 // Derived state selectors.
 
-import type { AgentDetails, AgentIdentity, AgentPlan, AppState, ConnectionStatus, FileLock, Message } from './types';
+import type { AgentDetails, AgentIdentity, AgentPlan, AppState, ConnectionStatus, FileLock, Message } from 'state/types';
 
-export const selectConnectionStatus = (state: AppState): ConnectionStatus =>
-  {return state.connectionStatus};
+export function selectConnectionStatus(state: Readonly<AppState>): ConnectionStatus {
+  return state.connectionStatus;
+}
 
-export const selectAgents = (state: AppState): AgentIdentity[] =>
-  {return state.agents};
+export function selectAgents(state: Readonly<AppState>): readonly AgentIdentity[] {
+  return state.agents;
+}
 
-export const selectLocks = (state: AppState): FileLock[] =>
-  {return state.locks};
+export function selectLocks(state: Readonly<AppState>): readonly FileLock[] {
+  return state.locks;
+}
 
-export const selectMessages = (state: AppState): Message[] =>
-  {return state.messages};
+export function selectMessages(state: Readonly<AppState>): readonly Message[] {
+  return state.messages;
+}
 
-export const selectPlans = (state: AppState): AgentPlan[] =>
-  {return state.plans};
+export function selectPlans(state: Readonly<AppState>): readonly AgentPlan[] {
+  return state.plans;
+}
 
-export const selectAgentCount = (state: AppState): number =>
-  {return state.agents.length};
+export function selectAgentCount(state: Readonly<AppState>): number {
+  return state.agents.length;
+}
 
-export const selectLockCount = (state: AppState): number =>
-  {return state.locks.length};
+export function selectLockCount(state: Readonly<AppState>): number {
+  return state.locks.length;
+}
 
-export const selectMessageCount = (state: AppState): number =>
-  {return state.messages.length};
+export function selectMessageCount(state: Readonly<AppState>): number {
+  return state.messages.length;
+}
 
-export const selectUnreadMessageCount = (state: AppState): number =>
-  {return state.messages.filter(m => {return m.readAt === null}).length};
+export function selectUnreadMessageCount(state: Readonly<AppState>): number {
+  return state.messages.filter((msg: Message): boolean => {
+    return msg.readAt === null;
+  }).length;
+}
 
-export const selectActiveLocks = (state: AppState): FileLock[] => {
-  const now = Date.now();
-  return state.locks.filter(l => {return l.expiresAt > now});
-};
+export function selectActiveLocks(state: Readonly<AppState>): readonly FileLock[] {
+  const now: number = Date.now();
+  return state.locks.filter((lock: FileLock): boolean => {
+    return lock.expiresAt > now;
+  });
+}
 
-export const selectExpiredLocks = (state: AppState): FileLock[] => {
-  const now = Date.now();
-  return state.locks.filter(l => {return l.expiresAt <= now});
-};
+export function selectExpiredLocks(state: Readonly<AppState>): readonly FileLock[] {
+  const now: number = Date.now();
+  return state.locks.filter((lock: FileLock): boolean => {
+    return lock.expiresAt <= now;
+  });
+}
 
-export const selectAgentDetails = (state: AppState): AgentDetails[] =>
-  {return state.agents.map(agent => {return {
-    agent,
-    locks: state.locks.filter(l => {return l.agentName === agent.agentName}),
-    plan: state.plans.find(p => {return p.agentName === agent.agentName}) ?? null,
-    sentMessages: state.messages.filter(m => {return m.fromAgent === agent.agentName}),
-    receivedMessages: state.messages.filter(
-      m => {return m.toAgent === agent.agentName || m.toAgent === '*'}
-    ),
-  }})};
+export function selectAgentDetails(state: Readonly<AppState>): AgentDetails[] {
+  return state.agents.map((agent: AgentIdentity): AgentDetails => {
+    return {
+      agent,
+      locks: state.locks.filter((lock: FileLock): boolean => {
+        return lock.agentName === agent.agentName;
+      }),
+      plan: state.plans.find((plan: AgentPlan): boolean => {
+        return plan.agentName === agent.agentName;
+      }) ?? null,
+      receivedMessages: state.messages.filter(
+        (msg: Message): boolean => {
+          return msg.toAgent === agent.agentName || msg.toAgent === '*';
+        },
+      ),
+      sentMessages: state.messages.filter((msg: Message): boolean => {
+        return msg.fromAgent === agent.agentName;
+      }),
+    };
+  });
+}

@@ -158,7 +158,15 @@
     "test": "node scripts/runTests.js",
     "package": "vsce package"
   },
-  "dependencies": {},
+  "_moduleAliases": {
+    "services": "./out/services",
+    "state": "./out/state",
+    "testApi": "./out/testApi",
+    "ui": "./out/ui"
+  },
+  "dependencies": {
+    "module-alias": "^2.2.3"
+  },
   "devDependencies": {
     "@types/eslint": "^8.56.10",
     "@types/mocha": "^10.0.6",

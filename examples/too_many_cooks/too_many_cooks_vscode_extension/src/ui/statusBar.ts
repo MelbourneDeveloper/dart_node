@@ -1,60 +1,76 @@
 // Status bar item showing agent/lock/message counts.
 
 import * as vscode from 'vscode';
-import type { StoreManager } from '../services/storeManager';
-import {
-  selectAgentCount, selectConnectionStatus,
-  selectLockCount, selectUnreadMessageCount,
-} from '../state/selectors';
+import type { AppState, ConnectionStatus } from 'state/types';
+import { selectAgentCount, selectConnectionStatus, selectLockCount, selectUnreadMessageCount } from 'state/selectors';
+import type { StoreManager } from 'services/storeManager';
+
+function pluralSuffix(count: number): string {
+  if (count === 1) {
+    return '';
+  }
+  return 's';
+}
 
 export class StatusBarManager {
   private readonly statusBarItem: vscode.StatusBarItem;
   private readonly unsubscribe: () => void;
 
-  constructor(storeManager: StoreManager) {
-    this.statusBarItem = vscode.window.createStatusBarItem(
-      vscode.StatusBarAlignment.Left, 100
-    );
+  public constructor(storeManager: Readonly<StoreManager>) {
+    this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     this.statusBarItem.command = 'tooManyCooks.showDashboard';
 
-    this.unsubscribe = storeManager.subscribe(() => { this.update(storeManager); });
+    this.unsubscribe = storeManager.subscribe((): void => { this.update(storeManager); });
     this.update(storeManager);
     this.statusBarItem.show();
   }
 
-  private update(storeManager: StoreManager): void {
-    const {state} = storeManager;
-    const status = selectConnectionStatus(state);
-    const agents = selectAgentCount(state);
-    const locks = selectLockCount(state);
-    const unread = selectUnreadMessageCount(state);
+  private update(storeManager: Readonly<StoreManager>): void {
+    const { state }: { readonly state: AppState } = storeManager;
+    const status: ConnectionStatus = selectConnectionStatus(state);
+    const agents: number = selectAgentCount(state);
+    const locks: number = selectLockCount(state);
+    const unread: number = selectUnreadMessageCount(state);
+
+    let background: vscode.ThemeColor | null = null;
 
     switch (status) {
       case 'disconnected':
         this.statusBarItem.text = '$(debug-disconnect) Too Many Cooks';
         this.statusBarItem.tooltip = 'Click to connect';
-        this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+        background = new vscode.ThemeColor('statusBarItem.errorBackground');
         break;
       case 'connecting':
         this.statusBarItem.text = '$(sync~spin) Connecting...';
         this.statusBarItem.tooltip = 'Connecting to Too Many Cooks server';
-        this.statusBarItem.backgroundColor = undefined;
         break;
       case 'connected':
-        this.statusBarItem.text = `$(person) ${agents}  $(lock) ${locks}  $(mail) ${unread}`;
-        this.statusBarItem.tooltip = [
-          `${agents} agent${agents !== 1 ? 's' : ''}`,
-          `${locks} lock${locks !== 1 ? 's' : ''}`,
-          `${unread} unread message${unread !== 1 ? 's' : ''}`,
-          '',
-          'Click to open dashboard',
-        ].join('\n');
-        this.statusBarItem.backgroundColor = undefined;
+        this.updateConnected(agents, locks, unread);
         break;
+      default:
+        break;
+    }
+
+    if (background === null) {
+      this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBar.background');
+    } else {
+      this.statusBarItem.backgroundColor = background;
     }
   }
 
-  dispose(): void {
+  private updateConnected(agents: number, locks: number, unread: number): void {
+    this.statusBarItem.text =
+      `$(person) ${String(agents)}  $(lock) ${String(locks)}  $(mail) ${String(unread)}`;
+    this.statusBarItem.tooltip = [
+      `${String(agents)} agent${pluralSuffix(agents)}`,
+      `${String(locks)} lock${pluralSuffix(locks)}`,
+      `${String(unread)} unread message${pluralSuffix(unread)}`,
+      '',
+      'Click to open dashboard',
+    ].join('\n');
+  }
+
+  public dispose(): void {
     this.unsubscribe();
     this.statusBarItem.dispose();
   }

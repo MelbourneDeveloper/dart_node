@@ -1,161 +1,240 @@
 // TreeDataProvider for agents view.
 
 import * as vscode from 'vscode';
-import { StoreManager } from '../../services/storeManager';
-import { AgentDetails } from '../../state/types';
-import { selectAgentDetails } from '../../state/selectors';
-import { AgentTreeItem } from './treeItems';
+import type { AgentDetails, FileLock, Message } from 'state/types';
+import { AgentTreeItem } from 'ui/tree/agentTreeItem';
+import type { StoreManager } from 'services/storeManager';
+import { selectAgentDetails } from 'state/selectors';
+
+// eslint-disable-next-line @typescript-eslint/no-inferrable-types
+const MS_PER_SECOND: number = 1000;
 
 export class AgentsTreeProvider implements vscode.TreeDataProvider<AgentTreeItem> {
-  private readonly _onDidChangeTreeData = new vscode.EventEmitter<AgentTreeItem | undefined>();
-  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private readonly changeEmitter: vscode.EventEmitter<AgentTreeItem | null> =
+    new vscode.EventEmitter<AgentTreeItem | null>();
+
+  public readonly onDidChangeTreeData: vscode.Event<AgentTreeItem | null> =
+    this.changeEmitter.event;
+
   private readonly unsubscribe: () => void;
 
-  constructor(private readonly storeManager: StoreManager) {
-    this.unsubscribe = storeManager.subscribe(() => {
-      this._onDidChangeTreeData.fire(undefined);
+  public constructor(private readonly storeManager: Readonly<StoreManager>) {
+    this.unsubscribe = storeManager.subscribe((): void => {
+      this.changeEmitter.fire(null);
     });
   }
 
-  getTreeItem(element: AgentTreeItem): vscode.TreeItem {
+  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/prefer-readonly-parameter-types
+  public getTreeItem(element: AgentTreeItem): vscode.TreeItem {
     return element;
   }
 
-  getChildren(element?: AgentTreeItem): AgentTreeItem[] {
-    const state = this.storeManager.state;
-    const details = selectAgentDetails(state);
+  // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+  public getChildren(element?: AgentTreeItem): AgentTreeItem[] {
+    const { state }: Readonly<StoreManager> = this.storeManager;
+    const details: readonly AgentDetails[] = selectAgentDetails(state);
 
-    if (!element) {
-      return details.map(d => this.createAgentItem(d));
+    if (typeof element === 'undefined') {
+      return details.map((detail: Readonly<AgentDetails>): AgentTreeItem => {
+        return createAgentItem(detail);
+      });
     }
 
-    if (element.itemType === 'agent' && element.agentName) {
-      const detail = details.find(d => d.agent.agentName === element.agentName);
-      return detail ? this.createAgentChildren(detail) : [];
+    if (element.itemType === 'agent' && typeof element.agentName === 'string') {
+      const found: AgentDetails | undefined = details.find(
+        (detail: Readonly<AgentDetails>): boolean => {
+          return detail.agent.agentName === element.agentName;
+        },
+      );
+      if (typeof found === 'undefined') {
+        return [];
+      }
+      return createAgentChildren(found);
     }
 
     return [];
   }
 
-  private createAgentItem(detail: AgentDetails): AgentTreeItem {
-    const lockCount = detail.locks.length;
-    const msgCount = detail.sentMessages.length + detail.receivedMessages.length;
-    const parts: string[] = [];
-    if (lockCount > 0) { parts.push(`${lockCount} lock${lockCount > 1 ? 's' : ''}`); }
-    if (msgCount > 0) { parts.push(`${msgCount} msg${msgCount > 1 ? 's' : ''}`); }
-
-    const item = new AgentTreeItem(
-      detail.agent.agentName,
-      vscode.TreeItemCollapsibleState.Collapsed,
-      'agent',
-      detail.agent.agentName,
-    );
-    item.description = parts.length > 0 ? parts.join(', ') : 'idle';
-    item.iconPath = new vscode.ThemeIcon('person');
-    item.contextValue = 'deletableAgent';
-    item.tooltip = this.createAgentTooltip(detail);
-    return item;
-  }
-
-  private createAgentTooltip(detail: AgentDetails): vscode.MarkdownString {
-    const agent = detail.agent;
-    const regDate = new Date(agent.registeredAt);
-    const activeDate = new Date(agent.lastActive);
-
-    const md = new vscode.MarkdownString();
-    md.appendMarkdown(`**Agent:** ${agent.agentName}\n\n`);
-    md.appendMarkdown(`**Registered:** ${regDate}\n\n`);
-    md.appendMarkdown(`**Last Active:** ${activeDate}\n\n`);
-
-    if (detail.plan) {
-      md.appendMarkdown('---\n\n');
-      md.appendMarkdown(`**Goal:** ${detail.plan.goal}\n\n`);
-      md.appendMarkdown(`**Current Task:** ${detail.plan.currentTask}\n\n`);
-    }
-
-    if (detail.locks.length > 0) {
-      md.appendMarkdown('---\n\n');
-      md.appendMarkdown(`**Locks (${detail.locks.length}):**\n`);
-      const now = Date.now();
-      for (const lock of detail.locks) {
-        const expired = lock.expiresAt <= now;
-        const status = expired ? 'EXPIRED' : 'active';
-        md.appendMarkdown(`- \`${lock.filePath}\` (${status})\n`);
-      }
-    }
-
-    const unread = detail.receivedMessages.filter(m => m.readAt === null).length;
-    if (detail.sentMessages.length > 0 || detail.receivedMessages.length > 0) {
-      md.appendMarkdown('\n---\n\n');
-      md.appendMarkdown(
-        `**Messages:** ${detail.sentMessages.length} sent, ` +
-        `${detail.receivedMessages.length} received` +
-        `${unread > 0 ? ` **(${unread} unread)**` : ''}\n`
-      );
-    }
-
-    return md;
-  }
-
-  private createAgentChildren(detail: AgentDetails): AgentTreeItem[] {
-    const children: AgentTreeItem[] = [];
-    const now = Date.now();
-
-    // Plan
-    if (detail.plan) {
-      const item = new AgentTreeItem(
-        `Goal: ${detail.plan.goal}`,
-        vscode.TreeItemCollapsibleState.None,
-        'plan',
-        detail.agent.agentName,
-      );
-      item.description = `Task: ${detail.plan.currentTask}`;
-      item.iconPath = new vscode.ThemeIcon('target');
-      children.push(item);
-    }
-
-    // Locks
-    for (const lock of detail.locks) {
-      const expiresIn = Math.max(0, Math.round((lock.expiresAt - now) / 1000));
-      const expired = lock.expiresAt <= now;
-      const reason = lock.reason;
-      const item = new AgentTreeItem(
-        lock.filePath,
-        vscode.TreeItemCollapsibleState.None,
-        'lock',
-        detail.agent.agentName,
-        lock.filePath,
-      );
-      item.description = expired
-        ? 'EXPIRED'
-        : `${expiresIn}s${reason ? ` (${reason})` : ''}`;
-      item.iconPath = new vscode.ThemeIcon('lock');
-      item.contextValue = 'lock';
-      children.push(item);
-    }
-
-    // Message summary
-    const unread = detail.receivedMessages.filter(m => m.readAt === null).length;
-    if (detail.sentMessages.length > 0 || detail.receivedMessages.length > 0) {
-      const sent = detail.sentMessages.length;
-      const recv = detail.receivedMessages.length;
-      const unreadStr = unread > 0 ? ` (${unread} unread)` : '';
-      const item = new AgentTreeItem(
-        'Messages',
-        vscode.TreeItemCollapsibleState.None,
-        'messageSummary',
-        detail.agent.agentName,
-      );
-      item.description = `${sent} sent, ${recv} received${unreadStr}`;
-      item.iconPath = new vscode.ThemeIcon('mail');
-      children.push(item);
-    }
-
-    return children;
-  }
-
-  dispose(): void {
+  public dispose(): void {
     this.unsubscribe();
-    this._onDidChangeTreeData.dispose();
+    this.changeEmitter.dispose();
   }
+}
+
+function createAgentItem(detail: Readonly<AgentDetails>): AgentTreeItem {
+  const lockCount: number = detail.locks.length;
+  const msgCount: number = detail.sentMessages.length + detail.receivedMessages.length;
+  const parts: string[] = [];
+  if (lockCount > 0) {
+    let suffix: string = '';
+    if (lockCount > 1) {
+      suffix = 's';
+    }
+    parts.push(`${String(lockCount)} lock${suffix}`);
+  }
+  if (msgCount > 0) {
+    let suffix: string = '';
+    if (msgCount > 1) {
+      suffix = 's';
+    }
+    parts.push(`${String(msgCount)} msg${suffix}`);
+  }
+
+  let desc: string = 'idle';
+  if (parts.length > 0) {
+    desc = parts.join(', ');
+  }
+
+  const item: AgentTreeItem = new AgentTreeItem({
+    agentName: detail.agent.agentName,
+    collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+    itemType: 'agent',
+    label: detail.agent.agentName,
+  });
+  item.description = desc;
+  item.iconPath = new vscode.ThemeIcon('person');
+  item.contextValue = 'deletableAgent';
+  item.tooltip = createAgentTooltip(detail);
+  return item;
+}
+
+function createAgentTooltip(detail: Readonly<AgentDetails>): vscode.MarkdownString {
+  const { agent }: Readonly<AgentDetails> = detail;
+  const regDate: Date = new Date(agent.registeredAt);
+  const activeDate: Date = new Date(agent.lastActive);
+
+  const md: vscode.MarkdownString = new vscode.MarkdownString();
+  md.appendMarkdown(`**Agent:** ${agent.agentName}\n\n`);
+  md.appendMarkdown(`**Registered:** ${String(regDate)}\n\n`);
+  md.appendMarkdown(`**Last Active:** ${String(activeDate)}\n\n`);
+
+  if (detail.plan !== null) {
+    md.appendMarkdown('---\n\n');
+    md.appendMarkdown(`**Goal:** ${detail.plan.goal}\n\n`);
+    md.appendMarkdown(`**Current Task:** ${detail.plan.currentTask}\n\n`);
+  }
+
+  appendLocksTooltip(md, detail);
+  appendMessagesTooltip(md, detail);
+
+  return md;
+}
+
+// eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+function appendLocksTooltip(md: vscode.MarkdownString, detail: Readonly<AgentDetails>): void {
+  if (detail.locks.length === 0) {
+    return;
+  }
+  md.appendMarkdown('---\n\n');
+  md.appendMarkdown(`**Locks (${String(detail.locks.length)}):**\n`);
+  const now: number = Date.now();
+  for (const lock of detail.locks) {
+    const expired: boolean = lock.expiresAt <= now;
+    let status: string = 'active';
+    if (expired) {
+      status = 'EXPIRED';
+    }
+    md.appendMarkdown(`- \`${lock.filePath}\` (${status})\n`);
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+function appendMessagesTooltip(md: vscode.MarkdownString, detail: Readonly<AgentDetails>): void {
+  const unread: number = detail.receivedMessages.filter(
+    (msg: Readonly<Message>): boolean => { return msg.readAt === null; },
+  ).length;
+  if (detail.sentMessages.length === 0 && detail.receivedMessages.length === 0) {
+    return;
+  }
+  md.appendMarkdown('\n---\n\n');
+  // eslint-disable-next-line @typescript-eslint/no-inferrable-types
+  let unreadStr: string = '';
+  if (unread > 0) {
+    unreadStr = ` **(${String(unread)} unread)**`;
+  }
+  md.appendMarkdown(
+    `**Messages:** ${String(detail.sentMessages.length)} sent, ` +
+    `${String(detail.receivedMessages.length)} received${unreadStr}\n`,
+  );
+}
+
+function createAgentChildren(detail: Readonly<AgentDetails>): AgentTreeItem[] {
+  const children: AgentTreeItem[] = [];
+  const now: number = Date.now();
+
+  if (detail.plan !== null) {
+    children.push(createPlanChild(detail));
+  }
+
+  for (const lock of detail.locks) {
+    children.push(createLockChild(lock, detail.agent.agentName, now));
+  }
+
+  addMessageSummaryChild(children, detail);
+
+  return children;
+}
+
+function createPlanChild(detail: Readonly<AgentDetails>): AgentTreeItem {
+  const item: AgentTreeItem = new AgentTreeItem({
+    agentName: detail.agent.agentName,
+    collapsibleState: vscode.TreeItemCollapsibleState.None,
+    itemType: 'plan',
+    label: `Goal: ${detail.plan?.goal ?? ''}`,
+  });
+  item.description = `Task: ${detail.plan?.currentTask ?? ''}`;
+  item.iconPath = new vscode.ThemeIcon('target');
+  return item;
+}
+
+function createLockChild(
+  lock: Readonly<FileLock>,
+  agentName: string,
+  now: number,
+): AgentTreeItem {
+  const expiresIn: number = Math.max(0, Math.round((lock.expiresAt - now) / MS_PER_SECOND));
+  const expired: boolean = lock.expiresAt <= now;
+  const item: AgentTreeItem = new AgentTreeItem({
+    agentName,
+    collapsibleState: vscode.TreeItemCollapsibleState.None,
+    filePath: lock.filePath,
+    itemType: 'lock',
+    label: lock.filePath,
+  });
+  if (expired) {
+    item.description = 'EXPIRED';
+  } else if (lock.reason === null) {
+    item.description = `${String(expiresIn)}s`;
+  } else {
+    item.description = `${String(expiresIn)}s (${lock.reason})`;
+  }
+  item.iconPath = new vscode.ThemeIcon('lock');
+  item.contextValue = 'lock';
+  return item;
+}
+
+// eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+function addMessageSummaryChild(children: AgentTreeItem[], detail: Readonly<AgentDetails>): void {
+  const unread: number = detail.receivedMessages.filter(
+    (msg: Readonly<Message>): boolean => { return msg.readAt === null; },
+  ).length;
+  if (detail.sentMessages.length === 0 && detail.receivedMessages.length === 0) {
+    return;
+  }
+  const sent: number = detail.sentMessages.length;
+  const recv: number = detail.receivedMessages.length;
+  // eslint-disable-next-line @typescript-eslint/no-inferrable-types
+  let unreadStr: string = '';
+  if (unread > 0) {
+    unreadStr = ` (${String(unread)} unread)`;
+  }
+  const item: AgentTreeItem = new AgentTreeItem({
+    agentName: detail.agent.agentName,
+    collapsibleState: vscode.TreeItemCollapsibleState.None,
+    itemType: 'messageSummary',
+    label: 'Messages',
+  });
+  item.description = `${String(sent)} sent, ${String(recv)} received${unreadStr}`;
+  item.iconPath = new vscode.ThemeIcon('mail');
+  children.push(item);
 }

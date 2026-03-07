@@ -3,18 +3,19 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { type ChildProcess, spawn } from 'child_process';
-import { checkServerAvailable, isRecord, postJsonRequest } from 'services/httpClient';
-import { extractToolResultText, initMcpSession, mcpJsonRpcRequest } from 'services/mcpProtocol';
 import type { AppState } from 'state/types';
 import { Store } from 'state/store';
+import { checkServerAvailable, isRecord, postJsonRequest } from 'services/httpClient';
+import { extractToolResultText, initMcpSession, mcpJsonRpcRequest } from 'services/mcpProtocol';
 import { parseStatusResponse } from 'services/statusParser';
-import { startAdminEventStream } from 'services/adminEventStream';
 
-const BASE_URL: string = 'http://localhost:4040';
-const MAX_POLL_ATTEMPTS: number = 30;
-const POLL_DELAY_MS: number = 200;
-const POLL_LOG_INTERVAL: number = 5;
 const SERVER_BINARY: string = 'build/bin/server_node.js';
+const BASE_URL: string = 'http://localhost:4040';
+const MCP_ACCEPT_HEADER: string = 'application/json, text/event-stream';
+const MAX_POLL_ATTEMPTS: number = 30;
+const POLL_LOG_INTERVAL: number = 5;
+const POLL_DELAY_MS: number = 200;
+const DATA_PREFIX: string = 'data: ';
 
 type LogFn = (msg: string) => void;
 
@@ -93,10 +94,8 @@ export class StoreManager {
     await this.waitForServer();
   }
 
-  // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
   private setupProcessHandlers(proc: ChildProcess): void {
     if (proc.stderr !== null) {
-      // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
       proc.stderr.on('data', (data: Buffer): void => {
         this.log(`[StoreManager] Server stderr: ${String(data)}`);
       });
@@ -108,7 +107,7 @@ export class StoreManager {
         this.store.dispatch({ status: 'disconnected', type: 'SetConnectionStatus' });
       }
     });
-    proc.on('error', (err: Readonly<Error>): void => {
+    proc.on('error', (err: Error): void => {
       this.log(`[StoreManager] Server error: ${err.message}`);
     });
   }
@@ -116,11 +115,51 @@ export class StoreManager {
   private connectEventStream(): void {
     this.eventAbortController?.abort();
     this.eventAbortController = new AbortController();
-    startAdminEventStream(this.eventAbortController, {
-      baseUrl: BASE_URL,
-      log: this.log,
-      onEvent: (): void => { this.handleAdminEvent(); },
+    initMcpSession(BASE_URL, '/admin/events', 'too-many-cooks-vsix-admin')
+      .then((sessionId: string): void => {
+        this.listenAdminEvents(sessionId);
+      })
+      .catch((err: unknown): void => {
+        this.log(`[StoreManager] Admin session error: ${String(err)}`);
+      });
+  }
+
+  private listenAdminEvents(sessionId: string): void {
+    const signal: AbortSignal | null = this.eventAbortController?.signal ?? null;
+    const headers: Headers = new Headers();
+    headers.set('accept', MCP_ACCEPT_HEADER);
+    headers.set('mcp-session-id', sessionId);
+    fetch(`${BASE_URL}/admin/events`, {
+      headers,
+      method: 'GET',
+      signal,
+    }).then(async (response: Response): Promise<void> => {
+      if (!response.ok || response.body === null) { return; }
+      await this.readEventStream(response.body);
+    }).catch((err: unknown): void => {
+      if (signal !== null && !signal.aborted) {
+        this.log(`[StoreManager] Admin stream error: ${String(err)}`);
+      }
     });
+  }
+
+  private async readEventStream(body: ReadableStream<Uint8Array>): Promise<void> {
+    const reader: ReadableStreamDefaultReader<Uint8Array> = body.getReader();
+    const decoder: TextDecoder = new TextDecoder();
+    let buffer = '';
+    for (;;) {
+      const result: ReadableStreamReadResult<Uint8Array> = await reader.read();
+      if (result.done) { break; }
+      buffer += decoder.decode(result.value, { stream: true });
+      const lines: string[] = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for (const line of lines) {
+        if (line.startsWith(DATA_PREFIX)) {
+          const lineData: string = line.substring(DATA_PREFIX.length).trim();
+          if (lineData.length > 0) { this.handleAdminEvent(); }
+        }
+      }
+    }
   }
 
   private handleAdminEvent(): void {
@@ -138,7 +177,7 @@ export class StoreManager {
   }
 
   private async waitForServer(): Promise<void> {
-    for (let idx: number = 0; idx < MAX_POLL_ATTEMPTS; idx++) {
+    for (let idx = 0; idx < MAX_POLL_ATTEMPTS; idx++) {
       try {
         const response: Response = await fetch(`${BASE_URL}/admin/status`);
         if (response.ok) { return; }
@@ -147,7 +186,7 @@ export class StoreManager {
           this.log(`[StoreManager] Poll ${String(idx)}: ${String(err)}`);
         }
       }
-      await new Promise((resolve: (value: unknown) => void): void => {
+      await new Promise((resolve: () => void): void => {
         setTimeout(resolve, POLL_DELAY_MS);
       });
     }
@@ -184,7 +223,7 @@ export class StoreManager {
     if (!response.ok) { return; }
     const json: unknown = await response.json();
     if (!isRecord(json)) { return; }
-    const statusData: ReturnType<typeof parseStatusResponse> = parseStatusResponse(json);
+    const statusData = parseStatusResponse(json);
     this.store.dispatch({ agents: statusData.agents, type: 'SetAgents' });
     this.store.dispatch({ locks: statusData.locks, type: 'SetLocks' });
     this.store.dispatch({ messages: statusData.messages, type: 'SetMessages' });
