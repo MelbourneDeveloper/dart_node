@@ -200,9 +200,12 @@ export class StoreManager {
       const decoder = new TextDecoder();
       let buffer = '';
 
-      while (true) {
-        const { done, value } = await reader.read();
+      let done = false;
+      while (!done) {
+        const result = await reader.read();
+        done = result.done;
         if (done) { break; }
+        const value = result.value;
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
@@ -227,7 +230,7 @@ export class StoreManager {
   }
 
   // Handle an admin push event by refreshing status.
-  private handleAdminEvent(data: string): void {
+  private handleAdminEvent(_data: string): void {
     this.log('[StoreManager] Admin event received');
     this.refreshStatus().catch(() => {});
   }
