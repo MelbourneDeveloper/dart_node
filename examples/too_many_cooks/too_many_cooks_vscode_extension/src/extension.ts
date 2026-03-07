@@ -12,6 +12,7 @@ import { LocksTreeProvider } from 'ui/tree/locksTreeProvider';
 import { MessagesTreeProvider } from 'ui/tree/messagesTreeProvider';
 import { StatusBarManager } from 'ui/statusBar';
 import { StoreManager } from 'services/storeManager';
+import { getDialogService } from 'services/dialogService';
 import type { TestAPI } from 'testApi';
 import { createTestAPI } from 'testApi';
 
@@ -47,6 +48,8 @@ export function activate(context: vscode.ExtensionContext): TestAPI {
   registerTreeViews(agentsProvider, locksProvider, messagesProvider);
   const statusBar: StatusBarManager = new StatusBarManager(storeManager);
   registerAllCommands(context, storeManager);
+
+  log('Extension activated');
 
   if (autoConnect) {
     storeManager.connect().then(
@@ -108,21 +111,23 @@ function registerAllCommands(context: vscode.ExtensionContext, sm: Readonly<Stor
 
 function registerConnectCommand(storeManager: Readonly<StoreManager>): vscode.Disposable {
   return vscode.commands.registerCommand('tooManyCooks.connect', async (): Promise<void> => {
+    const dialogs = getDialogService();
     try {
       await storeManager.connect();
       log('Connected successfully');
-      await vscode.window.showInformationMessage('Connected to Too Many Cooks server');
+      await dialogs.showInformationMessage('Connected to Too Many Cooks server');
     } catch (err: unknown) {
       log(`Connection failed: ${String(err)}`);
-      await vscode.window.showErrorMessage(`Failed to connect: ${String(err)}`);
+      await dialogs.showErrorMessage(`Failed to connect: ${String(err)}`);
     }
   });
 }
 
 function registerDisconnectCommand(storeManager: Readonly<StoreManager>): vscode.Disposable {
   return vscode.commands.registerCommand('tooManyCooks.disconnect', (): void => {
+    const dialogs = getDialogService();
     storeManager.disconnect();
-    vscode.window.showInformationMessage('Disconnected from Too Many Cooks server').then(
+    dialogs.showInformationMessage('Disconnected from Too Many Cooks server').then(
       (): void => {
         // Resolved
       },
@@ -135,10 +140,11 @@ function registerDisconnectCommand(storeManager: Readonly<StoreManager>): vscode
 
 function registerRefreshCommand(storeManager: Readonly<StoreManager>): vscode.Disposable {
   return vscode.commands.registerCommand('tooManyCooks.refresh', async (): Promise<void> => {
+    const dialogs = getDialogService();
     try {
       await storeManager.refreshStatus();
     } catch (err: unknown) {
-      await vscode.window.showErrorMessage(`Failed to refresh: ${String(err)}`);
+      await dialogs.showErrorMessage(`Failed to refresh: ${String(err)}`);
     }
   });
 }
@@ -154,12 +160,13 @@ function registerDeleteLockCommand(storeManager: Readonly<StoreManager>): vscode
     'tooManyCooks.deleteLock',
     // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
     async (item?: vscode.TreeItem): Promise<void> => {
+      const dialogs = getDialogService();
       const filePath: string | null = getFilePathFromItem(item);
       if (filePath === null) {
-        await vscode.window.showErrorMessage('No lock selected');
+        await dialogs.showErrorMessage('No lock selected');
         return;
       }
-      const confirm: string | undefined = await vscode.window.showWarningMessage(
+      const confirm: string | undefined = await dialogs.showWarningMessage(
         `Force release lock on ${filePath}?`,
         { modal: true },
         'Release',
@@ -168,10 +175,10 @@ function registerDeleteLockCommand(storeManager: Readonly<StoreManager>): vscode
       try {
         await storeManager.forceReleaseLock(filePath);
         log(`Force released lock: ${filePath}`);
-        await vscode.window.showInformationMessage(`Lock released: ${filePath}`);
+        await dialogs.showInformationMessage(`Lock released: ${filePath}`);
       } catch (err: unknown) {
         log(`Failed to release lock: ${String(err)}`);
-        await vscode.window.showErrorMessage(`Failed to release lock: ${String(err)}`);
+        await dialogs.showErrorMessage(`Failed to release lock: ${String(err)}`);
       }
     },
   );
@@ -182,12 +189,13 @@ function registerDeleteAgentCommand(storeManager: Readonly<StoreManager>): vscod
     'tooManyCooks.deleteAgent',
     // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
     async (item?: vscode.TreeItem): Promise<void> => {
+      const dialogs = getDialogService();
       const agentName: string | null = getAgentNameFromItem(item);
       if (agentName === null) {
-        await vscode.window.showErrorMessage('No agent selected');
+        await dialogs.showErrorMessage('No agent selected');
         return;
       }
-      const confirm: string | undefined = await vscode.window.showWarningMessage(
+      const confirm: string | undefined = await dialogs.showWarningMessage(
         `Remove agent "${agentName}"? This will release all their locks.`,
         { modal: true },
         'Remove',
@@ -196,10 +204,10 @@ function registerDeleteAgentCommand(storeManager: Readonly<StoreManager>): vscod
       try {
         await storeManager.deleteAgent(agentName);
         log(`Removed agent: ${agentName}`);
-        await vscode.window.showInformationMessage(`Agent removed: ${agentName}`);
+        await dialogs.showInformationMessage(`Agent removed: ${agentName}`);
       } catch (err: unknown) {
         log(`Failed to remove agent: ${String(err)}`);
-        await vscode.window.showErrorMessage(`Failed to remove agent: ${String(err)}`);
+        await dialogs.showErrorMessage(`Failed to remove agent: ${String(err)}`);
       }
     },
   );
@@ -220,10 +228,11 @@ async function handleSendMessage(
   // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
   item?: vscode.TreeItem,
 ): Promise<void> {
+  const dialogs = getDialogService();
   const toAgent: string | null = await selectRecipient(storeManager, item);
   if (toAgent === null) { return; }
 
-  const fromAgent: string | undefined = await vscode.window.showQuickPick(
+  const fromAgent: string | undefined = await dialogs.showQuickPick(
     storeManager.state.agents.map(
       (agent: Readonly<AgentIdentity>): string => { return agent.agentName; },
     ),
@@ -231,7 +240,7 @@ async function handleSendMessage(
   );
   if (typeof fromAgent === 'undefined') { return; }
 
-  const content: string | undefined = await vscode.window.showInputBox({
+  const content: string | undefined = await dialogs.showInputBox({
     placeHolder: 'Enter your message...',
     prompt: `Message to ${toAgent}`,
   });
@@ -243,11 +252,11 @@ async function handleSendMessage(
     if (content.length > MESSAGE_PREVIEW_LENGTH) {
       preview = `${content.substring(0, MESSAGE_PREVIEW_LENGTH)}...`;
     }
-    await vscode.window.showInformationMessage(`Message sent to ${toAgent}: "${preview}"`);
+    await dialogs.showInformationMessage(`Message sent to ${toAgent}: "${preview}"`);
     log(`Message sent from ${fromAgent} to ${toAgent}: ${content}`);
   } catch (err: unknown) {
     log(`Failed to send message: ${String(err)}`);
-    await vscode.window.showErrorMessage(`Failed to send message: ${String(err)}`);
+    await dialogs.showErrorMessage(`Failed to send message: ${String(err)}`);
   }
 }
 
@@ -259,8 +268,9 @@ async function selectRecipient(
   const fromItem: string | null = getAgentNameFromItem(item);
   if (fromItem !== null) { return fromItem; }
 
+  const dialogs = getDialogService();
   if (!storeManager.isConnected) {
-    await vscode.window.showErrorMessage('Not connected to server');
+    await dialogs.showErrorMessage('Not connected to server');
     return null;
   }
   const agentNames: string[] = [
@@ -269,7 +279,7 @@ async function selectRecipient(
       (agent: Readonly<AgentIdentity>): string => { return agent.agentName; },
     ),
   ];
-  const picked: string | undefined = await vscode.window.showQuickPick(agentNames, {
+  const picked: string | undefined = await dialogs.showQuickPick(agentNames, {
     placeHolder: 'Select recipient agent',
   });
   if (typeof picked === 'undefined') { return null; }

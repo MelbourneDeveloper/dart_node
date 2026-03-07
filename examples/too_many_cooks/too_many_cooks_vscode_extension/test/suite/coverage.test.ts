@@ -16,6 +16,7 @@ import {
   callToolString,
   extractKeyFromResult,
   cleanDatabase,
+  installDialogMocks,
   restoreDialogMocks,
   getLabel,
   getDescription,
@@ -190,6 +191,11 @@ suite('Extension Commands Coverage', () => {
   suiteSetup(async () => {
     await waitForExtensionActivation();
     await safeDisconnect();
+    installDialogMocks();
+  });
+
+  suiteTeardown(() => {
+    restoreDialogMocks();
   });
 
   test('refresh command works when connected', async () => {

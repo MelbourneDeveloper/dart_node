@@ -43,7 +43,7 @@ async function main() {
 
   const vscodeExecutablePath =
     process.env.VSCODE_EXECUTABLE_PATH ||
-    '/Applications/Visual Studio Code.app/Contents/MacOS/Electron';
+    '/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code';
 
   try {
     const exitCode = await runTests({

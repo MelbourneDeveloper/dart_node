@@ -185,12 +185,11 @@ export function cleanDatabase(): void {
 }
 
 // ============================================================================
-// Dialog mocking
+// Dialog mocking via DialogService (not monkey-patching vscode.window)
 // ============================================================================
 
-let originalShowWarningMessage: typeof vscode.window.showWarningMessage | null = null;
-let originalShowQuickPick: typeof vscode.window.showQuickPick | null = null;
-let originalShowInputBox: typeof vscode.window.showInputBox | null = null;
+import { setDialogService, resetDialogService } from 'services/dialogService';
+
 let mocksInstalled = false;
 
 const warningMessageResponses: (string | undefined)[] = [];
@@ -212,29 +211,31 @@ export function mockInputBox(response: string | undefined): void {
 export function installDialogMocks(): void {
   if (mocksInstalled) { return; }
 
-  const win = vscode.window;
-
-  originalShowWarningMessage = win.showWarningMessage.bind(win);
-  originalShowQuickPick = win.showQuickPick.bind(win);
-  originalShowInputBox = win.showInputBox.bind(win);
-
-  (win as any).showWarningMessage = async (..._args: any[]) => {
-    const val = warningMessageResponses.shift();
-    console.log(`[MOCK] showWarningMessage returning: ${val}`);
-    return val ?? undefined;
-  };
-
-  (win as any).showQuickPick = async (..._args: any[]) => {
-    const val = quickPickResponses.shift();
-    console.log(`[MOCK] showQuickPick returning: ${val}`);
-    return val ?? undefined;
-  };
-
-  (win as any).showInputBox = async (..._args: any[]) => {
-    const val = inputBoxResponses.shift();
-    console.log(`[MOCK] showInputBox returning: ${val}`);
-    return val ?? undefined;
-  };
+  setDialogService({
+    showErrorMessage: async (_message: string): Promise<string | undefined> => {
+      console.log(`[MOCK] showErrorMessage: ${_message}`);
+      return undefined;
+    },
+    showInformationMessage: async (_message: string): Promise<string | undefined> => {
+      console.log(`[MOCK] showInformationMessage: ${_message}`);
+      return undefined;
+    },
+    showInputBox: async (): Promise<string | undefined> => {
+      const val = inputBoxResponses.shift();
+      console.log(`[MOCK] showInputBox returning: ${val}`);
+      return val;
+    },
+    showQuickPick: async (): Promise<string | undefined> => {
+      const val = quickPickResponses.shift();
+      console.log(`[MOCK] showQuickPick returning: ${val}`);
+      return val;
+    },
+    showWarningMessage: async (): Promise<string | undefined> => {
+      const val = warningMessageResponses.shift();
+      console.log(`[MOCK] showWarningMessage returning: ${val}`);
+      return val;
+    },
+  });
 
   mocksInstalled = true;
   console.log('[TEST HELPER] Dialog mocks installed');
@@ -243,10 +244,7 @@ export function installDialogMocks(): void {
 export function restoreDialogMocks(): void {
   if (!mocksInstalled) { return; }
 
-  const win = vscode.window;
-  if (originalShowWarningMessage) { (win as any).showWarningMessage = originalShowWarningMessage; }
-  if (originalShowQuickPick) { (win as any).showQuickPick = originalShowQuickPick; }
-  if (originalShowInputBox) { (win as any).showInputBox = originalShowInputBox; }
+  resetDialogService();
 
   warningMessageResponses.length = 0;
   quickPickResponses.length = 0;
