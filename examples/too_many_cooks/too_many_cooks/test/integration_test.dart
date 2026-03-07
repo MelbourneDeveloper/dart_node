@@ -627,23 +627,61 @@ void _killProcess(JSObject process) {
   (process['kill']! as JSFunction).callAsFunction(process);
 }
 
-/// Wait for server to be ready by polling /admin/status.
+/// Wait for server to be ready by polling /admin/status
+/// and then verifying the /mcp endpoint accepts requests.
 Future<void> _waitForServer() async {
+  // Poll /admin/status until it responds
   for (var i = 0; i < 30; i++) {
     try {
       final r = await _jsFetch(
         '$_baseUrl/admin/status'.toJS,
       ).toDart;
       final ok = r['ok'] as JSBoolean?;
-      if (ok != null && ok.toDart) return;
+      if (ok != null && ok.toDart) break;
     } on Object {
       // Not ready yet
+    }
+    if (i == 29) throw StateError('Server failed to start');
+    await Future<void>.delayed(
+      const Duration(milliseconds: 200),
+    );
+  }
+
+  // Verify /mcp endpoint is also ready (avoids race on first request)
+  for (var i = 0; i < 10; i++) {
+    try {
+      final headers = JSObject()
+        ..['Content-Type'] = 'application/json'.toJS
+        ..['Accept'] = _accept.toJS;
+      final options = JSObject()
+        ..['method'] = 'POST'.toJS
+        ..['headers'] = headers
+        ..['body'] = jsonEncode({
+          'jsonrpc': '2.0',
+          'id': 0,
+          'method': 'initialize',
+          'params': {
+            'protocolVersion': '2024-11-05',
+            'capabilities': <String, Object?>{},
+            'clientInfo': {
+              'name': 'health-check',
+              'version': '1.0.0',
+            },
+          },
+        }).toJS;
+      final r = await _jsFetch(
+        '$_baseUrl/mcp'.toJS,
+        options,
+      ).toDart;
+      final ok = r['ok'] as JSBoolean?;
+      if (ok != null && ok.toDart) return;
+    } on Object {
+      // MCP endpoint not ready yet
     }
     await Future<void>.delayed(
       const Duration(milliseconds: 200),
     );
   }
-  throw StateError('Server failed to start');
 }
 
 /// Reset the server DB via admin endpoint.

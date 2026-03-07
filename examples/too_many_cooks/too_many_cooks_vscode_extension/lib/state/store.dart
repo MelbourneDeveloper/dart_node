@@ -148,9 +148,14 @@ class StoreManager {
       spawnOpts,
     ) as JSObject?;
 
-    // Listen for process exit and stderr
+    // Listen for process exit and stderr.
+    // Capture the process reference so the exit handler
+    // only clears _serverProcess if it's still the same
+    // process (avoids race when disconnect+reconnect).
     final process = _serverProcess;
     if (process != null) {
+      final capturedProcess = process;
+
       // Capture stderr for debugging
       final stderr = process['stderr'] as JSObject?;
       if (stderr != null) {
@@ -168,12 +173,15 @@ class StoreManager {
         'exit'.toJS,
         ((JSAny? code) {
           _log('[StoreManager] Server exited: $code');
-          _serverProcess = null;
-          _store.dispatch(
-            SetConnectionStatus(
-              ConnectionStatus.disconnected,
-            ),
-          );
+          // Only clear if this is still the active process
+          if (identical(_serverProcess, capturedProcess)) {
+            _serverProcess = null;
+            _store.dispatch(
+              SetConnectionStatus(
+                ConnectionStatus.disconnected,
+              ),
+            );
+          }
         }).toJS,
       );
 
@@ -297,10 +305,11 @@ class StoreManager {
     _pollTimer = null;
     _mcpSessionId = null;
 
-    if (_serverProcess != null) {
-      (_serverProcess?['kill'] as JSFunction?)
-          ?.callAsFunction(_serverProcess);
-      _serverProcess = null;
+    final proc = _serverProcess;
+    _serverProcess = null;
+    if (proc != null) {
+      (proc['kill'] as JSFunction?)
+          ?.callAsFunction(proc);
     }
 
     _store
