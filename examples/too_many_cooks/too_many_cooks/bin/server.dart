@@ -17,22 +17,6 @@ import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks/too_many_cooks.dart';
 
-Future<void> main() async {
-  _stderrWrite('[TMC] Server starting...\n'.toJS);
-  try {
-    await _startServer();
-  } catch (e, st) {
-    _stderrWrite('[TMC] Fatal error: $e\n'.toJS);
-    _stderrWrite('[TMC] Stack trace: $st\n'.toJS);
-    consoleError('[too-many-cooks] Fatal error: $e');
-    consoleError('[too-many-cooks] Stack trace: $st');
-    rethrow;
-  }
-}
-
-@JS('process.stderr.write')
-external void _stderrWrite(JSString data);
-
 @JS('setInterval')
 external void _setInterval(
   JSFunction callback,
@@ -48,12 +32,24 @@ String _randomUUID() => _jsRandomUUID();
 // ignore: lines_longer_than_80_chars
 const _badRequestJson = '{"jsonrpc":"2.0","error":{"code":-32000,"message":"Bad Request"},"id":null}';
 
+Future<void> main() async {
+  final log = _createLogger()
+    ..info('Server starting...');
+  try {
+    await _startServer(log);
+  } catch (e, st) {
+    log.fatal(
+      'Fatal error',
+      structuredData: {'error': '$e', 'stackTrace': '$st'},
+    );
+    rethrow;
+  }
+}
 
-Future<void> _startServer() async {
-  _stderrWrite('[TMC] Creating server...\n'.toJS);
+Future<void> _startServer(Logger log) async {
+  log.info('Creating server...');
 
   final cfg = defaultConfig;
-  final log = _createLogger();
 
   // Create shared database
   final dbResult = createDb(cfg);
@@ -61,7 +57,7 @@ Future<void> _startServer() async {
     Success(:final value) => value,
     Error(:final error) => throw Exception(error),
   };
-  _stderrWrite('[TMC] Database created.\n'.toJS);
+  log.info('Database created.');
 
   // Session tracking for MCP Streamable HTTP
   final transports =
@@ -78,21 +74,21 @@ Future<void> _startServer() async {
 
   // Admin Streamable HTTP routes (/admin/events)
   final adminPostFn =
-      _adminPostHandler(adminHub);
+      _adminPostHandler(adminHub, log);
   final adminGetDeleteFn =
       _adminGetDeleteHandler(adminHub);
   app
     ..post(
       '/admin/events',
-      _asyncHandler(adminPostFn),
+      _asyncHandler(adminPostFn, log),
     )
     ..get(
       '/admin/events',
-      _asyncHandler(adminGetDeleteFn),
+      _asyncHandler(adminGetDeleteFn, log),
     )
     ..delete(
       '/admin/events',
-      _asyncHandler(adminGetDeleteFn),
+      _asyncHandler(adminGetDeleteFn, log),
     );
 
   // MCP Streamable HTTP routes
@@ -101,18 +97,18 @@ Future<void> _startServer() async {
   final getDeleteFn =
       _mcpGetDeleteHandler(transports);
   app
-    ..post('/mcp', _asyncHandler(postFn))
-    ..get('/mcp', _asyncHandler(getDeleteFn))
-    ..delete('/mcp', _asyncHandler(getDeleteFn));
+    ..post('/mcp', _asyncHandler(postFn, log))
+    ..get('/mcp', _asyncHandler(getDeleteFn, log))
+    ..delete('/mcp', _asyncHandler(getDeleteFn, log));
 
   // Start listening
   const port = 4040;
   app.listen(
     port,
     (() {
-      _stderrWrite(
-        '[TMC] Server listening on port $port\n'
-            .toJS,
+      log.info(
+        'Server listening',
+        structuredData: {'port': port},
       );
     }).toJS,
   );
@@ -183,8 +179,9 @@ Future<void> Function(Request, Response)
         createStreamableHttpTransport(
           sessionIdGenerator: _randomUUID,
           onSessionInitialized: (sid) {
-            _stderrWrite(
-              '[TMC] Session init: $sid\n'.toJS,
+            log.info(
+              'Session init',
+              structuredData: {'sessionId': sid},
             );
             transports[sid] = transport;
           },
@@ -197,8 +194,9 @@ Future<void> Function(Request, Response)
     (transport as JSObject)['onclose'] = (() {
       final sid = transport.sessionId;
       if (sid != null) {
-        _stderrWrite(
-          '[TMC] Session closed: $sid\n'.toJS,
+        log.info(
+          'Session closed',
+          structuredData: {'sessionId': sid},
         );
         transports.remove(sid);
       }
@@ -254,6 +252,7 @@ Future<void> Function(Request, Response)
 Future<void> Function(Request, Response)
     _adminPostHandler(
   AdminEventHub hub,
+  Logger log,
 ) => (req, res) async {
   final sessionId =
       _getHeader(req, 'mcp-session-id');
@@ -278,9 +277,9 @@ Future<void> Function(Request, Response)
         createStreamableHttpTransport(
           sessionIdGenerator: _randomUUID,
           onSessionInitialized: (sid) {
-            _stderrWrite(
-              '[TMC] Admin session init: $sid\n'
-                  .toJS,
+            log.info(
+              'Admin session init',
+              structuredData: {'sessionId': sid},
             );
             hub.transports[sid] = transport;
           },
@@ -293,9 +292,9 @@ Future<void> Function(Request, Response)
     (transport as JSObject)['onclose'] = (() {
       final sid = transport.sessionId;
       if (sid != null) {
-        _stderrWrite(
-          '[TMC] Admin session closed: $sid\n'
-              .toJS,
+        log.info(
+          'Admin session closed',
+          structuredData: {'sessionId': sid},
         );
         hub.transports.remove(sid);
         hub.servers.remove(sid);
@@ -367,31 +366,62 @@ Future<void> Function(Request, Response)
 /// Wrap an async handler for Express.
 JSFunction _asyncHandler(
   Future<void> Function(Request, Response) fn,
+  Logger log,
 ) => ((Request req, Response res) {
   unawaited(fn(req, res).catchError((Object e) {
-    _stderrWrite('[TMC] Request error: $e\n'.toJS);
+    log.error(
+      'Request error',
+      structuredData: {'error': '$e'},
+    );
   }));
 }).toJS;
 
-Logger _createLogger() => createLoggerWithContext(
-  createLoggingContext(
-    transports: [logTransport(_logToStderr)],
-    minimumLogLevel: LogLevel.debug,
-  ),
-);
-
-void _logToStderr(
-  LogMessage message,
-  LogLevel minimumLogLevel,
-) {
-  if (message.logLevel.index < minimumLogLevel.index) {
-    return;
+String _resolveLogFilePath() {
+  final logsDir = pathJoin([getWorkspaceFolder(), 'logs']);
+  if (!existsSync(logsDir)) {
+    mkdirSync(logsDir, recursive: true);
   }
+  final timestamp = DateTime.now()
+      .toIso8601String()
+      .replaceAll(':', '-')
+      .replaceAll('.', '-');
+  return pathJoin([logsDir, 'mcp-server-$timestamp.log']);
+}
+
+Logger _createLogger() {
+  final logFilePath = _resolveLogFilePath();
+  return createLoggerWithContext(
+    createLoggingContext(
+      transports: [
+        logTransport(_createConsoleTransport()),
+        logTransport(_createFileTransport(logFilePath)),
+      ],
+      minimumLogLevel: LogLevel.debug,
+    ),
+  );
+}
+
+String _formatLogLine(LogMessage message) {
   final level = message.logLevel.name.toUpperCase();
   final data = message.structuredData;
   final dataStr =
       data != null && data.isNotEmpty ? ' $data' : '';
-  final line =
-      '[TMC] [$level] ${message.message}$dataStr\n';
-  _stderrWrite(line.toJS);
+  return '[TMC] [${message.timestamp.toIso8601String()}] '
+      '[$level] ${message.message}$dataStr\n';
 }
+
+LogFunction _createConsoleTransport() =>
+    (message, minimumLogLevel) {
+      if (message.logLevel.index < minimumLogLevel.index) {
+        return;
+      }
+      consoleError(_formatLogLine(message).trimRight());
+    };
+
+LogFunction _createFileTransport(String filePath) =>
+    (message, minimumLogLevel) {
+      if (message.logLevel.index < minimumLogLevel.index) {
+        return;
+      }
+      appendFileSync(filePath, _formatLogLine(message));
+    };

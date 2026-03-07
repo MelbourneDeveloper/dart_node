@@ -1,9 +1,8 @@
 /// MCP server setup for Too Many Cooks.
 library;
 
-import 'dart:js_interop';
-
 import 'package:dart_logging/dart_logging.dart';
+import 'package:dart_node_core/dart_node_core.dart';
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks/src/config.dart';
@@ -17,10 +16,6 @@ import 'package:too_many_cooks/src/types.dart';
 import 'package:too_many_cooks_data/too_many_cooks_data.dart'
     show TooManyCooksDb, createDb;
 
-/// Writes to stderr via process.stderr.write (safe for MCP stdio transport).
-@JS('process.stderr.write')
-external void _stderrWrite(JSString data);
-
 /// Result of creating the server — includes both MCP server and DB
 /// so the HTTP layer can wire up admin routes.
 typedef ServerBundle = ({McpServer server, TooManyCooksDb db});
@@ -29,13 +24,13 @@ typedef ServerBundle = ({McpServer server, TooManyCooksDb db});
 ///
 /// This creates both the database and a single MCP server
 /// instance with per-connection session state. Suitable for
-/// stdio transport where there's one connection.
+/// Streamable HTTP where there's one connection.
 Result<ServerBundle, String> createTooManyCooksServer({
   TooManyCooksConfig? config,
   Logger? logger,
 }) {
   final cfg = config ?? defaultConfig;
-  final log = logger ?? _createStderrLogger()
+  final log = logger ?? _createConsoleLogger()
     ..info('Creating Too Many Cooks server');
 
   final dbResult = createDb(cfg);
@@ -144,16 +139,16 @@ Result<McpServer, String> createMcpServerForDb(
   return Success(server);
 }
 
-/// Creates a logger that writes to stderr.
-Logger _createStderrLogger() => createLoggerWithContext(
+/// Creates a logger that writes to console.error.
+Logger _createConsoleLogger() => createLoggerWithContext(
   createLoggingContext(
-    transports: [logTransport(_logToStderr)],
+    transports: [logTransport(_logToConsole)],
     minimumLogLevel: LogLevel.debug,
   ),
 );
 
-/// Log transport that writes to stderr.
-void _logToStderr(
+/// Log transport that writes to console.error.
+void _logToConsole(
   LogMessage message,
   LogLevel minimumLogLevel,
 ) {
@@ -164,7 +159,7 @@ void _logToStderr(
   final data = message.structuredData;
   final dataStr =
       data != null && data.isNotEmpty ? ' $data' : '';
-  final line =
-      '[TMC] [$level] ${message.message}$dataStr\n';
-  _stderrWrite(line.toJS);
+  consoleError(
+    '[TMC] [$level] ${message.message}$dataStr',
+  );
 }
