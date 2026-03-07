@@ -2,7 +2,8 @@
 // Tests commands that require user confirmation dialogs.
 
 import * as vscode from 'vscode';
-import { AgentTreeItem, LockTreeItem } from '../../src/ui/tree/treeItems';
+import { AgentTreeItem } from '../../src/ui/tree/agentTreeItem';
+import { LockTreeItem } from '../../src/ui/tree/lockTreeItem';
 import { FileLock } from '../../src/state/types';
 import {
   waitForExtensionActivation,
@@ -84,12 +85,12 @@ suite('Command Integration - Dialog Mocking', () => {
       reason: 'test',
       version: 1,
     };
-    const lockItem = new LockTreeItem(
-      lockPath,
-      vscode.TreeItemCollapsibleState.None,
-      false,
+    const lockItem = new LockTreeItem({
+      collapsibleState: vscode.TreeItemCollapsibleState.None,
+      isCategory: false,
+      label: lockPath,
       lock,
-    );
+    });
 
     await vscode.commands.executeCommand('tooManyCooks.deleteLock', lockItem);
     await waitForLockGone(api, lockPath);
@@ -115,13 +116,13 @@ suite('Command Integration - Dialog Mocking', () => {
 
     mockWarningMessage('Release');
 
-    const agentItem = new AgentTreeItem(
-      lockPath,
-      vscode.TreeItemCollapsibleState.None,
-      'lock',
+    const agentItem = new AgentTreeItem({
       agentName,
-      lockPath,
-    );
+      collapsibleState: vscode.TreeItemCollapsibleState.None,
+      filePath: lockPath,
+      itemType: 'lock',
+      label: lockPath,
+    });
 
     await vscode.commands.executeCommand('tooManyCooks.deleteLock', agentItem);
     await waitForLockGone(api, lockPath);
@@ -130,11 +131,12 @@ suite('Command Integration - Dialog Mocking', () => {
   });
 
   test('deleteLock command - no filePath shows error', async () => {
-    const emptyItem = new LockTreeItem(
-      'No locks',
-      vscode.TreeItemCollapsibleState.None,
-      false,
-    );
+    const emptyItem = new LockTreeItem({
+      collapsibleState: vscode.TreeItemCollapsibleState.None,
+      isCategory: false,
+      label: 'No locks',
+      lock: null,
+    });
 
     await vscode.commands.executeCommand('tooManyCooks.deleteLock', emptyItem);
     assertOk(true, 'Command handled empty filePath gracefully');
@@ -166,12 +168,12 @@ suite('Command Integration - Dialog Mocking', () => {
       reason: 'test',
       version: 1,
     };
-    const lockItem = new LockTreeItem(
-      lockPath,
-      vscode.TreeItemCollapsibleState.None,
-      false,
+    const lockItem = new LockTreeItem({
+      collapsibleState: vscode.TreeItemCollapsibleState.None,
+      isCategory: false,
+      label: lockPath,
       lock,
-    );
+    });
 
     await vscode.commands.executeCommand('tooManyCooks.deleteLock', lockItem);
 
@@ -204,12 +206,12 @@ suite('Command Integration - Dialog Mocking', () => {
 
     mockWarningMessage('Remove');
 
-    const agentItem = new AgentTreeItem(
-      targetName,
-      vscode.TreeItemCollapsibleState.Collapsed,
-      'agent',
-      targetName,
-    );
+    const agentItem = new AgentTreeItem({
+      agentName: targetName,
+      collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+      itemType: 'agent',
+      label: targetName,
+    });
 
     await vscode.commands.executeCommand('tooManyCooks.deleteAgent', agentItem);
     await waitForAgentGone(api, targetName);
@@ -218,11 +220,11 @@ suite('Command Integration - Dialog Mocking', () => {
   });
 
   test('deleteAgent command - no agentName shows error', async () => {
-    const emptyItem = new AgentTreeItem(
-      'No agent',
-      vscode.TreeItemCollapsibleState.None,
-      'agent',
-    );
+    const emptyItem = new AgentTreeItem({
+      collapsibleState: vscode.TreeItemCollapsibleState.None,
+      itemType: 'agent',
+      label: 'No agent',
+    });
 
     await vscode.commands.executeCommand('tooManyCooks.deleteAgent', emptyItem);
     assertOk(true, 'Command handled empty agentName gracefully');
@@ -238,12 +240,12 @@ suite('Command Integration - Dialog Mocking', () => {
 
     mockWarningMessage(undefined);
 
-    const agentItem = new AgentTreeItem(
-      targetName,
-      vscode.TreeItemCollapsibleState.Collapsed,
-      'agent',
-      targetName,
-    );
+    const agentItem = new AgentTreeItem({
+      agentName: targetName,
+      collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+      itemType: 'agent',
+      label: targetName,
+    });
 
     await vscode.commands.executeCommand('tooManyCooks.deleteAgent', agentItem);
 
@@ -261,12 +263,12 @@ suite('Command Integration - Dialog Mocking', () => {
     mockQuickPick(senderName);
     mockInputBox('Test message with target');
 
-    const targetItem = new AgentTreeItem(
-      recipientName,
-      vscode.TreeItemCollapsibleState.Collapsed,
-      'agent',
-      recipientName,
-    );
+    const targetItem = new AgentTreeItem({
+      agentName: recipientName,
+      collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+      itemType: 'agent',
+      label: recipientName,
+    });
 
     await vscode.commands.executeCommand('tooManyCooks.sendMessage', targetItem);
     await waitForMessageInTree(api, 'Test message with target');

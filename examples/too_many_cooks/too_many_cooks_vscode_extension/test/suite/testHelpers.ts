@@ -169,7 +169,8 @@ export async function waitForMessageInTree(
 
 export function cleanDatabase(): void {
   const folders = vscode.workspace.workspaceFolders;
-  const wsFolder = folders && folders.length > 0 ? folders[0].uri.fsPath : '.';
+  const first = folders && folders.length > 0 ? folders[0] : undefined;
+  const wsFolder = first ? first.uri.fsPath : '.';
   const dbDir = path.join(wsFolder, '.too_many_cooks');
 
   console.log(`[TEST HELPER] Cleaning database at: ${dbDir}`);
@@ -271,7 +272,7 @@ export function extractKeyFromResult(result: string): string {
   if (!match) {
     throw new Error(`Could not extract agent_key from result: ${result}`);
   }
-  return match[1];
+  return match[1] ?? '';
 }
 
 // ============================================================================
@@ -286,7 +287,7 @@ export function getDescription(item: TreeItemSnapshot): string {
   return item.description ?? '';
 }
 
-export function getChildren(item: TreeItemSnapshot): TreeItemSnapshot[] | undefined {
+export function getChildren(item: TreeItemSnapshot): readonly TreeItemSnapshot[] | undefined {
   return item.children;
 }
 
@@ -318,9 +319,9 @@ export function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export function dumpTree(name: string, items: TreeItemSnapshot[]): void {
+export function dumpTree(name: string, items: readonly TreeItemSnapshot[]): void {
   console.log(`\n=== ${name} TREE ===`);
-  function dump(list: TreeItemSnapshot[], indent: number): void {
+  function dump(list: readonly TreeItemSnapshot[], indent: number): void {
     for (const item of list) {
       const prefix = '  '.repeat(indent);
       const desc = item.description ? ` [${item.description}]` : '';
