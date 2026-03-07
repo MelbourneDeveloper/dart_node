@@ -21,6 +21,9 @@ import 'package:too_many_cooks_vscode_extension/state/state.dart';
 
 void _log(String msg) => logger.log(msg);
 
+/// Server binary relative path (output of build_mcp.sh).
+const serverBinary = 'build/bin/server_node.js';
+
 /// HTTP fetch function (Node.js global).
 @JS('globalThis.fetch')
 external JSPromise<JSObject> _jsFetch(
@@ -194,12 +197,12 @@ class StoreManager {
       joinFn?.callAsFunction(
         null,
         workspaceFolder.toJS,
-        'build/bin/server_node.js'.toJS,
+        serverBinary.toJS,
       ) as JSString?,
       joinFn?.callAsFunction(
         null,
         workspaceFolder.toJS,
-        '../too_many_cooks/build/bin/server_node.js'
+        '../too_many_cooks/$serverBinary'
             .toJS,
       ) as JSString?,
     ];

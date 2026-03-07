@@ -16,6 +16,7 @@ Dart packages for building Node.js apps. Strongly Typed Dart layer over JS inter
 - All Dart, minimal JS. Use `dart:js_interop` (not deprecated `dart:js_util`/`package:js`)
 - AVOID `JSObject`/`JSAny`/`dynamic`!
 - Prefer typedef records over classes for data (structural typing)
+- Literals are illegal. Move all literals to named constants
 - ILLEGAL: `as`, `late`, `!`, `.then()`, global state
 
 **Architecture**

@@ -8,6 +8,8 @@ import 'dart:js_interop_unsafe';
 
 import 'package:dart_node_core/dart_node_core.dart';
 import 'package:test/test.dart';
+import 'package:too_many_cooks/too_many_cooks.dart'
+    show serverBinary;
 
 void main() {
   group('Too Many Cooks MCP Server Integration', () {
@@ -613,7 +615,7 @@ JSObject _spawnServer() {
   return spawnFn.callAsFunction(
     null,
     'node'.toJS,
-    <String>['build/bin/server.js'].jsify(),
+    <String>[serverBinary].jsify(),
     <String, Object?>{
       'stdio': ['pipe', 'pipe', 'inherit'],
     }.jsify(),

@@ -4,7 +4,8 @@
 set -e
 cd "$(dirname "$0")/.."
 
-SERVER_PATH="$(cd too_many_cooks && pwd)/build/bin/server_node.js"
+source "$(dirname "$0")/env.sh"
+SERVER_PATH="$(cd too_many_cooks && pwd)/$SERVER_BINARY"
 
 if [ ! -f "$SERVER_PATH" ]; then
   echo "Error: MCP server not built. Run build_mcp.sh first."

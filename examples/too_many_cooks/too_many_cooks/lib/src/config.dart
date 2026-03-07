@@ -18,3 +18,6 @@ export 'package:too_many_cooks_data/too_many_cooks_data.dart'
 
 /// Server configuration type alias for backwards compatibility.
 typedef TooManyCooksConfig = TooManyCooksDataConfig;
+
+/// Server binary relative path (output of build_mcp.sh).
+const serverBinary = 'build/bin/server_node.js';

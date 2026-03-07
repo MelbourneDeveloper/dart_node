@@ -38,11 +38,7 @@ The extension provides visual agent coordination (locks, messages, plans) via th
 
 ```bash
 cd examples/too_many_cooks && dart pub get && npm install
-dart compile js -o examples/too_many_cooks/build/bin/server.js examples/too_many_cooks/bin/server.dart
-dart run tools/build/add_preamble.dart \
-  examples/too_many_cooks/build/bin/server.js \
-  examples/too_many_cooks/build/bin/server_node.js \
-  --shebang
+bash examples/too_many_cooks/scripts/build_mcp.sh
 ```
 
 #### 2b. Build and package the extension

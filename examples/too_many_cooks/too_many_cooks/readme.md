@@ -9,8 +9,6 @@ cd examples/too_many_cooks/scripts
 bash build_mcp.sh
 ```
 
-Output: `build/bin/server_node.js`
-
 ## Install
 
 **Claude Code:**
@@ -21,12 +19,6 @@ bash scripts/install_mcp.sh
 **Cline:**
 ```bash
 bash scripts/install_cline_mcp.sh
-```
-
-## Run
-
-```bash
-node build/bin/server_node.js
 ```
 
 Set `TMC_WORKSPACE` env var to workspace folder (falls back to `process.cwd()`).

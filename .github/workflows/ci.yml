@@ -6,6 +6,7 @@ on:
 
 env:
   MIN_COVERAGE: ${{ vars.MIN_COVERAGE }}
+  SERVER_BINARY: build/bin/server_node.js
 
 jobs:
   website:
@@ -163,13 +164,13 @@ jobs:
           dart compile js -o examples/too_many_cooks/build/bin/server.js examples/too_many_cooks/bin/server.dart
           dart run tools/build/add_preamble.dart \
             examples/too_many_cooks/build/bin/server.js \
-            examples/too_many_cooks/build/bin/server_node.js \
+            examples/too_many_cooks/${{ env.SERVER_BINARY }} \
             --shebang
 
       - name: Verify server exists
         run: |
           set -e
-          test -f examples/too_many_cooks/build/bin/server_node.js || (echo "Server build failed!" && exit 1)
+          test -f examples/too_many_cooks/${{ env.SERVER_BINARY }} || (echo "Server build failed!" && exit 1)
           echo "MCP server built successfully"
 
   vscode-extension:
@@ -205,7 +206,7 @@ jobs:
           cd ../..
           dart run tools/build/add_preamble.dart \
             examples/too_many_cooks/build/bin/server.js \
-            examples/too_many_cooks/build/bin/server_node.js \
+            examples/too_many_cooks/${{ env.SERVER_BINARY }} \
             --shebang
 
       - name: Get dart_node_vsix dependencies
