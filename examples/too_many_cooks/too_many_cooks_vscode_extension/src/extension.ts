@@ -6,10 +6,8 @@ require('module-alias/register');
 
 import * as vscode from 'vscode';
 import type { AgentIdentity } from 'state/types';
-import { AgentTreeItem } from 'ui/tree/agentTreeItem';
 import { AgentsTreeProvider } from 'ui/tree/agentsTreeProvider';
 import { DashboardPanel } from 'ui/webview/dashboardPanel';
-import { LockTreeItem } from 'ui/tree/lockTreeItem';
 import { LocksTreeProvider } from 'ui/tree/locksTreeProvider';
 import { MessagesTreeProvider } from 'ui/tree/messagesTreeProvider';
 import { StatusBarManager } from 'ui/statusBar';
@@ -282,11 +280,15 @@ async function selectRecipient(
 // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
 function getFilePathFromItem(item?: vscode.TreeItem): string | null {
   if (typeof item === 'undefined') { return null; }
-  if (item instanceof AgentTreeItem && typeof item.filePath === 'string') {
+  // Duck-type checks to avoid instanceof failures across module boundaries.
+  if ('filePath' in item && typeof item.filePath === 'string') {
     return item.filePath;
   }
-  if (item instanceof LockTreeItem && item.lock !== null) {
-    return item.lock.filePath;
+  if ('lock' in item && typeof item.lock === 'object' && item.lock !== null) {
+    const lock: unknown = item.lock;
+    if (typeof lock === 'object' && lock !== null && 'filePath' in lock && typeof lock.filePath === 'string') {
+      return lock.filePath;
+    }
   }
   return null;
 }
@@ -294,7 +296,7 @@ function getFilePathFromItem(item?: vscode.TreeItem): string | null {
 // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
 function getAgentNameFromItem(item?: vscode.TreeItem): string | null {
   if (typeof item === 'undefined') { return null; }
-  if (item instanceof AgentTreeItem && typeof item.agentName === 'string') {
+  if ('agentName' in item && typeof item.agentName === 'string') {
     return item.agentName;
   }
   return null;
