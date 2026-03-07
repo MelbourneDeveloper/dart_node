@@ -5,20 +5,19 @@ Multi-agent coordination MCP server. See [spec](../docs/spec.md) for full docume
 ## Build
 
 ```bash
-cd examples/too_many_cooks/scripts
-bash build_mcp.sh
+bash scripts/mcp.sh build
 ```
 
 ## Install
 
 **Claude Code:**
 ```bash
-bash scripts/install_mcp.sh
+bash scripts/mcp.sh install
 ```
 
 **Cline:**
 ```bash
-bash scripts/install_cline_mcp.sh
+bash scripts/mcp.sh install-cline
 ```
 
 Set `TMC_WORKSPACE` env var to workspace folder (falls back to `process.cwd()`).

@@ -31,6 +31,28 @@ external JSPromise<JSObject> _jsFetch(
   JSObject? options,
 ]);
 
+/// Build a spawn env object in pure JS.
+/// Cannot dartify process.env in the VSCode extension host.
+JSObject _buildSpawnEnvJS(String workspaceFolder) {
+  final process =
+      requireModule('process') as JSObject;
+  final env = process['env'] as JSObject?;
+  final result = JSObject();
+  // Copy process.env keys via Object.assign
+  if (env != null) {
+    _objectAssign(result, env);
+  }
+  result['TMC_WORKSPACE'] = workspaceFolder.toJS;
+  return result;
+}
+
+/// Object.assign for copying process.env.
+@JS('Object.assign')
+external JSObject _objectAssign(
+  JSObject target,
+  JSObject source,
+);
+
 /// Store manager that wraps the Reflux store and HTTP
 /// client to the MCP server.
 class StoreManager {
@@ -110,22 +132,37 @@ class StoreManager {
     final spawnFn =
         childProcess['spawn'] as JSFunction?;
 
+    // Build spawn env in JS: spread process.env + TMC_WORKSPACE.
+    // Cannot dartify process.env in extension host (returns empty).
+    final spawnEnv = _buildSpawnEnv(workspaceFolder);
+
+    final spawnOpts = JSObject()
+      ..['stdio'] =
+          ['pipe', 'pipe', 'pipe'].jsify()
+      ..['env'] = spawnEnv;
+
     _serverProcess = spawnFn?.callAsFunction(
       null,
       'node'.toJS,
-      <String>[serverPath].jsify(),
-      <String, Object?>{
-        'stdio': ['pipe', 'pipe', 'inherit'],
-        'env': <String, Object?>{
-          ...(_getProcessEnv()),
-          'TMC_WORKSPACE': workspaceFolder,
-        },
-      }.jsify(),
+      [serverPath].jsify(),
+      spawnOpts,
     ) as JSObject?;
 
-    // Listen for process exit
+    // Listen for process exit and stderr
     final process = _serverProcess;
     if (process != null) {
+      // Capture stderr for debugging
+      final stderr = process['stderr'] as JSObject?;
+      if (stderr != null) {
+        (stderr['on'] as JSFunction?)?.callAsFunction(
+          stderr,
+          'data'.toJS,
+          ((JSAny? data) {
+            _log('[StoreManager] Server stderr: $data');
+          }).toJS,
+        );
+      }
+
       (process['on'] as JSFunction?)?.callAsFunction(
         process,
         'exit'.toJS,
@@ -137,6 +174,14 @@ class StoreManager {
               ConnectionStatus.disconnected,
             ),
           );
+        }).toJS,
+      );
+
+      (process['on'] as JSFunction?)?.callAsFunction(
+        process,
+        'error'.toJS,
+        ((JSAny? err) {
+          _log('[StoreManager] Server error: $err');
         }).toJS,
       );
     }
@@ -166,6 +211,7 @@ class StoreManager {
 
   /// Wait for the HTTP server to be ready.
   Future<void> _waitForServer() async {
+    _log('[StoreManager] Waiting for server...');
     for (var i = 0; i < 30; i++) {
       try {
         final response = await _fetch(
@@ -175,8 +221,11 @@ class StoreManager {
           _log('[StoreManager] Server is ready');
           return;
         }
-      } on Object {
-        // Server not ready yet
+        _log('[StoreManager] Poll $i: not ok');
+      } on Object catch (e) {
+        if (i == 0 || i % 5 == 0) {
+          _log('[StoreManager] Poll $i: $e');
+        }
       }
       await Future<void>.delayed(
         const Duration(milliseconds: 200),
@@ -221,31 +270,17 @@ class StoreManager {
 
     throw StateError(
       'MCP server binary not found. '
-      'Run scripts/build_mcp.sh first.',
+      'Run scripts/mcp.sh build first.',
     );
   }
 
-  /// Get process.env as a Dart map.
-  Map<String, String> _getProcessEnv() {
-    try {
-      final process =
-          requireModule('process') as JSObject;
-      final env = process['env'] as JSObject?;
-      if (env == null) return {};
-      final dartified = env.dartify();
-      if (dartified is Map) {
-        return Map<String, String>.fromEntries(
-          dartified.entries.map(
-            (e) => MapEntry(
-              e.key.toString(),
-              e.value.toString(),
-            ),
-          ),
-        );
-      }
-    } on Object catch (_) {}
-    return {};
-  }
+  /// Build spawn env by spreading process.env in JS
+  /// and adding TMC_WORKSPACE. Cannot dartify
+  /// process.env in the extension host (returns empty).
+  static JSObject _buildSpawnEnv(
+    String workspaceFolder,
+  ) =>
+      _buildSpawnEnvJS(workspaceFolder);
 
   /// Disconnect from the MCP server.
   Future<void> disconnect() async {

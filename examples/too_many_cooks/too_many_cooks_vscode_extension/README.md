@@ -7,14 +7,13 @@ Talks to the TMC server via `/admin/*` REST endpoints. Receives all state change
 ## Build
 
 ```bash
-cd examples/too_many_cooks/scripts
-bash build_vsix.sh
+bash scripts/vsix.sh build
 ```
 
 ## Install
 
 ```bash
-bash scripts/install_vsix.sh
+bash scripts/vsix.sh install
 ```
 
 ## Test

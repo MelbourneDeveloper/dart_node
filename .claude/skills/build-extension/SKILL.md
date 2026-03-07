@@ -23,7 +23,7 @@ bash examples/too_many_cooks_vscode_extension/build.sh
 ```
 
 This does:
-1. Compiles MCP server via `scripts/build_mcp.sh`
+1. Compiles MCP server via `scripts/mcp.sh build`
 2. Compiles extension: `dart compile js` → `wrap-extension.js` bridge → `out/lib/extension.js`
 3. Packages: `vsce package` → `.vsix` file
 

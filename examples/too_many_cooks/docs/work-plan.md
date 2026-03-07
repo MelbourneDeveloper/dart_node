@@ -19,7 +19,7 @@
 - [x] notifications_test.dart — rewrite for new auto-push model (no subscribers)
 - [x] Fix schema validation tests (MCP SDK Zod returns errors differently)
 - [x] Fix notification emitter error handling for stdio transport
-- [x] Fix build: must use scripts/build_mcp.sh (preamble required)
+- [x] Fix build: must use scripts/mcp.sh build (preamble required)
 - [x] VSIX extension_activation_test.dart — 5 dart tests pass
 - [x] VSIX suite tests — 98 tests pass via `npm test`
 
@@ -35,8 +35,8 @@ None — all blockers resolved.
   - Suite tests are END-TO-END: VSCode Extension Host + real SQLite DB + real MCP tools
   - MCP server must be built BEFORE suite tests (run_tests.sh handles this)
 - **Total: 248 tests passing**
-- Server builds correctly with preamble via scripts/build_mcp.sh
-- `scripts/run_tests.sh` runs ALL tests in correct order:
+- Server builds correctly with preamble via scripts/mcp.sh build
+- `scripts/e2e.sh` runs ALL tests in correct order:
   1. Data package tests (`dart test`)
   2. MCP server build (compile JS + add preamble)
   3. MCP server tests (`dart test` — spawns real server process)
