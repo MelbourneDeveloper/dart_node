@@ -12,7 +12,7 @@ MCP server enabling multiple AI agents to safely edit a git repository simultane
 
 ## Architecture
 
-Single HTTP server per workspace. **Everything** talks to the server — agents via MCP Streamable HTTP, VSCode extension via admin REST + SSE. Nothing touches the DB directly except the server.
+Single HTTP server per workspace. **Everything** talks to the server — agents via MCP Streamable HTTP, VSCode extension via admin REST + [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http). Nothing touches the DB directly except the server.
 
 ```mermaid
 graph TD
@@ -21,20 +21,20 @@ graph TD
     VSIX[VSCode Extension] -->|REST /admin/*| MCP
 
     MCP[Too Many Cooks Server<br>http://localhost:4040] -->|read/write| DB
-    MCP -->|push events via SSE| CC
-    MCP -->|push events via SSE| CL
-    MCP -->|push events via SSE| VSIX
+    MCP -->|push events via [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http)| CC
+    MCP -->|push events via [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http)| CL
+    MCP -->|push events via [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http)| VSIX
 
     DB[(SQLite<br>.too_many_cooks/data.db)]
 ```
 
 Two interfaces, one server:
-- **`/mcp`** — MCP Streamable HTTP endpoint for agents. Tool calls via POST, event stream via GET SSE.
-- **`/admin/*`** — REST endpoints + SSE event stream for the VSCode extension. Not exposed to MCP clients. VSIX receives all state changes via SSE push — no polling.
+- **`/mcp`** — MCP Streamable HTTP endpoint for agents. Tool calls via POST, event stream via GET [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http).
+- **`/admin/*`** — REST endpoints + [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) event stream for the VSCode extension. Not exposed to MCP clients. VSIX receives all state changes via [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) push — no polling.
 
 **Database path**: `${workspaceFolder}/.too_many_cooks/data.db` (single source of truth in `too_many_cooks_data` package).
 
-**Transport**: Streamable HTTP with SSE. Server pushes events (new messages, lock changes, etc.) to all connected clients (agents + VSIX) in real-time. No polling anywhere.
+**Transport**: Streamable HTTP with [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http). Server pushes events (new messages, lock changes, etc.) to all connected clients (agents + VSIX) in real-time. No polling anywhere.
 
 **Why HTTP, not stdio**: Stdio spawns an isolated process per agent — agents can't see each other's events. HTTP gives one shared process where the notification emitter actually works across all connected agents.
 
@@ -96,14 +96,14 @@ There is **no subscribe tool**. Subscriptions are automatic — managed entirely
 
 ### How it works
 
-1. **First connection** — agent calls `register` with just `name` → server creates identity, returns key, marks agent **active**, opens SSE event stream. **The agent must store this key.**
-2. **While connected** — server pushes all relevant events (lock changes, messages, plan updates, agent status changes) to the agent via SSE automatically
+1. **First connection** — agent calls `register` with just `name` → server creates identity, returns key, marks agent **active**, opens [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) event stream. **The agent must store this key.**
+2. **While connected** — server pushes all relevant events (lock changes, messages, plan updates, agent status changes) to the agent via [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) automatically
 3. **Connection drops** (agent disconnects, crashes, network loss) → server immediately marks agent as **deactivated** in the DB and emits `agent_deactivated` to all remaining connections (agents + VSIX)
 4. **Reconnect** — agent calls `register` with `key` only → server looks up the agent name from the key, marks agent **active** again, emits `agent_activated`. No new key is issued — the original key remains valid. Specifying `name` on reconnect is an error.
 
 ### Active agents in the DB
 
-The `identity` table tracks connection state via an `active` column. The set of active agents **always matches** the set of agents with live SSE connections. This is the single source of truth — the VSIX reads it to show which agents are online.
+The `identity` table tracks connection state via an `active` column. The set of active agents **always matches** the set of agents with live [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) connections. This is the single source of truth — the VSIX reads it to show which agents are online.
 
 ### Events
 
@@ -115,7 +115,7 @@ All events are pushed automatically to every connected client (agents + VSIX):
 
 ### VSIX behavior
 
-The VSIX connects to `/admin/events` (SSE) on startup and receives the same event stream. When an `agent_deactivated` event arrives, the VSIX immediately reflects this in the tree view (greyed out, offline indicator, etc.). No polling — the VSIX is purely reactive to push events.
+The VSIX connects to `/admin/events` ([HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http)) on startup and receives the same event stream. When an `agent_deactivated` event arrives, the VSIX immediately reflects this in the tree view (greyed out, offline indicator, etc.). No polling — the VSIX is purely reactive to push events.
 
 ---
 
@@ -136,7 +136,7 @@ Admin operations are exposed as REST endpoints on the server, **not** as MCP too
 | `/admin/reset-key` | POST | `{ agentName }` | Generate new key for agent |
 | `/admin/send-message` | POST | `{ fromAgent, toAgent, content }` | Send message on behalf of agent (no auth) |
 | `/admin/status` | GET | — | Full status (agents, locks, messages, plans) |
-| `/admin/events` | GET (SSE) | — | SSE stream pushing all state changes to the VSIX in real-time |
+| `/admin/events` | GET ([HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http)) | — | [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) stream pushing all state changes to the VSIX in real-time |
 
 ---
 
@@ -146,7 +146,7 @@ Admin operations are exposed as REST endpoints on the server, **not** as MCP too
 |---------|------|
 | `too_many_cooks_data/` | Data layer: DB ops, types, config, schema. Only used by the server. |
 | `too_many_cooks/` | HTTP server. MCP endpoint for agents, admin REST endpoints for VSIX, event notifications. |
-| `too_many_cooks_vscode_extension/` | VSCode extension. Talks to server via `/admin/*` REST endpoints. Receives all state changes via SSE push. Tree views for agents, locks, messages, plans. |
+| `too_many_cooks_vscode_extension/` | VSCode extension. Talks to server via `/admin/*` REST endpoints. Receives all state changes via [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) push. Tree views for agents, locks, messages, plans. |
 
 ---
 
@@ -157,7 +157,7 @@ Admin operations are exposed as REST endpoints on the server, **not** as MCP too
 3. **Optimistic concurrency**: Version column on locks prevents races
 4. **Retry policy**: 3 attempts, exponential backoff for transient SQLite errors
 5. **Broadcast messages**: Use `*` as to_agent
-6. **Real-time events**: Server pushes notifications to all connected agents and the VSIX via SSE — no polling
+6. **Real-time events**: Server pushes notifications to all connected agents and the VSIX via [HTTP STREAMABLE TRANSPORT](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) — no polling
 
 ---
 
