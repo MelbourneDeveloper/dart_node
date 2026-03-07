@@ -1,6 +1,9 @@
 // Too Many Cooks VSCode Extension - TypeScript.
 // Visualizes the Too Many Cooks multi-agent coordination system.
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+require('module-alias/register');
+
 import * as vscode from 'vscode';
 import type { AgentIdentity } from 'state/types';
 import { AgentTreeItem } from 'ui/tree/agentTreeItem';
