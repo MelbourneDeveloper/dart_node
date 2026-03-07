@@ -12,13 +12,16 @@ async function main() {
   console.log('Extension development path:', extensionDevelopmentPath);
   console.log('Extension tests path:', extensionTestsPath);
 
+  const vscodeExecutablePath =
+    process.env.VSCODE_EXECUTABLE_PATH ||
+    '/Applications/Visual Studio Code.app/Contents/MacOS/Electron';
+
   try {
-    // Use reuseMachineInstall: false to force isolation
-    // and pass environment variables to enable verbose logging
     const exitCode = await runTests({
       extensionDevelopmentPath,
       extensionTestsPath,
-      version: '1.80.0',
+      vscodeExecutablePath,
+      launchArgs: ['--user-data-dir', '/tmp/vsc-tmc-test'],
       extensionTestsEnv: {
         VERBOSE_LOGGING: 'true',
       },
