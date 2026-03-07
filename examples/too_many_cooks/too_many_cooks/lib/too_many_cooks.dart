@@ -5,8 +5,10 @@
 /// and plan visibility.
 library;
 
-export 'package:too_many_cooks_data/too_many_cooks_data.dart' show createDb;
+export 'package:too_many_cooks_data/too_many_cooks_data.dart'
+    show TooManyCooksDb, createDb;
 
+export 'src/admin_routes.dart';
 export 'src/config.dart';
 export 'src/server.dart';
 export 'src/types.dart';

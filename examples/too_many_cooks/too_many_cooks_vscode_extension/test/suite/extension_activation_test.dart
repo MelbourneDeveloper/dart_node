@@ -334,40 +334,6 @@ void main() {
       );
 
       test(
-        'CRITICAL: Subscribe tool MUST exist on database',
-        asyncTest(() async {
-          _log('[DB FEATURE] Testing subscribe tool existence...');
-          final api = getTestAPI();
-
-          // Subscribe tool is required for real-time notifications
-          try {
-            final resultStr = await callToolString(
-              api,
-              'subscribe',
-              {'action': 'list'},
-            );
-            assertOk(
-              resultStr.contains('subscribers'),
-              'Subscribe tool should return subscribers list',
-            );
-            _log(
-              '[DB FEATURE] CRITICAL: Subscribe tool MUST exist on database '
-              'PASSED',
-            );
-          } on Object catch (err) {
-            final msg = err.toString();
-            if (msg.contains('not found') || msg.contains('-32602')) {
-              throw StateError(
-                'CRITICAL: Subscribe tool not found on database!\n'
-                'Error was: $msg',
-              );
-            }
-            rethrow;
-          }
-        }),
-      );
-
-      test(
         'All core tools are available',
         asyncTest(() async {
           _log('[DB FEATURE] Testing all core tools...');

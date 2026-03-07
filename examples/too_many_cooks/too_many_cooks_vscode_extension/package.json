@@ -147,7 +147,6 @@
     }
   },
   "scripts": {
-    "postinstall": "npx @electron/rebuild -v 39.2.7 --module-dir . || true",
     "vscode:prepublish": "npm run compile",
     "compile": "dart pub get && dart compile js -O2 -o out/extension.dart.js lib/extension.dart && node scripts/wrap-extension.js",
     "compile:tests": "dart pub get && mkdir -p out/test/suite && for f in test/suite/*_test.dart; do dart compile js -O0 -o out/test/suite/$(basename ${f%.dart}.dart.js) $f; done && node scripts/wrap-tests.js && node scripts/generate-test-manifest.js && cp test/suite/index.js out/test/suite/",
@@ -157,9 +156,7 @@
     "test:unit": "dart test",
     "package": "vsce package"
   },
-  "dependencies": {
-    "better-sqlite3": "^12.6.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@electron/rebuild": "^3.7.2",
     "@playwright/test": "^1.57.0",

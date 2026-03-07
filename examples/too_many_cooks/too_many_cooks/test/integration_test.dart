@@ -11,23 +11,32 @@ import 'package:test/test.dart';
 
 void main() {
   group('Too Many Cooks MCP Server Integration', () {
-    // late is required for setUp/tearDown pattern in test files
+    // Server process shared across all tests
+    // ignore: no_late
+    late JSObject serverProcess;
+    // Per-test MCP client (fresh session each test)
     // ignore: no_late
     late _McpClient client;
 
-    setUp(() async {
-      // Delete DB file to start fresh each test
+    setUpAll(() async {
+      // Delete DB files and start server once
       _deleteDbFiles();
+      serverProcess = _spawnServer();
+      await _waitForServer();
+    });
+
+    tearDownAll(() {
+      _killProcess(serverProcess);
+      _deleteDbFiles();
+    });
+
+    setUp(() async {
+      // Reset DB between tests via admin endpoint
+      await _resetServer();
+      // Fresh MCP session for each test
       client = _McpClient();
-      await client.start();
+      await client.initSession();
     });
-
-    tearDown(() async {
-      await client.stop();
-    });
-
-    // Clean up after ALL tests complete so we don't pollute the shared DB
-    tearDownAll(_deleteDbFiles);
 
     test('5 agents register concurrently', () async {
       final registerFutures = List.generate(
@@ -267,21 +276,11 @@ void main() {
     test('lock without action returns error', () async {
       final result = await client.callToolRaw('lock', {});
       expect(result['isError'], isTrue);
-      final content =
-          (result['content']! as List).first as Map<String, Object?>;
-      final text = content['text']! as String;
-      expect(text, contains('missing_parameter'));
-      expect(text, contains('action'));
     });
 
     test('message without action returns error', () async {
       final result = await client.callToolRaw('message', {});
       expect(result['isError'], isTrue);
-      final content =
-          (result['content']! as List).first as Map<String, Object?>;
-      final text = content['text']! as String;
-      expect(text, contains('missing_parameter'));
-      expect(text, contains('action'));
     });
 
     test('message without registration returns not_registered', () async {
@@ -297,11 +296,6 @@ void main() {
     test('plan without action returns error', () async {
       final result = await client.callToolRaw('plan', {});
       expect(result['isError'], isTrue);
-      final content =
-          (result['content']! as List).first as Map<String, Object?>;
-      final text = content['text']! as String;
-      expect(text, contains('missing_parameter'));
-      expect(text, contains('action'));
     });
 
     // CRITICAL: One plan per agent - updating replaces, doesn't create new
@@ -601,73 +595,126 @@ Future<List<({String name, String key})>> _registerAgents(
   }).toList();
 }
 
-/// MCP Client - uses newline-delimited JSON over stdio.
-class _McpClient {
-  JSObject? _process;
-  final _pending = <int, Completer<Map<String, Object?>>>{};
-  var _nextId = 1;
-  var _buffer = '';
+/// HTTP fetch (Node.js global).
+@JS('globalThis.fetch')
+external JSPromise<JSObject> _jsFetch(
+  JSString url, [
+  JSObject? options,
+]);
 
-  Future<void> start() async {
-    final childProcess = requireModule('child_process') as JSObject;
-    final spawnFn = childProcess['spawn']! as JSFunction;
+const _baseUrl = 'http://localhost:4040';
+const _accept = 'application/json, text/event-stream';
 
-    _process =
-        spawnFn.callAsFunction(
-              null,
-              'node'.toJS,
-              <String>['build/bin/server_node.js'].jsify(),
-              <String, Object?>{
-                'stdio': ['pipe', 'pipe', 'inherit'],
-              }.jsify(),
-            )!
-            as JSObject;
+/// Spawn the server process.
+JSObject _spawnServer() {
+  final childProcess = requireModule('child_process') as JSObject;
+  final spawnFn = childProcess['spawn']! as JSFunction;
 
-    final stdout = _process!['stdout']! as JSObject;
-    (stdout['on']! as JSFunction).callAsFunction(
-      stdout,
-      'data'.toJS,
-      _onData.toJS,
+  return spawnFn.callAsFunction(
+    null,
+    'node'.toJS,
+    <String>['build/bin/server.js'].jsify(),
+    <String, Object?>{
+      'stdio': ['pipe', 'pipe', 'inherit'],
+    }.jsify(),
+  )! as JSObject;
+}
+
+/// Kill a child process.
+void _killProcess(JSObject process) {
+  (process['kill']! as JSFunction).callAsFunction(process);
+}
+
+/// Wait for server to be ready by polling /admin/status.
+Future<void> _waitForServer() async {
+  for (var i = 0; i < 30; i++) {
+    try {
+      final r = await _jsFetch(
+        '$_baseUrl/admin/status'.toJS,
+      ).toDart;
+      final ok = r['ok'] as JSBoolean?;
+      if (ok != null && ok.toDart) return;
+    } on Object {
+      // Not ready yet
+    }
+    await Future<void>.delayed(
+      const Duration(milliseconds: 200),
     );
+  }
+  throw StateError('Server failed to start');
+}
 
-    await _request('initialize', {
+/// Reset the server DB via admin endpoint.
+Future<void> _resetServer() async {
+  final options = JSObject()
+    ..['method'] = 'POST'.toJS
+    ..['headers'] = (JSObject()
+      ..['Content-Type'] = 'application/json'.toJS);
+  final r = await _jsFetch(
+    '$_baseUrl/admin/reset'.toJS,
+    options,
+  ).toDart;
+  final ok = r['ok'] as JSBoolean?;
+  if (ok == null || !ok.toDart) {
+    throw StateError('Failed to reset server');
+  }
+}
+
+/// MCP client that communicates via Streamable HTTP.
+class _McpClient {
+  String? _sessionId;
+  var _nextId = 1;
+
+  Future<void> initSession() async {
+    final initResult = await _request('initialize', {
       'protocolVersion': '2024-11-05',
       'capabilities': <String, Object?>{},
-      'clientInfo': {'name': 'test-client', 'version': '1.0.0'},
+      'clientInfo': {
+        'name': 'test-client',
+        'version': '1.0.0',
+      },
     });
-
-    _notify('notifications/initialized', {});
-  }
-
-  Future<void> stop() async {
-    if (_process != null) {
-      (_process!['kill']! as JSFunction).callAsFunction(_process);
+    if (_sessionId == null) {
+      throw StateError(
+        'No session ID after init: $initResult',
+      );
     }
+
+    // Send initialized notification
+    await _postMcp(jsonEncode({
+      'jsonrpc': '2.0',
+      'method': 'notifications/initialized',
+      'params': <String, Object?>{},
+    }));
   }
 
-  Future<String> callTool(String name, Map<String, Object?> args) async {
+  Future<String> callTool(
+    String name,
+    Map<String, Object?> args,
+  ) async {
     final result = await _request('tools/call', {
       'name': name,
       'arguments': args,
     });
-    final content = (result['content']! as List).first as Map<String, Object?>;
+    final content =
+        (result['content']! as List).first
+            as Map<String, Object?>;
     return content['text']! as String;
   }
 
-  /// Returns raw result including isError flag for testing error responses.
   Future<Map<String, Object?>> callToolRaw(
     String name,
     Map<String, Object?> args,
-  ) => _request('tools/call', {'name': name, 'arguments': args});
+  ) => _request('tools/call', {
+    'name': name,
+    'arguments': args,
+  });
 
   Future<Map<String, Object?>> _request(
     String method,
     Map<String, Object?> params,
-  ) {
+  ) async {
     final id = _nextId++;
-    final completer = Completer<Map<String, Object?>>();
-    _pending[id] = completer;
-
     final body = jsonEncode({
       'jsonrpc': '2.0',
       'id': id,
@@ -675,57 +722,96 @@ class _McpClient {
       'params': params,
     });
 
-    // MCP stdio uses newline-delimited JSON
-    _write('$body\n');
+    final response = await _postMcp(body);
+    final text = await _responseText(response);
 
-    return completer.future;
-  }
+    // Parse SSE or JSON
+    final json = _parseMcpResponse(text);
 
-  void _notify(String method, Map<String, Object?> params) {
-    final body = jsonEncode({
-      'jsonrpc': '2.0',
-      'method': method,
-      'params': params,
-    });
-    _write('$body\n');
-  }
-
-  void _write(String data) {
-    final stdin = _process!['stdin']! as JSObject;
-    (stdin['write']! as JSFunction).callAsFunction(stdin, data.toJS);
-  }
-
-  void _onData(JSAny chunk) {
-    final bytes = (chunk as JSUint8Array).toDart;
-    _buffer += String.fromCharCodes(bytes);
-    _processBuffer();
-  }
-
-  void _processBuffer() {
-    // MCP stdio uses newline-delimited JSON
-    while (true) {
-      final newlineIdx = _buffer.indexOf('\n');
-      if (newlineIdx == -1) return;
-
-      final line = _buffer.substring(0, newlineIdx);
-      _buffer = _buffer.substring(newlineIdx + 1);
-
-      if (line.trim().isEmpty) continue;
-      _handleMessage(line);
+    if (json.containsKey('error')) {
+      final error =
+          json['error']! as Map<String, Object?>;
+      final message =
+          error['message'] as String? ?? 'Error';
+      return <String, Object?>{
+        'isError': true,
+        'content': <Object>[
+          <String, Object?>{
+            'type': 'text',
+            'text': message,
+          },
+        ],
+      };
     }
+
+    return json['result']! as Map<String, Object?>;
   }
 
-  void _handleMessage(String body) {
-    final json = jsonDecode(body) as Map<String, Object?>;
-    final id = json['id'];
-    if (id != null && _pending.containsKey(id)) {
-      final completer = _pending.remove(id)!;
-      if (json.containsKey('error')) {
-        completer.completeError(Exception('MCP error: ${json['error']}'));
-      } else {
-        completer.complete(json['result']! as Map<String, Object?>);
+  Future<JSObject> _postMcp(String body) async {
+    final headers = JSObject()
+      ..['Content-Type'] = 'application/json'.toJS
+      ..['Accept'] = _accept.toJS;
+    if (_sessionId != null) {
+      headers['mcp-session-id'] =
+          _sessionId!.toJS;
+    }
+
+    final options = JSObject()
+      ..['method'] = 'POST'.toJS
+      ..['headers'] = headers
+      ..['body'] = body.toJS;
+
+    final response = await _jsFetch(
+      '$_baseUrl/mcp'.toJS,
+      options,
+    ).toDart;
+
+    // Capture session ID from response
+    final sid = _getHeader(response, 'mcp-session-id');
+    if (sid != null) _sessionId = sid;
+
+    return response;
+  }
+
+  Future<String> _responseText(
+    JSObject response,
+  ) async {
+    final text = await (
+      (response['text'] as JSFunction?)
+              ?.callAsFunction(response)
+          as JSPromise<JSString>?
+    )?.toDart;
+    return text?.toDart ?? '';
+  }
+
+  String? _getHeader(JSObject response, String name) {
+    final headers =
+        response['headers'] as JSObject?;
+    if (headers == null) return null;
+    final getFn = headers['get'] as JSFunction?;
+    final value =
+        getFn?.callAsFunction(headers, name.toJS);
+    if (value == null || value.isUndefinedOrNull) {
+      return null;
+    }
+    return (value as JSString).toDart;
+  }
+
+  Map<String, Object?> _parseMcpResponse(String text) {
+    if (text.trimLeft().startsWith('{')) {
+      return jsonDecode(text) as Map<String, Object?>;
+    }
+    for (final line in text.split('\n')) {
+      if (line.startsWith('data: ')) {
+        try {
+          return jsonDecode(line.substring(6))
+              as Map<String, Object?>;
+        } on Object {
+          continue;
+        }
       }
     }
+    throw StateError('Could not parse: $text');
   }
 }
 

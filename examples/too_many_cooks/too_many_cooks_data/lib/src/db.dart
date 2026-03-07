@@ -115,6 +115,7 @@ typedef TooManyCooksDb = ({
     String content,
   )
   adminSendMessage,
+  Result<void, DbError> Function() adminReset,
 });
 
 /// Create database instance with retry policy.
@@ -222,6 +223,7 @@ TooManyCooksDb _createDbOps(
   adminResetKey: (name) => _adminResetKey(db, log, name),
   adminSendMessage: (from, to, content) =>
       _adminSendMessage(db, log, from, to, content, config.maxMessageLength),
+  adminReset: () => _adminReset(db, log),
 );
 
 extension type _Crypto(JSObject _) implements JSObject {
@@ -1022,6 +1024,20 @@ Result<AgentRegistration, DbError> _adminResetKey(
       Error(:final error) => Error((code: errDatabase, message: error)),
     },
     Error(:final error) => Error((code: errDatabase, message: error)),
+  };
+}
+
+Result<void, DbError> _adminReset(Database db, Logger log) {
+  log.warn('Admin resetting all data');
+  return switch (db.exec('''
+    DELETE FROM plans;
+    DELETE FROM messages;
+    DELETE FROM locks;
+    DELETE FROM identity;
+  ''')) {
+    Success() => const Success(null),
+    Error(:final error) =>
+      Error((code: errDatabase, message: error)),
   };
 }
 

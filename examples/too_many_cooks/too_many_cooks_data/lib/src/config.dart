@@ -21,9 +21,13 @@ typedef TooManyCooksDataConfig = ({
 String resolveDbPath(String workspaceFolder) =>
     '$workspaceFolder/.too_many_cooks/data.db';
 
-/// Default configuration values.
+/// Default lock timeout in milliseconds (10 minutes).
 const defaultLockTimeoutMs = 600000;
+
+/// Default maximum message length in characters.
 const defaultMaxMessageLength = 200;
+
+/// Default maximum plan field length in characters.
 const defaultMaxPlanLength = 100;
 
 /// Create config with explicit dbPath.

@@ -5,11 +5,39 @@
 library;
 
 import 'package:reflux/reflux.dart';
-import 'package:too_many_cooks_data/too_many_cooks_data.dart';
 
-// Re-export types for convenience
-export 'package:too_many_cooks_data/too_many_cooks_data.dart'
-    show AgentIdentity, AgentPlan, FileLock, Message;
+// Types defined locally — VSIX never touches the DB directly.
+
+/// Agent identity (public info only - no key).
+typedef AgentIdentity = ({String agentName, int registeredAt, int lastActive});
+
+/// File lock info.
+typedef FileLock = ({
+  String filePath,
+  String agentName,
+  int acquiredAt,
+  int expiresAt,
+  String? reason,
+  int version,
+});
+
+/// Inter-agent message.
+typedef Message = ({
+  String id,
+  String fromAgent,
+  String toAgent,
+  String content,
+  int createdAt,
+  int? readAt,
+});
+
+/// Agent plan (what they're doing and why).
+typedef AgentPlan = ({
+  String agentName,
+  String goal,
+  String currentTask,
+  int updatedAt,
+});
 
 /// Connection status to the MCP server.
 enum ConnectionStatus {

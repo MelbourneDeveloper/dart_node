@@ -15,8 +15,6 @@ dependencies:
   nadz: ^0.0.7-beta
   reflux:
     path: ../../../packages/reflux
-  too_many_cooks_data:
-    path: ../too_many_cooks_data
 
 dev_dependencies:
   puppeteer: ^3.16.0

@@ -21,8 +21,16 @@ import 'package:too_many_cooks_data/too_many_cooks_data.dart'
 @JS('process.stderr.write')
 external void _stderrWrite(JSString data);
 
-/// Create the Too Many Cooks MCP server.
-Result<McpServer, String> createTooManyCooksServer({
+/// Result of creating the server — includes both MCP server and DB
+/// so the HTTP layer can wire up admin routes.
+typedef ServerBundle = ({McpServer server, TooManyCooksDb db});
+
+/// Create the Too Many Cooks MCP server with its own DB.
+///
+/// This creates both the database and a single MCP server
+/// instance with per-connection session state. Suitable for
+/// stdio transport where there's one connection.
+Result<ServerBundle, String> createTooManyCooksServer({
   TooManyCooksConfig? config,
   Logger? logger,
 }) {
@@ -30,16 +38,39 @@ Result<McpServer, String> createTooManyCooksServer({
   final log = logger ?? _createStderrLogger()
     ..info('Creating Too Many Cooks server');
 
-  // Create database
   final dbResult = createDb(cfg);
   if (dbResult case Error(:final error)) {
-    log.error('Failed to create database', structuredData: {'error': error});
+    log.error(
+      'Failed to create database',
+      structuredData: {'error': error},
+    );
     return Error(error);
   }
-  final db = (dbResult as Success<TooManyCooksDb, String>).value;
+  final db =
+      (dbResult as Success<TooManyCooksDb, String>).value;
   log.debug('Database created successfully');
 
-  // Create MCP server with logging capability enabled
+  final serverResult = createMcpServerForDb(db, cfg, log);
+  if (serverResult case Error(:final error)) {
+    return Error(error);
+  }
+  final server =
+      (serverResult as Success<McpServer, String>).value;
+
+  return Success((server: server, db: db));
+}
+
+/// Create an MCP server instance wired to a shared DB.
+///
+/// Each call creates a fresh MCP server with its own
+/// per-connection session state. The DB is shared.
+/// Use this for Streamable HTTP where each session needs
+/// its own MCP server instance.
+Result<McpServer, String> createMcpServerForDb(
+  TooManyCooksDb db,
+  TooManyCooksConfig config,
+  Logger log,
+) {
   final serverResult = McpServer.create(
     (name: 'too-many-cooks', version: '0.1.0'),
     options: (
@@ -53,16 +84,20 @@ Result<McpServer, String> createTooManyCooksServer({
     ),
   );
   if (serverResult case Error(:final error)) {
-    log.error('Failed to create MCP server', structuredData: {'error': error});
+    log.error(
+      'Failed to create MCP server',
+      structuredData: {'error': error},
+    );
     return Error(error);
   }
-  final server = (serverResult as Success<McpServer, String>).value;
+  final server =
+      (serverResult as Success<McpServer, String>).value;
   log.debug('MCP server created');
 
   // Create notification emitter
   final emitter = createNotificationEmitter(server);
 
-  // Per-connection session state — set after register, used by all other tools
+  // Per-connection session state
   SessionIdentity? session;
   SessionIdentity? getSession() => session;
   void setSession(String name, String key) {
@@ -80,7 +115,13 @@ Result<McpServer, String> createTooManyCooksServer({
     ..registerTool(
       'lock',
       lockToolConfig,
-      createLockHandler(db, cfg, emitter, log, getSession),
+      createLockHandler(
+        db,
+        config,
+        emitter,
+        log,
+        getSession,
+      ),
     )
     ..registerTool(
       'message',
@@ -92,16 +133,18 @@ Result<McpServer, String> createTooManyCooksServer({
       planToolConfig,
       createPlanHandler(db, emitter, log, getSession),
     )
-    ..registerTool('status', statusToolConfig, createStatusHandler(db, log))
-;
+    ..registerTool(
+      'status',
+      statusToolConfig,
+      createStatusHandler(db, log),
+    );
 
   log.info('Server initialized with all tools registered');
 
   return Success(server);
 }
 
-/// Creates a logger that writes to stderr (safe for MCP stdio transport).
-/// MCP uses stdin/stdout, so stderr is available for diagnostics.
+/// Creates a logger that writes to stderr.
 Logger _createStderrLogger() => createLoggerWithContext(
   createLoggingContext(
     transports: [logTransport(_logToStderr)],
@@ -109,12 +152,19 @@ Logger _createStderrLogger() => createLoggerWithContext(
   ),
 );
 
-/// Log transport that writes to stderr using process.stderr.write.
-void _logToStderr(LogMessage message, LogLevel minimumLogLevel) {
-  if (message.logLevel.index < minimumLogLevel.index) return;
+/// Log transport that writes to stderr.
+void _logToStderr(
+  LogMessage message,
+  LogLevel minimumLogLevel,
+) {
+  if (message.logLevel.index < minimumLogLevel.index) {
+    return;
+  }
   final level = message.logLevel.name.toUpperCase();
   final data = message.structuredData;
-  final dataStr = data != null && data.isNotEmpty ? ' $data' : '';
-  final line = '[TMC] [$level] ${message.message}$dataStr\n';
+  final dataStr =
+      data != null && data.isNotEmpty ? ' $data' : '';
+  final line =
+      '[TMC] [$level] ${message.message}$dataStr\n';
   _stderrWrite(line.toJS);
 }

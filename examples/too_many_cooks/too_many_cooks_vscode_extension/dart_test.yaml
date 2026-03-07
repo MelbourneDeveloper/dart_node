@@ -8,8 +8,8 @@
 # Do NOT run test/suite/*.dart with `dart test` - they will fail with
 # "method not found: 'suite'" because Mocha is not available.
 
-# Must use node platform because state imports too_many_cooks_data
-# which uses dart:js_interop (only available on JS platforms)
+# Must use node platform because extension uses dart:js_interop
+# (only available on JS platforms)
 platforms: [node]
 
 # Only run pure Dart tests (not VSCode Extension Host test/suite files)

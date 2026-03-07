@@ -7,7 +7,6 @@ import 'dart:async';
 import 'dart:js_interop';
 
 import 'package:dart_node_vsix/dart_node_vsix.dart';
-import 'package:too_many_cooks_data/too_many_cooks_data.dart' show resolveDbPath;
 import 'package:too_many_cooks_vscode_extension/state/store.dart';
 import 'package:too_many_cooks_vscode_extension/ui/status_bar/status_bar_manager.dart';
 import 'package:too_many_cooks_vscode_extension/ui/tree/agents_tree_provider.dart';
@@ -135,7 +134,7 @@ JSObject _doActivateSync(ExtensionContext context) {
       testWs ??
       (folders != null && folders.length > 0 ? folders[0].uri.fsPath : '.');
   _log('Using workspace folder: $workspaceFolder');
-  _log('Database will be at: ${resolveDbPath(workspaceFolder)}');
+  _log('Workspace: $workspaceFolder');
 
   // Create store manager with workspace folder
   _storeManager = StoreManager(workspaceFolder: workspaceFolder);

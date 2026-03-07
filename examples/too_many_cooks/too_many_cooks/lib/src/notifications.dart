@@ -49,11 +49,13 @@ NotificationEmitter createNotificationEmitter(McpServer server) {
     };
 
     unawaited(
-      server.sendLoggingMessage((
-        level: 'info',
-        logger: 'too-many-cooks',
-        data: notificationData,
-      )),
+      server
+          .sendLoggingMessage((
+            level: 'info',
+            logger: 'too-many-cooks',
+            data: notificationData,
+          ))
+          .then((_) {}, onError: (_) {}),
     );
   }
 
