@@ -46,14 +46,18 @@ async function readEventStream(
   // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
   body: ReadableStream<Uint8Array>,
   onEvent: () => void,
+  log: LogFn,
 ): Promise<void> {
   const reader: ReadableStreamDefaultReader<Uint8Array> = body.getReader();
   const decoder: TextDecoder = new TextDecoder();
   let buffer: string = '';
   const dataPrefix: string = 'data: ';
+  // eslint-disable-next-line @typescript-eslint/no-inferrable-types
+  let eventCount: number = 0;
   for (;;) {
     const result: ReadableStreamReadResult<Uint8Array> = await reader.read();
     if (result.done) {
+      log(`[AdminEventStream] Stream done after ${String(eventCount)} events`);
       break;
     }
     buffer += decoder.decode(result.value, { stream: true });
@@ -63,6 +67,8 @@ async function readEventStream(
       if (line.startsWith(dataPrefix)) {
         const lineData: string = line.substring(dataPrefix.length).trim();
         if (lineData.length > 0) {
+          eventCount += 1;
+          log(`[AdminEventStream] Event #${String(eventCount)}: ${lineData.substring(0, 80)}`);
           onEvent();
         }
       }
@@ -90,7 +96,7 @@ function listenAdminEvents(
         config.log(`[AdminEventStream] GET failed: ${String(response.status)}`);
         return;
       }
-      await readEventStream(response.body, config.onEvent);
+      await readEventStream(response.body, config.onEvent, config.log);
       config.log('[AdminEventStream] Event stream ended');
     },
   ).catch((err: unknown): void => {

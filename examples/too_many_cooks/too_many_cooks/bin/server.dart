@@ -322,12 +322,6 @@ Future<void> Function(Request, Response)
     };
     await server.connect(transport);
 
-    // Track server for event pushing
-    final sid = transport.sessionId;
-    if (sid != null) {
-      hub.servers[sid] = server;
-    }
-
     await transport
         .handleRequest(
           req as JSObject,
@@ -335,6 +329,15 @@ Future<void> Function(Request, Response)
           body,
         )
         .toDart;
+
+    // Track server for event pushing.
+    // Must be AFTER handleRequest — sessionId is
+    // only set during onSessionInitialized which
+    // fires inside handleRequest for initialize.
+    final sid = transport.sessionId;
+    if (sid != null) {
+      hub.servers[sid] = server;
+    }
     return;
   }
 

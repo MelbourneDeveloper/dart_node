@@ -27,6 +27,8 @@ function log(message: string): void {
   const fullMessage: string = `[${timestamp}] ${message}`;
   outputChannel?.appendLine(fullMessage);
   logMessages.push(fullMessage);
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  (require as Function)('process').stdout.write(`[EXT] ${fullMessage}\n`);
 }
 
 // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types

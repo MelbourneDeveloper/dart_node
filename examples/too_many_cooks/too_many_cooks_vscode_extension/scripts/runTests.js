@@ -89,6 +89,14 @@ async function main() {
     const failures = await waitForTestCompletion();
     logToFile('INFO', 'Test failures:', failures);
 
+    // Dump the full log to console so CI/terminal shows everything
+    try {
+      const fullLog = fs.readFileSync(LOG_FILE, 'utf8');
+      process.stdout.write('\n=== FULL TEST LOG ===\n');
+      process.stdout.write(fullLog);
+      process.stdout.write('=== END TEST LOG ===\n\n');
+    } catch { /* ignore */ }
+
     logStream.end();
     process.exit(failures > 0 ? 1 : 0);
   } catch (err) {

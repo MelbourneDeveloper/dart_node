@@ -87,6 +87,7 @@ export class StoreManager {
   }
 
   private handleAdminEvent(): void {
+    this.log('[StoreManager] Admin event received → refreshing');
     this.refreshStatus().catch((err: unknown): void => {
       this.log(`[StoreManager] Refresh failed: ${String(err)}`);
     });
@@ -105,10 +106,22 @@ export class StoreManager {
   public async refreshStatus(): Promise<void> {
     if (!this.isConnected) { throw new Error('Not connected'); }
     const response: Response = await fetch(`${BASE_URL}/admin/status`);
-    if (!response.ok) { return; }
+    if (!response.ok) {
+      this.log(`[StoreManager] refreshStatus: response not ok (${String(response.status)})`);
+      return;
+    }
     const json: unknown = await response.json();
-    if (!isRecord(json)) { return; }
+    if (!isRecord(json)) {
+      this.log('[StoreManager] refreshStatus: response is not a record');
+      return;
+    }
     const statusData: ReturnType<typeof parseStatusResponse> = parseStatusResponse(json);
+    this.log(
+      `[StoreManager] refreshStatus: ${String(statusData.agents.length)} agents, ` +
+      `${String(statusData.locks.length)} locks, ` +
+      `${String(statusData.messages.length)} msgs, ` +
+      `${String(statusData.plans.length)} plans`,
+    );
     this.store.dispatch({ agents: statusData.agents, type: 'SetAgents' });
     this.store.dispatch({ locks: statusData.locks, type: 'SetLocks' });
     this.store.dispatch({ messages: statusData.messages, type: 'SetMessages' });
