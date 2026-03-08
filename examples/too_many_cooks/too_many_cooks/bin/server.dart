@@ -93,7 +93,7 @@ Future<void> _startServer(Logger log) async {
 
   // MCP Streamable HTTP routes
   final postFn =
-      _mcpPostHandler(transports, db, cfg, log);
+      _mcpPostHandler(transports, db, cfg, log, adminHub);
   final getDeleteFn =
       _mcpGetDeleteHandler(transports);
   app
@@ -155,6 +155,7 @@ Future<void> Function(Request, Response)
   TooManyCooksDb db,
   TooManyCooksConfig cfg,
   Logger log,
+  AdminEventHub adminHub,
 ) => (req, res) async {
   final sessionId =
       _getHeader(req, 'mcp-session-id');
@@ -202,8 +203,10 @@ Future<void> Function(Request, Response)
       }
     }).toJS;
 
-    final serverResult =
-        createMcpServerForDb(db, cfg, log);
+    final serverResult = createMcpServerForDb(
+      db, cfg, log,
+      adminPush: adminHub.pushEvent,
+    );
     final server = switch (serverResult) {
       Success(:final value) => value,
       Error(:final error) => throw Exception(error),

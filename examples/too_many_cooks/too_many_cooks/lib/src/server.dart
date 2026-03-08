@@ -64,8 +64,9 @@ Result<ServerBundle, String> createTooManyCooksServer({
 Result<McpServer, String> createMcpServerForDb(
   TooManyCooksDb db,
   TooManyCooksConfig config,
-  Logger log,
-) {
+  Logger log, {
+  AdminPushFn? adminPush,
+}) {
   final serverResult = McpServer.create(
     (name: 'too-many-cooks', version: '0.1.0'),
     options: (
@@ -89,8 +90,11 @@ Result<McpServer, String> createMcpServerForDb(
       (serverResult as Success<McpServer, String>).value;
   log.debug('MCP server created');
 
-  // Create notification emitter
-  final emitter = createNotificationEmitter(server);
+  // Create notification emitter — also pushes to admin hub
+  final emitter = createNotificationEmitter(
+    server,
+    adminPush: adminPush,
+  );
 
   // Per-connection session state
   SessionIdentity? session;

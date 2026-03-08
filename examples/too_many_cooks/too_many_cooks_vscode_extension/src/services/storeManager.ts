@@ -69,7 +69,6 @@ export class StoreManager {
   private async doConnect(): Promise<void> {
     const externalRunning: boolean = await checkServerAvailable(BASE_URL);
     if (externalRunning) {
-      await this.resetServer();
       this.usingExternalServer = true;
     } else {
       await this.spawnServer();

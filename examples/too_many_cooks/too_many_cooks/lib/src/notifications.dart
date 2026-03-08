@@ -33,14 +33,22 @@ const eventMessageSent = 'message_sent';
 /// Event type for plan update.
 const eventPlanUpdated = 'plan_updated';
 
+/// Callback type for pushing events to the admin hub.
+typedef AdminPushFn =
+    void Function(String event, Map<String, Object?> payload);
+
 /// Notification emitter - broadcasts events to all connected clients via MCP
 /// logging. No subscriber management — events push automatically.
 typedef NotificationEmitter = ({
   void Function(String event, Map<String, Object?> payload) emit,
 });
 
-/// Create a notification emitter that uses the MCP server's logging.
-NotificationEmitter createNotificationEmitter(McpServer server) {
+/// Create a notification emitter that uses the MCP server's logging
+/// and optionally also pushes to the admin event hub (for the VSIX).
+NotificationEmitter createNotificationEmitter(
+  McpServer server, {
+  AdminPushFn? adminPush,
+}) {
   void emit(String event, Map<String, Object?> payload) {
     final notificationData = <String, Object?>{
       'event': event,
@@ -57,6 +65,9 @@ NotificationEmitter createNotificationEmitter(McpServer server) {
           ))
           .then((_) {}, onError: (_) {}),
     );
+
+    // Also push to admin hub so the VSIX gets real-time updates
+    adminPush?.call(event, payload);
   }
 
   return (emit: emit,);

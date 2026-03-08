@@ -3,11 +3,14 @@
 import * as vscode from 'vscode';
 
 export interface DialogService {
-  showErrorMessage(message: string): Thenable<string | undefined>;
-  showInformationMessage(message: string): Thenable<string | undefined>;
-  showInputBox(options: vscode.InputBoxOptions): Thenable<string | undefined>;
-  showQuickPick(items: string[], options: vscode.QuickPickOptions): Thenable<string | undefined>;
-  showWarningMessage(message: string, options: vscode.MessageOptions, ...items: string[]): Thenable<string | undefined>;
+  readonly showErrorMessage: (message: string) => Thenable<string | undefined>;
+  readonly showInformationMessage: (message: string) => Thenable<string | undefined>;
+  // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+  readonly showInputBox: (options: Readonly<vscode.InputBoxOptions>) => Thenable<string | undefined>;
+  // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+  readonly showQuickPick: (items: readonly string[], options: Readonly<vscode.QuickPickOptions>) => Thenable<string | undefined>;
+  // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+  readonly showWarningMessage: (message: string, options: Readonly<vscode.MessageOptions>, ...items: string[]) => Thenable<string | undefined>;
 }
 
 function createDefaultDialogService(): DialogService {
@@ -18,13 +21,15 @@ function createDefaultDialogService(): DialogService {
     showInformationMessage: (message: string): Thenable<string | undefined> => {
       return vscode.window.showInformationMessage(message);
     },
-    showInputBox: (options: vscode.InputBoxOptions): Thenable<string | undefined> => {
+    // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+    showInputBox: (options: Readonly<vscode.InputBoxOptions>): Thenable<string | undefined> => {
       return vscode.window.showInputBox(options);
     },
-    showQuickPick: (items: string[], options: vscode.QuickPickOptions): Thenable<string | undefined> => {
-      return vscode.window.showQuickPick(items, options);
+    showQuickPick: (items: readonly string[], options: Readonly<vscode.QuickPickOptions>): Thenable<string | undefined> => {
+      return vscode.window.showQuickPick([...items], options);
     },
-    showWarningMessage: (message: string, options: vscode.MessageOptions, ...items: string[]): Thenable<string | undefined> => {
+    // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+    showWarningMessage: (message: string, options: Readonly<vscode.MessageOptions>, ...items: string[]): Thenable<string | undefined> => {
       return vscode.window.showWarningMessage(message, options, ...items);
     },
   };
@@ -36,7 +41,7 @@ export function getDialogService(): DialogService {
   return activeDialogService;
 }
 
-export function setDialogService(service: DialogService): void {
+export function setDialogService(service: Readonly<DialogService>): void {
   activeDialogService = service;
 }
 
