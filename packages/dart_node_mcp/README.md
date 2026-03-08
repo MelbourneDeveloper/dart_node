@@ -117,7 +117,7 @@ claude mcp add --transport stdio my-server -- node /path/to/server.js
 
 ## Example: Too Many Cooks
 
-The [Too Many Cooks](/docs/too-many-cooks/) MCP server is built with dart_node_mcp. It provides multi-agent coordination for AI assistants editing the same codebase.
+The [Too Many Cooks](https://github.com/melbournedeveloper/too_many_cooks) MCP server is built with dart_node_mcp. It provides multi-agent coordination for AI assistants editing the same codebase.
 
 ## Source Code
 

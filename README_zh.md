@@ -22,13 +22,6 @@
 | [dart_logging](packages/dart_logging) | 结构化日志 |
 | [dart_node_coverage](packages/dart_node_coverage) | dart2js 代码覆盖率 |
 
-## 工具
-
-| 工具 | 描述 |
-|------|-------------|
-| [too-many-cooks](examples/too_many_cooks) | 多智能体协调 MCP 服务器 ([npm](https://www.npmjs.com/package/too-many-cooks)) |
-| [Too Many Cooks VSCode](examples/too_many_cooks_vscode_extension) | 智能体可视化 VSCode 扩展 |
-
 ## 快速开始
 
 ```bash

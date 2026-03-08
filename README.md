@@ -22,13 +22,6 @@ Write your entire stack in Dart: React web apps, React Native mobile apps with E
 | [dart_logging](packages/dart_logging) | Structured logging |
 | [dart_node_coverage](packages/dart_node_coverage) | Code coverage for dart2js |
 
-## Tools
-
-| Tool | Description |
-|------|-------------|
-| [too-many-cooks](examples/too_many_cooks) | Multi-agent coordination MCP server ([npm](https://www.npmjs.com/package/too-many-cooks)) |
-| [Too Many Cooks VSCode](examples/too_many_cooks_vscode_extension) | VSCode extension for agent visualization |
-
 ## Dev Container (Recommended)
 
 This project includes a [Dev Container](.devcontainer/devcontainer.json) that provides a fully configured development environment with Dart, Node.js, and Chromium pre-installed. Open the project in VSCode and select **Reopen in Container** when prompted.

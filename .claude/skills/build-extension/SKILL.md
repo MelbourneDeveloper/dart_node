@@ -8,35 +8,11 @@ allowed-tools: Bash
 
 # Build VSCode Extensions
 
-This repo has two VSCode extension components:
+This repo has one VSCode extension component:
 
 | Component | Location | What it is |
 |-----------|----------|------------|
 | **dart_node_vsix** | `packages/dart_node_vsix/` | The SDK package — Dart bindings for the VSCode extension API (commands, tree views, webviews, status bar, etc.) |
-| **too_many_cooks** | `examples/too_many_cooks_vscode_extension/` | A concrete extension built with that SDK — multi-agent coordination UI |
-
-## too-many-cooks extension
-
-**Full build** (MCP server + extension + .vsix package):
-```bash
-bash examples/too_many_cooks_vscode_extension/build.sh
-```
-
-This does:
-1. Compiles MCP server via `scripts/mcp.sh build`
-2. Compiles extension: `dart compile js` → `wrap-extension.js` bridge → `out/lib/extension.js`
-3. Packages: `vsce package` → `.vsix` file
-
-**Test** (runs Mocha tests under a real VSCode instance):
-```bash
-cd examples/too_many_cooks_vscode_extension && npm run pretest && npm test
-```
-On headless Linux, prefix with `xvfb-run -a`.
-
-**Install into VSCode**:
-```bash
-code --install-extension examples/too_many_cooks_vscode_extension/*.vsix
-```
 
 ## dart_node_vsix SDK package
 

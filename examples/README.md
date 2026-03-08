@@ -11,8 +11,6 @@ examples/
 ├── markdown_editor/              → Rich text editor demo
 ├── reflux_demo/                  → State management demo
 ├── jsx_demo/                     → JSX syntax demo
-├── too_many_cooks/               → Multi-agent coordination MCP server
-└── too_many_cooks_vscode_extension/ → VSCode extension for agent visualization
 ```
 
 ## Quick Start
@@ -21,13 +19,3 @@ examples/
 # Build and run the TaskFlow demo (Express + React + React Native)
 sh examples/run_taskflow.sh
 ```
-
-## Too Many Cooks
-
-The `too_many_cooks` example is a production MCP server published to npm:
-
-```bash
-npm install -g too-many-cooks
-```
-
-The `too_many_cooks_vscode_extension` provides real-time visualization of agent coordination.
