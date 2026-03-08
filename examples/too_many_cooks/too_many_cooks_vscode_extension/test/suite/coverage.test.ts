@@ -15,7 +15,7 @@ import {
   getTestAPI,
   callToolString,
   extractKeyFromResult,
-  cleanDatabase,
+  resetServerState,
   installDialogMocks,
   restoreDialogMocks,
   getLabel,
@@ -247,12 +247,12 @@ suite('Tree Provider Edge Cases', () => {
 
   suiteSetup(async () => {
     await waitForExtensionActivation();
-    await safeDisconnect();
-    cleanDatabase();
-
     const api = getTestAPI();
-    await api.connect();
-    await waitForConnection();
+    if (!api.isConnected()) {
+      await api.connect();
+      await waitForConnection();
+    }
+    await resetServerState();
 
     const result = await callToolString(api, 'register', { name: agentName });
     agentKey = extractKeyFromResult(result);

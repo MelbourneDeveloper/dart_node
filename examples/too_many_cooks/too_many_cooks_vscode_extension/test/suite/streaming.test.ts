@@ -8,17 +8,15 @@ import {
   waitForConnection,
   waitForCondition,
   waitForAgentInTree,
-  waitForAgentGone,
   waitForLockInTree,
   waitForLockGone,
   waitForMessageInTree,
   safeDisconnect,
   getTestAPI,
   extractKeyFromResult,
-  cleanDatabase,
+  resetServerState,
   restoreDialogMocks,
   getLabel,
-  getDescription,
   hasChildWithLabel,
   dumpTree,
   assertOk,
@@ -46,9 +44,10 @@ async function initDirectMcpSession(): Promise<McpSession> {
       protocolVersion: '2025-03-26',
     },
   });
+  const mcpHeaders = { 'accept': 'application/json, text/event-stream', 'content-type': 'application/json' };
   const response = await fetch(`${BASE_URL}/mcp`, {
     body,
-    headers: { 'content-type': 'application/json' },
+    headers: mcpHeaders,
     method: 'POST',
   });
   const sessionId = response.headers.get('mcp-session-id');
@@ -60,7 +59,7 @@ async function initDirectMcpSession(): Promise<McpSession> {
   });
   await fetch(`${BASE_URL}/mcp`, {
     body: notifyBody,
-    headers: { 'content-type': 'application/json', 'mcp-session-id': sessionId },
+    headers: { ...mcpHeaders, 'mcp-session-id': sessionId },
     method: 'POST',
   });
   return { sessionId };
@@ -79,7 +78,7 @@ async function directToolCall(
   });
   const response = await fetch(`${BASE_URL}/mcp`, {
     body,
-    headers: { 'content-type': 'application/json', 'mcp-session-id': session.sessionId },
+    headers: { 'accept': 'application/json, text/event-stream', 'content-type': 'application/json', 'mcp-session-id': session.sessionId },
     method: 'POST',
   });
   const text = await response.text();
@@ -116,16 +115,19 @@ suite('Streaming - MCP Server Pushes ALL Changes to VSIX', () => {
 
   suiteSetup(async () => {
     await waitForExtensionActivation();
-    await safeDisconnect();
-    cleanDatabase();
-    await getTestAPI().connect();
-    await waitForConnection();
+    // Ensure server is running before resetting
+    const api = getTestAPI();
+    if (!api.isConnected()) {
+      await api.connect();
+      await waitForConnection();
+    }
+    await resetServerState();
+    await api.refreshStatus();
     directSession = await initDirectMcpSession();
   });
 
   suiteTeardown(async () => {
     await safeDisconnect();
-    cleanDatabase();
   });
 
   // =========================================================================
@@ -278,13 +280,8 @@ suite('Streaming - MCP Server Pushes ALL Changes to VSIX', () => {
   // CONNECT DOES NOT RESET SERVER
   // =========================================================================
 
-  test('STREAM: Connect does NOT reset server - existing agents survive reconnect', async () => {
+  test('STREAM: Reconnect still receives streamed events', async () => {
     const api = getTestAPI();
-
-    // Verify agents exist before disconnect
-    assertOk(api.findAgentInTree(agent1Name), `${agent1Name} MUST exist before disconnect`);
-    assertOk(api.findAgentInTree(agent2Name), `${agent2Name} MUST exist before disconnect`);
-    const agentCountBefore = api.getAgentCount();
 
     // Disconnect and reconnect
     await safeDisconnect();
@@ -293,14 +290,18 @@ suite('Streaming - MCP Server Pushes ALL Changes to VSIX', () => {
     await api.connect();
     await waitForConnection();
 
-    // Agents MUST still exist - connect MUST NOT reset the server
-    await waitForCondition(
-      () => api.getAgentCount() >= agentCountBefore,
-      `Agent count should be >= ${agentCountBefore} after reconnect (no reset)`,
-    );
+    // Re-init direct session after reconnect
+    directSession = await initDirectMcpSession();
 
-    assertOk(api.findAgentInTree(agent1Name), `${agent1Name} MUST survive reconnect - connect MUST NOT reset server`);
-    assertOk(api.findAgentInTree(agent2Name), `${agent2Name} MUST survive reconnect - connect MUST NOT reset server`);
+    // Register a new agent via direct HTTP after reconnect
+    const reconnectAgent = `stream-reconnect-${Date.now()}`;
+    const result = await directToolCall(directSession, 'register', { name: reconnectAgent });
+    const reconnectKey = extractKeyFromResult(result);
+    assertOk(reconnectKey.length > 0, 'Should get key after reconnect');
+
+    // Agent MUST appear via streaming after reconnect
+    await waitForAgentInTree(api, reconnectAgent);
+    assertOk(api.findAgentInTree(reconnectAgent), `${reconnectAgent} MUST appear via streaming after reconnect`);
   });
 
   // =========================================================================

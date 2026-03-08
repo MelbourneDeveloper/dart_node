@@ -17,7 +17,7 @@ import {
   getTestAPI,
   callToolString,
   extractKeyFromResult,
-  cleanDatabase,
+  resetServerState,
   installDialogMocks,
   restoreDialogMocks,
   mockWarningMessage,
@@ -37,7 +37,12 @@ suite('Command Integration - Dialog Mocking', () => {
 
   suiteSetup(async () => {
     await waitForExtensionActivation();
-    cleanDatabase();
+    const api = getTestAPI();
+    if (!api.isConnected()) {
+      await api.connect();
+      await waitForConnection();
+    }
+    await resetServerState();
   });
 
   suiteTeardown(async () => {

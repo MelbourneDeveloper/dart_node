@@ -14,7 +14,7 @@ import {
   getTestAPI,
   callToolString,
   extractKeyFromResult,
-  cleanDatabase,
+  resetServerState,
   restoreDialogMocks,
   getLabel,
   getDescription,
@@ -37,13 +37,19 @@ suite('DB Integration - UI Verification', () => {
 
   suiteSetup(async () => {
     await waitForExtensionActivation();
+    // Connect to ensure server is running, reset state, then disconnect
+    // so the first test can verify the connect flow
+    const api = getTestAPI();
+    if (!api.isConnected()) {
+      await api.connect();
+      await waitForConnection();
+    }
+    await resetServerState();
     await safeDisconnect();
-    cleanDatabase();
   });
 
   suiteTeardown(async () => {
     await safeDisconnect();
-    cleanDatabase();
   });
 
   test('Connect to database', async () => {

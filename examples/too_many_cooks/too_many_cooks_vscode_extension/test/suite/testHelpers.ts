@@ -164,8 +164,19 @@ export async function waitForMessageInTree(
 }
 
 // ============================================================================
-// Database cleanup
+// Server state reset & database cleanup
 // ============================================================================
+
+const TEST_BASE_URL = 'http://localhost:4040';
+
+export async function resetServerState(): Promise<void> {
+  console.log('[TEST HELPER] Resetting server state via /admin/reset');
+  const response = await fetch(`${TEST_BASE_URL}/admin/reset`, { method: 'POST' });
+  if (!response.ok) {
+    throw new Error(`Failed to reset server: ${response.status} ${response.statusText}`);
+  }
+  console.log('[TEST HELPER] Server state reset');
+}
 
 export function cleanDatabase(): void {
   const folders = vscode.workspace.workspaceFolders;

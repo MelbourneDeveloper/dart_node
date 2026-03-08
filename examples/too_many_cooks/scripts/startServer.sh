@@ -12,8 +12,6 @@ if [ ! -f "$SERVER_PATH" ]; then
   exit 1
 fi
 
-rm -rf "$VSIX_DIR/.too_many_cooks"
-
 cleanup() { [ -n "${MCP_PID:-}" ] && kill "$MCP_PID" 2>/dev/null || true; }
 trap cleanup EXIT
 

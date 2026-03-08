@@ -47,7 +47,7 @@ AdminEventHub createAdminEventHub() {
               logger: 'too-many-cooks-admin',
               data: data,
             ))
-            .then((_) {}, onError: (_) {
+            .then((_) {}, onError: (Object e) {
               // Transport closed — remove it
               servers.remove(entry.key);
               transports.remove(entry.key);

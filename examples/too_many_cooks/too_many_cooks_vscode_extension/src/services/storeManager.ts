@@ -128,14 +128,6 @@ export class StoreManager {
     });
   }
 
-  private async resetServer(): Promise<void> {
-    try {
-      await fetch(`${BASE_URL}/admin/reset`, { method: 'POST' });
-    } catch (err: unknown) {
-      this.log(`[StoreManager] Reset failed: ${String(err)}`);
-    }
-  }
-
   private async waitForServer(): Promise<void> {
     for (let idx: number = 0; idx < MAX_POLL_ATTEMPTS; idx++) {
       try {
