@@ -6,7 +6,6 @@ import {
   waitForExtensionActivation,
   getTestAPI,
   restoreDialogMocks,
-  delay,
   assertOk,
   assertEqual,
 } from './testHelpers';
@@ -47,7 +46,6 @@ suite('Commands', () => {
   test('showDashboard command opens a webview panel', async () => {
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
     await vscode.commands.executeCommand('tooManyCooks.showDashboard');
-    await delay(500);
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
   });
 });

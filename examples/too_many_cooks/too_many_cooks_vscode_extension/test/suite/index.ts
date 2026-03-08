@@ -33,40 +33,26 @@ function writeLog(message: string): void {
   console.log(line.trimEnd());
 }
 
-// Intercept console.log to also write to log file
-function installConsoleCapture(): void {
-  const originalLog: typeof console.log = console.log.bind(console);
-  const originalError: typeof console.error = console.error.bind(console);
-  const originalWarn: typeof console.warn = console.warn.bind(console);
+// Intercept process.stdout/stderr.write to capture ALL output
+// (including mocha's spec reporter, which bypasses console.log).
+function installOutputCapture(): void {
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStderrWrite = process.stderr.write.bind(process.stderr);
 
-  console.log = (...args: unknown[]): void => {
-    const message: string = args.map((a: unknown): string =>
-      typeof a === 'string' ? a : JSON.stringify(a),
-    ).join(' ');
+  process.stdout.write = (chunk: unknown, ...args: unknown[]): boolean => {
     if (logStream !== null) {
-      logStream.write(`[LOG] ${message}\n`);
+      const text: string = typeof chunk === 'string' ? chunk : String(chunk);
+      logStream.write(text);
     }
-    originalLog(...args);
+    return (originalStdoutWrite as Function)(chunk, ...args);
   };
 
-  console.error = (...args: unknown[]): void => {
-    const message: string = args.map((a: unknown): string =>
-      typeof a === 'string' ? a : JSON.stringify(a),
-    ).join(' ');
+  process.stderr.write = (chunk: unknown, ...args: unknown[]): boolean => {
     if (logStream !== null) {
-      logStream.write(`[ERR] ${message}\n`);
+      const text: string = typeof chunk === 'string' ? chunk : String(chunk);
+      logStream.write(`[ERR] ${text}`);
     }
-    originalError(...args);
-  };
-
-  console.warn = (...args: unknown[]): void => {
-    const message: string = args.map((a: unknown): string =>
-      typeof a === 'string' ? a : JSON.stringify(a),
-    ).join(' ');
-    if (logStream !== null) {
-      logStream.write(`[WARN] ${message}\n`);
-    }
-    originalWarn(...args);
+    return (originalStderrWrite as Function)(chunk, ...args);
   };
 }
 
@@ -74,7 +60,7 @@ export async function run(): Promise<void> {
   ensureLogDir();
   const logFile: string = getLogFile();
   logStream = fs.createWriteStream(logFile, { flags: 'a' });
-  installConsoleCapture();
+  installOutputCapture();
 
   writeLog(`Log file: ${logFile}`);
   writeLog('Test suite starting...');
@@ -82,7 +68,7 @@ export async function run(): Promise<void> {
   const mocha = new Mocha({
     ui: 'tdd',
     color: true,
-    timeout: 30000,
+    timeout: 5000,
     reporter: 'spec',
   });
 

@@ -113,7 +113,7 @@ suite('Database Feature Verification', () => {
     const api = getTestAPI();
     if (!api.isConnected()) {
       await api.connect();
-      await waitForConnection(10000);
+      await waitForConnection();
     }
     const result = await callToolString(api, 'register', { name: agentName });
     agentKey = extractKeyFromResult(result);

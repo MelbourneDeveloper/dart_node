@@ -27,3 +27,6 @@ out/test/**
 out/*.dart.js
 out/*.dart.js.deps
 out/*.dart.js.map
+build/**
+*.bak*
+src/**

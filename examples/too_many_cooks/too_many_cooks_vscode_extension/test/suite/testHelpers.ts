@@ -6,6 +6,8 @@ import * as fs from 'fs';
 import { TestAPI, TreeItemSnapshot } from '../../src/testApi';
 
 const EXTENSION_ID = 'Nimblesite.too-many-cooks';
+const EVENT_TIMEOUT_MS = 1000;
+const EVENT_POLL_MS = 50;
 
 let cachedTestAPI: TestAPI | null = null;
 
@@ -23,8 +25,8 @@ export function getTestAPI(): TestAPI {
 export async function waitForCondition(
   condition: () => boolean,
   message = 'Condition not met within timeout',
-  timeout = 10000,
-  interval = 100,
+  timeout = EVENT_TIMEOUT_MS,
+  interval = EVENT_POLL_MS,
 ): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeout) {
@@ -58,13 +60,13 @@ export async function waitForExtensionActivation(): Promise<void> {
         return true;
       }
       return false;
-    }, 'Extension exports not available within timeout', 30000);
+    }, 'Extension exports not available within timeout', EVENT_TIMEOUT_MS);
   }
 
   console.log('[TEST HELPER] Extension activation complete');
 }
 
-export async function waitForConnection(timeout = 30000): Promise<void> {
+export async function waitForConnection(timeout = EVENT_TIMEOUT_MS): Promise<void> {
   console.log('[TEST HELPER] Waiting for connection...');
   const api = getTestAPI();
   await waitForCondition(
@@ -77,7 +79,6 @@ export async function waitForConnection(timeout = 30000): Promise<void> {
 
 export async function safeDisconnect(): Promise<void> {
   if (!cachedTestAPI) { return; }
-  await delay(500);
   if (cachedTestAPI.isConnected()) {
     try { await cachedTestAPI.disconnect(); } catch { /* ignore */ }
   }
@@ -91,8 +92,8 @@ export async function safeDisconnect(): Promise<void> {
 export async function waitForLockInTree(
   api: TestAPI,
   filePath: string,
-  timeout = 10000,
-  interval = 200,
+  timeout = EVENT_TIMEOUT_MS,
+  interval = EVENT_POLL_MS,
 ): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeout) {
@@ -106,8 +107,8 @@ export async function waitForLockInTree(
 export async function waitForLockGone(
   api: TestAPI,
   filePath: string,
-  timeout = 10000,
-  interval = 200,
+  timeout = EVENT_TIMEOUT_MS,
+  interval = EVENT_POLL_MS,
 ): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeout) {
@@ -121,8 +122,8 @@ export async function waitForLockGone(
 export async function waitForAgentInTree(
   api: TestAPI,
   agentName: string,
-  timeout = 10000,
-  interval = 200,
+  timeout = EVENT_TIMEOUT_MS,
+  interval = EVENT_POLL_MS,
 ): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeout) {
@@ -136,8 +137,8 @@ export async function waitForAgentInTree(
 export async function waitForAgentGone(
   api: TestAPI,
   agentName: string,
-  timeout = 10000,
-  interval = 200,
+  timeout = EVENT_TIMEOUT_MS,
+  interval = EVENT_POLL_MS,
 ): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeout) {
@@ -151,8 +152,8 @@ export async function waitForAgentGone(
 export async function waitForMessageInTree(
   api: TestAPI,
   content: string,
-  timeout = 10000,
-  interval = 200,
+  timeout = EVENT_TIMEOUT_MS,
+  interval = EVENT_POLL_MS,
 ): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeout) {
@@ -321,7 +322,6 @@ export function countChildrenMatching(
 
 export async function openTooManyCooksPanel(): Promise<void> {
   await vscode.commands.executeCommand('workbench.view.extension.tooManyCooks');
-  await delay(500);
 }
 
 export function delay(ms: number): Promise<void> {

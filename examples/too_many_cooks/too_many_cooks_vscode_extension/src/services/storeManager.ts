@@ -1,8 +1,7 @@
 // Store manager - orchestrates MCP server connection and state.
+// The extension NEVER spawns or bundles a server binary.
+// It connects to an already-running external server only.
 
-import * as fs from 'fs';
-import * as path from 'path';
-import { type ChildProcess, spawn } from 'child_process';
 import { checkServerAvailable, isRecord, postJsonRequest } from 'services/httpClient';
 import { extractToolResultText, initMcpSession, mcpJsonRpcRequest } from 'services/mcpProtocol';
 import type { AppState } from 'state/types';
@@ -11,18 +10,15 @@ import { parseStatusResponse } from 'services/statusParser';
 import { startAdminEventStream } from 'services/adminEventStream';
 
 const BASE_URL: string = 'http://localhost:4040';
-const MAX_POLL_ATTEMPTS: number = 30;
-const POLL_DELAY_MS: number = 200;
-const POLL_LOG_INTERVAL: number = 5;
-const SERVER_BINARY: string = 'build/bin/server_node.js';
+const SERVER_NOT_RUNNING_MSG: string =
+  'MCP server is not running. Start it externally before connecting.';
 
 type LogFn = (msg: string) => void;
 
 export class StoreManager {
   private readonly store: Store;
   public readonly workspaceFolder: string;
-  private serverProcess: ChildProcess | null = null;
-  private usingExternalServer: boolean = false;
+  private connected: boolean = false;
   private connectPromise: Promise<void> | null = null;
   private mcpSessionId: string | null = null;
   private eventAbortController: AbortController | null = null;
@@ -43,7 +39,7 @@ export class StoreManager {
   }
 
   public get isConnected(): boolean {
-    return this.serverProcess !== null || this.usingExternalServer;
+    return this.connected;
   }
 
   public get isConnecting(): boolean {
@@ -56,7 +52,7 @@ export class StoreManager {
       await this.connectPromise;
       return;
     }
-    if (this.serverProcess !== null) { return; }
+    if (this.connected) { return; }
     this.store.dispatch({ status: 'connecting', type: 'SetConnectionStatus' });
     this.connectPromise = this.doConnect();
     try {
@@ -68,48 +64,13 @@ export class StoreManager {
 
   private async doConnect(): Promise<void> {
     const externalRunning: boolean = await checkServerAvailable(BASE_URL);
-    if (externalRunning) {
-      this.usingExternalServer = true;
-    } else {
-      await this.spawnServer();
+    if (!externalRunning) {
+      throw new Error(SERVER_NOT_RUNNING_MSG);
     }
+    this.connected = true;
     await this.refreshStatus();
     this.connectEventStream();
     this.store.dispatch({ status: 'connected', type: 'SetConnectionStatus' });
-  }
-
-  private async spawnServer(): Promise<void> {
-    const serverPath: string = this.findServerPath();
-    const processEnv: NodeJS.ProcessEnv = { ...process.env };
-    processEnv.TMC_WORKSPACE = this.workspaceFolder;
-    const proc: ChildProcess = spawn('node', [serverPath], {
-      env: processEnv,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    this.serverProcess = proc;
-    this.setupProcessHandlers(proc);
-    this.usingExternalServer = false;
-    await this.waitForServer();
-  }
-
-  // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
-  private setupProcessHandlers(proc: ChildProcess): void {
-    if (proc.stderr !== null) {
-      // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
-      proc.stderr.on('data', (data: Buffer): void => {
-        this.log(`[StoreManager] Server stderr: ${String(data)}`);
-      });
-    }
-    proc.on('exit', (code: number | null): void => {
-      this.log(`[StoreManager] Server exited: ${String(code)}`);
-      if (this.serverProcess === proc) {
-        this.serverProcess = null;
-        this.store.dispatch({ status: 'disconnected', type: 'SetConnectionStatus' });
-      }
-    });
-    proc.on('error', (err: Readonly<Error>): void => {
-      this.log(`[StoreManager] Server error: ${err.message}`);
-    });
   }
 
   private connectEventStream(): void {
@@ -128,43 +89,12 @@ export class StoreManager {
     });
   }
 
-  private async waitForServer(): Promise<void> {
-    for (let idx: number = 0; idx < MAX_POLL_ATTEMPTS; idx++) {
-      try {
-        const response: Response = await fetch(`${BASE_URL}/admin/status`);
-        if (response.ok) { return; }
-      } catch (err: unknown) {
-        if (idx === 0 || idx % POLL_LOG_INTERVAL === 0) {
-          this.log(`[StoreManager] Poll ${String(idx)}: ${String(err)}`);
-        }
-      }
-      await new Promise((resolve: (value: unknown) => void): void => {
-        setTimeout(resolve, POLL_DELAY_MS);
-      });
-    }
-    throw new Error('Server failed to start');
-  }
-
-  private findServerPath(): string {
-    const candidates: string[] = [
-      path.join(this.workspaceFolder, SERVER_BINARY),
-      path.join(this.workspaceFolder, `../too_many_cooks/${SERVER_BINARY}`),
-    ];
-    for (const candidate of candidates) {
-      if (fs.existsSync(candidate)) { return candidate; }
-    }
-    throw new Error('MCP server binary not found.');
-  }
-
   public disconnect(): void {
     this.connectPromise = null;
     this.mcpSessionId = null;
     this.eventAbortController?.abort();
     this.eventAbortController = null;
-    const proc: ChildProcess | null = this.serverProcess;
-    this.serverProcess = null;
-    this.usingExternalServer = false;
-    if (proc !== null) { proc.kill(); }
+    this.connected = false;
     this.store.dispatch({ type: 'ResetState' });
     this.store.dispatch({ status: 'disconnected', type: 'SetConnectionStatus' });
   }

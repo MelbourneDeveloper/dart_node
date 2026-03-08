@@ -22,7 +22,6 @@ import {
   getDescription,
   getChildren,
   hasChildWithLabel,
-  delay,
   assertOk,
   assertEqual,
 } from './testHelpers';
@@ -62,7 +61,7 @@ suite('Lock State Coverage', () => {
       reason: 'Testing active lock',
     });
 
-    await waitForLockInTree(api, '/test/lock/active.ts', 5000);
+    await waitForLockInTree(api, '/test/lock/active.ts');
 
     const locks = api.getLocks();
     const ourLock = locks.find(l => l.filePath === '/test/lock/active.ts');
@@ -85,7 +84,7 @@ suite('Lock State Coverage', () => {
       reason: 'Testing lock description',
     });
 
-    await waitForLockInTree(api, lockPath, 5000);
+    await waitForLockInTree(api, lockPath);
 
     const lockItem = api.findLockInTree(lockPath);
     assertOk(lockItem, 'Lock should exist');
@@ -127,10 +126,10 @@ suite('Store Error Handling Coverage', () => {
       reason: 'Will be force released',
     });
 
-    await waitForLockInTree(api, '/test/force/release.ts', 5000);
+    await waitForLockInTree(api, '/test/force/release.ts');
 
     await api.forceReleaseLock('/test/force/release.ts');
-    await waitForLockGone(api, '/test/force/release.ts', 5000);
+    await waitForLockGone(api, '/test/force/release.ts');
 
     assertEqual(api.findLockInTree('/test/force/release.ts'), null, 'Lock should be removed after force release');
   });
@@ -158,10 +157,10 @@ suite('Store Error Handling Coverage', () => {
       current_task: 'Waiting to be deleted',
     });
 
-    await waitForAgentInTree(api, deleteAgentName, 5000);
+    await waitForAgentInTree(api, deleteAgentName);
 
     await api.deleteAgent(deleteAgentName);
-    await waitForAgentGone(api, deleteAgentName, 5000);
+    await waitForAgentGone(api, deleteAgentName);
 
     assertEqual(api.findAgentInTree(deleteAgentName), null, 'Agent should be gone after delete');
     assertEqual(api.findLockInTree('/test/delete/agent.ts'), null, 'Agent lock should also be gone');
@@ -176,7 +175,7 @@ suite('Store Error Handling Coverage', () => {
     const senderName = `store-sender-${testId}`;
     await api.sendMessage(senderName, receiverName, 'Test message via store.sendMessage');
 
-    await waitForMessageInTree(api, 'Test message via store', 5000);
+    await waitForMessageInTree(api, 'Test message via store');
 
     const msgItem = api.findMessageInTree('Test message via store');
     assertOk(msgItem, 'Message should appear in tree');
@@ -278,7 +277,7 @@ suite('Tree Provider Edge Cases', () => {
       content: 'Edge case message',
     });
 
-    await waitForMessageInTree(api, 'Edge case', 5000);
+    await waitForMessageInTree(api, 'Edge case');
 
     // Fetch messages to mark as read
     await api.callTool('message', {
@@ -305,7 +304,7 @@ suite('Tree Provider Edge Cases', () => {
       reason: 'Edge case lock',
     });
 
-    await waitForLockInTree(api, '/edge/case/file.ts', 5000);
+    await waitForLockInTree(api, '/edge/case/file.ts');
 
     const agentItem = api.findAgentInTree(agentName);
     assertOk(agentItem, 'Agent should be in tree');
@@ -326,13 +325,11 @@ suite('Tree Provider Edge Cases', () => {
     });
 
     // Wait for plan to appear
-    const start = Date.now();
-    while (Date.now() - start < 10000) {
-      try { await api.refreshStatus(); } catch { /* ignore */ }
+    await waitForCondition(() => {
+      try { api.refreshStatus(); } catch { /* ignore */ }
       const agent = api.findAgentInTree(agentName);
-      if (agent && hasChildWithLabel(agent, 'Edge case goal')) { break; }
-      await delay(200);
-    }
+      return agent !== null && agent !== undefined && hasChildWithLabel(agent, 'Edge case goal');
+    }, 'Plan to appear in agent tree');
 
     const agentItem = api.findAgentInTree(agentName);
     const children = getChildren(agentItem!);
@@ -344,6 +341,7 @@ suite('Tree Provider Edge Cases', () => {
     assertOk(planLabel.includes('Edge case goal'), `Plan child should contain goal, got: ${planLabel}`);
   });
 });
+
 
 // Error Handling Coverage Tests
 suite('Error Handling Coverage', () => {
@@ -419,20 +417,15 @@ suite('Error Handling Coverage', () => {
 
   test('Dashboard panel can be created and disposed', async () => {
     await vscode.commands.executeCommand('tooManyCooks.showDashboard');
-    await delay(500);
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
-    await delay(200);
 
     await vscode.commands.executeCommand('tooManyCooks.showDashboard');
-    await delay(500);
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
   });
 
   test('Dashboard panel reveal when already open', async () => {
     await vscode.commands.executeCommand('tooManyCooks.showDashboard');
-    await delay(500);
     await vscode.commands.executeCommand('tooManyCooks.showDashboard');
-    await delay(300);
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
   });
 
@@ -441,10 +434,7 @@ suite('Error Handling Coverage', () => {
     const originalAutoConnect = config.get<boolean>('autoConnect') ?? true;
 
     await config.update('autoConnect', !originalAutoConnect, vscode.ConfigurationTarget.Global);
-    await delay(100);
-
     await config.update('autoConnect', originalAutoConnect, vscode.ConfigurationTarget.Global);
-    await delay(100);
 
     const api = getTestAPI();
     assertOk(api, 'API should still exist');

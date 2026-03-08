@@ -34,7 +34,19 @@ cleanup_mcp() { [ -n "${MCP_PID:-}" ] && kill "$MCP_PID" 2>/dev/null || true; }
 trap cleanup_mcp EXIT
 TMC_WORKSPACE="$VSIX_DIR" node "$ROOT/too_many_cooks/$SERVER_BINARY" &
 MCP_PID=$!
-sleep 2
+
+# Poll until server is ready (max 10s)
+for i in $(seq 1 50); do
+  if curl -sf http://localhost:4040/admin/status >/dev/null 2>&1; then
+    echo "MCP server ready (attempt $i)"
+    break
+  fi
+  if [ "$i" -eq 50 ]; then
+    echo "MCP server failed to start"
+    exit 1
+  fi
+  sleep 0.2
+done
 
 # 7. Run VSIX tests
 npm run test
