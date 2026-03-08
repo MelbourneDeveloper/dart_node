@@ -97,7 +97,6 @@ export async function waitForLockInTree(
 ): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeout) {
-    try { await api.refreshStatus(); } catch { /* ignore */ }
     if (api.findLockInTree(filePath)) { return; }
     await delay(interval);
   }
@@ -112,7 +111,6 @@ export async function waitForLockGone(
 ): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeout) {
-    try { await api.refreshStatus(); } catch { /* ignore */ }
     if (!api.findLockInTree(filePath)) { return; }
     await delay(interval);
   }
@@ -127,7 +125,6 @@ export async function waitForAgentInTree(
 ): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeout) {
-    try { await api.refreshStatus(); } catch { /* ignore */ }
     if (api.findAgentInTree(agentName)) { return; }
     await delay(interval);
   }
@@ -142,7 +139,6 @@ export async function waitForAgentGone(
 ): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeout) {
-    try { await api.refreshStatus(); } catch { /* ignore */ }
     if (!api.findAgentInTree(agentName)) { return; }
     await delay(interval);
   }
@@ -157,7 +153,6 @@ export async function waitForMessageInTree(
 ): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeout) {
-    try { await api.refreshStatus(); } catch { /* ignore */ }
     if (api.findMessageInTree(content)) { return; }
     await delay(interval);
   }

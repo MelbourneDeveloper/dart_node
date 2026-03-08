@@ -122,7 +122,11 @@ suite('Streaming - MCP Server Pushes ALL Changes to VSIX', () => {
       await waitForConnection();
     }
     await resetServerState();
-    await api.refreshStatus();
+    // Reset pushes an event — wait for store to clear via streaming
+    await waitForCondition(
+      () => getTestAPI().getAgentCount() === 0,
+      'Store to clear after reset',
+    );
     directSession = await initDirectMcpSession();
   });
 

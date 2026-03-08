@@ -33,6 +33,11 @@ AdminEventHub createAdminEventHub() {
     String event,
     Map<String, Object?> payload,
   ) {
+    consoleError(
+      '[TMC] [PUSH] $event → '
+      '${servers.length} server(s), '
+      '${transports.length} transport(s)',
+    );
     final data = <String, Object?>{
       'event': event,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
@@ -40,6 +45,9 @@ AdminEventHub createAdminEventHub() {
     };
 
     for (final entry in [...servers.entries]) {
+      consoleError(
+        '[TMC] [PUSH] Sending to ${entry.key}',
+      );
       unawaited(
         entry.value
             .sendLoggingMessage((
@@ -47,7 +55,14 @@ AdminEventHub createAdminEventHub() {
               logger: 'too-many-cooks-admin',
               data: data,
             ))
-            .then((_) {}, onError: (Object e) {
+            .then((_) {
+              consoleError(
+                '[TMC] [PUSH] Sent OK to ${entry.key}',
+              );
+            }, onError: (Object e) {
+              consoleError(
+                '[TMC] [PUSH] FAILED ${entry.key}: $e',
+              );
               // Transport closed — remove it
               servers.remove(entry.key);
               transports.remove(entry.key);
@@ -203,6 +218,7 @@ void registerAdminRoutes(
     ..post('/admin/reset', handler((req, res) {
       switch (db.adminReset()) {
         case Success():
+          hub.pushEvent('state_reset', <String, Object?>{});
           res.send('{"reset":true}');
         case Error(:final error):
           _sendError(res, 500, dbErrorToJson(error));
