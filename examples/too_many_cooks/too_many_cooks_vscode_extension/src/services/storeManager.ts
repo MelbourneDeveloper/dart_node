@@ -57,6 +57,9 @@ export class StoreManager {
     this.connectPromise = this.doConnect();
     try {
       await this.connectPromise;
+    } catch (err: unknown) {
+      this.store.dispatch({ status: 'disconnected', type: 'SetConnectionStatus' });
+      throw err;
     } finally {
       this.connectPromise = null;
     }

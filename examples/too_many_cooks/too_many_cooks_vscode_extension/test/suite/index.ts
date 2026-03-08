@@ -82,7 +82,7 @@ export async function run(): Promise<void> {
   }
 
   return new Promise((resolve, reject) => {
-    mocha.run((failures) => {
+    const runner = mocha.run((failures) => {
       writeLog(`Test run complete: ${String(failures)} failures`);
       if (logStream !== null) {
         logStream.end();
@@ -92,6 +92,24 @@ export async function run(): Promise<void> {
         reject(new Error(`${failures} tests failed.`));
       } else {
         resolve();
+      }
+    });
+
+    runner.on('suite', (suite) => {
+      if (suite.title) {
+        writeLog(`Suite: ${suite.title}`);
+      }
+    });
+
+    runner.on('pass', (test) => {
+      writeLog(`  PASS: ${test.fullTitle()}`);
+    });
+
+    runner.on('fail', (test, err) => {
+      writeLog(`  FAIL: ${test.fullTitle()}`);
+      writeLog(`    Error: ${err.message}`);
+      if (err.stack) {
+        writeLog(`    Stack: ${err.stack}`);
       }
     });
   });
