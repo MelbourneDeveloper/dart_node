@@ -14,8 +14,7 @@ import 'package:nadz/nadz.dart';
 ///
 /// Handles MCP protocol over Streamable HTTP transport.
 /// Each session gets its own transport instance.
-extension type StreamableHttpTransport._(JSObject _)
-    implements Transport {
+extension type StreamableHttpTransport._(JSObject _) implements Transport {
   @redeclare
   external JSPromise<JSAny?> start();
 
@@ -52,8 +51,7 @@ typedef StreamableHttpTransportOptions = ({
 ///
 /// Each call creates a new transport for one session.
 /// Use [onSessionInitialized] to capture the session ID.
-Result<StreamableHttpTransport, String>
-    createStreamableHttpTransport({
+Result<StreamableHttpTransport, String> createStreamableHttpTransport({
   String Function()? sessionIdGenerator,
   void Function(String sessionId)? onSessionInitialized,
 }) {
@@ -62,29 +60,23 @@ Result<StreamableHttpTransport, String>
       '@modelcontextprotocol/sdk/server/streamableHttp.js',
     );
     final transportClass =
-        (sdkModule
-                as JSObject)['StreamableHTTPServerTransport']
-            as JSFunction;
+        (sdkModule as JSObject)['StreamableHTTPServerTransport'] as JSFunction;
 
     final options = JSObject();
     if (sessionIdGenerator != null) {
-      options['sessionIdGenerator'] =
-          (() => sessionIdGenerator().toJS).toJS;
+      options['sessionIdGenerator'] = (() => sessionIdGenerator().toJS).toJS;
     }
     if (onSessionInitialized != null) {
-      options['onsessioninitialized'] =
-          ((JSString sid) =>
-              onSessionInitialized(sid.toDart)).toJS;
+      options['onsessioninitialized'] = ((JSString sid) => onSessionInitialized(
+        sid.toDart,
+      )).toJS;
     }
 
-    final transport = transportClass
-        .callAsConstructor<StreamableHttpTransport>(
-          options,
-        );
+    final transport = transportClass.callAsConstructor<StreamableHttpTransport>(
+      options,
+    );
     return Success(transport);
   } catch (e) {
-    return Error(
-      'Failed to create StreamableHTTP transport: $e',
-    );
+    return Error('Failed to create StreamableHTTP transport: $e');
   }
 }

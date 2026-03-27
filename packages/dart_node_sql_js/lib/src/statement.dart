@@ -121,17 +121,15 @@ Result<RunResult, String> _stmtRun(
     resetFn.callAsFunction(jsStmt);
 
     // Get changes from the database object
-    final getRowsModifiedFn =
-        jsDb['getRowsModified'] as JSFunction;
+    final getRowsModifiedFn = jsDb['getRowsModified'] as JSFunction;
     final changes =
         (getRowsModifiedFn.callAsFunction(jsDb) as JSNumber).toDartInt;
 
     // Get last insert rowid via exec
     final execFn = jsDb['exec'] as JSFunction;
-    final rowidResult = execFn.callAsFunction(
-      jsDb,
-      'SELECT last_insert_rowid() as id'.toJS,
-    ) as JSArray<JSAny?>;
+    final rowidResult =
+        execFn.callAsFunction(jsDb, 'SELECT last_insert_rowid() as id'.toJS)
+            as JSArray<JSAny?>;
 
     var lastInsertRowid = 0;
     if (rowidResult.length > 0) {

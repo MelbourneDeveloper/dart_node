@@ -85,8 +85,8 @@ int _findImportInsertIndex(List<String> lines) {
   return lastDirectiveEnd >= 0
       ? lastDirectiveEnd + 1
       : libraryIndex >= 0
-          ? libraryIndex + 1
-          : 0;
+      ? libraryIndex + 1
+      : 0;
 }
 
 /// Inject coverage probe at the start of a line.

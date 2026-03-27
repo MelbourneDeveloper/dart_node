@@ -278,8 +278,7 @@ class McpServer {
   /// Returns an empty list if the tool is not found or has no schema fields.
   List<String> getRegisteredToolFields(String toolName) {
     try {
-      final registeredTools =
-          _mcpServer['_registeredTools'] as JSObject?;
+      final registeredTools = _mcpServer['_registeredTools'] as JSObject?;
       if (registeredTools == null) return [];
       final tool = registeredTools[toolName] as JSObject?;
       if (tool == null) return [];
@@ -443,8 +442,8 @@ JSObject _propDefToZodType(JSObject z, Map<Object?, Object?> propDef) {
   }
   return switch (propDef['type'] as String?) {
     'boolean' => (z['boolean'] as JSFunction).callAsFunction(z) as JSObject,
-    'number' || 'integer' =>
-      (z['number'] as JSFunction).callAsFunction(z) as JSObject,
+    'number' ||
+    'integer' => (z['number'] as JSFunction).callAsFunction(z) as JSObject,
     _ => (z['string'] as JSFunction).callAsFunction(z) as JSObject,
   };
 }

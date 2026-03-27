@@ -66,8 +66,7 @@ Result<Database, String> openDatabase(
 
     if (fileExists) {
       final buffer = readFileSyncFn.callAsFunction(fs, path.toJS);
-      jsDb = sqlJs.databaseConstructor
-          .callAsConstructor<JSObject>(buffer);
+      jsDb = sqlJs.databaseConstructor.callAsConstructor<JSObject>(buffer);
     } else {
       jsDb = sqlJs.databaseConstructor.callAsConstructor<JSObject>();
     }
@@ -93,8 +92,7 @@ void _save(JSObject jsDb, String path, JSObject fs) {
   final data = exportFn.callAsFunction(jsDb);
 
   final bufferClass = requireModule('buffer') as JSObject;
-  final bufferFrom =
-      (bufferClass['Buffer'] as JSObject)['from'] as JSFunction;
+  final bufferFrom = (bufferClass['Buffer'] as JSObject)['from'] as JSFunction;
   final nodeBuffer = bufferFrom.callAsFunction(null, data);
 
   final writeFileSyncFn = fs['writeFileSync'] as JSFunction;
@@ -121,8 +119,7 @@ Result<Statement, String> _dbPrepare(
 ) {
   try {
     final prepareFn = jsDb['prepare'] as JSFunction;
-    final jsStmt =
-        prepareFn.callAsFunction(jsDb, sql.toJS) as JSObject;
+    final jsStmt = prepareFn.callAsFunction(jsDb, sql.toJS) as JSObject;
     return Success(
       createStatement(jsStmt, jsDb, onWrite: () => _save(jsDb, path, fs)),
     );
