@@ -86,6 +86,9 @@ effectful
 mcp
 mcps
 modelcontextprotocol
+streamable
+Streamable
+onsessioninitialized
 
 # Technical terms
 interoperability
@@ -245,6 +248,8 @@ wrongkey
 imagedata
 encodeddata
 minimumlog
+
+parameterless
 
 # Other technical
 LTWH
