@@ -271,7 +271,7 @@ void main() {
 
 ## Example
 
-See [too_many_cooks_vscode_extension](https://github.com/melbournedeveloper/dart_node/tree/main/examples/too_many_cooks_vscode_extension) for a complete real-world example.
+See [too_many_cooks_vscode_extension](https://github.com/melbournedeveloper/too_many_cooks) for a complete real-world example.
 
 ## Source Code
 

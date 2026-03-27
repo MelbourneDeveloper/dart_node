@@ -7,11 +7,6 @@ Dart packages for building Node.js apps. Strongly Typed Dart layer over JS inter
 ⛔️ NEVER KILL (pkill) THE VSCODE PROCESS!!!
 - Do not use Git unless asked by user
 
-## Multi-Agent Coordination (Too Many Cooks)
-- Keep your key! It's critical. Do not lose it!
-- Check messages regularly, lock files before editing, unlock after
-- Don't edit locked files; signal intent via plans and messages
-
 **Language & Types**
 - All Dart, minimal JS. Use `dart:js_interop` (not deprecated `dart:js_util`/`package:js`)
 - AVOID `JSObject`/`JSAny`/`dynamic`!
@@ -72,6 +67,5 @@ examples/
   backend/              # Express server example
   frontend/             # React web example
   mobile/               # React Native example
-  too_many_cooks/       # Multi-agent coordination server
   jsx_demo/             # JSX syntax demo
 ```

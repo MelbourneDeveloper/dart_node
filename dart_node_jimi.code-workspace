@@ -1,0 +1,61 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"dart.testInvocationMode": "implementationThenName",
+		"dart.cliConsole": "terminal",
+		"dart.debugExternalPackageLibraries": false,
+		"dart.debugSdkLibraries": false,
+		"dart.env": {
+			"DART_NODE_COVERAGE": "1"
+		},
+		"testing.automaticallyOpenPeekView": "failureVisible",
+		"testing.defaultGutterClickAction": "run",
+		"files.associations": {
+			"*.jsx": "dart-jsx"
+		},
+		"editor.tokenColorCustomizations": {
+			"textMateRules": [
+				{
+					"scope": "entity.name.tag.jsx",
+					"settings": {
+						"foreground": "#4EC9B0"
+					}
+				},
+				{
+					"scope": "support.class.component.jsx",
+					"settings": {
+						"foreground": "#4EC9B0"
+					}
+				},
+				{
+					"scope": "entity.other.attribute-name.jsx",
+					"settings": {
+						"foreground": "#9CDCFE"
+					}
+				},
+				{
+					"scope": "punctuation.definition.tag.jsx",
+					"settings": {
+						"foreground": "#808080"
+					}
+				},
+				{
+					"scope": "punctuation.section.embedded.begin.jsx",
+					"settings": {
+						"foreground": "#FFD700"
+					}
+				},
+				{
+					"scope": "punctuation.section.embedded.end.jsx",
+					"settings": {
+						"foreground": "#FFD700"
+					}
+				}
+			]
+		}
+	}
+}

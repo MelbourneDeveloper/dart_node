@@ -62,21 +62,28 @@ Result<String, String> instrumentSource({
 }
 
 /// Find the index where the coverage import should be inserted.
-/// After library directive if present, otherwise after existing imports,
-/// or at the top if no imports.
+/// After the last import/export directive (including multi-line ones),
+/// after library directive, or at the top.
 int _findImportInsertIndex(List<String> lines) {
-  var lastImportIndex = -1;
+  var lastDirectiveEnd = -1;
   var libraryIndex = -1;
+  var inDirective = false;
 
   for (var i = 0; i < lines.length; i++) {
     final trimmed = lines[i].trim();
     if (trimmed.startsWith('library')) libraryIndex = i;
-    if (trimmed.startsWith('import ')) lastImportIndex = i;
+    final startsDirective =
+        trimmed.startsWith('import ') || trimmed.startsWith('export ');
+    if (startsDirective) inDirective = true;
+    if (inDirective && trimmed.endsWith(';')) {
+      lastDirectiveEnd = i;
+      inDirective = false;
+    }
   }
 
-  // Insert after last import, or after library, or at top
-  return lastImportIndex >= 0
-      ? lastImportIndex + 1
+  // Insert after last directive end, or after library, or at top
+  return lastDirectiveEnd >= 0
+      ? lastDirectiveEnd + 1
       : libraryIndex >= 0
       ? libraryIndex + 1
       : 0;

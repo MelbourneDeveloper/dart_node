@@ -170,6 +170,8 @@ Future<Result<void, String>> _instrumentFileInPlace(String filePath) async {
   final parseResult = parseExecutableLines(source, filePath);
   switch (parseResult) {
     case Success(:final value):
+      final relativePath = p.relative(filePath);
+      stdout.writeln('  $relativePath: ${value.length} executable lines');
       final instrumentResult = instrumentSource(
         sourceCode: source,
         filePath: filePath,
@@ -210,19 +212,19 @@ Future<Result<void, String>> _runTests(String packageDir) async {
       ? {'NODE_PATH': p.join(packageDir, 'node_modules')}
       : <String, String>{};
 
-  final result = await Process.run(
+  final process = await Process.start(
     'dart',
     testArgs,
     workingDirectory: packageDir,
     environment: environment,
+    mode: ProcessStartMode.inheritStdio,
   );
 
-  stdout.writeln('Test stdout: ${result.stdout}');
-  stderr.writeln('Test stderr: ${result.stderr}');
+  final exitCode = await process.exitCode;
 
-  return result.exitCode == 0
+  return exitCode == 0
       ? const Success<void, String>(null)
-      : Error<void, String>('Tests failed with exit code ${result.exitCode}');
+      : Error<void, String>('Tests failed with exit code $exitCode');
 }
 
 Result<void, String> _generateLcov(String packageDir, String outputPath) {

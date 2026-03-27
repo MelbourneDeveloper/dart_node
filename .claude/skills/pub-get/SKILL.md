@@ -19,7 +19,7 @@ Installs `dart pub get` and `npm install` across all packages and examples in de
 
 1. **Tier 1 (Core):** `dart_logging`, `dart_node_coverage`, `dart_node_core`, `reflux`
 2. **Tier 2 (Packages):** `dart_jsx`, `dart_node_express`, `dart_node_ws`, `dart_node_better_sqlite3`, `dart_node_mcp`, `dart_node_react`, `dart_node_react_native`
-3. **Tier 3 (Examples):** `frontend`, `markdown_editor`, `reflux_demo/web_counter`, `too_many_cooks`, `backend`, `mobile`, `jsx_demo`
+3. **Tier 3 (Examples):** `frontend`, `markdown_editor`, `reflux_demo/web_counter`, `backend`, `mobile`, `jsx_demo`
 
 Order matters because Tier 2 depends on Tier 1, and Tier 3 depends on both.
 

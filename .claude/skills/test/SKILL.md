@@ -31,7 +31,6 @@ Map changed files to packages:
 | `packages/reflux/` | `packages/reflux` |
 | `packages/dart_jsx/` | `packages/dart_jsx` |
 | `examples/frontend/` | `examples/frontend` |
-| `examples/too_many_cooks/` | `examples/too_many_cooks` |
 | `examples/markdown_editor/` | `examples/markdown_editor` |
 | `examples/reflux_demo/` | `examples/reflux_demo/web_counter` |
 | `tools/` or root config | Run `--all` |
@@ -75,7 +74,7 @@ Minimum coverage: **80%**. If below threshold, read `coverage/lcov.info` and ide
 
 - **Tier 1:** `dart_logging`, `dart_node_core`
 - **Tier 2:** `reflux`, `dart_node_express`, `dart_node_ws`, `dart_node_better_sqlite3`, `dart_node_mcp`, `dart_node_react_native`, `dart_node_react`
-- **Tier 3:** `examples/frontend`, `examples/markdown_editor`, `examples/reflux_demo/web_counter`, `examples/too_many_cooks`
+- **Tier 3:** `examples/frontend`, `examples/markdown_editor`, `examples/reflux_demo/web_counter`
 
 ## After running
 

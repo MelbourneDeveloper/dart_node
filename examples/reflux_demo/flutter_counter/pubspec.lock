@@ -70,7 +70,7 @@ packages:
       path: "../../../packages/dart_logging"
       relative: true
     source: path
-    version: "0.9.0-beta"
+    version: "0.11.0-beta"
   fake_async:
     dependency: transitive
     description:
@@ -175,7 +175,7 @@ packages:
       path: "../../../packages/reflux"
       relative: true
     source: path
-    version: "0.9.0-beta"
+    version: "0.11.0-beta"
   sky_engine:
     dependency: transitive
     description: flutter

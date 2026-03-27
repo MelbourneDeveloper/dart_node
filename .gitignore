@@ -75,3 +75,7 @@ website/test-results/
 # Flutter web scaffolding (not needed for VSCode extension)
 examples/too_many_cooks_vscode_extension/web/
 examples/too_many_cooks_vscode_extension/lib/main.dart
+
+.commandtree/
+.too_many_cooks
+

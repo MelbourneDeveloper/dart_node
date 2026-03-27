@@ -12,6 +12,9 @@ import 'package:dart_node_mcp/src/transport.dart';
 import 'package:dart_node_mcp/src/types.dart';
 import 'package:nadz/nadz.dart';
 
+@JS('Object.keys')
+external JSArray<JSString> _jsObjectKeys(JSObject obj);
+
 /// High-level MCP Server (wraps TypeScript McpServer class).
 ///
 /// Provides a simplified API for registering tools, resources, and prompts.
@@ -269,6 +272,26 @@ class McpServer {
       // Ignore errors on notifications
     }
   }
+
+  /// Returns the field names exposed in the Zod input schema for a registered
+  /// tool. This is what MCP clients see when inspecting a tool's parameters.
+  /// Returns an empty list if the tool is not found or has no schema fields.
+  List<String> getRegisteredToolFields(String toolName) {
+    try {
+      final registeredTools = _mcpServer['_registeredTools'] as JSObject?;
+      if (registeredTools == null) return [];
+      final tool = registeredTools[toolName] as JSObject?;
+      if (tool == null) return [];
+      final inputSchema = tool['inputSchema'] as JSObject?;
+      if (inputSchema == null) return [];
+      final shape = inputSchema['shape'] as JSObject?;
+      if (shape == null) return [];
+      final keys = _jsObjectKeys(shape);
+      return [for (var i = 0; i < keys.length; i++) keys[i].toDart];
+    } catch (_) {
+      return [];
+    }
+  }
 }
 
 // Helper functions for JS conversion
@@ -356,13 +379,73 @@ JSObject _toolConfigToJs(ToolConfig config) {
     obj['description'] = config.description!.toJS;
   }
   // MCP SDK v1.24+ requires Zod schemas for inputSchema.
-  // We use z.object({}).passthrough() to accept any arguments.
-  // This ensures the SDK passes args to our callback properly.
-  obj['inputSchema'] = _createPassthroughZodSchema();
+  // Build a typed Zod schema from the JSON schema so clients see field names.
+  obj['inputSchema'] = config.inputSchema != null
+      ? _jsonSchemaToZod(config.inputSchema!)
+      : _createPassthroughZodSchema();
   if (config.annotations != null) {
     obj['annotations'] = _toolAnnotationsToJs(config.annotations!);
   }
   return obj;
+}
+
+/// Build a Zod schema from a JSON Schema Map so MCP clients see typed fields.
+/// Falls back to passthrough if the schema has no properties.
+JSObject _jsonSchemaToZod(Map<String, Object?> schema) {
+  final zod = requireModule('zod') as JSObject;
+  final z = zod['z'] as JSObject;
+
+  final properties = schema['properties'];
+  final required = schema['required'] as List<Object?>?;
+
+  if (properties == null || properties is! Map<Object?, Object?>) {
+    return _createPassthroughZodSchemaWith(z);
+  }
+
+  final zodFields = JSObject();
+  for (final entry in properties.entries) {
+    final propName = entry.key as String;
+    final propDef = entry.value;
+    if (propDef is! Map<Object?, Object?>) continue;
+
+    final isRequired = required?.contains(propName) ?? false;
+    var zodType = _propDefToZodType(z, propDef);
+
+    final description = propDef['description'];
+    if (description is String) {
+      final describeFn = zodType['describe'] as JSFunction;
+      zodType =
+          describeFn.callAsFunction(zodType, description.toJS) as JSObject;
+    }
+
+    if (!isRequired) {
+      final optionalFn = zodType['optional'] as JSFunction;
+      zodType = optionalFn.callAsFunction(zodType) as JSObject;
+    }
+
+    zodFields[propName] = zodType;
+  }
+
+  final objectFn = z['object'] as JSFunction;
+  final zodObject = objectFn.callAsFunction(z, zodFields) as JSObject;
+  final passthroughFn = zodObject['passthrough'] as JSFunction;
+  return passthroughFn.callAsFunction(zodObject) as JSObject;
+}
+
+/// Map a single JSON Schema property definition to a Zod type.
+JSObject _propDefToZodType(JSObject z, Map<Object?, Object?> propDef) {
+  final enumValues = propDef['enum'];
+  if (enumValues is List && enumValues.isNotEmpty) {
+    final enumFn = z['enum'] as JSFunction;
+    final values = enumValues.map((v) => (v as String).toJS).toList().toJS;
+    return enumFn.callAsFunction(z, values) as JSObject;
+  }
+  return switch (propDef['type'] as String?) {
+    'boolean' => (z['boolean'] as JSFunction).callAsFunction(z) as JSObject,
+    'number' ||
+    'integer' => (z['number'] as JSFunction).callAsFunction(z) as JSObject,
+    _ => (z['string'] as JSFunction).callAsFunction(z) as JSObject,
+  };
 }
 
 /// Create a Zod passthrough schema that accepts any object.
@@ -370,9 +453,12 @@ JSObject _toolConfigToJs(ToolConfig config) {
 JSObject _createPassthroughZodSchema() {
   final zod = requireModule('zod') as JSObject;
   final z = zod['z'] as JSObject;
+  return _createPassthroughZodSchemaWith(z);
+}
+
+JSObject _createPassthroughZodSchemaWith(JSObject z) {
   final objectFn = z['object'] as JSFunction;
-  final emptyObj = JSObject();
-  final zodObject = objectFn.callAsFunction(z, emptyObj) as JSObject;
+  final zodObject = objectFn.callAsFunction(z, JSObject()) as JSObject;
   final passthroughFn = zodObject['passthrough'] as JSFunction;
   return passthroughFn.callAsFunction(zodObject) as JSObject;
 }
