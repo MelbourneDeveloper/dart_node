@@ -46,7 +46,8 @@ extension NullableExtensions<T extends Object> on T? {
 
 /// Extension methods for non-null values enabling functional transformations.
 ///
-/// Provides utilities for applying transformations to values in a functional style.
+/// Provides utilities for applying transformations to values
+/// in a functional style.
 extension ObjectExtensions<T extends Object> on T {
   /// Apply function [op] to this value and return the result.
   ///
