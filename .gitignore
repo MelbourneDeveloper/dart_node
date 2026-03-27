@@ -1,16 +1,98 @@
+# =============================================================================
+# OS
+# =============================================================================
 .DS_Store
-node_modules/
-**/build/
-!tools/build/
-.dart_tool/
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-coverage/
+# =============================================================================
+# IDE / Editor
+# =============================================================================
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*~
+
+# =============================================================================
+# Portfolio-wide tooling
+# =============================================================================
+.too_many_cooks
+.commandtree/
+.playwright-mcp/
 logs/
+nohup.out
 
-# Generated JS files from dart compile js
+# =============================================================================
+# Coverage artifacts
+# =============================================================================
+coverage/
+lcov.info
+*.profraw
+*.profdata
+htmlcov/
+.coverage
+TestResults/
+
+# =============================================================================
+# Secrets / local overrides
+# =============================================================================
+.env
+.env.local
+.env.*.local
+*.secret
+*.pem
+*.key
+!*.pub.key
+
+# =============================================================================
+# Dart
+# =============================================================================
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+.metadata
 *.js.deps
 *.js.map
 
+# =============================================================================
+# Node / JS
+# =============================================================================
+node_modules/
+out/
+
+# =============================================================================
+# Project-specific
+# =============================================================================
+
+# Build artifacts (preserve tools/build/ and .claude/skills/build/)
+**/build/
+!tools/build/
+!.claude/skills/build/
+
+# Generated mjs files (preserve .vscode-test.mjs)
+*.mjs
+!.vscode-test.mjs
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# VS Code extension artifacts
+*.vsix
+.vscode-test/
+packages/dart_node_vsix/out/
+packages/dart_node_vsix/build/
+
+# Mobile / Expo
 examples/mobile/rn/.expo/
 
 # Website generated files
@@ -26,56 +108,15 @@ website/src/zh/api/dart_node_mcp/
 website/src/zh/api/dart_logging/
 website/src/zh/api/reflux/
 website/.dart-doc-temp/
-
-examples/frontend/coverage/
-
-*.mjs
-!.vscode-test.mjs
-
-examples/too_many_cooks_vscode_extension/.vscode-test/user-data/
-
-examples/too_many_cooks_vscode_extension/.vscode-test/vscode-darwin-arm64-1.106.3/
-
-*.db
-
-*.db-shm
-
-*.db-wal
-
-*.vsix
-
-examples/too_many_cooks_vscode_extension/.vscode-test/
-
-examples/reflux_demo/flutter_counter/test/failures/
-
-
-mutation-reports
-
-out/
-
-
-.vscode-test/
-.playwright-mcp/
-
-# dart_node_vsix build artifacts
-packages/dart_node_vsix/out/
-packages/dart_node_vsix/build/
-
 website/playwright-report/
-
 website/test-results/
 
-# IntelliJ IDEA
-.idea/
-*.iml
-
-# Dart metadata
-.metadata
-
-# Flutter web scaffolding (not needed for VSCode extension)
+# Example-specific
+examples/frontend/coverage/
+examples/too_many_cooks_vscode_extension/.vscode-test/
 examples/too_many_cooks_vscode_extension/web/
 examples/too_many_cooks_vscode_extension/lib/main.dart
+examples/reflux_demo/flutter_counter/test/failures/
 
-.commandtree/
-.too_many_cooks
-
+# Mutation testing
+mutation-reports

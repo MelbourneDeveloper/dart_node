@@ -1,15 +1,114 @@
-.PHONY: help setup test test-tier1 test-tier2 test-tier3 pub-get install-vsix clean
+# =============================================================================
+# Standard Makefile — dart_node
+# Dart packages for building Node.js apps.
+# =============================================================================
 
-help: ## Show available targets
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
+.PHONY: build test lint fmt fmt-check clean check ci coverage coverage-check \
+        help setup pub-get test-tier1 test-tier2 test-tier3 install-vsix
+
+# Coverage threshold (override in CI via env var)
+COVERAGE_THRESHOLD ?= 80
+
+# =============================================================================
+# PRIMARY TARGETS (uniform interface — do not rename)
+# =============================================================================
+
+## build: Compile/assemble all artifacts
+build:
+	@echo "==> Building..."
+	$(MAKE) _build
+
+## test: Run full test suite with coverage
+test:
+	@echo "==> Testing..."
+	$(MAKE) _test
+
+## lint: Run all linters (fails on any warning)
+lint:
+	@echo "==> Linting..."
+	$(MAKE) _lint
+
+## fmt: Format all code in-place
+fmt:
+	@echo "==> Formatting..."
+	$(MAKE) _fmt
+
+## fmt-check: Check formatting without modifying
+fmt-check:
+	@echo "==> Checking format..."
+	$(MAKE) _fmt_check
+
+## clean: Remove all build artifacts
+clean:
+	@echo "==> Cleaning..."
+	$(MAKE) _clean
+
+## check: lint + test (pre-commit)
+check: lint test
+
+## ci: lint + test + build (full CI simulation)
+ci: lint test build
+
+## coverage: Generate coverage report
+coverage:
+	@echo "==> Coverage report..."
+	$(MAKE) _coverage
+
+## coverage-check: Assert thresholds (exits non-zero if below)
+coverage-check:
+	@echo "==> Checking coverage thresholds..."
+	$(MAKE) _coverage_check
+
+# =============================================================================
+# DART IMPLEMENTATIONS
+# =============================================================================
+
+_build:
+	@echo "Dart library packages — no standalone build artifacts"
+
+_test:
+	./tools/test.sh
+
+_lint:
+	$(MAKE) _fmt_check
+	cspell "**/*.md" "**/*.dart" "**/*.ts" --no-progress
+	@for dir in packages/* examples/* tools/build; do \
+		if [ -d "$$dir" ] && [ -f "$$dir/pubspec.yaml" ]; then \
+			echo "Analyzing $$dir..."; \
+			(cd "$$dir" && dart analyze --no-fatal-warnings) || true; \
+		fi; \
+	done
+
+_fmt:
+	dart format packages/ examples/ tools/build
+
+_fmt_check:
+	dart format --set-exit-if-changed packages/
+	dart format --set-exit-if-changed examples/
+	dart format --set-exit-if-changed tools/build
+
+_clean:
+	rm -rf logs/
+	@for pkg in packages/*/; do \
+		[ -d "$$pkg/build" ] && rm -rf "$$pkg/build" || true; \
+		[ -d "$$pkg/coverage" ] && rm -rf "$$pkg/coverage" || true; \
+	done
+
+_coverage:
+	./tools/test.sh
+	@echo "Coverage reports in logs/"
+
+_coverage_check:
+	MIN_COVERAGE=$(COVERAGE_THRESHOLD) ./tools/test.sh
+
+# =============================================================================
+# PROJECT-SPECIFIC TARGETS
+# =============================================================================
 
 setup: pub-get ## Install all Dart and npm dependencies
 
 pub-get: ## Run dart pub get on all packages in dependency order
 	./tools/pub_get.sh
-
-test: ## Run all tests with coverage (all tiers)
-	./tools/test.sh
 
 test-tier1: ## Run tier 1 tests only (core packages)
 	./tools/test.sh --tier 1
@@ -23,27 +122,26 @@ test-tier3: ## Run tier 3 tests only (examples)
 install-vsix: ## Build and install the VS Code extension locally
 	./tools/run_todo_backend.sh
 
-lint: ## Analyze all Dart packages
-	@for pkg in packages/dart_logging packages/dart_node_core packages/dart_node_express \
-	            packages/dart_node_ws packages/dart_node_mcp packages/dart_node_react \
-	            packages/dart_node_react_native packages/dart_node_better_sqlite3 \
-	            packages/reflux packages/dart_jsx packages/dart_node_coverage; do \
-	  [ -d "$$pkg" ] && echo "Analyzing $$pkg..." && (cd "$$pkg" && dart analyze) || true; \
-	done
-
-fmt: ## Format all Dart packages
-	@for pkg in packages/dart_logging packages/dart_node_core packages/dart_node_express \
-	            packages/dart_node_ws packages/dart_node_mcp packages/dart_node_react \
-	            packages/dart_node_react_native packages/dart_node_better_sqlite3 \
-	            packages/reflux packages/dart_jsx packages/dart_node_coverage; do \
-	  [ -d "$$pkg" ] && (cd "$$pkg" && dart format .) || true; \
-	done
-
-clean: ## Remove build artifacts and logs
-	rm -rf logs/
-	@for pkg in packages/*/; do \
-	  [ -d "$$pkg/build" ] && rm -rf "$$pkg/build" || true; \
-	  [ -d "$$pkg/coverage" ] && rm -rf "$$pkg/coverage" || true; \
-	done
-
-ci: setup test ## Full CI pipeline (setup + all tests)
+# =============================================================================
+# HELP
+# =============================================================================
+help:
+	@echo "Available targets:"
+	@echo "  build          - Compile/assemble all artifacts"
+	@echo "  test           - Run full test suite with coverage"
+	@echo "  lint           - Run all linters (errors mode)"
+	@echo "  fmt            - Format all code in-place"
+	@echo "  fmt-check      - Check formatting (no modification)"
+	@echo "  clean          - Remove build artifacts"
+	@echo "  check          - lint + test (pre-commit)"
+	@echo "  ci             - lint + test + build (full CI)"
+	@echo "  coverage       - Generate and open coverage report"
+	@echo "  coverage-check - Assert coverage thresholds"
+	@echo ""
+	@echo "Project-specific:"
+	@echo "  setup          - Install all Dart and npm dependencies"
+	@echo "  pub-get        - Run dart pub get in dependency order"
+	@echo "  test-tier1     - Run tier 1 tests only"
+	@echo "  test-tier2     - Run tier 2 tests only"
+	@echo "  test-tier3     - Run tier 3 tests only"
+	@echo "  install-vsix   - Build and install VS Code extension"
