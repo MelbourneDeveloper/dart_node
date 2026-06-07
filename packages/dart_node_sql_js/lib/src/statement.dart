@@ -2,10 +2,28 @@
 library;
 
 import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
 
+import 'package:dart_node_sql_js/src/database.dart';
 import 'package:dart_node_sql_js/src/types.dart';
 import 'package:nadz/nadz.dart';
+
+/// Typed view over a sql.js prepared `Statement` instance.
+extension type SqlJsStatement(JSObject _) implements JSObject {
+  /// Bind positional parameters to the statement.
+  external void bind(JSArray<JSAny?> values);
+
+  /// Advance to the next row. Returns false when exhausted.
+  external bool step();
+
+  /// Return the current row as a column-keyed object.
+  external JSObject getAsObject();
+
+  /// Reset the statement so it can be executed again.
+  external void reset();
+
+  /// Release the statement and its memory.
+  external void free();
+}
 
 /// A prepared SQL statement.
 typedef Statement = ({
@@ -24,47 +42,33 @@ typedef Statement = ({
 ///
 /// [jsStmt] is the sql.js Statement object.
 /// [jsDb] is the sql.js Database object (needed for getRowsModified).
-/// [onWrite] is called after run() to persist changes to disk.
-Statement createStatement(
-  JSObject jsStmt,
-  JSObject jsDb, {
-  void Function()? onWrite,
-}) => (
+Statement createStatement(SqlJsStatement jsStmt, SqlJsDatabase jsDb) => (
   all: ([params]) => _stmtAll(jsStmt, params),
   get: ([params]) => _stmtGet(jsStmt, params),
-  run: ([params]) => _stmtRun(jsStmt, jsDb, params, onWrite),
+  run: ([params]) => _stmtRun(jsStmt, jsDb, params),
 );
 
-void _bindParams(JSObject jsStmt, List<Object?>? params) {
-  final bindFn = jsStmt['bind'] as JSFunction;
+void _bindParams(SqlJsStatement jsStmt, List<Object?>? params) {
   if (params != null && params.isNotEmpty) {
-    bindFn.callAsFunction(jsStmt, params.map(_jsifyParam).toList().toJS);
-  } else {
-    // Reset bindings for parameterless execution
-    bindFn.callAsFunction(jsStmt);
+    jsStmt.bind(params.map(_jsifyParam).toList().toJS);
   }
 }
 
 JSAny? _jsifyParam(Object? p) => p.jsify();
 
 Result<List<Map<String, Object?>>, String> _stmtAll(
-  JSObject jsStmt,
+  SqlJsStatement jsStmt,
   List<Object?>? params,
 ) {
   try {
     _bindParams(jsStmt, params);
 
-    final stepFn = jsStmt['step'] as JSFunction;
-    final getAsObjectFn = jsStmt['getAsObject'] as JSFunction;
-    final resetFn = jsStmt['reset'] as JSFunction;
-
     final rows = <Map<String, Object?>>[];
-    while ((stepFn.callAsFunction(jsStmt) as JSBoolean).toDart) {
-      final jsRow = getAsObjectFn.callAsFunction(jsStmt) as JSObject;
-      final row = _convertRow(jsRow.dartify());
+    while (jsStmt.step()) {
+      final row = _convertRow(jsStmt.getAsObject().dartify());
       if (row != null) rows.add(row);
     }
-    resetFn.callAsFunction(jsStmt);
+    jsStmt.reset();
 
     return Success(rows);
   } catch (e) {
@@ -79,24 +83,18 @@ Map<String, Object?>? _convertRow(Object? dartified) {
 }
 
 Result<Map<String, Object?>?, String> _stmtGet(
-  JSObject jsStmt,
+  SqlJsStatement jsStmt,
   List<Object?>? params,
 ) {
   try {
     _bindParams(jsStmt, params);
 
-    final stepFn = jsStmt['step'] as JSFunction;
-    final getAsObjectFn = jsStmt['getAsObject'] as JSFunction;
-    final resetFn = jsStmt['reset'] as JSFunction;
-
-    final hasRow = (stepFn.callAsFunction(jsStmt) as JSBoolean).toDart;
-    if (!hasRow) {
-      resetFn.callAsFunction(jsStmt);
+    if (!jsStmt.step()) {
+      jsStmt.reset();
       return const Success(null);
     }
-    final jsRow = getAsObjectFn.callAsFunction(jsStmt) as JSObject;
-    final row = _convertRow(jsRow.dartify());
-    resetFn.callAsFunction(jsStmt);
+    final row = _convertRow(jsStmt.getAsObject().dartify());
+    jsStmt.reset();
 
     return Success(row);
   } catch (e) {
@@ -105,50 +103,38 @@ Result<Map<String, Object?>?, String> _stmtGet(
 }
 
 Result<RunResult, String> _stmtRun(
-  JSObject jsStmt,
-  JSObject jsDb,
+  SqlJsStatement jsStmt,
+  SqlJsDatabase jsDb,
   List<Object?>? params,
-  void Function()? onWrite,
 ) {
   try {
     _bindParams(jsStmt, params);
 
-    final stepFn = jsStmt['step'] as JSFunction;
-    final resetFn = jsStmt['reset'] as JSFunction;
+    jsStmt
+      ..step()
+      ..reset();
 
-    // Execute the statement
-    stepFn.callAsFunction(jsStmt);
-    resetFn.callAsFunction(jsStmt);
+    final changes = jsDb.getRowsModified();
+    final lastInsertRowid = _lastInsertRowid(jsDb);
 
-    // Get changes from the database object
-    final getRowsModifiedFn = jsDb['getRowsModified'] as JSFunction;
-    final changes =
-        (getRowsModifiedFn.callAsFunction(jsDb) as JSNumber).toDartInt;
-
-    // Get last insert rowid via exec
-    final execFn = jsDb['exec'] as JSFunction;
-    final rowidResult =
-        execFn.callAsFunction(jsDb, 'SELECT last_insert_rowid() as id'.toJS)
-            as JSArray<JSAny?>;
-
-    var lastInsertRowid = 0;
-    if (rowidResult.length > 0) {
-      final resultObj = rowidResult[0] as JSObject;
-      final values = resultObj['values'] as JSArray<JSAny?>;
-      if (values.length > 0) {
-        final firstRow = values[0] as JSArray<JSAny?>;
-        if (firstRow.length > 0) {
-          final val = firstRow[0];
-          if (val != null && !val.isUndefinedOrNull) {
-            lastInsertRowid = (val as JSNumber).toDartInt;
-          }
-        }
-      }
-    }
-
-    onWrite?.call();
     return Success((changes: changes, lastInsertRowid: lastInsertRowid));
   } catch (e) {
     return Error('Statement.run failed: $e');
   }
+}
+
+/// Read the rowid of the most recent insert via `last_insert_rowid()`.
+///
+/// Uses a dedicated statement that is freed immediately so it never
+/// interferes with the caller's live statements.
+int _lastInsertRowid(SqlJsDatabase jsDb) {
+  final stmt = jsDb.prepare('SELECT last_insert_rowid() AS id');
+  final id = stmt.step() ? _rowidValue(stmt) : 0;
+  stmt.free();
+  return id;
+}
+
+int _rowidValue(SqlJsStatement stmt) {
+  final value = _convertRow(stmt.getAsObject().dartify())?['id'];
+  return value is num ? value.toInt() : 0;
 }

@@ -35,4 +35,4 @@ jobs:
       - name: Publish packages
         run: |
           chmod +x .github/scripts/publish-packages.sh
-          .github/scripts/publish-packages.sh "${{ steps.version.outputs.VERSION }}" reflux dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_mcp
+          .github/scripts/publish-packages.sh "${{ steps.version.outputs.VERSION }}" reflux dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_sql_js dart_node_mcp

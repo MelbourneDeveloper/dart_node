@@ -85,6 +85,7 @@ Every publishable package must have a `## $ARGUMENTS` entry in its CHANGELOG.md.
 | 2 | dart_node_express |
 | 2 | dart_node_ws |
 | 2 | dart_node_better_sqlite3 |
+| 2 | dart_node_sql_js |
 | 2 | dart_node_mcp |
 | 3 | dart_node_react |
 | 3 | dart_node_react_native |
@@ -93,7 +94,7 @@ Check each changelog:
 
 ```bash
 VERSION="$ARGUMENTS"
-for pkg in dart_logging dart_node_core reflux dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_mcp dart_node_react dart_node_react_native; do
+for pkg in dart_logging dart_node_core reflux dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_sql_js dart_node_mcp dart_node_react dart_node_react_native; do
   if grep -q "^## $VERSION" "packages/$pkg/CHANGELOG.md" 2>/dev/null; then
     echo "✅ $pkg"
   else
@@ -109,7 +110,7 @@ If any are missing, **stop and update the changelogs** before proceeding.
 Each package should have a README.md. Quick sanity check:
 
 ```bash
-for pkg in dart_logging dart_node_core reflux dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_mcp dart_node_react dart_node_react_native; do
+for pkg in dart_logging dart_node_core reflux dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_sql_js dart_node_mcp dart_node_react dart_node_react_native; do
   if [[ -f "packages/$pkg/README.md" ]]; then
     LINES=$(wc -l < "packages/$pkg/README.md")
     echo "✅ $pkg - $LINES lines"
@@ -124,7 +125,7 @@ done
 Verify which versions are currently published:
 
 ```bash
-for pkg in dart_logging dart_node_core reflux dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_mcp dart_node_react dart_node_react_native; do
+for pkg in dart_logging dart_node_core reflux dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_sql_js dart_node_mcp dart_node_react dart_node_react_native; do
   LATEST=$(curl -s "https://pub.dev/api/packages/$pkg" | grep -o '"version":"[^"]*"' | head -1 | cut -d'"' -f4)
   echo "$pkg: $LATEST"
 done
@@ -185,7 +186,7 @@ git tag "Release-Tier2/$ARGUMENTS"
 git push origin "Release-Tier2/$ARGUMENTS"
 ```
 
-Publishes: reflux, dart_node_express, dart_node_ws, dart_node_better_sqlite3, dart_node_mcp
+Publishes: reflux, dart_node_express, dart_node_ws, dart_node_better_sqlite3, dart_node_sql_js, dart_node_mcp
 
 ## Step 10: Tier 3 publishing
 
@@ -214,7 +215,7 @@ After release, verify all packages are available:
 
 ```bash
 VERSION="$ARGUMENTS"
-for pkg in dart_logging dart_node_core reflux dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_mcp dart_node_react dart_node_react_native; do
+for pkg in dart_logging dart_node_core reflux dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_sql_js dart_node_mcp dart_node_react dart_node_react_native; do
   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pub.dev/api/packages/$pkg/versions/$VERSION")
   if [[ "$HTTP_CODE" == "200" ]]; then
     echo "✅ $pkg@$VERSION published"
