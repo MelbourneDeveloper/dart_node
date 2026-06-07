@@ -59,6 +59,7 @@ jobs:
             "dart_node_express"
             "dart_node_ws"
             "dart_node_better_sqlite3"
+            "dart_node_sql_js"
             "dart_node_mcp"
             "dart_node_react"
             "dart_node_react_native"
