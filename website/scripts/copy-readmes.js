@@ -18,17 +18,29 @@ const zhDocsDir = join(__dirname, '..', 'src', 'zh', 'docs');
 
 // Mapping from package directory name to docs slug
 const packageToDocsMap = {
-  'dart_node_core': { slug: 'core', title: 'dart_node_core', order: 1 },
-  'dart_node_express': { slug: 'express', title: 'dart_node_express', order: 2 },
-  'dart_node_react': { slug: 'react', title: 'dart_node_react', order: 3 },
-  'dart_node_react_native': { slug: 'react-native', title: 'dart_node_react_native', order: 4 },
-  'dart_node_ws': { slug: 'websockets', title: 'dart_node_ws', order: 5 },
-  'dart_node_better_sqlite3': { slug: 'sqlite', title: 'dart_node_better_sqlite3', order: 6 },
-  'dart_node_mcp': { slug: 'mcp', title: 'dart_node_mcp', order: 7 },
-  'dart_logging': { slug: 'logging', title: 'dart_logging', order: 8 },
-  'reflux': { slug: 'reflux', title: 'reflux', order: 9 },
-  'dart_jsx': { slug: 'jsx', title: 'dart_jsx', order: 10 },
+  'dart_node_core': { slug: 'core', title: 'dart_node_core', order: 1, pubdev: 'dart_node_core' },
+  'dart_node_express': { slug: 'express', title: 'dart_node_express', order: 2, pubdev: 'dart_node_express' },
+  'dart_node_react': { slug: 'react', title: 'dart_node_react', order: 3, pubdev: 'dart_node_react' },
+  'dart_node_react_native': { slug: 'react-native', title: 'dart_node_react_native', order: 4, pubdev: 'dart_node_react_native' },
+  'dart_node_ws': { slug: 'websockets', title: 'dart_node_ws', order: 5, pubdev: 'dart_node_ws' },
+  'dart_node_better_sqlite3': { slug: 'sqlite', title: 'dart_node_better_sqlite3', order: 6, pubdev: 'dart_node_better_sqlite3' },
+  'dart_node_mcp': { slug: 'mcp', title: 'dart_node_mcp', order: 7, pubdev: 'dart_node_mcp' },
+  'dart_logging': { slug: 'logging', title: 'dart_logging', order: 8, pubdev: 'dart_logging' },
+  'reflux': { slug: 'reflux', title: 'reflux', order: 9, pubdev: 'reflux' },
+  'dart_jsx': { slug: 'jsx', title: 'dart_jsx', order: 10, pubdev: 'dart_jsx' },
 };
+
+// CTA HTML to inject after installation sections
+function getPackageLinksHtml(pubdevPackage, lang = 'en') {
+  const viewText = lang === 'zh' ? '在 pub.dev 查看' : 'View on pub.dev';
+  const starText = lang === 'zh' ? '给个 Star' : 'Star on GitHub';
+  return `
+<div class="package-links">
+  <a href="https://pub.dev/packages/${pubdevPackage}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">${viewText}</a>
+  <a href="https://github.com/MelbourneDeveloper/dart_node" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">${starText}</a>
+</div>
+`;
+}
 
 function generateFrontmatter(config, lang = 'en') {
   if (lang === 'zh') {
@@ -57,7 +69,7 @@ eleventyNavigation:
 `;
 }
 
-function processReadme(content, packageName) {
+function processReadme(content, packageName, config, lang = 'en') {
   // Remove the first heading (# package_name) as it will be in the frontmatter title
   const lines = content.split('\n');
   let startIndex = 0;
@@ -82,7 +94,21 @@ function processReadme(content, packageName) {
     }
   }
 
-  return lines.slice(startIndex).join('\n').trim();
+  let result = lines.slice(startIndex).join('\n').trim();
+
+  // Inject package links after the first code block following "## Installation" or "## 安装"
+  if (config && config.pubdev) {
+    const installationPattern = lang === 'zh'
+      ? /(## 安装[\s\S]*?```[\s\S]*?```)/
+      : /(## Installation[\s\S]*?```[\s\S]*?```)/;
+    const installationMatch = result.match(installationPattern);
+    if (installationMatch) {
+      const packageLinks = getPackageLinksHtml(config.pubdev, lang);
+      result = result.replace(installationMatch[0], installationMatch[0] + packageLinks);
+    }
+  }
+
+  return result;
 }
 
 function copyEnglishReadmes() {
@@ -109,7 +135,7 @@ function copyEnglishReadmes() {
 
     // Process and write to docs
     const frontmatter = generateFrontmatter(config);
-    const processedContent = processReadme(readmeContent, packageDir);
+    const processedContent = processReadme(readmeContent, packageDir, config, 'en');
     const finalContent = frontmatter + processedContent + '\n';
 
     writeFileSync(outputPath, finalContent);
@@ -141,7 +167,7 @@ function copyChineseReadmes() {
 
     // Process and write to docs
     const frontmatter = generateFrontmatter(config, 'zh');
-    const processedContent = processReadme(readmeContent, packageDir);
+    const processedContent = processReadme(readmeContent, packageDir, config, 'zh');
     const finalContent = frontmatter + processedContent + '\n';
 
     writeFileSync(outputPath, finalContent);
