@@ -1,4 +1,5 @@
 import 'package:dart_node_express/dart_node_express.dart';
+import 'package:shared/models/pomodoro.dart';
 import 'package:shared/models/task.dart';
 import 'package:shared/models/user.dart';
 
@@ -46,4 +47,20 @@ final createUserSchema = schema<CreateUserData>(
 final loginSchema = schema<LoginData>(
   {'email': string().email(), 'password': string().notEmpty()},
   (map) => (email: map['email'] as String, password: map['password'] as String),
+);
+
+/// Validation schema for creating pomodoro session
+final createPomodoroSessionSchema = schema<CreatePomodoroSessionData>(
+  {
+    'title': string().notEmpty().maxLength(200),
+    'duration': optional(int_().min(1).max(120)),
+    'breakDuration': optional(int_().min(1).max(60)),
+    'linkedTaskId': optional(string()),
+  },
+  (map) => (
+    title: map['title'] as String,
+    duration: map['duration'] as int?,
+    breakDuration: map['breakDuration'] as int?,
+    linkedTaskId: map['linkedTaskId'] as String?,
+  ),
 );

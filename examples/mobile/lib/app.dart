@@ -5,6 +5,7 @@ import 'package:dart_node_react_native/dart_node_react_native.dart';
 import 'package:shared/http/http_client.dart';
 
 import 'screens/login_screen.dart';
+import 'screens/pomodoro_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/task_list_screen.dart';
 import 'types.dart';
@@ -86,6 +87,11 @@ ReactElement _buildCurrentView({
     token: token?.toDart ?? '',
     user: user,
     authEffects: authEffects,
+    fetchFn: fetchFn,
+  ),
+  'pomodoro' => pomodoroScreen(
+    token: token?.toDart ?? '',
+    onBack: () => authEffects.setView('tasks'),
     fetchFn: fetchFn,
   ),
   _ => loginScreen(authEffects: authEffects, fetchFn: fetchFn),

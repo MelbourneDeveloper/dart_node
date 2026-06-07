@@ -30,6 +30,86 @@ Future<Result<JSArray, String>> fetchTasks({
   required String apiUrl,
 }) async => (await fetchJson('$apiUrl/tasks', token: token)).map(_readTaskData);
 
+// --- Pomodoro API functions ---
+
+Future<Result<JSArray, String>> fetchPomodoroSessions({
+  required String token,
+  required String apiUrl,
+}) async =>
+    (await fetchJson('$apiUrl/pomodoro', token: token)).map(_readArrayData);
+
+Future<Result<JSObject, String>> fetchActivePomodoro({
+  required String token,
+  required String apiUrl,
+}) async =>
+    (await fetchJson('$apiUrl/pomodoro/active', token: token)).map(_readData);
+
+Future<Result<JSObject, String>> createPomodoroSession({
+  required String token,
+  required String apiUrl,
+  required String title,
+  int? duration,
+  int? breakDuration,
+  String? linkedTaskId,
+}) async {
+  final body = <String, dynamic>{'title': title};
+  if (duration != null) body['duration'] = duration;
+  if (breakDuration != null) body['breakDuration'] = breakDuration;
+  if (linkedTaskId != null) body['linkedTaskId'] = linkedTaskId;
+  return (await fetchJson('$apiUrl/pomodoro', method: 'POST', token: token, body: body))
+      .map(_readData);
+}
+
+Future<Result<JSObject, String>> startPomodoroSession({
+  required String token,
+  required String apiUrl,
+  required String sessionId,
+}) async => (await fetchJson(
+      '$apiUrl/pomodoro/$sessionId/start',
+      method: 'POST',
+      token: token,
+    )).map(_readData);
+
+Future<Result<JSObject, String>> pausePomodoroSession({
+  required String token,
+  required String apiUrl,
+  required String sessionId,
+}) async => (await fetchJson(
+      '$apiUrl/pomodoro/$sessionId/pause',
+      method: 'POST',
+      token: token,
+    )).map(_readData);
+
+Future<Result<JSObject, String>> resumePomodoroSession({
+  required String token,
+  required String apiUrl,
+  required String sessionId,
+}) async => (await fetchJson(
+      '$apiUrl/pomodoro/$sessionId/resume',
+      method: 'POST',
+      token: token,
+    )).map(_readData);
+
+Future<Result<JSObject, String>> completePomodoroSession({
+  required String token,
+  required String apiUrl,
+  required String sessionId,
+}) async => (await fetchJson(
+      '$apiUrl/pomodoro/$sessionId/complete',
+      method: 'POST',
+      token: token,
+    )).map(_readData);
+
+Future<Result<JSObject, String>> deletePomodoroSession({
+  required String token,
+  required String apiUrl,
+  required String sessionId,
+}) async => (await fetchJson(
+      '$apiUrl/pomodoro/$sessionId',
+      method: 'DELETE',
+      token: token,
+    ));
+
 List<String> getObjectKeys(JSObject obj) => _jsObjectKeys(
   obj,
 ).toDart.whereType<JSString>().map((key) => key.toDart).toList();
@@ -134,6 +214,16 @@ Result<JSObject, String> _guardSuccess(JSObject json) {
 JSArray _readTaskData(JSObject json) => switch (json['data']) {
   final JSArray tasks => tasks,
   _ => <JSAny>[].toJS,
+};
+
+JSArray _readArrayData(JSObject json) => switch (json['data']) {
+  final JSArray arr => arr,
+  _ => <JSAny>[].toJS,
+};
+
+JSObject _readData(JSObject json) => switch (json['data']) {
+  final JSObject obj => obj,
+  _ => JSObject(),
 };
 
 String _readError(JSAny? error) => switch (error) {
