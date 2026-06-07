@@ -365,10 +365,14 @@ void _stopSession(
       });
 }
 
-void _handlePomodoroEvent(JSObject jsEvent, StateHook<JSPomodoroEvent?> timerState) {
+void _handlePomodoroEvent(
+  JSObject jsEvent,
+  StateHook<JSPomodoroEvent?> timerState,
+) {
   final eventType = jsEvent['type'];
   switch (eventType) {
-    case final JSString t when t.toDart == 'pomodoro_tick' || t.toDart == 'pomodoro_update':
+    case final JSString t
+        when t.toDart == 'pomodoro_tick' || t.toDart == 'pomodoro_update':
       final data = jsEvent['data'];
       switch (data) {
         case final JSObject obj:
@@ -416,9 +420,11 @@ class _PomodoroStyles {
 
   Map<String, Object?> get primaryButtonText => AppStyles.pomodoroControlIcon;
 
-  Map<String, Object?> get secondaryButton => AppStyles.pomodoroControlBtnSecondary;
+  Map<String, Object?> get secondaryButton =>
+      AppStyles.pomodoroControlBtnSecondary;
 
-  Map<String, Object?> get secondaryButtonText => AppStyles.pomodoroControlIconSecondary;
+  Map<String, Object?> get secondaryButtonText =>
+      AppStyles.pomodoroControlIconSecondary;
 
   Map<String, Object?> get dangerButton => {
     ...AppStyles.pomodoroControlBtnSecondary,

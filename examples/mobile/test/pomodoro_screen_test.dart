@@ -169,11 +169,7 @@ void main() {
         '/pomodoro/active': {'success': true, 'data': null},
         'POST /pomodoro/start': {
           'success': true,
-          'data': {
-            'id': 'session-1',
-            'title': 'Focus Session',
-            'duration': 25,
-          },
+          'data': {'id': 'session-1', 'title': 'Focus Session', 'duration': 25},
         },
       });
 

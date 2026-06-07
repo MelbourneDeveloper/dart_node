@@ -9,12 +9,8 @@ void main() {
     Error(:final error) => throw StateError(error),
   };
 
-  PeerContact _contact(NodeId id) => (
-    nodeId: id,
-    address: '127.0.0.1',
-    port: 8000,
-    lastSeen: DateTime.now(),
-  );
+  PeerContact _contact(NodeId id) =>
+      (nodeId: id, address: '127.0.0.1', port: 8000, lastSeen: DateTime.now());
 
   test('createRoutingTable creates 256 empty buckets', () {
     final table = createRoutingTable(_randomId());

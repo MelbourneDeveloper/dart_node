@@ -9,10 +9,9 @@ import 'package:nadz/nadz.dart';
 typedef NodeId = ({Uint8List bytes});
 
 /// Creates a NodeId from raw bytes. Must be exactly 32 bytes.
-Result<NodeId, String> nodeIdFromBytes(Uint8List bytes) =>
-    bytes.length == 32
-        ? Success((bytes: bytes))
-        : Error('NodeId must be 32 bytes, got ${bytes.length}');
+Result<NodeId, String> nodeIdFromBytes(Uint8List bytes) => bytes.length == 32
+    ? Success((bytes: bytes))
+    : Error('NodeId must be 32 bytes, got ${bytes.length}');
 
 /// Derives a NodeId from a public key by hashing it with SHA-256.
 Future<Result<NodeId, String>> nodeIdFromPublicKey(

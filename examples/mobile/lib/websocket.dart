@@ -95,13 +95,13 @@ enum PomodoroEventType { tick, start, pause, resume, complete, unknown }
 
 /// Parse pomodoro event type from string
 PomodoroEventType parsePomodoroEventType(String? type) => switch (type) {
-      'pomodoro_tick' => PomodoroEventType.tick,
-      'pomodoro_start' => PomodoroEventType.start,
-      'pomodoro_pause' => PomodoroEventType.pause,
-      'pomodoro_resume' => PomodoroEventType.resume,
-      'pomodoro_complete' => PomodoroEventType.complete,
-      _ => PomodoroEventType.unknown,
-    };
+  'pomodoro_tick' => PomodoroEventType.tick,
+  'pomodoro_start' => PomodoroEventType.start,
+  'pomodoro_pause' => PomodoroEventType.pause,
+  'pomodoro_resume' => PomodoroEventType.resume,
+  'pomodoro_complete' => PomodoroEventType.complete,
+  _ => PomodoroEventType.unknown,
+};
 
 /// Pomodoro event data from WebSocket
 typedef PomodoroEvent = ({
@@ -150,32 +150,31 @@ RNWebSocket? connectPomodoroWebSocket({
   required OnPomodoroEvent onPomodoroEvent,
   void Function()? onOpen,
   void Function()? onClose,
-}) =>
-    _createWebSocket('$wsUrl?token=$token')
-      ..onopen = ((JSAny _) {
-        onOpen?.call();
-      }).toJS
-      ..onmessage = ((WSMessageEvent event) {
-        final data = event.data;
-        switch (data.isA<JSString>()) {
-          case true:
-            final message = data.dartify() as String?;
-            switch (message) {
-              case final String m:
-                _handlePomodoroMessage(m, onPomodoroEvent);
-              case null:
-                break;
-            }
-          case false:
+}) => _createWebSocket('$wsUrl?token=$token')
+  ..onopen = ((JSAny _) {
+    onOpen?.call();
+  }).toJS
+  ..onmessage = ((WSMessageEvent event) {
+    final data = event.data;
+    switch (data.isA<JSString>()) {
+      case true:
+        final message = data.dartify() as String?;
+        switch (message) {
+          case final String m:
+            _handlePomodoroMessage(m, onPomodoroEvent);
+          case null:
             break;
         }
-      }).toJS
-      ..onclose = ((JSAny _) {
-        onClose?.call();
-      }).toJS
-      ..onerror = ((JSAny _) {
-        // Error handling - close will be called after
-      }).toJS;
+      case false:
+        break;
+    }
+  }).toJS
+  ..onclose = ((JSAny _) {
+    onClose?.call();
+  }).toJS
+  ..onerror = ((JSAny _) {
+    // Error handling - close will be called after
+  }).toJS;
 
 void _handlePomodoroMessage(String message, OnPomodoroEvent onPomodoroEvent) {
   final json = globalContext['JSON']! as JSObject;

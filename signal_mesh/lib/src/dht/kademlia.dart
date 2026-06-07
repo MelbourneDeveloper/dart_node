@@ -15,10 +15,7 @@ typedef FindNodeRequest = ({
 });
 
 /// Response to a FindNode request: the k closest known contacts.
-typedef FindNodeResponse = ({
-  NodeId sender,
-  List<PeerContact> closestNodes,
-});
+typedef FindNodeResponse = ({NodeId sender, List<PeerContact> closestNodes});
 
 /// Store request: ask a peer to store a key-value pair.
 typedef StoreRequest = ({
@@ -37,11 +34,7 @@ typedef FindValueResponse = ({
 });
 
 /// DHT storage entry with TTL.
-typedef DhtEntry = ({
-  List<int> value,
-  DateTime storedAt,
-  int ttlSeconds,
-});
+typedef DhtEntry = ({List<int> value, DateTime storedAt, int ttlSeconds});
 
 /// State of a Kademlia DHT node.
 typedef KademliaState = ({
@@ -69,21 +62,14 @@ Result<(KademliaState, FindNodeResponse), String> handleFindNode(
     lastSeen: DateTime.now(),
   );
 
-  final (updatedTable, _) =
-      switch (addContact(state.routingTable, contact)) {
+  final (updatedTable, _) = switch (addContact(state.routingTable, contact)) {
     Success(:final value) => value,
     Error() => (state.routingTable, false),
   };
 
-  final closest = findClosest(
-    updatedTable,
-    request.target,
-  );
+  final closest = findClosest(updatedTable, request.target);
 
-  final response = (
-    sender: state.routingTable.localId,
-    closestNodes: closest,
-  );
+  final response = (sender: state.routingTable.localId, closestNodes: closest);
 
   return Success((
     (routingTable: updatedTable, storage: state.storage),
@@ -106,8 +92,7 @@ Result<KademliaState, String> handleStore(
     lastSeen: DateTime.now(),
   );
 
-  final (updatedTable, _) =
-      switch (addContact(state.routingTable, contact)) {
+  final (updatedTable, _) = switch (addContact(state.routingTable, contact)) {
     Success(:final value) => value,
     Error() => (state.routingTable, false),
   };
@@ -137,8 +122,7 @@ Result<(KademliaState, FindValueResponse), String> handleFindValue(
     lastSeen: DateTime.now(),
   );
 
-  final (updatedTable, _) =
-      switch (addContact(state.routingTable, contact)) {
+  final (updatedTable, _) = switch (addContact(state.routingTable, contact)) {
     Success(:final value) => value,
     Error() => (state.routingTable, false),
   };
@@ -178,10 +162,11 @@ Result<(KademliaState, FindValueResponse), String> handleFindValue(
 ///
 /// This is the client-side algorithm - it sends FIND_NODE RPCs to
 /// progressively closer nodes until no closer nodes are found.
-typedef SendFindNode = Future<FindNodeResponse?> Function(
-  PeerContact target,
-  FindNodeRequest request,
-);
+typedef SendFindNode =
+    Future<FindNodeResponse?> Function(
+      PeerContact target,
+      FindNodeRequest request,
+    );
 
 Future<List<PeerContact>> iterativeFindNode(
   KademliaState state,

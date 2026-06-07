@@ -50,13 +50,10 @@ typedef MeshNode = ({
   Transport transport,
   PeerAddress localAddress,
   Result<void, String> Function(PeerAddress address) connectToPeer,
-  Future<Result<void, String>> Function(
-    NodeId recipient,
-    Uint8List plaintext,
-  ) sendMessage,
-  void Function(
-    void Function(NodeId sender, Uint8List plaintext) handler,
-  ) onMessage,
+  Future<Result<void, String>> Function(NodeId recipient, Uint8List plaintext)
+  sendMessage,
+  void Function(void Function(NodeId sender, Uint8List plaintext) handler)
+  onMessage,
   Result<void, String> Function() shutdown,
   MeshNodeState Function() getState,
 });
@@ -133,8 +130,11 @@ Future<Result<MeshNode, String>> createMeshNode({
         recipient: recipient,
         payload: {'data': plaintext.toList()},
       );
-      final queueResult =
-          enqueueMessage(state.messageQueue, recipient, wireMsg);
+      final queueResult = enqueueMessage(
+        state.messageQueue,
+        recipient,
+        wireMsg,
+      );
       if (queueResult case Success(:final value)) {
         state = (
           identity: state.identity,
@@ -158,8 +158,11 @@ Future<Result<MeshNode, String>> createMeshNode({
         recipient: recipient,
         payload: {'data': plaintext.toList()},
       );
-      final queueResult =
-          enqueueMessage(state.messageQueue, recipient, wireMsg);
+      final queueResult = enqueueMessage(
+        state.messageQueue,
+        recipient,
+        wireMsg,
+      );
       if (queueResult case Success(:final value)) {
         state = (
           identity: state.identity,
@@ -196,10 +199,10 @@ Future<Result<MeshNode, String>> createMeshNode({
 
     // Send to the closest known peer (direct or via relay)
     final target = closest.first;
-    final sendResult = await transport.send(
-      (host: target.address, port: target.port),
-      data,
-    );
+    final sendResult = await transport.send((
+      host: target.address,
+      port: target.port,
+    ), data);
 
     return sendResult;
   }
@@ -241,8 +244,9 @@ void _handleIncomingMessage(
 
   // Cap seen IDs set size
   if (state.seenMessageIds.length > 10000) {
-    final toRemove =
-        state.seenMessageIds.take(state.seenMessageIds.length - 5000);
+    final toRemove = state.seenMessageIds.take(
+      state.seenMessageIds.length - 5000,
+    );
     state.seenMessageIds.removeAll(toRemove);
   }
 
@@ -305,10 +309,10 @@ Future<Result<void, String>> bootstrap(
         payload: {'target': nodeIdToHex(request.target)},
       );
       final data = serializeWireMessage(wireMsg);
-      await node.transport.send(
-        (host: target.address, port: target.port),
-        data,
-      );
+      await node.transport.send((
+        host: target.address,
+        port: target.port,
+      ), data);
       // In a real implementation, we'd wait for the response
       return null;
     },

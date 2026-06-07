@@ -19,11 +19,7 @@ typedef KBucket = ({
 });
 
 /// Kademlia routing table: 256 k-buckets indexed by XOR distance.
-typedef RoutingTable = ({
-  NodeId localId,
-  int k,
-  List<KBucket> buckets,
-});
+typedef RoutingTable = ({NodeId localId, int k, List<KBucket> buckets});
 
 /// Default replication parameter (number of closest nodes to query).
 const defaultK = 20;
@@ -100,10 +96,7 @@ Result<(RoutingTable, bool), String> addContact(
   }
 
   final newBuckets = List<KBucket>.from(table.buckets);
-  newBuckets[idx] = (
-    contacts: bucket.contacts,
-    replacementCache: updatedCache,
-  );
+  newBuckets[idx] = (contacts: bucket.contacts, replacementCache: updatedCache);
   return Success((
     (localId: table.localId, k: table.k, buckets: newBuckets),
     false,
@@ -132,23 +125,17 @@ RoutingTable removeContact(RoutingTable table, NodeId nodeId) {
   }
 
   final newBuckets = List<KBucket>.from(table.buckets);
-  newBuckets[idx] = (
-    contacts: updatedContacts,
-    replacementCache: updatedCache,
-  );
+  newBuckets[idx] = (contacts: updatedContacts, replacementCache: updatedCache);
 
   return (localId: table.localId, k: table.k, buckets: newBuckets);
 }
 
 /// Finds the k closest contacts to a target NodeId.
-List<PeerContact> findClosest(
-  RoutingTable table,
-  NodeId target, {
-  int? count,
-}) {
+List<PeerContact> findClosest(RoutingTable table, NodeId target, {int? count}) {
   final k = count ?? table.k;
-  final allContacts =
-      table.buckets.expand((bucket) => bucket.contacts).toList();
+  final allContacts = table.buckets
+      .expand((bucket) => bucket.contacts)
+      .toList();
 
   allContacts.sort((a, b) {
     final distA = xorDistance(target, a.nodeId);

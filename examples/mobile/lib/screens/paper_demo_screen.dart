@@ -11,7 +11,9 @@ import 'package:dart_node_react/dart_node_react.dart';
 import 'package:dart_node_react_native/dart_node_react_native.dart';
 
 /// Create Paper demo screen component
-JSFunction createPaperDemoScreen() => createFunctionalComponent((JSObject props) {
+JSFunction createPaperDemoScreen() => createFunctionalComponent((
+  JSObject props,
+) {
   final countState = useState(0);
   final fabOpenState = useState(false);
   final count = countState.value;
@@ -20,7 +22,9 @@ JSFunction createPaperDemoScreen() => createFunctionalComponent((JSObject props)
   return npmComponent(
     'react-native',
     'ScrollView',
-    props: {'style': {'flex': 1, 'padding': 16, 'backgroundColor': '#121212'}},
+    props: {
+      'style': {'flex': 1, 'padding': 16, 'backgroundColor': '#121212'},
+    },
     children: [
       // Paper Button - DIRECT usage, no wrapper!
       npmComponent(
@@ -55,7 +59,9 @@ JSFunction createPaperDemoScreen() => createFunctionalComponent((JSObject props)
       npmComponent(
         'react-native-paper',
         'Card',
-        props: {'style': {'backgroundColor': '#1E1E1E'}},
+        props: {
+          'style': {'backgroundColor': '#1E1E1E'},
+        },
         children: [
           npmComponent(
             'react-native-paper',
@@ -74,8 +80,12 @@ JSFunction createPaperDemoScreen() => createFunctionalComponent((JSObject props)
               npmComponent(
                 'react-native-paper',
                 'Text',
-                props: {'style': {'color': '#E0E0E0'}},
-                child: 'This card uses npmComponent() directly with react-native-paper. Props are just Map<String, dynamic> - no typed wrappers!'.toJS,
+                props: {
+                  'style': {'color': '#E0E0E0'},
+                },
+                child:
+                    'This card uses npmComponent() directly with react-native-paper. Props are just Map<String, dynamic> - no typed wrappers!'
+                        .toJS,
               ),
             ],
           ),
@@ -136,11 +146,12 @@ JSFunction createPaperDemoScreen() => createFunctionalComponent((JSObject props)
       // =================================================================
       // TYPED HELPERS - Same components, but with full type safety!
       // =================================================================
-
       npmComponent(
         'react-native-paper',
         'Card',
-        props: {'style': {'backgroundColor': '#2D2D2D'}},
+        props: {
+          'style': {'backgroundColor': '#2D2D2D'},
+        },
         children: [
           npmComponent(
             'react-native-paper',
@@ -159,8 +170,11 @@ JSFunction createPaperDemoScreen() => createFunctionalComponent((JSObject props)
               npmComponent(
                 'react-native-paper',
                 'Text',
-                props: {'style': {'color': '#E0E0E0', 'marginBottom': 12}},
-                child: 'Same components, but typed! Props get autocomplete.'.toJS,
+                props: {
+                  'style': {'color': '#E0E0E0', 'marginBottom': 12},
+                },
+                child:
+                    'Same components, but typed! Props get autocomplete.'.toJS,
               ),
 
               // TYPED Button - using paperButton() helper
@@ -227,5 +241,7 @@ JSFunction createPaperDemoScreen() => createFunctionalComponent((JSObject props)
 ReactElement _spacer() => npmComponent(
   'react-native',
   'View',
-  props: {'style': {'height': 16}},
+  props: {
+    'style': {'height': 16},
+  },
 );

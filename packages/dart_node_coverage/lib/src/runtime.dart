@@ -155,8 +155,9 @@ void _mergeData(JSObject current, JSObject existing) {
 
     // Get or create file coverage
     final hasFile = current.hasProperty(fileKey).toDart;
-    final currentFileCov =
-        hasFile ? current.getProperty<JSObject>(fileKey) : JSObject();
+    final currentFileCov = hasFile
+        ? current.getProperty<JSObject>(fileKey)
+        : JSObject();
 
     if (!hasFile) {
       current.setProperty(fileKey, currentFileCov);

@@ -139,10 +139,7 @@ Result<void, String> _imClose(InMemoryTransportState state) {
   for (final peerKey in state.connected.toList()) {
     final parts = peerKey.split(':');
     if (parts.length == 2) {
-      _imDisconnect(
-        state,
-        (host: parts[0], port: int.tryParse(parts[1]) ?? 0),
-      );
+      _imDisconnect(state, (host: parts[0], port: int.tryParse(parts[1]) ?? 0));
     }
   }
 

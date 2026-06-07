@@ -69,8 +69,9 @@ Uint8List serializeWireMessage(WireMessage message) {
     'id': message.id,
     'type': message.type.name,
     'sender': nodeIdToHex(message.sender),
-    'recipient':
-        message.recipient != null ? nodeIdToHex(message.recipient!) : null,
+    'recipient': message.recipient != null
+        ? nodeIdToHex(message.recipient!)
+        : null,
     'payload': message.payload,
     'timestamp': message.timestamp.toIso8601String(),
     'ttl': message.ttl,
@@ -100,8 +101,9 @@ Result<WireMessage, String> deserializeWireMessage(Uint8List data) {
 
     NodeId? recipient;
     if (map['recipient'] is String) {
-      final recResult =
-          nodeIdFromBytes(_hexToBytes(map['recipient'] as String));
+      final recResult = nodeIdFromBytes(
+        _hexToBytes(map['recipient'] as String),
+      );
       if (recResult case Success(:final value)) recipient = value;
     }
 
@@ -116,7 +118,7 @@ Result<WireMessage, String> deserializeWireMessage(Uint8List data) {
       payload: payload,
       timestamp:
           DateTime.tryParse(map['timestamp'] as String? ?? '') ??
-              DateTime.now(),
+          DateTime.now(),
       ttl: map['ttl'] as int? ?? 7,
     ));
   } on Object catch (e) {

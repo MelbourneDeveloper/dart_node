@@ -69,11 +69,16 @@ extension type JSPomodoroSession._(JSObject _) implements JSObject {
     }
 
     if (title != null) newSession.setProperty('title'.toJS, title.toJS);
-    if (duration != null) newSession.setProperty('duration'.toJS, duration.toJS);
-    if (breakDuration != null) newSession.setProperty('breakDuration'.toJS, breakDuration.toJS);
-    if (startedAt != null) newSession.setProperty('startedAt'.toJS, startedAt.toJS);
-    if (completedAt != null) newSession.setProperty('completedAt'.toJS, completedAt.toJS);
-    if (linkedTaskId != null) newSession.setProperty('linkedTaskId'.toJS, linkedTaskId.toJS);
+    if (duration != null)
+      newSession.setProperty('duration'.toJS, duration.toJS);
+    if (breakDuration != null)
+      newSession.setProperty('breakDuration'.toJS, breakDuration.toJS);
+    if (startedAt != null)
+      newSession.setProperty('startedAt'.toJS, startedAt.toJS);
+    if (completedAt != null)
+      newSession.setProperty('completedAt'.toJS, completedAt.toJS);
+    if (linkedTaskId != null)
+      newSession.setProperty('linkedTaskId'.toJS, linkedTaskId.toJS);
 
     return JSPomodoroSession._(newSession);
   }

@@ -93,7 +93,11 @@ ReactElement taskListScreen({
   return view(
     style: AppStyles.container,
     children: [
-      _buildHeader(getUserDisplayName(user), handleLogout, () => authEffects.setView('pomodoro')),
+      _buildHeader(
+        getUserDisplayName(user),
+        handleLogout,
+        () => authEffects.setView('pomodoro'),
+      ),
       loading
           ? view(
               style: {'flex': 1, 'justifyContent': 'center'},

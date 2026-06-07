@@ -72,10 +72,16 @@ extension PomodoroSessionExtension on PomodoroSession {
     'title': title,
     'duration': duration,
     'breakDuration': breakDuration,
-    ...startedAt != null ? {'startedAt': startedAt!.toIso8601String()} : <String, dynamic>{},
-    ...completedAt != null ? {'completedAt': completedAt!.toIso8601String()} : <String, dynamic>{},
+    ...startedAt != null
+        ? {'startedAt': startedAt!.toIso8601String()}
+        : <String, dynamic>{},
+    ...completedAt != null
+        ? {'completedAt': completedAt!.toIso8601String()}
+        : <String, dynamic>{},
     'userId': userId,
-    ...linkedTaskId != null ? {'linkedTaskId': linkedTaskId} : <String, dynamic>{},
+    ...linkedTaskId != null
+        ? {'linkedTaskId': linkedTaskId}
+        : <String, dynamic>{},
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
   };

@@ -238,8 +238,9 @@ void main() {
           case Error(:final error):
             throw UnauthorizedError(error);
           case Success(value: final auth):
-            final activeSession =
-                pomodoroService.getActiveSession(auth.user.id);
+            final activeSession = pomodoroService.getActiveSession(
+              auth.user.id,
+            );
             res.jsonMap({'success': true, 'data': activeSession?.toJson()});
         }
       }),

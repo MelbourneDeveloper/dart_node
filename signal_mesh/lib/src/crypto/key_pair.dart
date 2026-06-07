@@ -38,12 +38,13 @@ Future<Result<KeyPairBundle, String>> generateKeyBundle({
     );
 
     // One-time pre-keys
-    final oneTimeKeys =
-        await Future.wait(List.generate(oneTimePreKeyCount, (_) async {
-      final kp = await algorithm.newKeyPair();
-      final pub = await kp.extractPublicKey();
-      return (publicKey: pub, keyPair: kp);
-    }));
+    final oneTimeKeys = await Future.wait(
+      List.generate(oneTimePreKeyCount, (_) async {
+        final kp = await algorithm.newKeyPair();
+        final pub = await kp.extractPublicKey();
+        return (publicKey: pub, keyPair: kp);
+      }),
+    );
 
     return Success((
       identityPublic: identityPub,

@@ -213,8 +213,9 @@ void _onMessage(JSWebSocket ws, void Function(JSAny) handler) {
 String _extractMessage(JSAny data) {
   // Convert using JavaScript String() function for safety
   try {
-    final stringConstructor =
-        globalContext.getProperty<JSFunction>('String'.toJS);
+    final stringConstructor = globalContext.getProperty<JSFunction>(
+      'String'.toJS,
+    );
     final result = stringConstructor.callAsFunction(null, data);
     return switch (result) {
       final JSString s => s.toDart,

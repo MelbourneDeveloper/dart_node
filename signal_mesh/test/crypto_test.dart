@@ -129,7 +129,10 @@ void main() {
         switch (decryptResult) {
           case Success(:final value):
             bobState = value.$1;
-            expect(String.fromCharCodes(value.$2), equals('Hello Bob from the mesh!'));
+            expect(
+              String.fromCharCodes(value.$2),
+              equals('Hello Bob from the mesh!'),
+            );
           case Error(:final error):
             fail('Decrypt failed: $error');
         }
@@ -156,10 +159,7 @@ void main() {
     };
 
     for (var i = 0; i < 5; i++) {
-      final result = await ratchetEncrypt(
-        aliceState,
-        Uint8List.fromList([i]),
-      );
+      final result = await ratchetEncrypt(aliceState, Uint8List.fromList([i]));
       switch (result) {
         case Success(:final value):
           aliceState = value.$1;

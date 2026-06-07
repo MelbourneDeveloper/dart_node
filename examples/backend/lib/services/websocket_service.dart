@@ -11,8 +11,10 @@ import 'package:shared/models/task.dart';
 enum TaskEventType {
   /// Task created
   created,
+
   /// Task updated
   updated,
+
   /// Task deleted
   deleted,
 }
@@ -21,12 +23,16 @@ enum TaskEventType {
 enum PomodoroEventType {
   /// Session started
   started,
+
   /// Session paused
   paused,
+
   /// Session resumed
   resumed,
+
   /// Timer tick (every second)
   tick,
+
   /// Session completed
   completed,
 }
@@ -35,6 +41,7 @@ enum PomodoroEventType {
 enum PomodoroState {
   /// Working period
   working,
+
   /// Break period
   onBreak,
 }

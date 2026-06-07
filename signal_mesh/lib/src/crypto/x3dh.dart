@@ -76,8 +76,10 @@ Future<Result<X3dhResult, String>> x3dhInitiate({
     }
 
     // Concatenate all DH results
-    final combined =
-        dhResults.fold<List<int>>([], (acc, bytes) => acc..addAll(bytes));
+    final combined = dhResults.fold<List<int>>(
+      [],
+      (acc, bytes) => acc..addAll(bytes),
+    );
 
     // KDF to derive shared secret
     final hkdf = Hkdf(hmac: Hmac(Sha256()), outputLength: 32);
@@ -144,8 +146,10 @@ Future<Result<Uint8List, String>> x3dhRespond({
       dhResults.add(await dh4.extractBytes());
     }
 
-    final combined =
-        dhResults.fold<List<int>>([], (acc, bytes) => acc..addAll(bytes));
+    final combined = dhResults.fold<List<int>>(
+      [],
+      (acc, bytes) => acc..addAll(bytes),
+    );
 
     final hkdf = Hkdf(hmac: Hmac(Sha256()), outputLength: 32);
     final derived = await hkdf.deriveKey(

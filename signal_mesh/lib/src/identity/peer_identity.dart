@@ -23,12 +23,12 @@ Future<Result<PeerIdentity, String>> createPeerIdentity({
   final nodeIdResult = await nodeIdFromPublicKey(identityKey);
   return switch (nodeIdResult) {
     Success(:final value) => Success((
-        nodeId: value,
-        identityKey: identityKey,
-        phoneNumber: phoneNumber,
-        phoneAttestation: phoneAttestation,
-        createdAt: DateTime.now(),
-      )),
+      nodeId: value,
+      identityKey: identityKey,
+      phoneNumber: phoneNumber,
+      phoneAttestation: phoneAttestation,
+      createdAt: DateTime.now(),
+    )),
     Error(:final error) => Error(error),
   };
 }
@@ -51,8 +51,8 @@ Map<String, Object?> serializeIdentity(PeerIdentity identity) => {
   'phoneNumber': identity.phoneNumber,
   'phoneAttestation': identity.phoneAttestation != null
       ? identity.phoneAttestation!
-          .map((b) => b.toRadixString(16).padLeft(2, '0'))
-          .join()
+            .map((b) => b.toRadixString(16).padLeft(2, '0'))
+            .join()
       : null,
   'createdAt': identity.createdAt.toIso8601String(),
 };
@@ -78,14 +78,11 @@ Result<PeerIdentity, String> deserializeIdentity(Map<String, Object?> data) {
 
     return Success((
       nodeId: (nodeIdResult as Success<NodeId, String>).value,
-      identityKey: SimplePublicKey(
-        identityKeyBytes,
-        type: KeyPairType.x25519,
-      ),
+      identityKey: SimplePublicKey(identityKeyBytes, type: KeyPairType.x25519),
       phoneNumber: phoneNumber is String ? phoneNumber : null,
-      phoneAttestation:
-          phoneAttHex is String ? _hexToBytes(phoneAttHex) : null,
-      createdAt: DateTime.tryParse(data['createdAt'] as String? ?? '') ??
+      phoneAttestation: phoneAttHex is String ? _hexToBytes(phoneAttHex) : null,
+      createdAt:
+          DateTime.tryParse(data['createdAt'] as String? ?? '') ??
           DateTime.now(),
     ));
   } on Object catch (e) {

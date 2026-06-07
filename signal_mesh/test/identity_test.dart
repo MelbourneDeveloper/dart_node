@@ -68,10 +68,7 @@ void main() {
 
     switch (deserialized) {
       case Success(:final value):
-        expect(
-          nodeIdToHex(value.nodeId),
-          equals(nodeIdToHex(identity.nodeId)),
-        );
+        expect(nodeIdToHex(value.nodeId), equals(nodeIdToHex(identity.nodeId)));
         expect(value.phoneNumber, equals('+1234567890'));
       case Error(:final error):
         fail(error);

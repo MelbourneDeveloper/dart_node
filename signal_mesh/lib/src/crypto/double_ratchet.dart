@@ -142,19 +142,18 @@ Future<Result<(RatchetState, Uint8List), String>> ratchetDecrypt(
     var currentState = state;
 
     // Check if we need a DH ratchet step (new remote public key)
-    final needsRatchet = currentState.remoteDhPublic == null ||
-        !_publicKeysEqual(
-          message.dhPublic,
-          currentState.remoteDhPublic,
-        );
+    final needsRatchet =
+        currentState.remoteDhPublic == null ||
+        !_publicKeysEqual(message.dhPublic, currentState.remoteDhPublic);
 
     if (needsRatchet) {
       currentState = await _dhRatchetStep(currentState, message.dhPublic);
     }
 
     // Derive message key from receive chain key
-    final (newChainKey, messageKey) =
-        await _kdfChainKey(currentState.receiveChainKey);
+    final (newChainKey, messageKey) = await _kdfChainKey(
+      currentState.receiveChainKey,
+    );
 
     // Decrypt with AES-GCM
     final aesGcm = AesGcm.with256bits();
@@ -163,11 +162,7 @@ Future<Result<(RatchetState, Uint8List), String>> ratchetDecrypt(
     final cipherText = cipherBytes.sublist(0, cipherBytes.length - macLength);
     final mac = Mac(cipherBytes.sublist(cipherBytes.length - macLength));
 
-    final secretBox = SecretBox(
-      cipherText,
-      nonce: message.nonce,
-      mac: mac,
-    );
+    final secretBox = SecretBox(cipherText, nonce: message.nonce, mac: mac);
 
     final plaintext = await aesGcm.decrypt(
       secretBox,
@@ -207,8 +202,7 @@ Future<RatchetState> _dhRatchetStep(
   final dhBytes = await dhResult.extractBytes();
 
   // Derive new root key and receive chain key
-  final (rootKey1, receiveChainKey) =
-      await _kdfRootKey(state.rootKey, dhBytes);
+  final (rootKey1, receiveChainKey) = await _kdfRootKey(state.rootKey, dhBytes);
 
   // Generate new DH key pair
   final newDhKp = await x25519.newKeyPair();
@@ -259,17 +253,16 @@ Future<(Uint8List, Uint8List)> _kdfChainKey(Uint8List chainKey) async {
   final hmac = Hmac(Sha256());
 
   // Message key = HMAC(chainKey, 0x01)
-  final msgMac =
-      await hmac.calculateMac([0x01], secretKey: SecretKey(chainKey));
+  final msgMac = await hmac.calculateMac([
+    0x01,
+  ], secretKey: SecretKey(chainKey));
 
   // Next chain key = HMAC(chainKey, 0x02)
-  final nextMac =
-      await hmac.calculateMac([0x02], secretKey: SecretKey(chainKey));
+  final nextMac = await hmac.calculateMac([
+    0x02,
+  ], secretKey: SecretKey(chainKey));
 
-  return (
-    Uint8List.fromList(nextMac.bytes),
-    Uint8List.fromList(msgMac.bytes),
-  );
+  return (Uint8List.fromList(nextMac.bytes), Uint8List.fromList(msgMac.bytes));
 }
 
 bool _publicKeysEqual(SimplePublicKey? a, SimplePublicKey? b) {

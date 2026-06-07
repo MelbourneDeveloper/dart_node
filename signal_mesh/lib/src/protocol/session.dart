@@ -52,26 +52,26 @@ Future<Result<(SessionStore, PendingSession), String>> initiateSession({
 
   return switch (x3dhResult) {
     Success(:final value) => () {
-        final pending = (
-          remoteId: remoteId,
-          identityKeyPair: identityKeyPair,
-          x3dhResult: value,
-          initiatedAt: DateTime.now(),
-        );
-        final key = nodeIdToHex(remoteId);
-        final updatedPending =
-            Map<String, PendingSession>.from(store.pendingSessions)
-              ..[key] = pending;
-        final updatedStore = (
-          activeSessions: store.activeSessions,
-          pendingSessions: updatedPending,
-        );
-        return Success<(SessionStore, PendingSession), String>(
-          (updatedStore, pending),
-        );
-      }(),
-    Error(:final error) =>
-      Error<(SessionStore, PendingSession), String>(error),
+      final pending = (
+        remoteId: remoteId,
+        identityKeyPair: identityKeyPair,
+        x3dhResult: value,
+        initiatedAt: DateTime.now(),
+      );
+      final key = nodeIdToHex(remoteId);
+      final updatedPending = Map<String, PendingSession>.from(
+        store.pendingSessions,
+      )..[key] = pending;
+      final updatedStore = (
+        activeSessions: store.activeSessions,
+        pendingSessions: updatedPending,
+      );
+      return Success<(SessionStore, PendingSession), String>((
+        updatedStore,
+        pending,
+      ));
+    }(),
+    Error(:final error) => Error<(SessionStore, PendingSession), String>(error),
   };
 }
 
@@ -93,29 +93,25 @@ Future<Result<(SessionStore, Session), String>> completeSession({
 
   return switch (ratchetResult) {
     Success(:final value) => () {
-        final session = (
-          localId: localId,
-          remoteId: remoteId,
-          ratchetState: value,
-          establishedAt: DateTime.now(),
-          messagesSent: 0,
-          messagesReceived: 0,
-        );
-        final updatedActive =
-            Map<String, Session>.from(store.activeSessions)..[key] = session;
-        final updatedPending =
-            Map<String, PendingSession>.from(store.pendingSessions)
-              ..remove(key);
-        return Success<(SessionStore, Session), String>((
-          (
-            activeSessions: updatedActive,
-            pendingSessions: updatedPending,
-          ),
-          session,
-        ));
-      }(),
-    Error(:final error) =>
-      Error<(SessionStore, Session), String>(error),
+      final session = (
+        localId: localId,
+        remoteId: remoteId,
+        ratchetState: value,
+        establishedAt: DateTime.now(),
+        messagesSent: 0,
+        messagesReceived: 0,
+      );
+      final updatedActive = Map<String, Session>.from(store.activeSessions)
+        ..[key] = session;
+      final updatedPending = Map<String, PendingSession>.from(
+        store.pendingSessions,
+      )..remove(key);
+      return Success<(SessionStore, Session), String>((
+        (activeSessions: updatedActive, pendingSessions: updatedPending),
+        session,
+      ));
+    }(),
+    Error(:final error) => Error<(SessionStore, Session), String>(error),
   };
 }
 
@@ -134,27 +130,23 @@ Future<Result<(SessionStore, Session), String>> acceptSession({
 
   return switch (ratchetResult) {
     Success(:final value) => () {
-        final key = nodeIdToHex(remoteId);
-        final session = (
-          localId: localId,
-          remoteId: remoteId,
-          ratchetState: value,
-          establishedAt: DateTime.now(),
-          messagesSent: 0,
-          messagesReceived: 0,
-        );
-        final updatedActive =
-            Map<String, Session>.from(store.activeSessions)..[key] = session;
-        return Success<(SessionStore, Session), String>((
-          (
-            activeSessions: updatedActive,
-            pendingSessions: store.pendingSessions,
-          ),
-          session,
-        ));
-      }(),
-    Error(:final error) =>
-      Error<(SessionStore, Session), String>(error),
+      final key = nodeIdToHex(remoteId);
+      final session = (
+        localId: localId,
+        remoteId: remoteId,
+        ratchetState: value,
+        establishedAt: DateTime.now(),
+        messagesSent: 0,
+        messagesReceived: 0,
+      );
+      final updatedActive = Map<String, Session>.from(store.activeSessions)
+        ..[key] = session;
+      return Success<(SessionStore, Session), String>((
+        (activeSessions: updatedActive, pendingSessions: store.pendingSessions),
+        session,
+      ));
+    }(),
+    Error(:final error) => Error<(SessionStore, Session), String>(error),
   };
 }
 
@@ -166,16 +158,16 @@ Future<Result<(Session, RatchetMessage), String>> encryptSessionMessage(
   final result = await ratchetEncrypt(session.ratchetState, plaintext);
   return switch (result) {
     Success(:final value) => Success((
-        (
-          localId: session.localId,
-          remoteId: session.remoteId,
-          ratchetState: value.$1,
-          establishedAt: session.establishedAt,
-          messagesSent: session.messagesSent + 1,
-          messagesReceived: session.messagesReceived,
-        ),
-        value.$2,
-      )),
+      (
+        localId: session.localId,
+        remoteId: session.remoteId,
+        ratchetState: value.$1,
+        establishedAt: session.establishedAt,
+        messagesSent: session.messagesSent + 1,
+        messagesReceived: session.messagesReceived,
+      ),
+      value.$2,
+    )),
     Error(:final error) => Error(error),
   };
 }
@@ -188,16 +180,16 @@ Future<Result<(Session, Uint8List), String>> decryptSessionMessage(
   final result = await ratchetDecrypt(session.ratchetState, message);
   return switch (result) {
     Success(:final value) => Success((
-        (
-          localId: session.localId,
-          remoteId: session.remoteId,
-          ratchetState: value.$1,
-          establishedAt: session.establishedAt,
-          messagesSent: session.messagesSent,
-          messagesReceived: session.messagesReceived + 1,
-        ),
-        value.$2,
-      )),
+      (
+        localId: session.localId,
+        remoteId: session.remoteId,
+        ratchetState: value.$1,
+        establishedAt: session.establishedAt,
+        messagesSent: session.messagesSent,
+        messagesReceived: session.messagesReceived + 1,
+      ),
+      value.$2,
+    )),
     Error(:final error) => Error(error),
   };
 }

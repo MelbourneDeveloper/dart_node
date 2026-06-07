@@ -99,8 +99,7 @@ Future<Result<bool, String>> verifyAttestation({
     if (!isTrusted) return Success(false);
 
     // Check TTL
-    final age =
-        DateTime.now().difference(attestation.attestedAt).inSeconds;
+    final age = DateTime.now().difference(attestation.attestedAt).inSeconds;
     if (age > attestation.ttlSeconds) return Success(false);
 
     // Verify signature

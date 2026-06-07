@@ -85,19 +85,15 @@ void main() {
   test('isCloser correctly identifies closer node', () {
     // Manually construct nodes where distance is predictable
     final target = nodeIdFromBytes(Uint8List(32));
-    final close = nodeIdFromBytes(
-      Uint8List(32)..[31] = 1,
-    );
-    final far = nodeIdFromBytes(
-      Uint8List(32)..[0] = 0xFF,
-    );
+    final close = nodeIdFromBytes(Uint8List(32)..[31] = 1);
+    final far = nodeIdFromBytes(Uint8List(32)..[0] = 0xFF);
 
     switch ((target, close, far)) {
       case (
-          Success(value: final t),
-          Success(value: final c),
-          Success(value: final f),
-        ):
+        Success(value: final t),
+        Success(value: final c),
+        Success(value: final f),
+      ):
         expect(isCloser(t, c, f), isTrue);
         expect(isCloser(t, f, c), isFalse);
       default:

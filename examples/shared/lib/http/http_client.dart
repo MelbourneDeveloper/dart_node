@@ -56,8 +56,12 @@ Future<Result<JSObject, String>> createPomodoroSession({
   if (duration != null) body['duration'] = duration;
   if (breakDuration != null) body['breakDuration'] = breakDuration;
   if (linkedTaskId != null) body['linkedTaskId'] = linkedTaskId;
-  return (await fetchJson('$apiUrl/pomodoro', method: 'POST', token: token, body: body))
-      .map(_readData);
+  return (await fetchJson(
+    '$apiUrl/pomodoro',
+    method: 'POST',
+    token: token,
+    body: body,
+  )).map(_readData);
 }
 
 Future<Result<JSObject, String>> startPomodoroSession({
@@ -65,50 +69,50 @@ Future<Result<JSObject, String>> startPomodoroSession({
   required String apiUrl,
   required String sessionId,
 }) async => (await fetchJson(
-      '$apiUrl/pomodoro/$sessionId/start',
-      method: 'POST',
-      token: token,
-    )).map(_readData);
+  '$apiUrl/pomodoro/$sessionId/start',
+  method: 'POST',
+  token: token,
+)).map(_readData);
 
 Future<Result<JSObject, String>> pausePomodoroSession({
   required String token,
   required String apiUrl,
   required String sessionId,
 }) async => (await fetchJson(
-      '$apiUrl/pomodoro/$sessionId/pause',
-      method: 'POST',
-      token: token,
-    )).map(_readData);
+  '$apiUrl/pomodoro/$sessionId/pause',
+  method: 'POST',
+  token: token,
+)).map(_readData);
 
 Future<Result<JSObject, String>> resumePomodoroSession({
   required String token,
   required String apiUrl,
   required String sessionId,
 }) async => (await fetchJson(
-      '$apiUrl/pomodoro/$sessionId/resume',
-      method: 'POST',
-      token: token,
-    )).map(_readData);
+  '$apiUrl/pomodoro/$sessionId/resume',
+  method: 'POST',
+  token: token,
+)).map(_readData);
 
 Future<Result<JSObject, String>> completePomodoroSession({
   required String token,
   required String apiUrl,
   required String sessionId,
 }) async => (await fetchJson(
-      '$apiUrl/pomodoro/$sessionId/complete',
-      method: 'POST',
-      token: token,
-    )).map(_readData);
+  '$apiUrl/pomodoro/$sessionId/complete',
+  method: 'POST',
+  token: token,
+)).map(_readData);
 
 Future<Result<JSObject, String>> deletePomodoroSession({
   required String token,
   required String apiUrl,
   required String sessionId,
 }) async => (await fetchJson(
-      '$apiUrl/pomodoro/$sessionId',
-      method: 'DELETE',
-      token: token,
-    ));
+  '$apiUrl/pomodoro/$sessionId',
+  method: 'DELETE',
+  token: token,
+));
 
 List<String> getObjectKeys(JSObject obj) => _jsObjectKeys(
   obj,
