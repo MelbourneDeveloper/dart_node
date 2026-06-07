@@ -39,7 +39,7 @@ void main() {
         'getCommands returns array of commands',
         asyncTest(() async {
           final commands = await vscode.commands.getCommands(true).toDart;
-          assertOk(commands.length > 0, 'Should have commands');
+          assertOk(commands.toDart.isNotEmpty, 'Should have commands');
         }),
       );
 

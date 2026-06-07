@@ -260,3 +260,25 @@ strikethrough
 pkill
 Preact
 codeworkers
+
+# signal_mesh — P2P crypto / DHT
+kademlia
+hkdf
+hmac
+ciphertext
+otpk
+prekey
+prekeys
+unqueried
+
+# Pomodoro example feature
+pomodoro
+pomodoros
+collab
+
+# Agent tooling
+deslop
+rescan
+worktree
+worktrees
+automemory

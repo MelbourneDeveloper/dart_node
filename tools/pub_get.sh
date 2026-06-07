@@ -10,36 +10,6 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 echo "Running dart pub get in dependency order..."
 echo ""
 
-# Tier 1: Core packages with no internal dependencies
-TIER1_PACKAGES=(
-  "packages/dart_logging"
-  "packages/dart_node_coverage"
-  "packages/dart_node_core"
-  "packages/reflux"
-)
-
-# Tier 2: Packages that depend on Tier 1
-TIER2_PACKAGES=(
-  "packages/dart_jsx"
-  "packages/dart_node_express"
-  "packages/dart_node_ws"
-  "packages/dart_node_better_sqlite3"
-  "packages/dart_node_mcp"
-  "packages/dart_node_react"
-  "packages/dart_node_react_native"
-)
-
-# Tier 3: Examples that depend on packages
-TIER3_EXAMPLES=(
-  "examples/frontend"
-  "examples/markdown_editor"
-  "examples/reflux_demo/web_counter"
-  "examples/too_many_cooks"
-  "examples/backend"
-  "examples/mobile"
-  "examples/jsx_demo"
-)
-
 pub_get() {
   local dir="$1"
   local full_path="$ROOT_DIR/$dir"
@@ -77,25 +47,23 @@ npm_install() {
   fi
 }
 
-echo "=== Tier 1: Core packages ==="
-for pkg in "${TIER1_PACKAGES[@]}"; do
-  pub_get "$pkg"
-  npm_install "$pkg"
-done
-
-echo ""
-echo "=== Tier 2: Dependent packages ==="
-for pkg in "${TIER2_PACKAGES[@]}"; do
-  pub_get "$pkg"
-  npm_install "$pkg"
-done
-
-echo ""
-echo "=== Tier 3: Examples ==="
-for example in "${TIER3_EXAMPLES[@]}"; do
-  pub_get "$example"
-  npm_install "$example"
-done
+# Recursively discover EVERY Dart package (path deps resolve regardless of order)
+# so no package is silently left without dependencies.
+echo "=== All Dart packages (recursive discovery) ==="
+while IFS= read -r pub; do
+  # Skip Flutter-SDK packages — CI provisions Dart only, so `dart pub get` on
+  # them fails. They are excluded from the test matrix too (see tools/test.sh).
+  if grep -qE 'sdk:[[:space:]]*flutter' "$pub"; then
+    echo "  SKIP ${pub#"$ROOT_DIR"/} (Flutter SDK package)"
+    continue
+  fi
+  rel=${pub#"$ROOT_DIR"/}
+  rel=${rel%/pubspec.yaml}
+  pub_get "$rel"
+  npm_install "$rel"
+done < <(find "$ROOT_DIR/packages" "$ROOT_DIR/examples" "$ROOT_DIR/signal_mesh" \
+  -name pubspec.yaml -not -path '*/node_modules/*' -not -path '*/.dart_tool/*' \
+  -not -path '*/build/*' | sort)
 
 echo ""
 echo "Done!"

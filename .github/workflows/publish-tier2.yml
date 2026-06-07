@@ -12,6 +12,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment: pub.dev-tier2
     steps:
       - name: Extract version

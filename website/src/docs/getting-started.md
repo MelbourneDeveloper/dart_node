@@ -102,6 +102,11 @@ faq:
 
 Welcome to dart_node! This guide will help you build your first application using Dart for the JavaScript ecosystem.
 
+<div class="package-links" style="margin-bottom: var(--space-8);">
+  <a href="https://pub.dev/publishers/dartnode.dev/packages" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Browse packages on pub.dev</a>
+  <a href="https://github.com/MelbourneDeveloper/dart_node" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Star on GitHub</a>
+</div>
+
 ## Prerequisites
 
 Before you begin, make sure you have:
@@ -236,3 +241,11 @@ Check out the [examples directory](https://github.com/melbournedeveloper/dart_no
 - **backend/** - Express server with REST API
 - **frontend/** - React web application
 - **mobile/** - React Native + Expo mobile app
+
+## Support the Project
+
+If dart_node is useful to you, please consider:
+
+- [Star the repository on GitHub](https://github.com/MelbourneDeveloper/dart_node) - It helps others discover the project
+- [Like the packages on pub.dev](https://pub.dev/publishers/dartnode.dev/packages) - Boost visibility in the Dart ecosystem
+- [Share on social media](https://twitter.com/intent/tweet?text=Check%20out%20dart_node%20-%20Full-Stack%20Dart%20for%20React,%20React%20Native,%20and%20Express!%20https://dartnode.dev) - Spread the word

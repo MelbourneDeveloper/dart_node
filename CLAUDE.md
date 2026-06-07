@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+<!-- agent-pmo:76596cb -->
+
 Dart packages for building Node.js apps. Strongly Typed Dart layer over JS interop.
 
 ## Rules
@@ -26,6 +28,7 @@ Dart packages for building Node.js apps. Strongly Typed Dart layer over JS inter
 - 100% coverage with high-level integration tests, not unit tests/mocks
 - Tests in separate files, not groups. Dart only (JS only for interop testing)
 - Never skip tests. Never remove assertions. Failing tests OK, silent failures = ⛔️ ILLEGAL. Aggressively unskip tests.
+- Fixing bugs: write test that fails because of bug -> run test to verify failure -> fix bug -> run test to verify pass
 - NO PLACEHOLDERS—throw if incomplete
 
 **Dependencies**
@@ -71,3 +74,41 @@ examples/
   mobile/               # React Native example
   jsx_demo/             # JSX syntax demo
 ```
+
+## Duplication — Deslop ([CI-DESLOP])
+
+Code duplication is debt and is gated in CI by Deslop (threshold in `.deslop.toml`,
+ratcheted DOWN only). Use the Deslop MCP tools to prevent duplication:
+
+- **BEFORE** writing any function, method, class, helper, fixture, or test setup →
+  call `find-similar`. `signals.fused ≥ 0.85` or an `identical`/`nearly_identical`
+  bucket → reuse the existing code, do not duplicate. `0.6 ≤ fused < 0.85` → review
+  the canonical occurrence and bias toward reuse. `fused < 0.6` or empty → proceed.
+- **AFTER** changing code → `rescan`, then `top-offenders` (worst clusters) and
+  `cluster-by-id` (members + signals for a cluster you plan to merge). Use
+  `report-for-file` / `report-for-range` for a specific file/selection. Call
+  `schema-doc` once per session to learn the report shape.
+- **NEVER** silence findings by raising the threshold, marking code `hidden`, or
+  splitting it into trivially different shapes.
+
+## Git Discipline ([BRANCH-AGENT])
+
+- **NEVER push to `main` directly.** Every change ships via PR → CI green → merge.
+- **NEVER list yourself (the agent) as a commit co-author.** No `Co-Authored-By`.
+- **Work on exactly ONE branch at a time.** Reuse the existing feature branch.
+- **NEVER start a new branch when a feature branch already exists.** Check first.
+- **If multiple feature branches exist, merge them into one IMMEDIATELY**, before
+  any other work.
+- **Worktrees are forbidden.** Never run `git worktree`.
+
+## Autonomy ([AGENT-AUTONOMY])
+
+- **Act autonomously. Do NOT stop to ask the user questions.** When something is
+  ambiguous, choose the most reasonable default, record the assumption, continue
+  to completion. No mid-task pauses for confirmation. Deliver finished work plus a
+  short summary of any assumptions made.
+
+## Auto-memory ([AGENT-AUTOMEMORY])
+
+Auto-memory is OFF (`"autoMemoryEnabled": false` in `.claude/settings.json`). All
+persistent rules go through a reviewed PR to this file — never auto-captured memory.

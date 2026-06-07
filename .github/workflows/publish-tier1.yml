@@ -19,6 +19,7 @@ permissions:
 jobs:
   prepare:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
     steps:
@@ -123,6 +124,7 @@ jobs:
   publish:
     needs: prepare
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment: pub.dev-tier1
     steps:
       - uses: actions/checkout@v4
