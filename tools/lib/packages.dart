@@ -60,6 +60,11 @@ const _packageConfigs = <String, PackageConfig>{
     tier: 2,
     testPlatform: TestPlatform.node,
   ),
+  'dart_node_sql_js': PackageConfig(
+    name: 'dart_node_sql_js',
+    tier: 2,
+    testPlatform: TestPlatform.node,
+  ),
   // Tier 3 - depends on tier 2
   'dart_node_react': PackageConfig(
     name: 'dart_node_react',

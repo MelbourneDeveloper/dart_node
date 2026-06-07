@@ -75,7 +75,7 @@ else
 fi
 
 # Package type definitions
-NODE_PACKAGES="dart_node_core dart_node_express dart_node_ws dart_node_better_sqlite3"
+NODE_PACKAGES="dart_node_core dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_sql_js"
 NODE_INTEROP_PACKAGES="dart_node_mcp dart_node_react_native"
 BROWSER_PACKAGES="dart_node_react frontend jsx_demo mobile"
 NPM_PACKAGES=""
@@ -86,7 +86,7 @@ BUILD_FIRST=""
 # check_all_packages_covered() so a package's coverage check is never silently
 # dropped.
 TIER1="packages/dart_logging packages/dart_node_core packages/dart_node_coverage"
-TIER2="packages/reflux packages/dart_jsx packages/dart_node_express packages/dart_node_ws packages/dart_node_better_sqlite3 packages/dart_node_mcp packages/dart_node_react_native packages/dart_node_react signal_mesh"
+TIER2="packages/reflux packages/dart_jsx packages/dart_node_express packages/dart_node_ws packages/dart_node_better_sqlite3 packages/dart_node_sql_js packages/dart_node_mcp packages/dart_node_react_native packages/dart_node_react signal_mesh"
 TIER3="examples/frontend examples/markdown_editor examples/reflux_demo/web_counter examples/jsx_demo examples/mobile"
 
 # Packages that have tests but are deliberately NOT run here, each with a reason.
