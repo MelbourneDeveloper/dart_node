@@ -1,6 +1,7 @@
 name: dart_jsx
 description: JSX transpiler for Dart - transforms JSX syntax to dart_node_react calls
 version: 0.1.0
+publish_to: none
 repository: https://github.com/user/dart_node/tree/main/packages/dart_jsx
 
 environment:

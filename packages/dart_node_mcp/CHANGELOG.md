@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.0-beta
+
+- Add streamable HTTP transport
+- Additional MCP server capabilities
+
 ## 0.12.0-beta
 
 - Maintenance release

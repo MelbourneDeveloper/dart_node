@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.13.0-beta
+
+- Maintenance release; no functional changes
+
 ## 0.12.0-beta
 
 - Enhanced test coverage

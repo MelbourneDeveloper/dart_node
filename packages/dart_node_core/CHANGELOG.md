@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.0-beta
+
+- Add filesystem (`fs`) bindings
+- Add child process interop
+
 ## 0.12.0-beta
 
 - Improved documentation for core extensions
