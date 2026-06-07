@@ -1,111 +1,80 @@
+# agent-pmo:76596cb
 # =============================================================================
 # Standard Makefile — dart_node
-# Dart packages for building Node.js apps.
+# Dart packages for building Node.js apps. Cross-platform (Linux, macOS, Windows).
 # =============================================================================
 
-.PHONY: build test lint fmt fmt-check clean check ci coverage coverage-check \
-        help setup pub-get test-tier1 test-tier2 test-tier3 install-vsix
+.PHONY: build test lint fmt clean ci setup \
+        pub-get test-tier1 test-tier2 test-tier3 install-vsix help
 
-# Coverage threshold (override in CI via env var)
-COVERAGE_THRESHOLD ?= 80
+# ---------------------------------------------------------------------------
+# OS Detection ([MAKE-CROSS-PLATFORM])
+# ---------------------------------------------------------------------------
+ifeq ($(OS),Windows_NT)
+  SHELL := powershell.exe
+  .SHELLFLAGS := -NoProfile -Command
+  RM = Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+  MKDIR = New-Item -ItemType Directory -Force
+  HOME ?= $(USERPROFILE)
+else
+  RM = rm -rf
+  MKDIR = mkdir -p
+endif
+
+# Coverage — single source of truth is coverage-thresholds.json
+# ([COVERAGE-THRESHOLDS-JSON]). No env vars, no GitHub repo variables.
+COVERAGE_THRESHOLDS_FILE := coverage-thresholds.json
 
 # =============================================================================
-# PRIMARY TARGETS (uniform interface — do not rename)
+# Standard Targets (canonical names — do not rename or add synonyms)
 # =============================================================================
 
 ## build: Compile/assemble all artifacts
 build:
 	@echo "==> Building..."
-	$(MAKE) _build
-
-## test: Run full test suite with coverage
-test:
-	@echo "==> Testing..."
-	$(MAKE) _test
-
-## lint: Run all linters (fails on any warning)
-lint:
-	@echo "==> Linting..."
-	$(MAKE) _lint
-
-## fmt: Format all code in-place
-fmt:
-	@echo "==> Formatting..."
-	$(MAKE) _fmt
-
-## fmt-check: Check formatting without modifying
-fmt-check:
-	@echo "==> Checking format..."
-	$(MAKE) _fmt_check
-
-## clean: Remove all build artifacts
-clean:
-	@echo "==> Cleaning..."
-	$(MAKE) _clean
-
-## check: lint + test (pre-commit)
-check: lint test
-
-## ci: lint + test + build (full CI simulation)
-ci: lint test build
-
-## coverage: Generate coverage report
-coverage:
-	@echo "==> Coverage report..."
-	$(MAKE) _coverage
-
-## coverage-check: Assert thresholds (exits non-zero if below)
-coverage-check:
-	@echo "==> Checking coverage thresholds..."
-	$(MAKE) _coverage_check
-
-# =============================================================================
-# DART IMPLEMENTATIONS
-# =============================================================================
-
-_build:
 	@echo "Dart library packages — no standalone build artifacts"
 
-_test:
-	./tools/test.sh
+## test: Fail-fast tests + coverage + threshold enforcement ([TEST-RULES]).
+##       Threshold is read from coverage-thresholds.json.
+test:
+	@echo "==> Testing (fail-fast + coverage + threshold)..."
+	MIN_COVERAGE=$$(jq -r '.default_threshold' $(COVERAGE_THRESHOLDS_FILE)) ./tools/test.sh
 
-_lint:
-	$(MAKE) _fmt_check
+## lint: Run all linters/analyzers (read-only). Does NOT format.
+lint:
+	@echo "==> Linting..."
 	cspell "**/*.md" "**/*.dart" "**/*.ts" --no-progress
 	@for dir in packages/* examples/* tools/build; do \
 		if [ -d "$$dir" ] && [ -f "$$dir/pubspec.yaml" ]; then \
 			echo "Analyzing $$dir..."; \
-			(cd "$$dir" && dart analyze --no-fatal-warnings) || true; \
+			(cd "$$dir" && dart analyze --no-fatal-warnings) || exit 1; \
 		fi; \
 	done
 
-_fmt:
-	dart format packages/ examples/ tools/build
+## fmt: Format all code in-place. Pass CHECK=1 for read-only check (CI use).
+fmt:
+	@echo "==> Formatting$(if $(CHECK), (check mode),)..."
+	dart format$(if $(CHECK), --set-exit-if-changed,) packages/ examples/
 
-_fmt_check:
-	dart format --set-exit-if-changed packages/
-	dart format --set-exit-if-changed examples/
-	dart format --set-exit-if-changed tools/build
-
-_clean:
-	rm -rf logs/
+## clean: Remove all build artifacts
+clean:
+	@echo "==> Cleaning..."
+	$(RM) logs
 	@for pkg in packages/*/; do \
-		[ -d "$$pkg/build" ] && rm -rf "$$pkg/build" || true; \
-		[ -d "$$pkg/coverage" ] && rm -rf "$$pkg/coverage" || true; \
+		[ -d "$$pkg/build" ] && $(RM) "$$pkg/build" || true; \
+		[ -d "$$pkg/coverage" ] && $(RM) "$$pkg/coverage" || true; \
 	done
 
-_coverage:
-	./tools/test.sh
-	@echo "Coverage reports in logs/"
+## ci: lint + test + build (full CI simulation)
+ci: lint test build
 
-_coverage_check:
-	MIN_COVERAGE=$(COVERAGE_THRESHOLD) ./tools/test.sh
+## setup: Install all Dart and npm dependencies (devcontainer hook)
+setup: pub-get
 
 # =============================================================================
-# PROJECT-SPECIFIC TARGETS
+# Repo-Specific Targets
+# Owned by the repo. Preserved verbatim per [MAKE-REPO-SPECIFIC].
 # =============================================================================
-
-setup: pub-get ## Install all Dart and npm dependencies
 
 pub-get: ## Run dart pub get on all packages in dependency order
 	./tools/pub_get.sh
@@ -126,22 +95,18 @@ install-vsix: ## Build and install the VS Code extension locally
 # HELP
 # =============================================================================
 help:
-	@echo "Available targets:"
-	@echo "  build          - Compile/assemble all artifacts"
-	@echo "  test           - Run full test suite with coverage"
-	@echo "  lint           - Run all linters (errors mode)"
-	@echo "  fmt            - Format all code in-place"
-	@echo "  fmt-check      - Check formatting (no modification)"
-	@echo "  clean          - Remove build artifacts"
-	@echo "  check          - lint + test (pre-commit)"
-	@echo "  ci             - lint + test + build (full CI)"
-	@echo "  coverage       - Generate and open coverage report"
-	@echo "  coverage-check - Assert coverage thresholds"
+	@echo "Standard targets:"
+	@echo "  build        - Compile/assemble all artifacts"
+	@echo "  test         - Fail-fast tests + coverage + threshold enforcement"
+	@echo "  lint         - All linters/analyzers (read-only, no formatting)"
+	@echo "  fmt          - Format all code in-place (CHECK=1 for read-only CI check)"
+	@echo "  clean        - Remove build artifacts"
+	@echo "  ci           - lint + test + build (full CI simulation)"
+	@echo "  setup        - Install all Dart and npm dependencies"
 	@echo ""
-	@echo "Project-specific:"
-	@echo "  setup          - Install all Dart and npm dependencies"
-	@echo "  pub-get        - Run dart pub get in dependency order"
-	@echo "  test-tier1     - Run tier 1 tests only"
-	@echo "  test-tier2     - Run tier 2 tests only"
-	@echo "  test-tier3     - Run tier 3 tests only"
-	@echo "  install-vsix   - Build and install VS Code extension"
+	@echo "Repo-specific:"
+	@echo "  pub-get      - Run dart pub get in dependency order"
+	@echo "  test-tier1   - Run tier 1 tests only"
+	@echo "  test-tier2   - Run tier 2 tests only"
+	@echo "  test-tier3   - Run tier 3 tests only"
+	@echo "  install-vsix - Build and install VS Code extension"

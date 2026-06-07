@@ -20,7 +20,7 @@ Prepare the current state for CI. Ensures the branch will pass CI before pushing
 
 ### Step 2 — Run each CI step locally, in order
 
-1. **Format check**: `make fmt-check`
+1. **Format check**: `make fmt CHECK=1`
    - If fails: run `make fmt` to fix, then re-check
 2. **Spell check**: `cspell "**/*.md" "**/*.dart" "**/*.ts" --no-progress`
    - If fails: add words to cspell dictionary or fix typos

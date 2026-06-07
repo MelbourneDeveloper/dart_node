@@ -12,7 +12,7 @@ Carefully search for duplicate code, duplicate tests, and dead code across the r
 Before touching ANY code, verify these conditions. If any fail, stop and report why.
 
 1. Run `make test` — all tests must pass. If tests fail, stop.
-2. Run `make coverage-check` — coverage must meet the repo threshold (80%). If not, stop.
+2. `make test` already enforces the coverage threshold from `coverage-thresholds.json`. If it failed on coverage, stop.
 3. This is a Dart repo with static typing via `austerity` — proceed.
 
 ## Steps
@@ -51,7 +51,7 @@ For each change: **change -> test -> verify coverage -> continue or revert**.
 ### Step 6 — Final verification
 
 1. Run `make test` — all tests must still pass
-2. Run `make lint` and `make fmt-check` — code must be clean
+2. Run `make lint` and `make fmt CHECK=1` — code must be clean
 3. Report: what was removed, what was merged, final coverage vs baseline
 
 ## Rules

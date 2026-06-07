@@ -1,3 +1,4 @@
+# agent-pmo:76596cb
 # =============================================================================
 # OS
 # =============================================================================
@@ -12,9 +13,9 @@ Desktop.ini
 
 # =============================================================================
 # IDE / Editor
+# .vscode/ and .idea/ are intentionally NOT ignored — shared dev tooling
+# (settings, extensions, launch configs) MUST be committed ([GITIGNORE-RULES]).
 # =============================================================================
-.vscode/
-.idea/
 *.iml
 *.swp
 *.swo

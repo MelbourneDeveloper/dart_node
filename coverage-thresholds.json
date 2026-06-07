@@ -1,0 +1,5 @@
+{
+  "_agent_pmo": "76596cb",
+  "_doc": "Single source of truth for code coverage thresholds. See REPO-STANDARDS-SPEC [COVERAGE-THRESHOLDS-JSON]. NO GitHub repo variables, NO env vars, NO public `make coverage-check` target. Read by the internal `_coverage_check` path inside `make test` (tools/test.sh). `make test` exits non-zero if measured coverage < threshold. Thresholds are monotonically increasing — ratchet UP only, never down. Seeded from the previously-enforced floor (GitHub var MIN_COVERAGE=70); this is a library repo so ratchet toward 90 as coverage improves.",
+  "default_threshold": 70
+}

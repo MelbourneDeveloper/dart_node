@@ -1,17 +1,20 @@
+# agent-pmo:76596cb
 name: CI
 
+# CI runs on PRs to main ONLY ([CI-WORKFLOWS]). Merges/pushes to main trigger
+# nothing — main is already-validated code that arrived through a green PR.
 on:
   pull_request:
-    branches: [main]
-  push:
     branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Coverage threshold is NOT an env var / GitHub repo variable — it lives in
+# coverage-thresholds.json ([COVERAGE-THRESHOLDS-JSON]) and is resolved in the
+# test job below.
 env:
-  MIN_COVERAGE: ${{ vars.MIN_COVERAGE }}
   SERVER_BINARY: build/bin/server_node.js
 
 jobs:
@@ -51,7 +54,7 @@ jobs:
           done
 
       - name: Check formatting
-        run: make fmt-check
+        run: make fmt CHECK=1
 
       - name: Spell check
         run: cspell "**/*.md" "**/*.dart" "**/*.ts" --no-progress
@@ -65,6 +68,16 @@ jobs:
               echo "::endgroup::"
             fi
           done
+
+      # Deslop duplication gate ([CI-DESLOP]). Threshold lives in committed
+      # .deslop.toml — ratcheted DOWN, never up. `deslop .` exits 3 when exceeded.
+      - name: Deslop duplication gate
+        env:
+          DESLOP_VERSION: "0.5.1"  # pin — see https://github.com/Nimblesite/Deslop/releases
+        run: |
+          curl -sSfL "https://github.com/Nimblesite/Deslop/releases/download/v${DESLOP_VERSION}/deslop-${DESLOP_VERSION}-linux-x64.tar.gz" | tar -xz
+          echo "$PWD/deslop-${DESLOP_VERSION}-linux-x64" >> "$GITHUB_PATH"
+          deslop .
 
   test:
     name: Test
@@ -101,6 +114,10 @@ jobs:
               echo "::endgroup::"
             fi
           done
+
+      # Threshold is read from coverage-thresholds.json — single source of truth.
+      - name: Resolve coverage threshold
+        run: echo "MIN_COVERAGE=$(jq -r '.default_threshold' coverage-thresholds.json)" >> "$GITHUB_ENV"
 
       - name: Test Tier 1
         run: ./tools/test.sh --tier 1

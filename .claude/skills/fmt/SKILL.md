@@ -10,13 +10,13 @@ Format all code in this repo.
 ## Steps
 
 1. Run `make fmt`
-2. Run `make fmt-check` to confirm clean
+2. Run `make fmt CHECK=1` to confirm clean
 3. Report which files were modified
 
 ## What it does
 
-- `dart format packages/ examples/ tools/build`
+- `dart format packages/ examples/`
 
 ## Success criteria
 
-- `make fmt-check` exits with code 0 after formatting
+- `make fmt CHECK=1` exits with code 0 after formatting
