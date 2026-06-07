@@ -66,9 +66,12 @@ Future<Result<(SessionStore, PendingSession), String>> initiateSession({
           activeSessions: store.activeSessions,
           pendingSessions: updatedPending,
         );
-        return Success((updatedStore, pending));
+        return Success<(SessionStore, PendingSession), String>(
+          (updatedStore, pending),
+        );
       }(),
-    Error(:final error) => Error(error),
+    Error(:final error) =>
+      Error<(SessionStore, PendingSession), String>(error),
   };
 }
 
@@ -103,7 +106,7 @@ Future<Result<(SessionStore, Session), String>> completeSession({
         final updatedPending =
             Map<String, PendingSession>.from(store.pendingSessions)
               ..remove(key);
-        return Success((
+        return Success<(SessionStore, Session), String>((
           (
             activeSessions: updatedActive,
             pendingSessions: updatedPending,
@@ -111,7 +114,8 @@ Future<Result<(SessionStore, Session), String>> completeSession({
           session,
         ));
       }(),
-    Error(:final error) => Error(error),
+    Error(:final error) =>
+      Error<(SessionStore, Session), String>(error),
   };
 }
 
@@ -141,7 +145,7 @@ Future<Result<(SessionStore, Session), String>> acceptSession({
         );
         final updatedActive =
             Map<String, Session>.from(store.activeSessions)..[key] = session;
-        return Success((
+        return Success<(SessionStore, Session), String>((
           (
             activeSessions: updatedActive,
             pendingSessions: store.pendingSessions,
@@ -149,7 +153,8 @@ Future<Result<(SessionStore, Session), String>> acceptSession({
           session,
         ));
       }(),
-    Error(:final error) => Error(error),
+    Error(:final error) =>
+      Error<(SessionStore, Session), String>(error),
   };
 }
 

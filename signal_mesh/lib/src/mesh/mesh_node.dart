@@ -1,6 +1,6 @@
+import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:cryptography/cryptography.dart';
 import 'package:nadz/nadz.dart';
 
 import '../crypto/key_pair.dart';
@@ -10,7 +10,6 @@ import '../dht/routing_table.dart';
 import '../identity/peer_identity.dart';
 import '../protocol/message.dart';
 import '../protocol/session.dart';
-import '../transport/peer_connection.dart';
 import '../transport/transport.dart';
 import 'store_forward.dart';
 
@@ -114,9 +113,9 @@ Future<Result<MeshNode, String>> createMeshNode({
   MeshNodeState getState() => state;
 
   Result<void, String> connectToPeer(PeerAddress address) {
-    final connectResult = transport.connect(address);
-    // Since connect returns a Future, we handle it synchronously here
-    // by just initiating the connection
+    // connect returns a Future; fire-and-forget to initiate the
+    // connection, then report success synchronously.
+    unawaited(transport.connect(address));
     return Success(null);
   }
 

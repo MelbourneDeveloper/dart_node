@@ -5,6 +5,7 @@ description: >-
   Double Ratchet for E2E encryption, phone numbers as identifiers.
 version: 0.1.0-alpha
 repository: https://github.com/MelbourneDeveloper/dart_node
+publish_to: none
 
 environment:
   sdk: ^3.10.0
