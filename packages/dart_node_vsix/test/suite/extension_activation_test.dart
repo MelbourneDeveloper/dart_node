@@ -43,7 +43,10 @@ void main() {
         syncTest(() {
           final api = getTestAPI();
           final logs = api.getLogMessages();
-          assertOk(logs.length > 0, 'Extension must produce log messages');
+          assertOk(
+            logs.toDart.isNotEmpty,
+            'Extension must produce log messages',
+          );
 
           var hasActivating = false;
           var hasActivated = false;

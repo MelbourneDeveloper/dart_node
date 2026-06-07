@@ -272,9 +272,10 @@ void main() {
         expect(resource1.isSuccess, isTrue);
 
         // All notifications should work
-        server.sendToolListChanged();
-        server.sendResourceListChanged();
-        server.sendPromptListChanged();
+        server
+          ..sendToolListChanged()
+          ..sendResourceListChanged()
+          ..sendPromptListChanged();
       }
     });
   });

@@ -18,6 +18,23 @@ COVERAGE_CLI="$ROOT_DIR/packages/dart_node_coverage/bin/coverage.dart"
 # Minimum coverage threshold (can be overridden by MIN_COVERAGE env var)
 MIN_COVERAGE="${MIN_COVERAGE:-80}"
 
+# Per-package coverage thresholds live in coverage-thresholds.json
+# ([COVERAGE-THRESHOLDS-JSON]). Floors ratchet UP only — see ratchet_thresholds().
+THRESHOLDS_FILE="${THRESHOLDS_FILE:-$ROOT_DIR/coverage-thresholds.json}"
+
+# Resolve the coverage threshold for a package: its per-package entry if present,
+# else default_threshold from the file, else the MIN_COVERAGE fallback.
+pkg_threshold() {
+  local name="$1"
+  local t=""
+  if command -v jq >/dev/null 2>&1 && [[ -f "$THRESHOLDS_FILE" ]]; then
+    t=$(jq -r --arg n "$name" \
+      '.packages[$n] // .default_threshold // empty' "$THRESHOLDS_FILE")
+  fi
+  [[ -z "$t" || "$t" == "null" ]] && t="$MIN_COVERAGE"
+  echo "$t"
+}
+
 # Detect Chromium executable for browser tests (can be overridden by CHROME_EXECUTABLE env var)
 if [[ -z "${CHROME_EXECUTABLE:-}" ]]; then
   case "$(uname -s)" in
@@ -228,10 +245,14 @@ test_package() {
 
   # Check coverage threshold if applicable
   if [[ -n "$coverage" ]]; then
-    if [[ "$coverage" == "0" ]] || (( $(echo "$coverage < $MIN_COVERAGE" | bc -l) )); then
-      echo "⛔️ Failed $name (coverage ${coverage}% < ${MIN_COVERAGE}%) - $time_str"
+    local threshold
+    threshold=$(pkg_threshold "$name")
+    if [[ "$coverage" == "0" ]] || (( $(echo "$coverage < $threshold" | bc -l) )); then
+      echo "⛔️ Failed $name (coverage ${coverage}% < ${threshold}%) - $time_str"
       return 1
     fi
+    # Record measured coverage so the post-run ratchet can raise the floor
+    echo "$coverage" > "$LOGS_DIR/$name.coverage"
     echo "✅ Succeeded $name (${coverage}%) - $time_str"
   else
     echo "✅ Succeeded $name - $time_str"
@@ -316,6 +337,38 @@ run_tier() {
   return 0
 }
 
+# Ratchet coverage thresholds UP after a fully-green run. Each package's stored
+# threshold is raised to its measured coverage (never lowered), implementing the
+# monotonically-increasing floor in [COVERAGE-THRESHOLDS-JSON]. test_package runs
+# in parallel, so measured values are collected from logs/*.coverage and written
+# here in a single sequential pass — no concurrent writes to the JSON.
+ratchet_thresholds() {
+  command -v jq >/dev/null 2>&1 || return 0
+  [[ -f "$THRESHOLDS_FILE" ]] || return 0
+  local updated=0
+  for cov_file in "$LOGS_DIR"/*.coverage; do
+    [[ -f "$cov_file" ]] || continue
+    local name measured stored
+    name=$(basename "$cov_file" .coverage)
+    measured=$(cat "$cov_file")
+    stored=$(jq -r --arg n "$name" '.packages[$n] // 0' "$THRESHOLDS_FILE")
+    if (( $(echo "$measured > $stored" | bc -l) )); then
+      local tmp="$THRESHOLDS_FILE.tmp"
+      if jq --arg n "$name" --argjson v "$measured" \
+          '.packages[$n] = $v' "$THRESHOLDS_FILE" > "$tmp"; then
+        mv "$tmp" "$THRESHOLDS_FILE"
+        echo "⬆️  Ratcheted $name → ${measured}% (was ${stored}%)"
+        updated=1
+      else
+        rm -f "$tmp"
+      fi
+    fi
+  done
+  [[ $updated -eq 1 ]] && \
+    echo "Coverage thresholds raised in $(basename "$THRESHOLDS_FILE")"
+  return 0
+}
+
 # Main
 TOTAL_START=$SECONDS
 
@@ -364,6 +417,8 @@ for tier_spec in "${TIERS_TO_RUN[@]}"; do
   echo ""
   ((tier_num++))
 done
+
+ratchet_thresholds
 
 total_elapsed=$((SECONDS - TOTAL_START))
 echo "All tests passed - $(format_time $total_elapsed)"

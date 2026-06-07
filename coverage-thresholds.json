@@ -1,5 +1,17 @@
 {
   "_agent_pmo": "76596cb",
-  "_doc": "Single source of truth for code coverage thresholds. See REPO-STANDARDS-SPEC [COVERAGE-THRESHOLDS-JSON]. NO GitHub repo variables, NO env vars, NO public `make coverage-check` target. Read by the internal `_coverage_check` path inside `make test` (tools/test.sh). `make test` exits non-zero if measured coverage < threshold. Thresholds are monotonically increasing — ratchet UP only, never down. Seeded from the previously-enforced floor (GitHub var MIN_COVERAGE=70); this is a library repo so ratchet toward 90 as coverage improves.",
-  "default_threshold": 70
+  "_doc": "Single source of truth for code coverage thresholds. Read AND ratcheted by tools/test.sh (invoked by `make test`); `make test` exits non-zero if any package's measured coverage drops below its threshold. Thresholds are monotonically increasing: after every fully-green run, each package's stored floor is auto-raised to its measured coverage and never lowered (see ratchet_thresholds() in tools/test.sh). Per-package floors live in `packages`; a package with no entry falls back to `default_threshold`. Every floor here was seeded from the legacy GitHub Actions variable MIN_COVERAGE (70, see `gh variable list`) and then ratchets up to real measured coverage. `default_threshold` is the 90% library-repo floor for any new package. No GitHub repo variables or env vars gate coverage anymore — this file is authoritative.",
+  "default_threshold": 90,
+  "packages": {
+    "dart_logging": 100.0,
+    "dart_node_core": 100.0,
+    "dart_node_express": 100.0,
+    "dart_node_ws": 100.0,
+    "dart_node_better_sqlite3": 100.0,
+    "dart_node_mcp": 100.0,
+    "dart_node_react_native": 100.0,
+    "reflux": 97.6,
+    "web_counter": 98.5,
+    "markdown_editor": 94.8
+  }
 }

@@ -28,6 +28,13 @@ extension type _NodePath(JSObject _) implements JSObject {
 @JS('JSON')
 extension type _JSON._(JSObject _) implements JSObject {
   external static JSString stringify(JSAny obj);
+  external static JSObject parse(JSString text);
+}
+
+/// Extension type for the global Object constructor's static methods
+@JS('Object')
+extension type _JSObjectStatic._(JSObject _) implements JSObject {
+  external static JSArray<JSString> keys(JSObject obj);
 }
 
 /// Get the global context with coverage data access
@@ -126,13 +133,11 @@ void writeCoverageFile(String outputPath) {
   if (fs.existsSync(outputPath.toJS)) {
     try {
       final existing = fs.readFileSync(outputPath.toJS, 'utf8'.toJS);
-      final json = (globalContext as JSObject)['JSON'] as JSObject;
-      final parse = json['parse'] as JSFunction;
-      final existingData = parse.callAsFunction(json, existing) as JSObject;
+      final existingData = _JSON.parse(existing);
 
       // Merge existing into current
       _mergeData(currentData, existingData);
-    } catch (_) {
+    } on Object catch (_) {
       // Corrupt/empty file - ignore and overwrite
     }
   }
@@ -144,40 +149,26 @@ void writeCoverageFile(String outputPath) {
 
 /// Merge existing coverage data into current data
 void _mergeData(JSObject current, JSObject existing) {
-  final objClass = (globalContext as JSObject)['Object'] as JSObject;
-  final keys = objClass['keys'] as JSFunction;
-  final fileKeys = keys.callAsFunction(objClass, existing) as JSArray;
-
-  final fileCount = (fileKeys.getProperty('length'.toJS) as JSNumber).toDartInt;
-  for (var i = 0; i < fileCount; i++) {
-    final fileKeyRaw = fileKeys.getProperty(i.toJS);
-    if (fileKeyRaw == null) continue;
-    final fileKey = fileKeyRaw as JSString;
-    final existingFileCov = existing.getProperty(fileKey) as JSObject;
+  final fileKeys = _JSObjectStatic.keys(existing).toDart;
+  for (final fileKey in fileKeys) {
+    final existingFileCov = existing.getProperty<JSObject>(fileKey);
 
     // Get or create file coverage
-    final hasFile = (current.hasProperty(fileKey) as JSBoolean).toDart;
-    final currentFileCov = hasFile
-        ? current.getProperty(fileKey) as JSObject
-        : JSObject();
+    final hasFile = current.hasProperty(fileKey).toDart;
+    final currentFileCov =
+        hasFile ? current.getProperty<JSObject>(fileKey) : JSObject();
 
     if (!hasFile) {
       current.setProperty(fileKey, currentFileCov);
     }
 
     // Merge line counts
-    final lineKeys = keys.callAsFunction(objClass, existingFileCov) as JSArray;
-    final lineCount =
-        (lineKeys.getProperty('length'.toJS) as JSNumber).toDartInt;
-
-    for (var j = 0; j < lineCount; j++) {
-      final lineKeyRaw = lineKeys.getProperty(j.toJS);
-      if (lineKeyRaw == null) continue;
-      final lineKey = lineKeyRaw;
-      final existingCount = existingFileCov.getProperty(lineKey) as JSNumber;
-      final hasLine = (currentFileCov.hasProperty(lineKey) as JSBoolean).toDart;
+    final lineKeys = _JSObjectStatic.keys(existingFileCov).toDart;
+    for (final lineKey in lineKeys) {
+      final existingCount = existingFileCov.getProperty<JSNumber>(lineKey);
+      final hasLine = currentFileCov.hasProperty(lineKey).toDart;
       final currentCount = hasLine
-          ? (currentFileCov.getProperty(lineKey) as JSNumber).toDartDouble
+          ? currentFileCov.getProperty<JSNumber>(lineKey).toDartDouble
           : 0.0;
 
       // Add counts together
