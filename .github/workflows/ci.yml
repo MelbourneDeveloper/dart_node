@@ -80,8 +80,9 @@ jobs:
           DESLOP_VERSION: "0.5.1"  # pin — see https://github.com/Nimblesite/Deslop/releases
         run: |
           curl -sSfL "https://github.com/Nimblesite/Deslop/releases/download/v${DESLOP_VERSION}/deslop-${DESLOP_VERSION}-linux-x64.tar.gz" | tar -xz
-          echo "$PWD/deslop-${DESLOP_VERSION}-linux-x64" >> "$GITHUB_PATH"
-          deslop .
+          # Run the binary by path: GITHUB_PATH only affects *later* steps, so a
+          # bare `deslop` here is not yet on PATH (exit 127).
+          "$PWD/deslop-${DESLOP_VERSION}-linux-x64/deslop" .
 
   test:
     name: Test
