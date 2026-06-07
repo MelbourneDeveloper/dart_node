@@ -1,6 +1,6 @@
 name: dart_node_sql_js
 description: Typed Dart bindings for sql.js (SQLite compiled to WebAssembly)
-version: 0.13.0-beta
+version: 0.0.0-dev
 repository: https://github.com/MelbourneDeveloper/dart_node
 
 environment:

@@ -23,14 +23,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Checkout release branch
-        run: |
-          git fetch origin "release/${{ steps.version.outputs.VERSION }}"
-          git checkout "release/${{ steps.version.outputs.VERSION }}"
-
       - uses: ./.github/actions/setup
         with:
           dart-version: ${{ vars.DART_VERSION }}
+
+      # [SWR-VERSION-BUILD-STAMPING] Stamp the version from the tag in the
+      # runner working tree ONLY. Source stays 0.0.0-dev; nothing is committed,
+      # pushed, or branched. The runner is discarded after publish.
+      - name: Stamp versions in the working tree (not committed)
+        run: dart run tools/prepare_publish.dart "${{ steps.version.outputs.VERSION }}"
 
       - name: Publish packages
         run: |
