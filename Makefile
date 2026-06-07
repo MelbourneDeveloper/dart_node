@@ -44,17 +44,19 @@ test:
 lint:
 	@echo "==> Linting..."
 	cspell "**/*.md" "**/*.dart" "**/*.ts" --no-progress
-	@for dir in packages/* examples/* tools/build; do \
-		if [ -d "$$dir" ] && [ -f "$$dir/pubspec.yaml" ]; then \
-			echo "Analyzing $$dir..."; \
-			(cd "$$dir" && dart analyze --no-fatal-warnings) || exit 1; \
-		fi; \
+	@find packages examples signal_mesh -name pubspec.yaml \
+		-not -path '*/node_modules/*' -not -path '*/.dart_tool/*' \
+		-not -path '*/build/*' | sort | while read -r pub; do \
+		grep -qE 'sdk:[[:space:]]*flutter' "$$pub" && continue; \
+		dir=$$(dirname "$$pub"); \
+		echo "Analyzing $$dir..."; \
+		(cd "$$dir" && dart analyze --no-fatal-warnings) || exit 1; \
 	done
 
 ## fmt: Format all code in-place. Pass CHECK=1 for read-only check (CI use).
 fmt:
 	@echo "==> Formatting$(if $(CHECK), (check mode),)..."
-	dart format$(if $(CHECK), --set-exit-if-changed,) packages/ examples/
+	dart format$(if $(CHECK), --set-exit-if-changed,) packages/ examples/ signal_mesh/
 
 ## clean: Remove all build artifacts
 clean:

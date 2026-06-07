@@ -124,3 +124,5 @@ mutation-reports
 
 
 .deslop-cache/
+deslop-report.*
+deslop-*.log

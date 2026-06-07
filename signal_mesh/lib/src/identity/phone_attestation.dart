@@ -98,9 +98,10 @@ Future<Result<bool, String>> verifyAttestation({
     );
     if (!isTrusted) return Success(false);
 
-    // Check TTL
+    // Check TTL. Use >= so an instant-expiry (ttlSeconds: 0) attestation is
+    // already expired the moment it is created (age 0 is not < ttl 0).
     final age = DateTime.now().difference(attestation.attestedAt).inSeconds;
-    if (age > attestation.ttlSeconds) return Success(false);
+    if (age >= attestation.ttlSeconds) return Success(false);
 
     // Verify signature
     final ed25519 = Ed25519();

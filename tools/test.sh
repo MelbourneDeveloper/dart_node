@@ -76,18 +76,32 @@ fi
 
 # Package type definitions
 NODE_PACKAGES="dart_node_core dart_node_express dart_node_ws dart_node_better_sqlite3"
-NODE_INTEROP_PACKAGES="dart_node_mcp dart_node_react_native too_many_cooks"
-BROWSER_PACKAGES="dart_node_react frontend"
-NPM_PACKAGES="too_many_cooks_vscode_extension"
-BUILD_FIRST="too_many_cooks"
+NODE_INTEROP_PACKAGES="dart_node_mcp dart_node_react_native"
+BROWSER_PACKAGES="dart_node_react frontend jsx_demo mobile"
+NPM_PACKAGES=""
+BUILD_FIRST=""
 
-# Tier definitions (space-separated paths)
-TIER1="packages/dart_logging packages/dart_node_core"
-TIER2="packages/reflux packages/dart_node_express packages/dart_node_ws packages/dart_node_better_sqlite3 packages/dart_node_mcp packages/dart_node_react_native packages/dart_node_react"
-TIER3="examples/frontend examples/markdown_editor examples/reflux_demo/web_counter examples/too_many_cooks"
+# Tier definitions (space-separated paths). EVERY package that has a test/ dir
+# must appear here OR in EXCLUDED_WITH_REASON below — enforced by
+# check_all_packages_covered() so a package's coverage check is never silently
+# dropped.
+TIER1="packages/dart_logging packages/dart_node_core packages/dart_node_coverage"
+TIER2="packages/reflux packages/dart_jsx packages/dart_node_express packages/dart_node_ws packages/dart_node_better_sqlite3 packages/dart_node_mcp packages/dart_node_react_native packages/dart_node_react signal_mesh"
+TIER3="examples/frontend examples/markdown_editor examples/reflux_demo/web_counter examples/jsx_demo examples/mobile"
 
-# Exclusion list (package names to skip)
-EXCLUDED="too_many_cooks too_many_cooks_vscode_extension"
+# Packages that have tests but are deliberately NOT run here, each with a reason.
+# Format "name:reason"; surfaced loudly by check_all_packages_covered().
+EXCLUDED_WITH_REASON=(
+  "backend:e2e tests require a running Node server (not a unit suite)"
+  "flutter_counter:requires the Flutter SDK; CI provisions Dart only"
+  "dart_node_vsix:VS Code @vscode/test-electron harness (needs Xvfb + VS Code)"
+  "too_many_cooks:removed from the repo"
+  "too_many_cooks_vscode_extension:removed from the repo"
+)
+
+# Names skipped by run_tier, derived from EXCLUDED_WITH_REASON.
+EXCLUDED=""
+for _e in "${EXCLUDED_WITH_REASON[@]}"; do EXCLUDED="$EXCLUDED ${_e%%:*}"; done
 
 # Helper functions
 is_type() {
@@ -105,6 +119,43 @@ calc_coverage() {
   local lcov="$1"
   [[ -f "$lcov" ]] || { echo "0"; return; }
   awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' "$lcov"
+}
+
+# Fail the run if any package with a test/ dir is neither in a tier nor in
+# EXCLUDED_WITH_REASON. This guarantees every testable package is coverage-checked
+# (or explicitly, visibly skipped) — no silent gaps.
+check_all_packages_covered() {
+  local known=" $TIER1 $TIER2 $TIER3 "
+  local excluded_names=""
+  local e
+  for e in "${EXCLUDED_WITH_REASON[@]}"; do excluded_names="$excluded_names ${e%%:*}"; done
+
+  local missing=()
+  local pub dir name
+  while IFS= read -r pub; do
+    dir=$(dirname "$pub")
+    dir=${dir#"$ROOT_DIR"/}
+    [[ -d "$ROOT_DIR/$dir/test" ]] || continue
+    name=$(basename "$dir")
+    [[ " $known " == *" $dir "* ]] && continue
+    [[ " $excluded_names " == *" $name "* ]] && continue
+    missing+=("$dir")
+  done < <(find "$ROOT_DIR/packages" "$ROOT_DIR/examples" "$ROOT_DIR/signal_mesh" \
+    -name pubspec.yaml -not -path '*/node_modules/*' -not -path '*/.dart_tool/*' \
+    -not -path '*/build/*' 2>/dev/null | sort)
+
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    echo "⛔️ Packages with tests that are NOT coverage-checked and NOT excluded:"
+    printf '   - %s\n' "${missing[@]}"
+    echo "   Add each to a TIER or to EXCLUDED_WITH_REASON in tools/test.sh."
+    return 1
+  fi
+
+  echo "Coverage scope OK — every package with tests is tiered or explicitly excluded:"
+  for e in "${EXCLUDED_WITH_REASON[@]}"; do
+    echo "  • excluded ${e%%:*} — ${e#*:}"
+  done
+  return 0
 }
 
 # Parse arguments
@@ -133,7 +184,9 @@ elif [[ -n "$TIER" ]]; then
     *) echo "Invalid tier: $TIER"; exit 1 ;;
   esac
 else
-  # All tiers - run sequentially
+  # All tiers - run sequentially. Enforce that every testable package is
+  # accounted for before running anything.
+  check_all_packages_covered || exit 1
   TIERS_TO_RUN+=("$TIER1")
   TIERS_TO_RUN+=("$TIER2")
   TIERS_TO_RUN+=("$TIER3")

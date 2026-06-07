@@ -30,12 +30,12 @@ void main() {
     }
   });
 
-  test('connect to nonexistent peer fails', () {
+  test('connect to nonexistent peer fails', () async {
     const addr1 = (host: '127.0.0.1', port: 8001);
     const ghost = (host: '127.0.0.1', port: 9999);
     final t1 = createInMemoryTransport(addr1);
 
-    final result = t1.connect(ghost);
+    final result = await t1.connect(ghost);
     expect(result, isA<Error<void, String>>());
   });
 
@@ -59,13 +59,13 @@ void main() {
     expect(received?.peer, equals(addr1));
   });
 
-  test('send to disconnected peer fails', () {
+  test('send to disconnected peer fails', () async {
     const addr1 = (host: '127.0.0.1', port: 8001);
     const addr2 = (host: '127.0.0.1', port: 8002);
     final t1 = createInMemoryTransport(addr1);
     createInMemoryTransport(addr2);
 
-    final result = t1.send(addr2, Uint8List(0));
+    final result = await t1.send(addr2, Uint8List(0));
     expect(result, isA<Error<void, String>>());
   });
 

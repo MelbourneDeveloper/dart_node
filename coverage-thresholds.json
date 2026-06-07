@@ -5,13 +5,17 @@
   "packages": {
     "dart_logging": 100.0,
     "dart_node_core": 100.0,
+    "dart_node_coverage": 90.3,
     "dart_node_express": 100.0,
     "dart_node_ws": 100.0,
     "dart_node_better_sqlite3": 100.0,
     "dart_node_mcp": 100.0,
     "dart_node_react_native": 100.0,
+    "dart_jsx": 82.5,
     "reflux": 97.6,
+    "signal_mesh": 70.8,
     "web_counter": 98.5,
-    "markdown_editor": 94.8
+    "markdown_editor": 94.8,
+    "mobile": 95.8
   }
 }

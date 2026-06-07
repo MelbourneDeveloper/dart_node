@@ -35,23 +35,25 @@ jobs:
 
       - name: Get all dependencies
         run: |
-          for dir in packages/* examples/* tools/build; do
-            if [ -d "$dir" ] && [ -f "$dir/pubspec.yaml" ]; then
-              echo "::group::$dir"
-              cd $dir && dart pub get && cd - > /dev/null
-              echo "::endgroup::"
-            fi
-          done
+          while read -r pub; do
+            grep -qE 'sdk:[[:space:]]*flutter' "$pub" && continue
+            dir=$(dirname "$pub")
+            echo "::group::$dir"
+            (cd "$dir" && dart pub get)
+            echo "::endgroup::"
+          done < <(find packages examples signal_mesh -name pubspec.yaml \
+            -not -path '*/node_modules/*' -not -path '*/.dart_tool/*' \
+            -not -path '*/build/*' | sort)
 
       - name: Install npm dependencies
         run: |
-          for dir in packages/* examples/*; do
-            if [ -d "$dir" ] && [ -f "$dir/package.json" ]; then
-              echo "::group::npm install $dir"
-              cd $dir && npm install && cd - > /dev/null
-              echo "::endgroup::"
-            fi
-          done
+          while read -r pkg; do
+            dir=$(dirname "$pkg")
+            echo "::group::npm install $dir"
+            (cd "$dir" && npm install)
+            echo "::endgroup::"
+          done < <(find packages examples signal_mesh -name package.json \
+            -not -path '*/node_modules/*' | sort)
 
       - name: Check formatting
         run: make fmt CHECK=1
@@ -61,13 +63,15 @@ jobs:
 
       - name: Analyze
         run: |
-          for dir in packages/* examples/* tools/build; do
-            if [ -d "$dir" ] && [ -f "$dir/pubspec.yaml" ]; then
-              echo "::group::Analyzing $dir"
-              cd $dir && dart analyze --no-fatal-warnings && cd - > /dev/null
-              echo "::endgroup::"
-            fi
-          done
+          while read -r pub; do
+            grep -qE 'sdk:[[:space:]]*flutter' "$pub" && continue
+            dir=$(dirname "$pub")
+            echo "::group::Analyzing $dir"
+            (cd "$dir" && dart analyze --no-fatal-warnings)
+            echo "::endgroup::"
+          done < <(find packages examples signal_mesh -name pubspec.yaml \
+            -not -path '*/node_modules/*' -not -path '*/.dart_tool/*' \
+            -not -path '*/build/*' | sort)
 
       # Deslop duplication gate ([CI-DESLOP]). Threshold lives in committed
       # .deslop.toml — ratcheted DOWN, never up. `deslop .` exits 3 when exceeded.
@@ -97,36 +101,34 @@ jobs:
 
       - name: Get all dependencies
         run: |
-          for dir in packages/* examples/* tools/build; do
-            if [ -d "$dir" ] && [ -f "$dir/pubspec.yaml" ]; then
-              echo "::group::$dir"
-              cd $dir && dart pub get && cd - > /dev/null
-              echo "::endgroup::"
-            fi
-          done
+          while read -r pub; do
+            grep -qE 'sdk:[[:space:]]*flutter' "$pub" && continue
+            dir=$(dirname "$pub")
+            echo "::group::$dir"
+            (cd "$dir" && dart pub get)
+            echo "::endgroup::"
+          done < <(find packages examples signal_mesh -name pubspec.yaml \
+            -not -path '*/node_modules/*' -not -path '*/.dart_tool/*' \
+            -not -path '*/build/*' | sort)
 
       - name: Install npm dependencies
         run: |
-          for dir in packages/* examples/*; do
-            if [ -d "$dir" ] && [ -f "$dir/package.json" ]; then
-              echo "::group::npm install $dir"
-              cd $dir && npm install && cd - > /dev/null
-              echo "::endgroup::"
-            fi
-          done
+          while read -r pkg; do
+            dir=$(dirname "$pkg")
+            echo "::group::npm install $dir"
+            (cd "$dir" && npm install)
+            echo "::endgroup::"
+          done < <(find packages examples signal_mesh -name package.json \
+            -not -path '*/node_modules/*' | sort)
 
       # Threshold is read from coverage-thresholds.json — single source of truth.
       - name: Resolve coverage threshold
         run: echo "MIN_COVERAGE=$(jq -r '.default_threshold' coverage-thresholds.json)" >> "$GITHUB_ENV"
 
-      - name: Test Tier 1
-        run: ./tools/test.sh --tier 1
-
-      - name: Test Tier 2
-        run: ./tools/test.sh --tier 2
-
-      - name: Test Tier 3
-        run: ./tools/test.sh --tier 3
+      # Single run so the coverage-scope guard executes: every package with a
+      # test/ dir must be tiered or explicitly excluded, or the build fails.
+      - name: Test (all packages + coverage-scope guard)
+        run: ./tools/test.sh
 
       - name: Upload test logs
         if: always()
@@ -149,13 +151,15 @@ jobs:
 
       - name: Get all dependencies
         run: |
-          for dir in packages/* examples/* tools/build; do
-            if [ -d "$dir" ] && [ -f "$dir/pubspec.yaml" ]; then
-              echo "::group::$dir"
-              cd $dir && dart pub get && cd - > /dev/null
-              echo "::endgroup::"
-            fi
-          done
+          while read -r pub; do
+            grep -qE 'sdk:[[:space:]]*flutter' "$pub" && continue
+            dir=$(dirname "$pub")
+            echo "::group::$dir"
+            (cd "$dir" && dart pub get)
+            echo "::endgroup::"
+          done < <(find packages examples signal_mesh -name pubspec.yaml \
+            -not -path '*/node_modules/*' -not -path '*/.dart_tool/*' \
+            -not -path '*/build/*' | sort)
 
       - name: Build
         run: make build
