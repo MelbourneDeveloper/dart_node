@@ -496,4 +496,246 @@ abstract final class AppStyles {
     'color': AppColors.textSecondary,
     'fontSize': AppTypography.sizeMd,
   };
+
+  // ===========================================
+  // POMODORO TIMER STYLES
+  // ===========================================
+
+  // Pomodoro state colors
+  static const pomodoroWork = '#ef4444'; // Red for work sessions
+  static const pomodoroShortBreak = '#10b981'; // Green for short breaks
+  static const pomodoroLongBreak = '#6366f1'; // Indigo for long breaks
+  static const pomodoroPaused = '#64748b'; // Muted gray when paused
+
+  // Timer circle container
+  static const Map<String, dynamic> pomodoroTimerContainer = {
+    'alignItems': 'center',
+    'justifyContent': 'center',
+    'padding': AppSpacing.xxl,
+  };
+
+  // Timer circle (outer ring)
+  static const Map<String, dynamic> pomodoroCircle = {
+    'width': 280,
+    'height': 280,
+    'borderRadius': 140,
+    'borderWidth': 8,
+    'alignItems': 'center',
+    'justifyContent': 'center',
+    'backgroundColor': AppColors.bgCard,
+  };
+
+  // Timer circle for work state
+  static const Map<String, dynamic> pomodoroCircleWork = {
+    'width': 280,
+    'height': 280,
+    'borderRadius': 140,
+    'borderWidth': 8,
+    'borderColor': pomodoroWork,
+    'alignItems': 'center',
+    'justifyContent': 'center',
+    'backgroundColor': AppColors.bgCard,
+  };
+
+  // Timer circle for short break state
+  static const Map<String, dynamic> pomodoroCircleShortBreak = {
+    'width': 280,
+    'height': 280,
+    'borderRadius': 140,
+    'borderWidth': 8,
+    'borderColor': pomodoroShortBreak,
+    'alignItems': 'center',
+    'justifyContent': 'center',
+    'backgroundColor': AppColors.bgCard,
+  };
+
+  // Timer circle for long break state
+  static const Map<String, dynamic> pomodoroCircleLongBreak = {
+    'width': 280,
+    'height': 280,
+    'borderRadius': 140,
+    'borderWidth': 8,
+    'borderColor': pomodoroLongBreak,
+    'alignItems': 'center',
+    'justifyContent': 'center',
+    'backgroundColor': AppColors.bgCard,
+  };
+
+  // Timer circle for paused state
+  static const Map<String, dynamic> pomodoroCirclePaused = {
+    'width': 280,
+    'height': 280,
+    'borderRadius': 140,
+    'borderWidth': 8,
+    'borderColor': pomodoroPaused,
+    'alignItems': 'center',
+    'justifyContent': 'center',
+    'backgroundColor': AppColors.bgCard,
+  };
+
+  // Timer time display (main countdown text)
+  static const Map<String, dynamic> pomodoroTimeText = {
+    'fontSize': 64,
+    'fontWeight': AppTypography.weightBold,
+    'color': AppColors.textPrimary,
+    'fontVariant': ['tabular-nums'],
+  };
+
+  // Timer state label (e.g., "WORK", "BREAK")
+  static const Map<String, dynamic> pomodoroStateLabel = {
+    'fontSize': AppTypography.sizeMd,
+    'fontWeight': AppTypography.weightSemibold,
+    'color': AppColors.textSecondary,
+    'marginTop': AppSpacing.sm,
+    'textTransform': 'uppercase',
+    'letterSpacing': 2,
+  };
+
+  // Pomodoro control buttons container
+  static const Map<String, dynamic> pomodoroControls = {
+    'flexDirection': 'row',
+    'alignItems': 'center',
+    'justifyContent': 'center',
+    'gap': AppSpacing.lg,
+    'marginTop': AppSpacing.xxl,
+  };
+
+  // Primary control button (start/pause)
+  static const Map<String, dynamic> pomodoroControlBtnPrimary = {
+    'width': 64,
+    'height': 64,
+    'borderRadius': 32,
+    'backgroundColor': AppColors.accentPrimary,
+    'alignItems': 'center',
+    'justifyContent': 'center',
+    'elevation': 2,
+    'shadowColor': '#000',
+    'shadowOffset': {'width': 0, 'height': 2},
+    'shadowOpacity': 0.2,
+    'shadowRadius': 3,
+  };
+
+  // Secondary control button (reset/skip)
+  static const Map<String, dynamic> pomodoroControlBtnSecondary = {
+    'width': 48,
+    'height': 48,
+    'borderRadius': 24,
+    'backgroundColor': AppColors.bgSecondary,
+    'borderWidth': 1,
+    'borderColor': AppColors.borderRN,
+    'alignItems': 'center',
+    'justifyContent': 'center',
+  };
+
+  // Control button icon
+  static const Map<String, dynamic> pomodoroControlIcon = {
+    'fontSize': 24,
+    'color': AppColors.textPrimary,
+  };
+
+  // Control button icon (secondary)
+  static const Map<String, dynamic> pomodoroControlIconSecondary = {
+    'fontSize': 20,
+    'color': AppColors.textSecondary,
+  };
+
+  // Pomodoro session counter container
+  static const Map<String, dynamic> pomodoroSessionCounter = {
+    'flexDirection': 'row',
+    'alignItems': 'center',
+    'justifyContent': 'center',
+    'gap': AppSpacing.sm,
+    'marginTop': AppSpacing.xl,
+  };
+
+  // Session indicator dot (completed)
+  static const Map<String, dynamic> pomodoroSessionDotCompleted = {
+    'width': 12,
+    'height': 12,
+    'borderRadius': 6,
+    'backgroundColor': AppColors.accentPrimary,
+  };
+
+  // Session indicator dot (pending)
+  static const Map<String, dynamic> pomodoroSessionDotPending = {
+    'width': 12,
+    'height': 12,
+    'borderRadius': 6,
+    'backgroundColor': AppColors.bgSecondary,
+    'borderWidth': 1,
+    'borderColor': AppColors.borderRN,
+  };
+
+  // Pomodoro settings card
+  static const Map<String, dynamic> pomodoroSettingsCard = {
+    'backgroundColor': AppColors.bgCard,
+    'borderWidth': 1,
+    'borderColor': AppColors.borderRN,
+    'borderRadius': AppSpacing.radiusLg,
+    'padding': AppSpacing.xl,
+    'marginTop': AppSpacing.xxl,
+  };
+
+  // Pomodoro settings row
+  static const Map<String, dynamic> pomodoroSettingsRow = {
+    'flexDirection': 'row',
+    'alignItems': 'center',
+    'justifyContent': 'space-between',
+    'paddingVertical': AppSpacing.md,
+    'borderBottomWidth': 1,
+    'borderBottomColor': AppColors.borderRN,
+  };
+
+  // Pomodoro settings label
+  static const Map<String, dynamic> pomodoroSettingsLabel = {
+    'fontSize': AppTypography.sizeMd,
+    'color': AppColors.textPrimary,
+  };
+
+  // Pomodoro settings value
+  static const Map<String, dynamic> pomodoroSettingsValue = {
+    'fontSize': AppTypography.sizeMd,
+    'fontWeight': AppTypography.weightSemibold,
+    'color': AppColors.accentPrimary,
+  };
+
+  // Collaborative indicator container
+  static const Map<String, dynamic> pomodoroCollabContainer = {
+    'flexDirection': 'row',
+    'alignItems': 'center',
+    'justifyContent': 'center',
+    'gap': AppSpacing.sm,
+    'paddingVertical': AppSpacing.md,
+    'paddingHorizontal': AppSpacing.lg,
+    'backgroundColor': AppColors.bgSecondary,
+    'borderRadius': AppSpacing.radiusMd,
+    'marginBottom': AppSpacing.lg,
+  };
+
+  // Collaborative user avatar
+  static const Map<String, dynamic> pomodoroCollabAvatar = {
+    'width': 28,
+    'height': 28,
+    'borderRadius': 14,
+    'backgroundColor': AppColors.accentSecondary,
+    'alignItems': 'center',
+    'justifyContent': 'center',
+    'marginLeft': -8,
+    'borderWidth': 2,
+    'borderColor': AppColors.bgSecondary,
+  };
+
+  // Collaborative user avatar text
+  static const Map<String, dynamic> pomodoroCollabAvatarText = {
+    'fontSize': AppTypography.sizeSm,
+    'fontWeight': AppTypography.weightMedium,
+    'color': AppColors.textPrimary,
+  };
+
+  // Collaborative status text
+  static const Map<String, dynamic> pomodoroCollabStatusText = {
+    'fontSize': AppTypography.sizeSm,
+    'color': AppColors.textSecondary,
+    'marginLeft': AppSpacing.sm,
+  };
 }

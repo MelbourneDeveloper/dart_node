@@ -109,11 +109,11 @@
       "items": [
         {
           "text": "GitHub",
-          "url": "https://github.com/melbournedeveloper/dart_node"
+          "url": "https://github.com/MelbourneDeveloper/dart_node"
         },
         {
-          "text": "Discord",
-          "url": "#"
+          "text": "pub.dev",
+          "url": "https://pub.dev/publishers/dartnode.dev/packages"
         },
         {
           "text": "Twitter",

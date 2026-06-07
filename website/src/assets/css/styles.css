@@ -487,6 +487,20 @@ pre code {
   background: var(--bg-tertiary);
 }
 
+.btn-outline {
+  background: transparent;
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-outline:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 .btn-large {
   padding: var(--space-4) var(--space-8);
   font-size: var(--text-lg);
@@ -520,6 +534,21 @@ pre code {
   gap: var(--space-4);
   justify-content: center;
   flex-wrap: wrap;
+}
+
+.hero-cta-secondary {
+  margin-top: var(--space-4);
+}
+
+.hero-cta-secondary a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: var(--text-base);
+  transition: color var(--transition-fast);
+}
+
+.hero-cta-secondary a:hover {
+  color: var(--color-primary);
 }
 
 .hero-code {
@@ -574,6 +603,25 @@ pre code {
 .feature-card p {
   margin: 0;
   color: var(--text-secondary);
+}
+
+.feature-links {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.feature-links a {
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+
+.feature-links .pub-link {
+  color: var(--color-accent);
+}
+
+.feature-links .pub-link:hover {
+  color: var(--color-accent-light);
 }
 
 /* Section titles */
@@ -737,6 +785,19 @@ pre code {
 .docs-content h3 {
   margin-top: var(--space-8);
   margin-bottom: var(--space-3);
+}
+
+/* Package links CTA in docs */
+.package-links {
+  display: flex;
+  gap: var(--space-3);
+  margin: var(--space-6) 0;
+  flex-wrap: wrap;
+}
+
+.package-links .btn {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
 }
 
 /* Blog Layout - Uses page-section for consistent padding */
@@ -926,6 +987,34 @@ blockquote p {
 
 .footer-section a:hover {
   color: var(--color-primary);
+}
+
+.footer-cta {
+  padding: var(--space-8) 0;
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+}
+
+.footer-cta p {
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+  font-weight: 500;
+}
+
+.footer-cta-buttons {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.footer-cta-buttons .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
 }
 
 .footer-bottom {

@@ -18,6 +18,23 @@ COVERAGE_CLI="$ROOT_DIR/packages/dart_node_coverage/bin/coverage.dart"
 # Minimum coverage threshold (can be overridden by MIN_COVERAGE env var)
 MIN_COVERAGE="${MIN_COVERAGE:-80}"
 
+# Per-package coverage thresholds live in coverage-thresholds.json
+# ([COVERAGE-THRESHOLDS-JSON]). Floors ratchet UP only — see ratchet_thresholds().
+THRESHOLDS_FILE="${THRESHOLDS_FILE:-$ROOT_DIR/coverage-thresholds.json}"
+
+# Resolve the coverage threshold for a package: its per-package entry if present,
+# else default_threshold from the file, else the MIN_COVERAGE fallback.
+pkg_threshold() {
+  local name="$1"
+  local t=""
+  if command -v jq >/dev/null 2>&1 && [[ -f "$THRESHOLDS_FILE" ]]; then
+    t=$(jq -r --arg n "$name" \
+      '.packages[$n] // .default_threshold // empty' "$THRESHOLDS_FILE")
+  fi
+  [[ -z "$t" || "$t" == "null" ]] && t="$MIN_COVERAGE"
+  echo "$t"
+}
+
 # Detect Chromium executable for browser tests (can be overridden by CHROME_EXECUTABLE env var)
 if [[ -z "${CHROME_EXECUTABLE:-}" ]]; then
   case "$(uname -s)" in
@@ -59,18 +76,32 @@ fi
 
 # Package type definitions
 NODE_PACKAGES="dart_node_core dart_node_express dart_node_ws dart_node_better_sqlite3"
-NODE_INTEROP_PACKAGES="dart_node_mcp dart_node_react_native too_many_cooks"
-BROWSER_PACKAGES="dart_node_react frontend"
-NPM_PACKAGES="too_many_cooks_vscode_extension"
-BUILD_FIRST="too_many_cooks"
+NODE_INTEROP_PACKAGES="dart_node_mcp dart_node_react_native"
+BROWSER_PACKAGES="dart_node_react frontend jsx_demo mobile"
+NPM_PACKAGES=""
+BUILD_FIRST=""
 
-# Tier definitions (space-separated paths)
-TIER1="packages/dart_logging packages/dart_node_core"
-TIER2="packages/reflux packages/dart_node_express packages/dart_node_ws packages/dart_node_better_sqlite3 packages/dart_node_mcp packages/dart_node_react_native packages/dart_node_react"
-TIER3="examples/frontend examples/markdown_editor examples/reflux_demo/web_counter examples/too_many_cooks"
+# Tier definitions (space-separated paths). EVERY package that has a test/ dir
+# must appear here OR in EXCLUDED_WITH_REASON below — enforced by
+# check_all_packages_covered() so a package's coverage check is never silently
+# dropped.
+TIER1="packages/dart_logging packages/dart_node_core packages/dart_node_coverage"
+TIER2="packages/reflux packages/dart_jsx packages/dart_node_express packages/dart_node_ws packages/dart_node_better_sqlite3 packages/dart_node_mcp packages/dart_node_react_native packages/dart_node_react signal_mesh"
+TIER3="examples/frontend examples/markdown_editor examples/reflux_demo/web_counter examples/jsx_demo examples/mobile"
 
-# Exclusion list (package names to skip)
-EXCLUDED="too_many_cooks too_many_cooks_vscode_extension"
+# Packages that have tests but are deliberately NOT run here, each with a reason.
+# Format "name:reason"; surfaced loudly by check_all_packages_covered().
+EXCLUDED_WITH_REASON=(
+  "backend:e2e tests require a running Node server (not a unit suite)"
+  "flutter_counter:requires the Flutter SDK; CI provisions Dart only"
+  "dart_node_vsix:VS Code @vscode/test-electron harness (needs Xvfb + VS Code)"
+  "too_many_cooks:removed from the repo"
+  "too_many_cooks_vscode_extension:removed from the repo"
+)
+
+# Names skipped by run_tier, derived from EXCLUDED_WITH_REASON.
+EXCLUDED=""
+for _e in "${EXCLUDED_WITH_REASON[@]}"; do EXCLUDED="$EXCLUDED ${_e%%:*}"; done
 
 # Helper functions
 is_type() {
@@ -88,6 +119,43 @@ calc_coverage() {
   local lcov="$1"
   [[ -f "$lcov" ]] || { echo "0"; return; }
   awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' "$lcov"
+}
+
+# Fail the run if any package with a test/ dir is neither in a tier nor in
+# EXCLUDED_WITH_REASON. This guarantees every testable package is coverage-checked
+# (or explicitly, visibly skipped) — no silent gaps.
+check_all_packages_covered() {
+  local known=" $TIER1 $TIER2 $TIER3 "
+  local excluded_names=""
+  local e
+  for e in "${EXCLUDED_WITH_REASON[@]}"; do excluded_names="$excluded_names ${e%%:*}"; done
+
+  local missing=()
+  local pub dir name
+  while IFS= read -r pub; do
+    dir=$(dirname "$pub")
+    dir=${dir#"$ROOT_DIR"/}
+    [[ -d "$ROOT_DIR/$dir/test" ]] || continue
+    name=$(basename "$dir")
+    [[ " $known " == *" $dir "* ]] && continue
+    [[ " $excluded_names " == *" $name "* ]] && continue
+    missing+=("$dir")
+  done < <(find "$ROOT_DIR/packages" "$ROOT_DIR/examples" "$ROOT_DIR/signal_mesh" \
+    -name pubspec.yaml -not -path '*/node_modules/*' -not -path '*/.dart_tool/*' \
+    -not -path '*/build/*' 2>/dev/null | sort)
+
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    echo "⛔️ Packages with tests that are NOT coverage-checked and NOT excluded:"
+    printf '   - %s\n' "${missing[@]}"
+    echo "   Add each to a TIER or to EXCLUDED_WITH_REASON in tools/test.sh."
+    return 1
+  fi
+
+  echo "Coverage scope OK — every package with tests is tiered or explicitly excluded:"
+  for e in "${EXCLUDED_WITH_REASON[@]}"; do
+    echo "  • excluded ${e%%:*} — ${e#*:}"
+  done
+  return 0
 }
 
 # Parse arguments
@@ -116,7 +184,9 @@ elif [[ -n "$TIER" ]]; then
     *) echo "Invalid tier: $TIER"; exit 1 ;;
   esac
 else
-  # All tiers - run sequentially
+  # All tiers - run sequentially. Enforce that every testable package is
+  # accounted for before running anything.
+  check_all_packages_covered || exit 1
   TIERS_TO_RUN+=("$TIER1")
   TIERS_TO_RUN+=("$TIER2")
   TIERS_TO_RUN+=("$TIER3")
@@ -228,10 +298,14 @@ test_package() {
 
   # Check coverage threshold if applicable
   if [[ -n "$coverage" ]]; then
-    if [[ "$coverage" == "0" ]] || (( $(echo "$coverage < $MIN_COVERAGE" | bc -l) )); then
-      echo "⛔️ Failed $name (coverage ${coverage}% < ${MIN_COVERAGE}%) - $time_str"
+    local threshold
+    threshold=$(pkg_threshold "$name")
+    if [[ "$coverage" == "0" ]] || (( $(echo "$coverage < $threshold" | bc -l) )); then
+      echo "⛔️ Failed $name (coverage ${coverage}% < ${threshold}%) - $time_str"
       return 1
     fi
+    # Record measured coverage so the post-run ratchet can raise the floor
+    echo "$coverage" > "$LOGS_DIR/$name.coverage"
     echo "✅ Succeeded $name (${coverage}%) - $time_str"
   else
     echo "✅ Succeeded $name - $time_str"
@@ -316,6 +390,38 @@ run_tier() {
   return 0
 }
 
+# Ratchet coverage thresholds UP after a fully-green run. Each package's stored
+# threshold is raised to its measured coverage (never lowered), implementing the
+# monotonically-increasing floor in [COVERAGE-THRESHOLDS-JSON]. test_package runs
+# in parallel, so measured values are collected from logs/*.coverage and written
+# here in a single sequential pass — no concurrent writes to the JSON.
+ratchet_thresholds() {
+  command -v jq >/dev/null 2>&1 || return 0
+  [[ -f "$THRESHOLDS_FILE" ]] || return 0
+  local updated=0
+  for cov_file in "$LOGS_DIR"/*.coverage; do
+    [[ -f "$cov_file" ]] || continue
+    local name measured stored
+    name=$(basename "$cov_file" .coverage)
+    measured=$(cat "$cov_file")
+    stored=$(jq -r --arg n "$name" '.packages[$n] // 0' "$THRESHOLDS_FILE")
+    if (( $(echo "$measured > $stored" | bc -l) )); then
+      local tmp="$THRESHOLDS_FILE.tmp"
+      if jq --arg n "$name" --argjson v "$measured" \
+          '.packages[$n] = $v' "$THRESHOLDS_FILE" > "$tmp"; then
+        mv "$tmp" "$THRESHOLDS_FILE"
+        echo "⬆️  Ratcheted $name → ${measured}% (was ${stored}%)"
+        updated=1
+      else
+        rm -f "$tmp"
+      fi
+    fi
+  done
+  [[ $updated -eq 1 ]] && \
+    echo "Coverage thresholds raised in $(basename "$THRESHOLDS_FILE")"
+  return 0
+}
+
 # Main
 TOTAL_START=$SECONDS
 
@@ -364,6 +470,8 @@ for tier_spec in "${TIERS_TO_RUN[@]}"; do
   echo ""
   ((tier_num++))
 done
+
+ratchet_thresholds
 
 total_elapsed=$((SECONDS - TOTAL_START))
 echo "All tests passed - $(format_time $total_elapsed)"

@@ -1,4 +1,11 @@
 {
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#0E7C6B",
+    "titleBar.activeForeground": "#ffffff",
+    "titleBar.inactiveBackground": "#0A5C50",
+    "titleBar.inactiveForeground": "#ffffffcc"
+  },
+
   "dart.runPubGetOnPubspecChanges": "prompt",
   "dart.testInvocationMode": "implementationThenName",
   "dart.cliConsole": "terminal",

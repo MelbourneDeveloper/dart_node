@@ -26,10 +26,10 @@ void main() {
           // Note: We only test that the function exists and returns a promise.
           // We cannot await it because dialogs don't auto-dismiss in tests.
           final promise = vscode.window.showInformationMessage('Test message');
-          // Test that it returns a valid JSPromise object
+          // Verify the promise is a valid JSPromise by checking its type
           assertOk(
-            (promise as JSAny).typeofEquals('object'),
-            'showInformationMessage should return promise',
+            promise.isA<JSPromise<JSString?>>(),
+            'showInformationMessage should return a JSPromise',
           );
         }),
       );

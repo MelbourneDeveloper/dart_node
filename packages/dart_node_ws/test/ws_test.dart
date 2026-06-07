@@ -101,7 +101,7 @@ void main() {
     late WebSocketServer server;
     const testPort = 3456;
 
-    setUp(() async {
+    setUp(() {
       server = createWebSocketServer(port: testPort);
     });
 
@@ -179,19 +179,21 @@ JSWebSocket _createWebSocketClient(String url) {
 }
 
 /// Waits for WebSocket to reach OPEN state
-Future<void> _waitForOpen(JSWebSocket ws) async {
+Future<void> _waitForOpen(JSWebSocket ws) {
   final completer = Completer<void>();
 
   if (ws.readyState == 1) {
     completer.complete();
   } else {
-    ws.on('open', (() => completer.complete()).toJS);
-    ws.on(
-      'error',
-      ((JSAny error) => completer.completeError(
-        'Connection failed: $error',
-      )).toJS,
-    );
+    void onOpen() => completer.complete();
+    ws
+      ..on('open', onOpen.toJS)
+      ..on(
+        'error',
+        ((JSAny error) => completer.completeError(
+          'Connection failed: $error',
+        )).toJS,
+      );
   }
 
   return completer.future.timeout(const Duration(seconds: 2));
@@ -211,9 +213,15 @@ void _onMessage(JSWebSocket ws, void Function(JSAny) handler) {
 String _extractMessage(JSAny data) {
   // Convert using JavaScript String() function for safety
   try {
-    final stringConstructor = globalContext['String'] as JSFunction;
-    return (stringConstructor.callAsFunction(null, data) as JSString).toDart;
-  } catch (_) {
+    final stringConstructor = globalContext.getProperty<JSFunction>(
+      'String'.toJS,
+    );
+    final result = stringConstructor.callAsFunction(null, data);
+    return switch (result) {
+      final JSString s => s.toDart,
+      _ => data.toString(),
+    };
+  } on Object catch (_) {
     return data.toString();
   }
 }
