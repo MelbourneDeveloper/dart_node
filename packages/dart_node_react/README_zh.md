@@ -6,7 +6,7 @@
 
 ```yaml
 dependencies:
-  dart_node_react: ^0.11.0-beta
+  dart_node_react: ^0.13.0-beta
 ```
 
 通过 npm 安装 React：
@@ -18,22 +18,25 @@ npm install react react-dom
 ## 快速开始
 
 ```dart
+import 'dart:js_interop';
+
 import 'package:dart_node_react/dart_node_react.dart';
 
 ReactElement app() {
   return div(
     className: 'app',
     children: [
-      h1(children: [text('Hello, Dart!')]),
-      p(children: [text('Welcome to React with Dart.')]),
+      h1('Hello, Dart!'),
+      pEl('Welcome to React with Dart.'),
     ],
   );
 }
 
 void main() {
-  final container = document.getElementById('root');
-  final root = ReactDOM.createRoot(container);
-  root.render(app());
+  final container = Document.getElementById('root');
+  if (container case final JSObject c) {
+    createRoot(c).render(app());
+  }
 }
 ```
 
@@ -46,7 +49,7 @@ ReactElement greeting({required String name}) {
   return div(
     className: 'greeting',
     children: [
-      text('Hello, $name!'),
+      pEl('Hello, $name!'),
     ],
   );
 }
@@ -69,8 +72,8 @@ ReactElement userCard({
       avatarUrl != null
           ? img(src: avatarUrl, alt: name)
           : div(className: 'avatar-placeholder'),
-      h2(children: [text(name)]),
-      p(children: [text(email)]),
+      h2(name),
+      pEl(email),
     ],
   );
 }
@@ -87,14 +90,14 @@ ReactElement counter() {
   final count = useState(0);
 
   return div(children: [
-    p(children: [text('Count: ${count.value}')]),
+    pEl('Count: ${count.value}'),
     button(
-      onClick: (_) => count.setWithUpdater((c) => c + 1),
-      children: [text('Increment')],
+      text: 'Increment',
+      onClick: () => count.setWithUpdater((c) => c + 1),
     ),
     button(
-      onClick: (_) => count.setWithUpdater((c) => c - 1),
-      children: [text('Decrement')],
+      text: 'Decrement',
+      onClick: () => count.setWithUpdater((c) => c - 1),
     ),
   ]);
 }
@@ -123,7 +126,7 @@ ReactElement timer() {
     return () => timer.cancel();
   }, []); // 空依赖数组 = 仅在挂载时运行一次
 
-  return p(children: [text('Seconds: ${seconds.value}')]);
+  return pEl('Seconds: ${seconds.value}');
 }
 ```
 
@@ -142,17 +145,19 @@ useLayoutEffect(() {
 
 ```dart
 ReactElement focusInput() {
-  final inputRef = useRef<HTMLInputElement>(null);
+  final inputRef = useRef<JSObject>(null);
 
   void handleClick() {
-    inputRef.current?.focus();
+    if (inputRef.jsRef.current case final JSObject node) {
+      node.callMethod('focus'.toJS);
+    }
   }
 
   return div(children: [
-    input(ref: inputRef, type: 'text'),
+    input(type: 'text', props: {'ref': inputRef.jsRef}),
     button(
-      onClick: (_) => handleClick(),
-      children: [text('Focus Input')],
+      text: 'Focus Input',
+      onClick: handleClick,
     ),
   ]);
 }
@@ -171,7 +176,7 @@ ReactElement expensiveList({required List<int> numbers}) {
   );
 
   return div(children: [
-    p(children: [text('Fibonacci of ${count.value} is $fib')]),
+    pEl('Fibonacci of ${count.value} is $fib'),
   ]);
 }
 ```
@@ -188,16 +193,17 @@ ReactElement searchBox({required void Function(String) onSearch}) {
     [query.value, onSearch],
   );
 
-  return form(
-    onSubmit: (_) => handleSubmit(),
-    children: [
-      input(
-        value: query.value,
-        onChange: (e) => query.set(e.target.value),
-      ),
-      button(type: 'submit', children: [text('Search')]),
-    ],
-  );
+  return form(null, [
+    input(
+      value: query.value,
+      onChange: (e) {
+        if (e.target case final JSObject t) {
+          if (t['value'] case final JSString s) query.set(s.toDart);
+        }
+      },
+    ),
+    button(text: 'Search', props: {'type': 'submit', 'onClick': handleSubmit}),
+  ]);
 }
 ```
 
@@ -219,26 +225,25 @@ useDebugValue<bool>(
 ```dart
 // Div 和 span
 div(className: 'container', children: [...])
-span(className: 'highlight', children: [...])
+span('highlight text', className: 'highlight')
 
 // 标题
-h1(children: [text('Title')])
-h2(children: [text('Subtitle')])
+h1('Title')
+h2('Subtitle')
 
 // 段落和文本
-p(children: [text('Some text')])
-text('Raw text content')
+pEl('Some text')
 
 // 链接
-a(href: 'https://example.com', children: [text('Click me')])
+a(href: 'https://example.com', text: 'Click me')
 
 // 图片
 img(src: '/image.png', alt: 'Description')
 
 // 表单
-form(onSubmit: handleSubmit, children: [...])
+form(null, [...])
 input(type: 'text', value: value, onChange: handleChange)
-button(type: 'submit', children: [text('Submit')])
+button(text: 'Submit', props: {'type': 'submit'})
 ```
 
 ### 列表
@@ -247,18 +252,14 @@ button(type: 'submit', children: [text('Submit')])
 ReactElement todoList({required List<Todo> todos}) {
   return ul(
     className: 'todo-list',
-    children: todos.map((todo) =>
-      li(
-        key: todo.id,
-        children: [
-          input(
-            type: 'checkbox',
-            checked: todo.completed,
+    children: todos
+        .map(
+          (todo) => li(
+            todo.title,
+            props: {'key': todo.id},
           ),
-          text(todo.title),
-        ],
-      )
-    ).toList(),
+        )
+        .toList(),
   );
 }
 ```
@@ -269,8 +270,8 @@ ReactElement todoList({required List<Todo> todos}) {
 ReactElement userStatus({required User? user}) {
   return div(children: [
     user != null
-        ? span(children: [text('Welcome, ${user.name}!')])
-        : span(children: [text('Please log in')]),
+        ? span('Welcome, ${user.name}!')
+        : span('Please log in'),
   ]);
 }
 ```
@@ -279,18 +280,13 @@ ReactElement userStatus({required User? user}) {
 
 ```dart
 ReactElement interactiveButton() {
-  void handleClick(MouseEvent e) {
-    print('Button clicked at (${e.clientX}, ${e.clientY})');
-  }
-
-  void handleMouseEnter(MouseEvent e) {
-    print('Mouse entered');
+  void handleClick() {
+    print('Button clicked');
   }
 
   return button(
+    text: 'Hover and Click Me',
     onClick: handleClick,
-    onMouseEnter: handleMouseEnter,
-    children: [text('Hover and Click Me')],
   );
 }
 ```
@@ -302,29 +298,34 @@ ReactElement loginForm() {
   final email = useState('');
   final password = useState('');
 
-  void handleSubmit(Event e) {
+  void handleSubmit(SyntheticEvent e) {
     e.preventDefault();
     print('Login: ${email.value} / ${password.value}');
   }
 
-  return form(
-    onSubmit: handleSubmit,
-    children: [
-      input(
-        type: 'email',
-        value: email.value,
-        onChange: (e) => email.set(e.target.value),
-        placeholder: 'Email',
-      ),
-      input(
-        type: 'password',
-        value: password.value,
-        onChange: (e) => password.set(e.target.value),
-        placeholder: 'Password',
-      ),
-      button(type: 'submit', children: [text('Log In')]),
-    ],
-  );
+  String readValue(SyntheticEvent e) => switch (e.target) {
+    final JSObject t => switch (t['value']) {
+      final JSString s => s.toDart,
+      _ => '',
+    },
+    _ => '',
+  };
+
+  return form({'onSubmit': handleSubmit}, [
+    input(
+      type: 'email',
+      value: email.value,
+      onChange: (e) => email.set(readValue(e)),
+      placeholder: 'Email',
+    ),
+    input(
+      type: 'password',
+      value: password.value,
+      onChange: (e) => password.set(readValue(e)),
+      placeholder: 'Password',
+    ),
+    button(text: 'Log In', props: {'type': 'submit'}),
+  ]);
 }
 ```
 
@@ -355,20 +356,23 @@ div(
 ## 完整示例
 
 ```dart
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+
 import 'package:dart_node_react/dart_node_react.dart';
 
 ReactElement todoApp() {
   final todos = useState<List<Todo>>([]);
-  final input = useState('');
+  final text = useState('');
 
   void addTodo() {
-    if (input.value.trim().isEmpty) return;
+    if (text.value.trim().isEmpty) return;
 
     todos.setWithUpdater((prev) => [
       ...prev,
-      Todo(id: DateTime.now().toString(), title: input.value, completed: false),
+      Todo(id: DateTime.now().toString(), title: text.value, completed: false),
     ]);
-    input.set('');
+    text.set('');
   }
 
   void toggleTodo(String id) {
@@ -382,37 +386,42 @@ ReactElement todoApp() {
   return div(
     className: 'todo-app',
     children: [
-      h1(children: [text('Todo List')]),
+      h1('Todo List'),
 
-      form(
-        onSubmit: (e) {
+      form({
+        'onSubmit': (SyntheticEvent e) {
           e.preventDefault();
           addTodo();
         },
-        children: [
-          input(
-            value: input.value,
-            onChange: (e) => input.set(e.target.value),
-            placeholder: 'What needs to be done?',
-          ),
-          button(type: 'submit', children: [text('Add')]),
-        ],
-      ),
+      }, [
+        input(
+          value: text.value,
+          onChange: (e) {
+            if (e.target case final JSObject t) {
+              if (t['value'] case final JSString s) text.set(s.toDart);
+            }
+          },
+          placeholder: 'What needs to be done?',
+        ),
+        button(text: 'Add', props: {'type': 'submit'}),
+      ]),
 
       ul(
-        children: todos.value.map((todo) =>
-          li(
-            key: todo.id,
-            className: todo.completed ? 'completed' : '',
-            onClick: (_) => toggleTodo(todo.id),
-            children: [text(todo.title)],
-          )
-        ).toList(),
+        children: todos.value
+            .map(
+              (todo) => li(
+                todo.title,
+                className: todo.completed ? 'completed' : '',
+                props: {
+                  'key': todo.id,
+                  'onClick': () => toggleTodo(todo.id),
+                },
+              ),
+            )
+            .toList(),
       ),
 
-      p(children: [
-        text('${todos.value.where((t) => !t.completed).length} items left'),
-      ]),
+      pEl('${todos.value.where((t) => !t.completed).length} items left'),
     ],
   );
 }
@@ -426,11 +435,13 @@ class Todo {
 }
 
 void main() {
-  final root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(todoApp());
+  final container = Document.getElementById('root');
+  if (container case final JSObject c) {
+    createRoot(c).render(todoApp());
+  }
 }
 ```
 
 ## 源代码
 
-源代码可在 [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_react) 上获取。
+源代码可在 [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_react) 上获取。

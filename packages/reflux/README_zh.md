@@ -5,7 +5,7 @@ Reflux 是一个用于 **React with Dart** 和 **Flutter** 的状态管理库。
 
 ```yaml
 dependencies:
-  reflux: ^0.11.0-beta
+  reflux: ^0.13.0-beta
 ```
 
 ## 核心概念
@@ -141,4 +141,4 @@ timeTravel.redo(); // 前进一步
 
 ## 源代码
 
-源代码可在 [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/reflux) 上获取。
+源代码可在 [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/reflux) 上获取。

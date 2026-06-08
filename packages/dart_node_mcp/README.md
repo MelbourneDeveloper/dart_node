@@ -5,8 +5,8 @@ MCP (Model Context Protocol) server bindings for Dart on Node.js. Build AI tool 
 
 ```yaml
 dependencies:
-  dart_node_mcp: ^0.11.0-beta
-  nadz: ^0.9.0
+  dart_node_mcp: ^0.13.0-beta
+  nadz: ^0.0.7-beta
 ```
 
 Also install the npm package:
@@ -31,9 +31,17 @@ Future<void> main() async {
 
   server.registerTool(
     'echo',
-    (description: 'Echo input back', inputSchema: null),
+    (
+      title: null,
+      description: 'Echo input back',
+      inputSchema: null,
+      outputSchema: null,
+      annotations: null,
+    ),
     (args, meta) async => (
-      content: [(type: 'text', text: args['message'] as String)],
+      content: <Map<String, Object?>>[
+        {'type': 'text', 'text': args['message'] as String},
+      ],
       isError: false,
     ),
   );
@@ -65,6 +73,7 @@ Tools are functions that AI assistants can call. Register them with a name, desc
 server.registerTool(
   'greet',
   (
+    title: null,
     description: 'Greet a user by name',
     inputSchema: {
       'type': 'object',
@@ -73,11 +82,15 @@ server.registerTool(
       },
       'required': ['name'],
     },
+    outputSchema: null,
+    annotations: null,
   ),
   (args, meta) async {
     final name = args['name'] as String;
     return (
-      content: [(type: 'text', text: 'Hello, $name!')],
+      content: <Map<String, Object?>>[
+        {'type': 'text', 'text': 'Hello, $name!'},
+      ],
       isError: false,
     );
   },
@@ -115,10 +128,10 @@ Add your MCP server to Claude Code:
 claude mcp add --transport stdio my-server -- node /path/to/server.js
 ```
 
-## Example: Too Many Cooks
+## Built with dart_node_mcp: Too Many Cooks
 
-The [Too Many Cooks](https://github.com/melbournedeveloper/too_many_cooks) MCP server is built with dart_node_mcp. It provides multi-agent coordination for AI assistants editing the same codebase.
+[Too Many Cooks](https://tmc-mcp.dev) is an MCP server originally built with dart_node_mcp that provides multi-agent coordination for AI assistants editing the same codebase. It has since moved to its own home at [tmc-mcp.dev](https://tmc-mcp.dev) and is no longer part of this repository.
 
 ## Source Code
 
-The source code is available on [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_mcp).
+The source code is available on [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_mcp).

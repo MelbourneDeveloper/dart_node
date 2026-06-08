@@ -14,7 +14,7 @@
     },
     {
       "text": "GitHub",
-      "url": "https://github.com/melbournedeveloper/dart_node",
+      "url": "https://github.com/MelbourneDeveloper/dart_node",
       "external": true
     }
   ],
@@ -68,6 +68,10 @@
           "url": "/zh/docs/sqlite/"
         },
         {
+          "text": "dart_node_sql_js",
+          "url": "/zh/docs/sql-js/"
+        },
+        {
           "text": "dart_node_mcp",
           "url": "/zh/docs/mcp/"
         },
@@ -100,7 +104,8 @@
         },
         {
           "text": "示例",
-          "url": "/zh/docs/examples/"
+          "url": "https://github.com/MelbourneDeveloper/dart_node/tree/main/examples",
+          "external": true
         }
       ]
     },
@@ -113,11 +118,11 @@
         },
         {
           "text": "pub.dev",
-          "url": "https://pub.dev/publishers/dartnode.dev/packages"
+          "url": "https://pub.dev/publishers/christianfindlay.com/packages"
         },
         {
-          "text": "Twitter",
-          "url": "https://twitter.com/dart_node"
+          "text": "X (Twitter)",
+          "url": "https://x.com/cfdevelop"
         }
       ]
     },

@@ -40,6 +40,7 @@ const PACKAGES = [
   'dart_node_react_native',
   'dart_node_ws',
   'dart_node_better_sqlite3',
+  'dart_node_sql_js',
   'dart_node_mcp',
   'dart_logging',
   'reflux',
@@ -280,8 +281,11 @@ const processContent = (element, packageName, dom, langPrefix = '') => {
 
       // Links like ../dart_node_ws/Foo.html -> /api/dart_node_ws/Foo/
       // (removing the duplicate package/package structure)
-      // Apply language prefix for non-English versions
-      newHref.startsWith('../') && (newHref = newHref.replace(/^\.\.\//, `${langPrefix}/api/`));
+      // dartdoc emits one or more leading "../" depending on the source page
+      // depth (e.g. ../../dart_node_ws/Foo.html). Collapse the entire leading
+      // "../" run to /api/ so deep pages don't produce /api/../ (404) links.
+      // Apply language prefix for non-English versions.
+      newHref.startsWith('../') && (newHref = newHref.replace(/^(?:\.\.\/)+/, `${langPrefix}/api/`));
 
       // Links like Foo.html -> Foo/ (relative, stays same level)
       // Links like Foo/bar.html -> Foo/bar/
@@ -476,6 +480,11 @@ description: Complete API documentation for all dart_node packages
   <a href="/api/dart_node_better_sqlite3/" class="feature-card">
     <h3>dart_node_better_sqlite3</h3>
     <p>SQLite bindings using better-sqlite3 for Node.js.</p>
+  </a>
+
+  <a href="/api/dart_node_sql_js/" class="feature-card">
+    <h3>dart_node_sql_js</h3>
+    <p>sql.js bindings &mdash; SQLite compiled to WebAssembly, in-memory with disk persistence.</p>
   </a>
 
   <a href="/api/dart_node_mcp/" class="feature-card">

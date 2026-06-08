@@ -5,8 +5,8 @@
 
 ```yaml
 dependencies:
-  dart_node_better_sqlite3: ^0.11.0-beta
-  nadz: ^0.9.0
+  dart_node_better_sqlite3: ^0.13.0-beta
+  nadz: ^0.0.7-beta
 ```
 
 通过 npm 安装：
@@ -124,4 +124,4 @@ node app.js
 
 ## 源代码
 
-源代码可在 [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_better_sqlite3) 上获取。
+源代码可在 [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_better_sqlite3) 上获取。

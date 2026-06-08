@@ -6,7 +6,7 @@ Type-safe React bindings for building web applications in Dart. If you know Reac
 
 ```yaml
 dependencies:
-  dart_node_react: ^0.11.0-beta
+  dart_node_react: ^0.13.0-beta
 ```
 
 Also install React via npm:
@@ -24,16 +24,17 @@ ReactElement app() {
   return div(
     className: 'app',
     children: [
-      h1(children: [text('Hello, Dart!')]),
-      p(children: [text('Welcome to React with Dart.')]),
+      h1('Hello, Dart!'),
+      pEl('Welcome to React with Dart.'),
     ],
   );
 }
 
 void main() {
-  final container = document.getElementById('root');
-  final root = ReactDOM.createRoot(container);
-  root.render(app());
+  final container = Document.getElementById('root');
+  (container != null)
+      ? ReactDOM.createRoot(container).render(app())
+      : throw StateError('Root element not found');
 }
 ```
 
@@ -45,9 +46,7 @@ void main() {
 ReactElement greeting({required String name}) {
   return div(
     className: 'greeting',
-    children: [
-      text('Hello, $name!'),
-    ],
+    child: pEl('Hello, $name!'),
   );
 }
 
@@ -69,8 +68,8 @@ ReactElement userCard({
       avatarUrl != null
           ? img(src: avatarUrl, alt: name)
           : div(className: 'avatar-placeholder'),
-      h2(children: [text(name)]),
-      p(children: [text(email)]),
+      h2(name),
+      pEl(email),
     ],
   );
 }
@@ -87,14 +86,14 @@ ReactElement counter() {
   final count = useState(0);
 
   return div(children: [
-    p(children: [text('Count: ${count.value}')]),
+    pEl('Count: ${count.value}'),
     button(
-      onClick: (_) => count.setWithUpdater((c) => c + 1),
-      children: [text('Increment')],
+      text: 'Increment',
+      onClick: () => count.setWithUpdater((c) => c + 1),
     ),
     button(
-      onClick: (_) => count.setWithUpdater((c) => c - 1),
-      children: [text('Decrement')],
+      text: 'Decrement',
+      onClick: () => count.setWithUpdater((c) => c - 1),
     ),
   ]);
 }
@@ -123,7 +122,7 @@ ReactElement timer() {
     return () => timer.cancel();
   }, []); // Empty deps = run once on mount
 
-  return p(children: [text('Seconds: ${seconds.value}')]);
+  return pEl('Seconds: ${seconds.value}');
 }
 ```
 
@@ -141,18 +140,23 @@ useLayoutEffect(() {
 ### useRef
 
 ```dart
+// A focusable DOM node exposed through a ref.
+extension type FocusableElement._(JSObject _) implements JSObject {
+  external void focus();
+}
+
 ReactElement focusInput() {
-  final inputRef = useRef<HTMLInputElement>(null);
+  final inputRef = useRef<FocusableElement>();
 
   void handleClick() {
     inputRef.current?.focus();
   }
 
   return div(children: [
-    input(ref: inputRef, type: 'text'),
+    input(type: 'text', props: {'ref': inputRef.jsRef}),
     button(
-      onClick: (_) => handleClick(),
-      children: [text('Focus Input')],
+      text: 'Focus Input',
+      onClick: handleClick,
     ),
   ]);
 }
@@ -171,7 +175,7 @@ ReactElement expensiveList({required List<int> numbers}) {
   );
 
   return div(children: [
-    p(children: [text('Fibonacci of ${count.value} is $fib')]),
+    pEl('Fibonacci of ${count.value} is $fib'),
   ]);
 }
 ```
@@ -182,23 +186,31 @@ ReactElement expensiveList({required List<int> numbers}) {
 ReactElement searchBox({required void Function(String) onSearch}) {
   final query = useState('');
 
-  // Memoize the callback
-  final handleSubmit = useCallback(
-    () => onSearch(query.value),
-    [query.value, onSearch],
-  );
+  void handleSubmit() => onSearch(query.value);
+
+  // Memoize the callback to pass a stable reference to child components.
+  final memoizedSubmit = useCallback(handleSubmit, [query.value, onSearch]);
 
   return form(
-    onSubmit: (_) => handleSubmit(),
-    children: [
+    {'onSubmit': memoizedSubmit},
+    [
       input(
         value: query.value,
-        onChange: (e) => query.set(e.target.value),
+        onChange: (e) => query.set(inputValue(e)),
       ),
-      button(type: 'submit', children: [text('Search')]),
+      button(text: 'Search', onClick: handleSubmit),
     ],
   );
 }
+
+// Reads the current value from an input change event.
+String inputValue(SyntheticEvent event) => switch (event.target) {
+  final JSObject target => switch (target['value']) {
+    final JSString value => value.toDart,
+    _ => '',
+  },
+  _ => '',
+};
 ```
 
 ### useDebugValue
@@ -219,26 +231,25 @@ useDebugValue<bool>(
 ```dart
 // Divs and spans
 div(className: 'container', children: [...])
-span(className: 'highlight', children: [...])
+span('Highlighted text', className: 'highlight')
 
 // Headings
-h1(children: [text('Title')])
-h2(children: [text('Subtitle')])
+h1('Title')
+h2('Subtitle')
 
 // Paragraphs and text
-p(children: [text('Some text')])
-text('Raw text content')
+pEl('Some text')
 
 // Links
-a(href: 'https://example.com', children: [text('Click me')])
+a(href: 'https://example.com', text: 'Click me')
 
 // Images
 img(src: '/image.png', alt: 'Description')
 
 // Forms
-form(onSubmit: handleSubmit, children: [...])
+form({'onSubmit': handleSubmit}, [...])
 input(type: 'text', value: value, onChange: handleChange)
-button(type: 'submit', children: [text('Submit')])
+button(text: 'Submit', onClick: handleClick)
 ```
 
 ### Lists
@@ -249,14 +260,9 @@ ReactElement todoList({required List<Todo> todos}) {
     className: 'todo-list',
     children: todos.map((todo) =>
       li(
-        key: todo.id,
-        children: [
-          input(
-            type: 'checkbox',
-            checked: todo.completed,
-          ),
-          text(todo.title),
-        ],
+        todo.title,
+        props: {'key': todo.id},
+        className: todo.completed ? 'completed' : '',
       )
     ).toList(),
   );
@@ -269,8 +275,8 @@ ReactElement todoList({required List<Todo> todos}) {
 ReactElement userStatus({required User? user}) {
   return div(children: [
     user != null
-        ? span(children: [text('Welcome, ${user.name}!')])
-        : span(children: [text('Please log in')]),
+        ? span('Welcome, ${user.name}!')
+        : span('Please log in'),
   ]);
 }
 ```
@@ -279,18 +285,13 @@ ReactElement userStatus({required User? user}) {
 
 ```dart
 ReactElement interactiveButton() {
-  void handleClick(MouseEvent e) {
-    print('Button clicked at (${e.clientX}, ${e.clientY})');
-  }
-
-  void handleMouseEnter(MouseEvent e) {
-    print('Mouse entered');
+  void handleClick() {
+    print('Button clicked');
   }
 
   return button(
+    text: 'Click Me',
     onClick: handleClick,
-    onMouseEnter: handleMouseEnter,
-    children: [text('Hover and Click Me')],
   );
 }
 ```
@@ -302,27 +303,26 @@ ReactElement loginForm() {
   final email = useState('');
   final password = useState('');
 
-  void handleSubmit(Event e) {
-    e.preventDefault();
+  void handleSubmit() {
     print('Login: ${email.value} / ${password.value}');
   }
 
   return form(
-    onSubmit: handleSubmit,
-    children: [
+    {'onSubmit': (JSObject e) => SyntheticEvent.fromJs(e).preventDefault()},
+    [
       input(
         type: 'email',
         value: email.value,
-        onChange: (e) => email.set(e.target.value),
+        onChange: (e) => email.set(inputValue(e)),
         placeholder: 'Email',
       ),
       input(
         type: 'password',
         value: password.value,
-        onChange: (e) => password.set(e.target.value),
+        onChange: (e) => password.set(inputValue(e)),
         placeholder: 'Password',
       ),
-      button(type: 'submit', children: [text('Log In')]),
+      button(text: 'Log In', onClick: handleSubmit),
     ],
   );
 }
@@ -355,20 +355,32 @@ div(
 ## Complete Example
 
 ```dart
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+
 import 'package:dart_node_react/dart_node_react.dart';
+
+// Reads the current value from an input change event.
+String inputValue(SyntheticEvent event) => switch (event.target) {
+  final JSObject target => switch (target['value']) {
+    final JSString value => value.toDart,
+    _ => '',
+  },
+  _ => '',
+};
 
 ReactElement todoApp() {
   final todos = useState<List<Todo>>([]);
-  final input = useState('');
+  final newTodo = useState('');
 
   void addTodo() {
-    if (input.value.trim().isEmpty) return;
+    if (newTodo.value.trim().isEmpty) return;
 
     todos.setWithUpdater((prev) => [
       ...prev,
-      Todo(id: DateTime.now().toString(), title: input.value, completed: false),
+      Todo(id: DateTime.now().toString(), title: newTodo.value, completed: false),
     ]);
-    input.set('');
+    newTodo.set('');
   }
 
   void toggleTodo(String id) {
@@ -382,37 +394,39 @@ ReactElement todoApp() {
   return div(
     className: 'todo-app',
     children: [
-      h1(children: [text('Todo List')]),
+      h1('Todo List'),
 
       form(
-        onSubmit: (e) {
-          e.preventDefault();
-          addTodo();
+        {
+          'onSubmit': (JSObject e) {
+            SyntheticEvent.fromJs(e).preventDefault();
+            addTodo();
+          },
         },
-        children: [
+        [
           input(
-            value: input.value,
-            onChange: (e) => input.set(e.target.value),
+            value: newTodo.value,
+            onChange: (e) => newTodo.set(inputValue(e)),
             placeholder: 'What needs to be done?',
           ),
-          button(type: 'submit', children: [text('Add')]),
+          button(text: 'Add', onClick: addTodo),
         ],
       ),
 
       ul(
         children: todos.value.map((todo) =>
           li(
-            key: todo.id,
+            todo.title,
+            props: {
+              'key': todo.id,
+              'onClick': () => toggleTodo(todo.id),
+            },
             className: todo.completed ? 'completed' : '',
-            onClick: (_) => toggleTodo(todo.id),
-            children: [text(todo.title)],
           )
         ).toList(),
       ),
 
-      p(children: [
-        text('${todos.value.where((t) => !t.completed).length} items left'),
-      ]),
+      pEl('${todos.value.where((t) => !t.completed).length} items left'),
     ],
   );
 }
@@ -426,11 +440,13 @@ class Todo {
 }
 
 void main() {
-  final root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(todoApp());
+  final root = Document.getElementById('root');
+  (root != null)
+      ? ReactDOM.createRoot(root).render(todoApp())
+      : throw StateError('Root element not found');
 }
 ```
 
 ## Source Code
 
-The source code is available on [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_react).
+The source code is available on [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_react).

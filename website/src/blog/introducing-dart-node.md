@@ -1,6 +1,6 @@
 ---
 layout: layouts/blog.njk
-title: "Introducing dart_node: Full-Stack Dart for the JavaScript Ecosystem"
+title: "Introducing dart_node: Full-Stack Dart for JavaScript"
 description: "We're excited to announce dart_node, a framework for building React, React Native, and Express applications entirely in Dart."
 date: 2024-01-15
 author: "dart_node team"
@@ -103,8 +103,8 @@ ReactElement counter() {
   final count = useState(0);
 
   return button(
-    onClick: (_) => count.setWithUpdater((c) => c + 1),
-    children: [text('Count: ${count.value}')],
+    text: 'Count: ${count.value}',
+    onClick: () => count.setWithUpdater((c) => c + 1),
   );
 }
 ```
@@ -117,7 +117,7 @@ React Native bindings for mobile development. Use with Expo for a complete mobil
 ReactElement app() {
   return safeAreaView(children: [
     view(style: {'padding': 20}, children: [
-      rnText(children: [text('Hello from Dart!')]),
+      text('Hello from Dart!'),
     ]),
   ]);
 }

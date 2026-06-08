@@ -5,8 +5,8 @@
 
 ```yaml
 dependencies:
-  dart_node_react_native: ^0.11.0-beta
-  dart_node_react: ^0.11.0-beta  # Required peer dependency
+  dart_node_react_native: ^0.13.0-beta
+  dart_node_react: ^0.13.0-beta  # Required peer dependency
 ```
 
 Set up your Expo project:
@@ -152,14 +152,30 @@ scrollView(
 For efficient list rendering:
 
 ```dart
-ReactElement userList({required List<User> users}) {
-  return flatList<User>(
+ReactElement userList({required JSArray users}) {
+  ReactElement renderItem(JSObject info) {
+    final item = info['item'];
+    return switch (item) {
+      final JSObject user => userCard(user: user),
+      _ => view(),
+    };
+  }
+
+  JSAny? keyExtractor(JSObject item, JSNumber index) =>
+      switch (item['id']) {
+        final JSString id => id,
+        _ => index,
+      };
+
+  return flatList(
     data: users,
-    keyExtractor: (user, _) => user.id,
-    renderItem: (info) => userCard(user: info.item),
-    ItemSeparatorComponent: () => view(
-      style: {'height': 1, 'backgroundColor': '#eee'},
-    ),
+    keyExtractor: keyExtractor.toJS,
+    renderItem: renderItem.toJS,
+    props: {
+      'ItemSeparatorComponent': () => view(
+            style: {'height': 1, 'backgroundColor': '#eee'},
+          ),
+    },
   );
 }
 ```
@@ -169,15 +185,15 @@ ReactElement userList({required List<User> users}) {
 For displaying images:
 
 ```dart
-// Local image
-image(
-  source: AssetSource('assets/logo.png'),
+// Local image (provide the bundled asset via a require() call)
+rnImage(
+  source: {'uri': 'asset:/logo.png'},
   style: {'width': 100, 'height': 100},
 )
 
 // Remote image
-image(
-  source: UriSource('https://example.com/image.jpg'),
+rnImage(
+  source: {'uri': 'https://example.com/image.jpg'},
   style: {'width': 200, 'height': 150},
   resizeMode: 'cover',
 )
@@ -250,25 +266,26 @@ view(
 Use with React Navigation (via JS interop):
 
 ```dart
-// Define screens
-ReactElement homeScreen({required NavigationProps nav}) {
+// Define screens. React Navigation passes a props object containing
+// `navigation` and `route` — use extractScreenProps to read them safely.
+ReactElement homeScreen(ScreenProps screen) {
   return view(children: [
     text('Home Screen'),
     touchableOpacity(
-      onPress: () => nav.navigate('Details', {'id': 123}),
-      children: [text('Go to Details')])],
+      onPress: () => screen.navigation.navigate('Details', {'id': 123}),
+      children: [text('Go to Details')],
     ),
   ]);
 }
 
-ReactElement detailsScreen({required NavigationProps nav}) {
-  final id = nav.route.params['id'];
+ReactElement detailsScreen(ScreenProps screen) {
+  final id = screen.route.getParam<int>('id');
 
   return view(children: [
     text('Details for $id'),
     touchableOpacity(
-      onPress: () => nav.goBack(),
-      children: [text('Go Back')])],
+      onPress: () => screen.navigation.goBack(),
+      children: [text('Go Back')],
     ),
   ]);
 }

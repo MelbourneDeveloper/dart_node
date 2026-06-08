@@ -5,7 +5,7 @@ Pino 风格的结构化日志，支持子日志器。提供具有自动上下文
 
 ```yaml
 dependencies:
-  dart_logging: ^0.11.0-beta
+  dart_logging: ^0.13.0-beta
 ```
 
 ## 快速开始
@@ -81,9 +81,9 @@ userLogger.info('Action'); // 同时包含 requestId 和 userId
 创建自定义传输以将日志发送到不同目的地：
 
 ```dart
-void myTransport(LogEntry entry) {
+void myTransport(LogMessage message, LogLevel minimumLogLevel) {
   // 发送到外部服务、文件等
-  print('${entry.level}: ${entry.message}');
+  print('${message.logLevel}: ${message.message}');
 }
 
 final context = createLoggingContext(
@@ -119,4 +119,4 @@ void main() {
 
 ## 源代码
 
-源代码可在 [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_logging) 上获取。
+源代码可在 [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_logging) 上获取。

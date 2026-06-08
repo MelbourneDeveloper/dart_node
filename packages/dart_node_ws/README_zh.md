@@ -6,7 +6,7 @@
 
 ```yaml
 dependencies:
-  dart_node_ws: ^0.11.0-beta
+  dart_node_ws: ^0.13.0-beta
 ```
 
 通过 npm 安装 ws 包：
@@ -271,4 +271,4 @@ server.onConnection((client, url) {
 
 ## 源代码
 
-源代码可在 [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_ws) 上获取。
+源代码可在 [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_ws) 上获取。
