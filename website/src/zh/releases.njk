@@ -1,0 +1,41 @@
+---
+layout: layouts/base.njk
+title: "版本历史 - dart_node"
+description: "dart_node 各个包的逐版本发布历史，包含发布日期和每个包的变更说明。在 christianfindlay.com 名下发布至 pub.dev。"
+keywords: "dart_node 版本, dart_node 更新日志, dart_node 发布历史, pub.dev 版本, Dart 包版本"
+lang: zh
+permalink: /zh/releases/
+---
+
+<section class="releases">
+  <div class="container">
+    <div class="section-title">
+      <h1>版本历史</h1>
+      <p>dart_node 各个包的所有已发布版本，最新版本在前。每个版本都通过对应的 <code>Release/&lt;version&gt;</code> 标签发布至 <a href="https://pub.dev/publishers/christianfindlay.com/packages" target="_blank" rel="noopener noreferrer">pub.dev</a>。</p>
+    </div>
+
+    <ol class="release-list" reversed>
+      {% for release in releases %}
+      <li id="v{{ release.version }}">
+        <header>
+          <h2><a href="#v{{ release.version }}">{{ release.version }}</a></h2>
+          {% if release.dateZh %}<time datetime="{{ release.dateISO }}">{{ release.dateZh }}</time>{% endif %}
+          <span>{{ release.packages | length }} 个包</span>
+        </header>
+        <dl>
+          {% for pkg in release.packages %}
+          <dt>{{ pkg.name }}</dt>
+          <dd>
+            <ul>
+              {% for change in pkg.changes %}
+              <li>{{ change.zh | safe }}</li>
+              {% endfor %}
+            </ul>
+          </dd>
+          {% endfor %}
+        </dl>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
