@@ -42,8 +42,8 @@ environment:
   sdk: ^3.0.0
 
 dependencies:
-  dart_node_core: ^0.11.0-beta
-  dart_node_react: ^0.11.0-beta
+  dart_node_core: ^0.13.0-beta
+  dart_node_react: ^0.13.0-beta
 ```
 
 Run `dart pub get`. Done. No webpack config. No babel. No 47 dev dependencies fighting each other.
@@ -93,11 +93,11 @@ ReactElement Counter() => createElement(
         h2('Count: ${count.value}'),
         button(
           text: 'Increment',
-          onClick: (_) => count.setWithUpdater((c) => c + 1),
+          onClick: () => count.setWithUpdater((c) => c + 1),
         ),
         button(
           text: 'Reset',
-          onClick: (_) => count.set(0),
+          onClick: () => count.set(0),
         ),
       ],
     );
@@ -115,7 +115,29 @@ No more `useState<number | undefined>(undefined)` gymnastics. Just `useState(0)`
 
 ## Building Forms (The Part Everyone Dreads)
 
-Forms don't have to be painful. Here's a login form that actually works:
+Forms don't have to be painful. The `input` function gives you an `onChange`
+callback that receives a typed `SyntheticEvent`. To read the current value, write
+a tiny helper that pulls `target.value` off the event:
+
+```dart
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+import 'package:dart_node_react/dart_node_react.dart';
+
+/// Extract the input value from a change event.
+JSString getInputValue(SyntheticEvent event) {
+  final target = event.target;
+  return switch (target) {
+    final JSObject t => switch (t['value']) {
+      final JSString v => v,
+      _ => throw StateError('Input value is not a string'),
+    },
+    _ => throw StateError('Event target is not an object'),
+  };
+}
+```
+
+Now the login form is just a handful of typed elements:
 
 ```dart
 ReactElement LoginForm() => createElement(
@@ -195,7 +217,7 @@ ReactElement UserList() => createElement(
         else
           ul(
             children: usersState.value
-                .map((user) => li(child: span(user)))
+                .map((user) => li(user))
                 .toList(),
           ),
       ],
@@ -224,8 +246,8 @@ ReactElement PageLayout() => createElement(
           className: 'main-content',
           children: [
             section(
-              className: 'hero',
-              children: [
+              {'className': 'hero'},
+              [
                 h2('Welcome'),
                 pEl('Build type-safe React apps with Dart.'),
               ],
@@ -318,16 +340,17 @@ ReactElement TaskManager() => createElement(
             button(text: 'Add', onClick: addTask),
           ],
         ),
-        ul(
+        div(
           className: 'task-list',
           children: tasksState.value.indexed
               .map(
-                (item) => li(
+                (item) => div(
+                  className: 'task-item',
                   children: [
                     span(item.$2),
                     button(
                       text: 'Delete',
-                      onClick: (_) => removeTask(item.$1),
+                      onClick: () => removeTask(item.$1),
                     ),
                   ],
                 ),
@@ -344,7 +367,7 @@ State management, event handling, list rendering. All type-safe. All Dart.
 
 ## What's Next?
 
-You've got the basics. Now go build something. Explore [more hooks](/api/dart_node_react/) like `useMemo` and `useCallback`. Check out the [full-stack example](https://github.com/AstroCodez/dart_node/tree/main/examples/frontend) with authentication, API integration, and WebSocket support.
+You've got the basics. Now go build something. Explore [more hooks](/api/dart_node_react/) like `useMemo` and `useCallback`. Check out the [full-stack example](https://github.com/MelbourneDeveloper/dart_node/tree/main/examples/frontend) with authentication, API integration, and WebSocket support.
 
 No more fighting with type coercion. No more `any` escape hatches. Just clean, type-safe React apps in a language that respects your time.
 

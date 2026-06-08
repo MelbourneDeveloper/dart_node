@@ -6,7 +6,7 @@ Type-safe Express.js bindings for Dart. Build HTTP servers and REST APIs entirel
 
 ```yaml
 dependencies:
-  dart_node_express: ^0.11.0-beta
+  dart_node_express: ^0.13.0-beta
 ```
 
 Also install Express via npm:
@@ -50,7 +50,7 @@ app.post('/users', handler((req, res) {
 }));
 
 app.put('/users/:id', handler((req, res) {
-  final id = req.params['id'];
+  final id = req.params['id'].toString();
   res.jsonMap({'updated': id});
 }));
 
@@ -64,8 +64,8 @@ app.delete('/users/:id', handler((req, res) {
 
 ```dart
 app.get('/users/:userId/posts/:postId', handler((req, res) {
-  final userId = req.params['userId'];
-  final postId = req.params['postId'];
+  final userId = req.params['userId'].toString();
+  final postId = req.params['postId'].toString();
 
   res.jsonMap({
     'userId': userId,
@@ -78,8 +78,8 @@ app.get('/users/:userId/posts/:postId', handler((req, res) {
 
 ```dart
 app.get('/search', handler((req, res) {
-  final query = req.query['q'];
-  final page = int.tryParse(req.query['page'] ?? '1') ?? 1;
+  final query = req.query['q']?.toString();
+  final page = int.tryParse(req.query['page']?.toString() ?? '1') ?? 1;
 
   res.jsonMap({
     'query': query,
@@ -98,7 +98,7 @@ app.post('/api/data', handler((req, res) {
   final body = req.body;
 
   // Headers
-  final contentType = req.headers['content-type'];
+  final contentType = req.headers['content-type']?.toString();
 
   // URL path
   final path = req.path;
@@ -188,6 +188,10 @@ app.get('/profile', handler((req, res) {
 Organize routes with the Router:
 
 ```dart
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+import 'package:dart_node_express/dart_node_express.dart';
+
 Router createUserRouter() {
   final router = Router();
 
@@ -201,10 +205,20 @@ Router createUserRouter() {
   }));
 
   router.get('/:id', handler((req, res) {
-    res.jsonMap({'user': req.params['id']});
+    res.jsonMap({'user': req.params['id'].toString()});
   }));
 
   return router;
+}
+
+// Mount a Router at a path. Express Routers are callable middleware,
+// and `use` accepts a path (as JSAny?) plus a middleware JSFunction.
+void mountRouter(ExpressApp app, String path, Router router) {
+  final routerFn = switch (router as JSAny) {
+    final JSFunction f => f,
+    _ => throw StateError('Router is not callable'),
+  };
+  app.use(path.toJS, routerFn);
 }
 
 void main() {
@@ -212,7 +226,7 @@ void main() {
 
   // Mount the router
   final router = createUserRouter();
-  app.use('/api/users', router);
+  mountRouter(app, '/api/users', router);
 
   app.listen(3000);
 }
@@ -312,7 +326,7 @@ void main() {
   }));
 
   // Mount routers
-  app.use('/api/users', createUserRouter());
+  mountRouter(app, '/api/users', createUserRouter());
 
   // Start server
   app.listen(3000, () {
@@ -323,4 +337,4 @@ void main() {
 
 ## Source Code
 
-The source code is available on [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_express).
+The source code is available on [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_express).

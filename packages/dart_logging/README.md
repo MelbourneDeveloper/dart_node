@@ -5,7 +5,7 @@ Pino-style structured logging with child loggers. Provides hierarchical logging 
 
 ```yaml
 dependencies:
-  dart_logging: ^0.11.0-beta
+  dart_logging: ^0.13.0-beta
 ```
 
 ## Quick Start
@@ -81,9 +81,10 @@ This is useful for adding context that applies to a scope (like a request handle
 Create custom transports to send logs to different destinations:
 
 ```dart
-void myTransport(LogEntry entry) {
+void myTransport(LogMessage message, LogLevel minimumLogLevel) {
+  if (message.logLevel.index < minimumLogLevel.index) return;
   // Send to external service, file, etc.
-  print('${entry.level}: ${entry.message}');
+  print('${message.logLevel}: ${message.message}');
 }
 
 final context = createLoggingContext(
@@ -119,4 +120,4 @@ void main() {
 
 ## Source Code
 
-The source code is available on [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_logging).
+The source code is available on [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_logging).

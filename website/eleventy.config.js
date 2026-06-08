@@ -27,8 +27,8 @@ const techdocOptions = {
     author: "dart_node team",
     themeColor: "#0E7C6B",
     stylesheet: "/assets/css/styles.css",
-    twitterSite: "@dart_node",
-    twitterCreator: "@dart_node",
+    twitterSite: "@cfdevelop",
+    twitterCreator: "@cfdevelop",
     ogImage: "/assets/images/og-image.png",
     ogImageWidth: "1200",
     ogImageHeight: "630",
@@ -36,8 +36,8 @@ const techdocOptions = {
       name: "dart_node",
       logo: "/assets/images/og-image.png",
       sameAs: [
-        "https://github.com/melbournedeveloper/dart_node",
-        "https://twitter.com/dart_node",
+        "https://github.com/MelbourneDeveloper/dart_node",
+        "https://x.com/cfdevelop",
         "https://pub.dev/publishers/christianfindlay.com/packages"
       ]
     }

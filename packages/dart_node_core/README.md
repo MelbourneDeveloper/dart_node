@@ -5,7 +5,7 @@
 
 ```yaml
 dependencies:
-  dart_node_core: ^0.11.0-beta
+  dart_node_core: ^0.13.0-beta
 ```
 
 ## Core Utilities
@@ -90,4 +90,4 @@ void main() {
 
 ## Source Code
 
-The source code is available on [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_core).
+The source code is available on [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_core).

@@ -6,7 +6,7 @@ Type-safe VSCode extension API bindings for Dart. Build Visual Studio Code exten
 
 ```yaml
 dependencies:
-  dart_node_vsix: ^0.11.0-beta
+  dart_node_vsix: ^0.13.0-beta
 ```
 
 ## Quick Start
@@ -271,8 +271,8 @@ void main() {
 
 ## Example
 
-See [too_many_cooks_vscode_extension](https://github.com/melbournedeveloper/too_many_cooks) for a complete real-world example.
+Too Many Cooks, an MCP server originally built in this ecosystem, shipped a VSCode extension. It has since moved to its own home at [tmc-mcp.dev](https://tmc-mcp.dev) and is no longer part of this repository.
 
 ## Source Code
 
-The source code is available on [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_vsix).
+The source code is available on [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_vsix).

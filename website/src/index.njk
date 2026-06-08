@@ -61,13 +61,13 @@ keywords: "dart_node, Dart JavaScript, Dart React, Dart Express, Dart Node.js, T
     {"@type": "ListItem", "position": 3, "name": "dart_node_react", "description": "React bindings with hooks and JSX-like syntax", "url": "https://dartnode.org/docs/react/"},
     {"@type": "ListItem", "position": 4, "name": "dart_node_react_native", "description": "React Native + Expo bindings for mobile development", "url": "https://dartnode.org/docs/react-native/"},
     {"@type": "ListItem", "position": 5, "name": "dart_node_ws", "description": "WebSocket bindings for real-time communication", "url": "https://dartnode.org/docs/websockets/"},
-    {"@type": "ListItem", "position": 6, "name": "dart_node_better_sqlite3", "description": "Synchronous SQLite3 bindings with WAL mode", "url": "https://dartnode.org/docs/sqlite/"},
-    {"@type": "ListItem", "position": 7, "name": "dart_node_mcp", "description": "Model Context Protocol server for AI tools", "url": "https://dartnode.org/docs/mcp/"},
-    {"@type": "ListItem", "position": 8, "name": "reflux", "description": "Redux-style state container with pattern matching", "url": "https://dartnode.org/docs/reflux/"},
-    {"@type": "ListItem", "position": 9, "name": "dart_logging", "description": "Pino-style structured logging", "url": "https://dartnode.org/docs/logging/"},
-    {"@type": "ListItem", "position": 10, "name": "dart_jsx", "description": "JSX transpiler for Dart", "url": "https://dartnode.org/docs/jsx/"},
-    {"@type": "ListItem", "position": 11, "name": "dart_node_vsix", "description": "VSCode extension API bindings for building extensions in Dart", "url": "https://dartnode.org/docs/vsix/"},
-    {"@type": "ListItem", "position": 12, "name": "too-many-cooks", "description": "Multi-agent coordination MCP server", "url": "https://dartnode.org/docs/too-many-cooks/"}
+    {"@type": "ListItem", "position": 6, "name": "dart_node_better_sqlite3", "description": "Synchronous native SQLite3 bindings with WAL mode", "url": "https://dartnode.org/docs/sqlite/"},
+    {"@type": "ListItem", "position": 7, "name": "dart_node_sql_js", "description": "Typed bindings for sql.js — SQLite compiled to WebAssembly", "url": "https://dartnode.org/docs/sql-js/"},
+    {"@type": "ListItem", "position": 8, "name": "dart_node_mcp", "description": "Model Context Protocol server for AI tools", "url": "https://dartnode.org/docs/mcp/"},
+    {"@type": "ListItem", "position": 9, "name": "reflux", "description": "Redux-style state container with pattern matching", "url": "https://dartnode.org/docs/reflux/"},
+    {"@type": "ListItem", "position": 10, "name": "dart_logging", "description": "Pino-style structured logging", "url": "https://dartnode.org/docs/logging/"},
+    {"@type": "ListItem", "position": 11, "name": "dart_jsx", "description": "JSX transpiler for Dart", "url": "https://dartnode.org/docs/jsx/"},
+    {"@type": "ListItem", "position": 12, "name": "dart_node_vsix", "description": "VSCode extension API bindings for building extensions in Dart", "url": "https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_vsix"}
   ]
 }
 </script>
@@ -89,7 +89,7 @@ keywords: "dart_node, Dart JavaScript, Dart React, Dart Express, Dart Node.js, T
     </div>
 
     <div class="hero-cta-secondary">
-      <a href="https://pub.dev/publishers/dartnode.dev/packages" target="_blank" rel="noopener noreferrer">Browse all packages on pub.dev &rarr;</a>
+      <a href="https://pub.dev/publishers/christianfindlay.com/packages" target="_blank" rel="noopener noreferrer">Browse all packages on pub.dev &rarr;</a>
     </div>
 
     <div class="hero-code">
@@ -320,10 +320,20 @@ ReactElement counter() {
       <div class="feature-card">
         <div class="feature-icon" style="background: #3498db;">S</div>
         <h3>dart_node_better_sqlite3</h3>
-        <p>Typed bindings for better-sqlite3 with synchronous SQLite3 and WAL mode.</p>
+        <p>Typed bindings for better-sqlite3 with synchronous native SQLite3 and WAL mode.</p>
         <div class="feature-links">
           <a href="/docs/sqlite/">Docs &rarr;</a>
           <a href="https://pub.dev/packages/dart_node_better_sqlite3" target="_blank" rel="noopener noreferrer" class="pub-link">pub.dev</a>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #16a085;">Q</div>
+        <h3>dart_node_sql_js</h3>
+        <p>Typed bindings for sql.js &mdash; SQLite compiled to WebAssembly. In-memory, no native build, with explicit disk persistence.</p>
+        <div class="feature-links">
+          <a href="/docs/sql-js/">Docs &rarr;</a>
+          <a href="https://pub.dev/packages/dart_node_sql_js" target="_blank" rel="noopener noreferrer" class="pub-link">pub.dev</a>
         </div>
       </div>
 
@@ -353,7 +363,7 @@ ReactElement counter() {
         <p>JSX transpiler for Dart &mdash; write JSX syntax that compiles to dart_node_react calls.</p>
         <div class="feature-links">
           <a href="/docs/jsx/">Docs &rarr;</a>
-          <a href="https://pub.dev/packages/dart_jsx" target="_blank" rel="noopener noreferrer" class="pub-link">pub.dev</a>
+          <a href="https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_jsx" target="_blank" rel="noopener noreferrer" class="pub-link">Source</a>
         </div>
       </div>
 
@@ -362,18 +372,16 @@ ReactElement counter() {
         <h3>dart_node_vsix</h3>
         <p>VSCode extension API bindings for building Visual Studio Code extensions in Dart.</p>
         <div class="feature-links">
-          <a href="/docs/vsix/">Docs &rarr;</a>
-          <a href="https://pub.dev/packages/dart_node_vsix" target="_blank" rel="noopener noreferrer" class="pub-link">pub.dev</a>
+          <a href="https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_vsix" target="_blank" rel="noopener noreferrer" class="pub-link">Source &rarr;</a>
         </div>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon" style="background: #8e44ad;">T</div>
-        <h3>too-many-cooks</h3>
-        <p>Multi-agent coordination MCP server for AI agents editing codebases simultaneously.</p>
+        <h3>Too Many Cooks</h3>
+        <p>Multi-agent coordination MCP server, originally built with dart_node_mcp. It has moved to its own home and is no longer part of this repo.</p>
         <div class="feature-links">
-          <a href="/docs/too-many-cooks/">Docs &rarr;</a>
-          <a href="https://pub.dev/packages/too_many_cooks" target="_blank" rel="noopener noreferrer" class="pub-link">pub.dev</a>
+          <a href="https://tmc-mcp.dev" target="_blank" rel="noopener noreferrer" class="pub-link">tmc-mcp.dev &rarr;</a>
         </div>
       </div>
     </div>

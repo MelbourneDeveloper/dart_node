@@ -36,11 +36,11 @@ dart compile js lib/main.dart -o build/main.js -O2
 
 | 级别 | 说明 | 使用场景 |
 |-------|-------------|----------|
-| `-O0` | 无优化 | 调试 |
-| `-O1` | 基本优化 | 开发 |
-| `-O2` | 完全优化（默认） | 生产 |
-| `-O3` | 激进优化 | 最高性能 |
-| `-O4` | 最激进 | 对大小/速度要求严格时 |
+| `-O0` | 不做优化 | 仅调试 |
+| `-O1` | 默认：全程序分析与内联 | 开发 / 默认 |
+| `-O2` | 安全的、面向生产的优化（如压缩） | 生产 |
+| `-O3` | 可能不安全的优化 | 最高性能 |
+| `-O4` | 更激进的不安全优化 | 对大小/速度要求严格时 |
 
 ## Node.js 兼容性
 
@@ -57,10 +57,10 @@ void main() {
 }
 ```
 
-或使用我们的构建工具（推荐）：
+将其包装成一个小的构建脚本，并在 `dart compile js` 之后运行：
 
 ```bash
-dart run tools/build/build.dart my_app
+dart compile js web/app.dart -o build/app.js -O2
 ```
 
 ## 输出结构
@@ -182,7 +182,7 @@ Future<void> main(List<String> args) async {
 
 4. **优先使用 `const`** - 常量值在编译时计算
 
-5. **分析输出** - 检查 `.js.info` 文件了解大小分布：
+5. **分析输出** - 使用 `--dump-info` 的输出了解大小分布：
 
 ```bash
 dart compile js lib/main.dart -o build/main.js --dump-info

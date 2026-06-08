@@ -41,8 +41,8 @@ environment:
   sdk: ^3.10.0
 
 dependencies:
-  dart_node_core: ^0.11.0-beta
-  dart_node_express: ^0.11.0-beta
+  dart_node_core: ^0.13.0-beta
+  dart_node_express: ^0.13.0-beta
 ```
 
 然后运行：
@@ -140,7 +140,7 @@ Dart 代码在运行时使用 JS 互操作来调用这些 npm 包。
 
 ## 示例项目
 
-查看 [示例目录](https://github.com/melbournedeveloper/dart_node/tree/main/examples) 获取完整的工作应用程序：
+查看 [示例目录](https://github.com/MelbourneDeveloper/dart_node/tree/main/examples) 获取完整的工作应用程序：
 
 - **backend/** - 带 REST API 的 Express 服务器
 - **frontend/** - React Web 应用程序

@@ -5,8 +5,8 @@ Typed Dart bindings for [better-sqlite3](https://github.com/WiseLibs/better-sqli
 
 ```yaml
 dependencies:
-  dart_node_better_sqlite3: ^0.11.0-beta
-  nadz: ^0.9.0
+  dart_node_better_sqlite3: ^0.13.0-beta
+  nadz: ^0.0.7-beta
 ```
 
 Also install the npm package:
@@ -41,7 +41,10 @@ void main() {
     Error(:final error) => throw Exception(error),
   };
 
-  final rows = query.all([]);
+  final rows = switch (query.all()) {
+    Success(:final value) => value,
+    Error(:final error) => throw Exception(error),
+  };
   print(rows);
 
   db.close();
@@ -93,22 +96,32 @@ final query = switch (db.prepare('SELECT * FROM users WHERE id = ?')) {
 };
 
 // Get single row
-final row = query.get([1]);
+final row = switch (query.get([1])) {
+  Success(:final value) => value,
+  Error(:final error) => throw Exception(error),
+};
 
 // Get all rows
-final allRows = query.all([]);
+final allRows = switch (query.all()) {
+  Success(:final value) => value,
+  Error(:final error) => throw Exception(error),
+};
 ```
 
 ### Transactions
 
 ```dart
 db.exec('BEGIN');
-try {
-  // Multiple operations...
-  db.exec('COMMIT');
-} catch (e) {
-  db.exec('ROLLBACK');
-  rethrow;
+
+// Multiple operations...
+final result = db.exec('INSERT INTO users (name) VALUES (?)');
+
+switch (result) {
+  case Success():
+    db.exec('COMMIT');
+  case Error(:final error):
+    db.exec('ROLLBACK');
+    throw Exception(error);
 }
 ```
 
@@ -124,4 +137,4 @@ node app.js
 
 ## Source Code
 
-The source code is available on [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_better_sqlite3).
+The source code is available on [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_better_sqlite3).

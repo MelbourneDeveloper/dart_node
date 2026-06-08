@@ -27,17 +27,31 @@ const packageToDocsMap = {
   'dart_node_mcp': { slug: 'mcp', title: 'dart_node_mcp', order: 7, pubdev: 'dart_node_mcp' },
   'dart_logging': { slug: 'logging', title: 'dart_logging', order: 8, pubdev: 'dart_logging' },
   'reflux': { slug: 'reflux', title: 'reflux', order: 9, pubdev: 'reflux' },
-  'dart_jsx': { slug: 'jsx', title: 'dart_jsx', order: 10, pubdev: 'dart_jsx' },
+  'dart_node_sql_js': { slug: 'sql-js', title: 'dart_node_sql_js', order: 10, pubdev: 'dart_node_sql_js' },
+  // dart_jsx is not published to pub.dev (publish_to: none) — link to source instead.
+  'dart_jsx': { slug: 'jsx', title: 'dart_jsx', order: 11, pubdev: null },
 };
 
-// CTA HTML to inject after installation sections
-function getPackageLinksHtml(pubdevPackage, lang = 'en') {
-  const viewText = lang === 'zh' ? '在 pub.dev 查看' : 'View on pub.dev';
+// CTA HTML to inject after installation sections.
+// Published packages link to pub.dev; unpublished ones (pubdev === null)
+// link to their source folder on GitHub so the button never 404s.
+const repoUrl = 'https://github.com/MelbourneDeveloper/dart_node';
+
+function getPackageLinksHtml(config, packageDir, lang = 'en') {
   const starText = lang === 'zh' ? '给个 Star' : 'Star on GitHub';
+  const primary = config.pubdev
+    ? {
+        href: `https://pub.dev/packages/${config.pubdev}`,
+        text: lang === 'zh' ? '在 pub.dev 查看' : 'View on pub.dev',
+      }
+    : {
+        href: `${repoUrl}/tree/main/packages/${packageDir}`,
+        text: lang === 'zh' ? '在 GitHub 查看源码' : 'View source on GitHub',
+      };
   return `
 <div class="package-links">
-  <a href="https://pub.dev/packages/${pubdevPackage}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">${viewText}</a>
-  <a href="https://github.com/MelbourneDeveloper/dart_node" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">${starText}</a>
+  <a href="${primary.href}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">${primary.text}</a>
+  <a href="${repoUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">${starText}</a>
 </div>
 `;
 }
@@ -97,13 +111,13 @@ function processReadme(content, packageName, config, lang = 'en') {
   let result = lines.slice(startIndex).join('\n').trim();
 
   // Inject package links after the first code block following "## Installation" or "## 安装"
-  if (config && config.pubdev) {
+  if (config) {
     const installationPattern = lang === 'zh'
       ? /(## 安装[\s\S]*?```[\s\S]*?```)/
       : /(## Installation[\s\S]*?```[\s\S]*?```)/;
     const installationMatch = result.match(installationPattern);
     if (installationMatch) {
-      const packageLinks = getPackageLinksHtml(config.pubdev, lang);
+      const packageLinks = getPackageLinksHtml(config, packageName, lang);
       result = result.replace(installationMatch[0], installationMatch[0] + packageLinks);
     }
   }

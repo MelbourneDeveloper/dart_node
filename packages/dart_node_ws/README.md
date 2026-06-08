@@ -6,7 +6,7 @@ Type-safe WebSocket bindings for Node.js, enabling real-time bidirectional commu
 
 ```yaml
 dependencies:
-  dart_node_ws: ^0.11.0-beta
+  dart_node_ws: ^0.13.0-beta
 ```
 
 Also install the ws package via npm:
@@ -271,4 +271,4 @@ server.onConnection((client, url) {
 
 ## Source Code
 
-The source code is available on [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_ws).
+The source code is available on [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_ws).

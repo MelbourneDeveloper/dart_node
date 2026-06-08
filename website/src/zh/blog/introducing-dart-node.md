@@ -105,8 +105,8 @@ ReactElement counter() {
   final count = useState(0);
 
   return button(
-    onClick: (_) => count.setWithUpdater((c) => c + 1),
-    children: [text('Count: ${count.value}')],
+    text: 'Count: ${count.value}',
+    onClick: () => count.setWithUpdater((c) => c + 1),
   );
 }
 ```
@@ -119,7 +119,7 @@ ReactElement counter() {
 ReactElement app() {
   return safeAreaView(children: [
     view(style: {'padding': 20}, children: [
-      rnText(children: [text('Hello from Dart!')]),
+      text('Hello from Dart!'),
     ]),
   ]);
 }

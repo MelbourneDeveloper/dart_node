@@ -6,7 +6,7 @@
 
 ```yaml
 dependencies:
-  dart_node_express: ^0.11.0-beta
+  dart_node_express: ^0.13.0-beta
 ```
 
 通过 npm 安装 Express：
@@ -50,7 +50,7 @@ app.post('/users', handler((req, res) {
 }));
 
 app.put('/users/:id', handler((req, res) {
-  final id = req.params['id'];
+  final id = req.params['id'].toString();
   res.jsonMap({'updated': id});
 }));
 
@@ -64,8 +64,8 @@ app.delete('/users/:id', handler((req, res) {
 
 ```dart
 app.get('/users/:userId/posts/:postId', handler((req, res) {
-  final userId = req.params['userId'];
-  final postId = req.params['postId'];
+  final userId = req.params['userId'].toString();
+  final postId = req.params['postId'].toString();
 
   res.jsonMap({
     'userId': userId,
@@ -78,8 +78,8 @@ app.get('/users/:userId/posts/:postId', handler((req, res) {
 
 ```dart
 app.get('/search', handler((req, res) {
-  final query = req.query['q'];
-  final page = int.tryParse(req.query['page'] ?? '1') ?? 1;
+  final query = req.query['q'].toString();
+  final page = int.tryParse(req.query['page']?.toString() ?? '1') ?? 1;
 
   res.jsonMap({
     'query': query,
@@ -98,7 +98,7 @@ app.post('/api/data', handler((req, res) {
   final body = req.body;
 
   // 请求头
-  final contentType = req.headers['content-type'];
+  final contentType = req.headers['content-type'].toString();
 
   // URL 路径
   final path = req.path;
@@ -201,7 +201,7 @@ Router createUserRouter() {
   }));
 
   router.get('/:id', handler((req, res) {
-    res.jsonMap({'user': req.params['id']});
+    res.jsonMap({'user': req.params['id'].toString()});
   }));
 
   return router;
@@ -212,7 +212,9 @@ void main() {
 
   // 挂载路由器
   final router = createUserRouter();
-  app.use('/api/users', router);
+  if (router case final JSFunction fn) {
+    app.use('/api/users'.toJS, fn);
+  }
 
   app.listen(3000);
 }
@@ -312,7 +314,9 @@ void main() {
   }));
 
   // 挂载路由器
-  app.use('/api/users', createUserRouter());
+  if (createUserRouter() case final JSFunction fn) {
+    app.use('/api/users'.toJS, fn);
+  }
 
   // 启动服务器
   app.listen(3000, () {
@@ -323,4 +327,4 @@ void main() {
 
 ## 源代码
 
-源代码可在 [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_express) 上获取。
+源代码可在 [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_express) 上获取。
