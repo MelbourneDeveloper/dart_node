@@ -34,11 +34,11 @@ dart compile js lib/main.dart -o build/main.js -O2
 
 | Level | Description | Use Case |
 |-------|-------------|----------|
-| `-O0` | No optimization | Debugging |
-| `-O1` | Basic optimization | Development |
-| `-O2` | Full optimization (default) | Production |
-| `-O3` | Aggressive optimization | Maximum performance |
-| `-O4` | Most aggressive | When size/speed is critical |
+| `-O0` | No optimizations | Debugging only |
+| `-O1` | Default: whole-program analysis and inlining | Development / default |
+| `-O2` | Safe production-oriented optimizations (e.g. minification) | Production |
+| `-O3` | Potentially unsafe optimizations | Maximum performance |
+| `-O4` | More aggressive unsafe optimizations | When size/speed is critical |
 
 ## Node.js Compatibility
 
@@ -55,10 +55,10 @@ void main() {
 }
 ```
 
-Or use our build tool (recommended):
+Wrap this in a small build script and run it after `dart compile js`:
 
 ```bash
-dart run tools/build/build.dart my_app
+dart compile js web/app.dart -o build/app.js -O2
 ```
 
 ## Output Structure
@@ -180,7 +180,7 @@ Future<void> main(List<String> args) async {
 
 4. **Prefer `const`** - Constant values are evaluated at compile time
 
-5. **Profile your output** - Check the `.js.info` file for size breakdown:
+5. **Profile your output** - Use the `--dump-info` output for a size breakdown:
 
 ```bash
 dart compile js lib/main.dart -o build/main.js --dump-info

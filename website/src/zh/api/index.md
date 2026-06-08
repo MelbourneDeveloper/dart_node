@@ -41,6 +41,11 @@ description: 所有 dart_node 包的完整 API 文档
     <p>使用 better-sqlite3 的 SQLite 绑定。</p>
   </a>
 
+  <a href="/zh/api/dart_node_sql_js/" class="feature-card">
+    <h3>dart_node_sql_js</h3>
+    <p>sql.js 绑定 —— 编译为 WebAssembly 的 SQLite，纯内存运行并可持久化到磁盘。</p>
+  </a>
+
   <a href="/zh/api/dart_node_mcp/" class="feature-card">
     <h3>dart_node_mcp</h3>
     <p>模型上下文协议（MCP）绑定，用于 AI 工具集成。</p>

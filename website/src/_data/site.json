@@ -6,10 +6,10 @@
   "author": "dart_node team",
   "language": "en",
   "themeColor": "#0E7C6B",
-  "twitter": "@dart_node",
-  "twitterSite": "@dart_node",
-  "twitterCreator": "@dart_node",
-  "github": "https://github.com/melbournedeveloper/dart_node",
+  "twitter": "@cfdevelop",
+  "twitterSite": "@cfdevelop",
+  "twitterCreator": "@cfdevelop",
+  "github": "https://github.com/MelbourneDeveloper/dart_node",
   "stylesheet": "/assets/css/styles.css",
   "ogImage": "/assets/images/og-image.png",
   "ogImageWidth": "1200",
@@ -19,8 +19,8 @@
     "name": "dart_node",
     "logo": "/assets/images/og-image.png",
     "sameAs": [
-      "https://github.com/melbournedeveloper/dart_node",
-      "https://twitter.com/dart_node",
+      "https://github.com/MelbourneDeveloper/dart_node",
+      "https://x.com/cfdevelop",
       "https://pub.dev/publishers/christianfindlay.com/packages"
     ]
   }

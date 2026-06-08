@@ -5,8 +5,8 @@
 
 ```yaml
 dependencies:
-  dart_node_mcp: ^0.11.0-beta
-  nadz: ^0.9.0
+  dart_node_mcp: ^0.13.0-beta
+  nadz: ^0.0.7-beta
 ```
 
 通过 npm 安装：
@@ -31,9 +31,17 @@ Future<void> main() async {
 
   server.registerTool(
     'echo',
-    (description: 'Echo input back', inputSchema: null),
+    (
+      title: null,
+      description: 'Echo input back',
+      inputSchema: null,
+      outputSchema: null,
+      annotations: null,
+    ),
     (args, meta) async => (
-      content: [(type: 'text', text: args['message'] as String)],
+      content: <Map<String, Object?>>[
+        {'type': 'text', 'text': args['message'] as String},
+      ],
       isError: false,
     ),
   );
@@ -65,6 +73,7 @@ final serverResult = McpServer.create((name: 'my-server', version: '1.0.0'));
 server.registerTool(
   'greet',
   (
+    title: null,
     description: 'Greet a user by name',
     inputSchema: {
       'type': 'object',
@@ -73,11 +82,15 @@ server.registerTool(
       },
       'required': ['name'],
     },
+    outputSchema: null,
+    annotations: null,
   ),
   (args, meta) async {
     final name = args['name'] as String;
     return (
-      content: [(type: 'text', text: 'Hello, $name!')],
+      content: <Map<String, Object?>>[
+        {'type': 'text', 'text': 'Hello, $name!'},
+      ],
       isError: false,
     );
   },
@@ -115,10 +128,10 @@ node server.js
 claude mcp add --transport stdio my-server -- node /path/to/server.js
 ```
 
-## 示例：Too Many Cooks
+## 使用 dart_node_mcp 构建：Too Many Cooks
 
-[Too Many Cooks](https://github.com/melbournedeveloper/too_many_cooks) MCP 服务器是使用 dart_node_mcp 构建的。它为编辑同一代码库的 AI 助手提供多智能体协调功能。
+[Too Many Cooks](https://tmc-mcp.dev) 是一个最初使用 dart_node_mcp 构建的 MCP 服务器，为编辑同一代码库的 AI 助手提供多智能体协调功能。它现已迁移到独立站点 [tmc-mcp.dev](https://tmc-mcp.dev)，不再是本仓库的一部分。
 
 ## 源代码
 
-源代码可在 [GitHub](https://github.com/melbournedeveloper/dart_node/tree/main/packages/dart_node_mcp) 上获取。
+源代码可在 [GitHub](https://github.com/MelbourneDeveloper/dart_node/tree/main/packages/dart_node_mcp) 上获取。
