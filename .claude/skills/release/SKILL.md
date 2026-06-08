@@ -1,6 +1,6 @@
 ---
 name: release
-description: Prepare and execute a release to pub.dev. Bumps versions, validates changelogs, checks pub.dev status, and guides through the tiered publishing process.
+description: Prepare and execute a release to pub.dev. Stamps placeholder versions from the tag in-runner (zero source churn), validates changelogs, checks pub.dev status, and guides through the tiered publishing process.
 argument-hint: "<version>"
 disable-model-invocation: true
 allowed-tools: Bash, Read, Grep, Glob, WebFetch
@@ -9,6 +9,18 @@ allowed-tools: Bash, Read, Grep, Glob, WebFetch
 # Release to pub.dev
 
 Prepare and execute a dart_node release. This is a multi-step process that publishes packages in tiers due to interdependencies.
+
+## Version model — placeholders only ([SWR-VERSION-BUILD-STAMPING])
+
+**Every `version:` in `packages/*/pubspec.yaml` is `0.0.0-dev` at all times, on every branch.** The real
+version is stamped from the tag **in the CI runner's working tree only** at publish time and is **never
+committed, pushed, branched, or PR'd back**. A release therefore produces **ZERO churn** on tracked source.
+
+- Do NOT bump `version:` in source. Do NOT merge a "release" PR that changes a placeholder to a real version
+  — there is no such PR anymore, and per the spec it must be rejected in review.
+- Inter-package deps stay as local `path:` deps in source; `tools/prepare_publish.dart <version>` switches
+  them to `^<version>` in-runner at publish time.
+- The only things committed for a release are **CHANGELOG** entries (release notes) — never version fields.
 
 ## Arguments
 
@@ -25,8 +37,10 @@ git status
 git branch --show-current
 ```
 
-- Must be on `main` branch (or create a release branch)
+- Must be on `main` branch
 - Working directory should be clean
+- Every `packages/*/pubspec.yaml` `version:` must read `0.0.0-dev` (placeholder). If any shows a real
+  version, that is churn — reset it to `0.0.0-dev` before tagging.
 
 ### 1.2 Check current versions
 
@@ -42,34 +56,12 @@ dart run tools/prepare_publish.dart 2>&1 || true
 
 This shows any packages missing from `tools/lib/packages.dart`.
 
-## Step 2: Switch dependencies to pub.dev versions
+## Step 2: Dependency switching is automatic (no action)
 
-**CRITICAL**: Before publishing, all internal dependencies must point to pub.dev versions, NOT local paths!
-
-Use `tools/switch_deps.dart` to switch:
-
-```bash
-# Switch from local paths to pub.dev versioned dependencies
-dart run tools/switch_deps.dart release
-```
-
-This converts:
-```yaml
-# FROM (local development):
-dart_node_core:
-  path: ../dart_node_core
-
-# TO (release):
-dart_node_core: ^0.11.0-beta
-```
-
-To switch back to local for development:
-
-```bash
-dart run tools/switch_deps.dart local
-```
-
-**Note**: The CI workflow handles this automatically on the release branch.
+Internal deps stay as local `path:` deps in source. Each tier workflow runs
+`dart run tools/prepare_publish.dart <version>` **in the runner working tree** before publishing, which
+stamps `0.0.0-dev` → `<version>` and rewrites `path:` deps to `^<version>`. Nothing is committed — the
+runner is discarded after publish. You do not switch deps by hand and there is no release branch.
 
 ## Step 3: Validate changelogs
 
@@ -147,20 +139,17 @@ Or run specific tiers:
 ./tools/test.sh --tier 3
 ```
 
-## Step 7: Bump versions (dry run)
+## Step 7: Preview the stamp (optional, local dry run)
 
-Preview what changes the prepare script will make:
+To see what the in-runner stamp will produce, run it locally then **discard the changes** (never commit):
 
 ```bash
 dart run tools/prepare_publish.dart $ARGUMENTS
+git restore packages   # throw the stamp away — source must stay 0.0.0-dev
 ```
 
-This updates:
-- `version:` in all pubspec.yaml files
-- Interdependencies to use `^$ARGUMENTS` (pub.dev versions)
-- Removes `publish_to: none`
-
-**Do NOT commit these changes yet** - they are made on a release branch by CI.
+It stamps `0.0.0-dev` → `$ARGUMENTS` and rewrites `path:` deps to `^$ARGUMENTS`. CI does exactly this in the
+runner working tree at publish time.
 
 ## Step 8: Create release tag
 
@@ -171,11 +160,12 @@ git tag "Release/$ARGUMENTS"
 git push origin "Release/$ARGUMENTS"
 ```
 
-This triggers the **publish-tier1** workflow which:
-1. Creates a `release/$ARGUMENTS` branch
-2. Runs `prepare_publish.dart`
-3. Creates a PR to main
-4. Publishes dart_logging and dart_node_core
+This triggers the **publish-tier1** workflow which, in a single throwaway runner:
+1. Validates the tag is on `main` and changelogs have `## $ARGUMENTS`
+2. Stamps versions/deps in the working tree (NOT committed)
+3. Publishes dart_logging and dart_node_core
+
+No release branch, no commit, no PR — zero churn.
 
 ## Step 9: Tier 2 publishing
 
@@ -199,15 +189,8 @@ git push origin "Release-Tier3/$ARGUMENTS"
 
 Publishes: dart_node_react, dart_node_react_native
 
-After tier 3 completes, it switches dependencies back to local and pushes to the release branch.
-
-## Step 11: Merge the release PR
-
-After all tiers complete successfully:
-
-1. Go to the PR created by tier 1
-2. Verify all packages are published on pub.dev
-3. Merge the PR to main
+Each tier stamps in its own runner and publishes — nothing is committed, so there is no release branch to
+merge and no dependency "switch back" step. The release is complete once tier 3's packages are live.
 
 ## Verification
 
@@ -239,7 +222,8 @@ Add the missing `## X.Y.Z` header to the package's CHANGELOG.md with release not
 ## Checklist summary
 
 - [ ] On main branch, clean working directory
-- [ ] **No local path dependencies** (all point to pub.dev versions)
+- [ ] Every `packages/*/pubspec.yaml` `version:` is `0.0.0-dev` (placeholder)
+- [ ] Internal deps are local `path:` deps (CI switches them in-runner)
 - [ ] All changelogs have `## $ARGUMENTS` entries
 - [ ] All READMEs are present and up-to-date
 - [ ] All tests pass
@@ -249,4 +233,4 @@ Add the missing `## X.Y.Z` header to the package's CHANGELOG.md with release not
 - [ ] Tier 2 complete, packages live on pub.dev
 - [ ] `Release-Tier3/$ARGUMENTS` tag pushed
 - [ ] Tier 3 complete, packages live on pub.dev
-- [ ] Release PR merged to main
+- [ ] Source unchanged — every `version:` still `0.0.0-dev`, no release branch/PR created

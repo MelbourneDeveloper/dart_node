@@ -1,6 +1,6 @@
 name: dart_node_vsix
 description: VSCode extension API bindings for Dart via dart:js_interop
-version: 0.1.0
+version: 0.0.0-dev
 publish_to: none
 
 environment:

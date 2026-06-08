@@ -40,6 +40,14 @@ Dart packages for building Node.js apps. Strongly Typed Dart layer over JS inter
 - Use the template: .github/PULL_REQUEST_TEMPLATE.md
 - Only use git diff with main. Ignore commit messages
 
+**Releases (Shipwright `[SWR-VERSION-BUILD-STAMPING]`)**
+- Every `version:` in `packages/*/pubspec.yaml` MUST stay `0.0.0-dev` on every branch. The real version is
+  stamped from the git tag in the CI runner working tree at publish time — NEVER committed, pushed, branched,
+  or PR'd back. Releases produce ZERO source churn.
+- ⛔️ ILLEGAL: bumping a `version:` in source, or a PR that turns a `0.0.0-dev` placeholder into a real version.
+- Internal deps stay as local `path:` deps in source; `tools/prepare_publish.dart <version>` rewrites them
+  in-runner. Only CHANGELOG entries are committed for a release.
+
 # Web & Translation
 
 - Optimize for AI Search and SEO
