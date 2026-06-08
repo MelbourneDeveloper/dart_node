@@ -6,7 +6,7 @@ on:
       - 'Release-Tier3/[0-9]+.[0-9]+.[0-9]+*'
 
 permissions:
-  contents: write
+  contents: read
   id-token: write
 
 jobs:
@@ -22,33 +22,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Checkout release branch
-        run: |
-          git fetch origin "release/${{ steps.version.outputs.VERSION }}"
-          git checkout "release/${{ steps.version.outputs.VERSION }}"
 
       - uses: ./.github/actions/setup
         with:
           dart-version: ${{ vars.DART_VERSION }}
 
+      # [SWR-VERSION-BUILD-STAMPING] Stamp the version from the tag in the
+      # runner working tree ONLY. Source stays 0.0.0-dev; nothing is committed,
+      # pushed, or branched. The runner is discarded after publish.
+      - name: Stamp versions in the working tree (not committed)
+        run: dart run tools/prepare_publish.dart "${{ steps.version.outputs.VERSION }}"
+
       - name: Publish packages
         run: |
           chmod +x .github/scripts/publish-packages.sh
           .github/scripts/publish-packages.sh "${{ steps.version.outputs.VERSION }}" dart_node_react dart_node_react_native
-
-      - name: Switch dependencies to local
-        run: dart run tools/switch_deps.dart local
-
-      - name: Commit local dependencies to release branch
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "chore: switch to local dependencies after publish"
-            git push origin release/${{ steps.version.outputs.VERSION }}
-          fi

@@ -12,22 +12,19 @@ on:
         type: string
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
   id-token: write
 
 jobs:
-  prepare:
+  publish:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    outputs:
-      version: ${{ steps.version.outputs.VERSION }}
+    environment: pub.dev-tier1
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate tag is on main (tag push only)
         if: github.event_name == 'push'
@@ -89,59 +86,14 @@ jobs:
         with:
           dart-version: ${{ vars.DART_VERSION }}
 
-      - name: Prepare for publishing (switch to pub.dev deps)
-        run: dart run tools/prepare_publish.dart ${{ steps.version.outputs.VERSION }}
-
-      - name: Create release branch and commit
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b release/${{ steps.version.outputs.VERSION }}
-          git add -A
-          git commit -m "chore: prepare release ${{ steps.version.outputs.VERSION }} with pub.dev dependencies"
-          git push origin release/${{ steps.version.outputs.VERSION }}
-
-      - name: Create PR to main
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh pr create \
-            --title "Release ${{ steps.version.outputs.VERSION }}" \
-            --body "## Release ${{ steps.version.outputs.VERSION }}
-
-          This PR is auto-created from the release tag.
-
-          **Do not merge yet!** Publishing happens in tier workflows (tier1 → tier2 → tier3).
-
-          After tier3 completes, dependencies will be switched back to local and this PR will be updated.
-
-          ### Publishing Tiers
-          - Tier 1: dart_logging, dart_node_core (this workflow)
-          - Tier 2: reflux, dart_node_express, dart_node_ws, dart_node_better_sqlite3, dart_node_mcp
-          - Tier 3: dart_node_react, dart_node_react_native" \
-            --base main \
-            --head release/${{ steps.version.outputs.VERSION }}
-
-  publish:
-    needs: prepare
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment: pub.dev-tier1
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Checkout release branch
-        run: |
-          git fetch origin "release/${{ needs.prepare.outputs.version }}"
-          git checkout "release/${{ needs.prepare.outputs.version }}"
-
-      - uses: ./.github/actions/setup
-        with:
-          dart-version: ${{ vars.DART_VERSION }}
+      # [SWR-VERSION-BUILD-STAMPING] Stamp the version from the tag in the
+      # runner working tree ONLY. Source stays 0.0.0-dev; nothing is committed,
+      # pushed, branched, or PR'd. The runner is discarded after publish, so a
+      # release produces ZERO churn on tracked source.
+      - name: Stamp versions in the working tree (not committed)
+        run: dart run tools/prepare_publish.dart "${{ steps.version.outputs.VERSION }}"
 
       - name: Publish packages
         run: |
           chmod +x .github/scripts/publish-packages.sh
-          .github/scripts/publish-packages.sh "${{ needs.prepare.outputs.version }}" dart_logging dart_node_core
+          .github/scripts/publish-packages.sh "${{ steps.version.outputs.VERSION }}" dart_logging dart_node_core
