@@ -1,0 +1,40 @@
+---
+layout: layouts/base.njk
+title: "Release History - dart_node"
+description: "Version-by-version release history for every dart_node package, with publish dates and per-package changelog notes. Published to pub.dev under christianfindlay.com."
+keywords: "dart_node releases, dart_node changelog, dart_node versions, pub.dev release history, Dart package versions"
+permalink: /releases/
+---
+
+<section class="releases">
+  <div class="container">
+    <div class="section-title">
+      <h1>Release History</h1>
+      <p>Every published version of the dart_node packages, newest first. Each release ships to <a href="https://pub.dev/publishers/christianfindlay.com/packages" target="_blank" rel="noopener noreferrer">pub.dev</a> from the matching <code>Release/&lt;version&gt;</code> tag.</p>
+    </div>
+
+    <ol class="release-list" reversed>
+      {% for release in releases %}
+      <li id="v{{ release.version }}">
+        <header>
+          <h2><a href="#v{{ release.version }}">{{ release.version }}</a></h2>
+          {% if release.dateEn %}<time datetime="{{ release.dateISO }}">{{ release.dateEn }}</time>{% endif %}
+          <span>{{ release.packages | length }} package{% if release.packages | length != 1 %}s{% endif %}</span>
+        </header>
+        <dl>
+          {% for pkg in release.packages %}
+          <dt>{{ pkg.name }}</dt>
+          <dd>
+            <ul>
+              {% for change in pkg.changes %}
+              <li>{{ change.en | safe }}</li>
+              {% endfor %}
+            </ul>
+          </dd>
+          {% endfor %}
+        </dl>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
