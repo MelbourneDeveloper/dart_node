@@ -1784,3 +1784,109 @@ a.tag.tag-secondary:hover {
 .mobile-menu-toggle span {
   transition: all 0.3s ease;
 }
+
+/* Releases page */
+.releases {
+  padding: var(--space-16) 0;
+}
+
+.release-list {
+  list-style: none;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.release-list > li {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6) var(--space-8);
+  scroll-margin-top: var(--space-20);
+}
+
+.release-list > li > header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.release-list > li > header h2 {
+  margin: 0;
+  font-size: var(--text-2xl);
+}
+
+.release-list > li > header h2 a {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.release-list > li > header h2 a:hover {
+  color: var(--color-primary);
+}
+
+.release-list > li > header time {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.release-list > li > header span {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+}
+
+.release-list dl {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) 1fr;
+  gap: var(--space-4) var(--space-6);
+  margin: 0;
+}
+
+.release-list dt {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-primary-light);
+  word-break: break-word;
+}
+
+.release-list dd {
+  margin: 0;
+}
+
+.release-list dd ul {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.release-list dd li {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+@media (max-width: 640px) {
+  .release-list > li {
+    padding: var(--space-5) var(--space-5);
+  }
+
+  .release-list dl {
+    grid-template-columns: 1fr;
+    gap: var(--space-1) 0;
+  }
+
+  .release-list dt {
+    margin-top: var(--space-3);
+  }
+}

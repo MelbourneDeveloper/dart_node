@@ -13,6 +13,10 @@
       "url": "/blog/"
     },
     {
+      "text": "Releases",
+      "url": "/releases/"
+    },
+    {
       "text": "GitHub",
       "url": "https://github.com/MelbourneDeveloper/dart_node",
       "external": true
@@ -132,6 +136,10 @@
         {
           "text": "Blog",
           "url": "/blog/"
+        },
+        {
+          "text": "Releases",
+          "url": "/releases/"
         },
         {
           "text": "Dart Official",
