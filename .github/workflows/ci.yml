@@ -18,10 +18,35 @@ env:
   SERVER_BINARY: build/bin/server_node.js
 
 jobs:
+  # Change detection ([CI-PATH-FILTER]). Website-only PRs skip the Dart
+  # lint/test/build jobs; code-only PRs skip the website job. Job-level `if`
+  # skips report a "skipped" conclusion that SATISFIES required status checks —
+  # unlike workflow-level `paths:` filters, which leave required checks pending
+  # forever and block the merge. So we gate here, never with `on: paths`.
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      website: ${{ steps.filter.outputs.website }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            website:
+              - 'website/**'
+            code:
+              - '!website/**'
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -88,7 +113,8 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: lint
+    needs: [changes, lint]
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -143,7 +169,8 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: test
+    needs: [changes, test]
+    if: needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -169,6 +196,8 @@ jobs:
     name: Website Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    needs: changes
+    if: needs.changes.outputs.website == 'true'
     steps:
       - uses: actions/checkout@v4
 
