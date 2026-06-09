@@ -24,14 +24,30 @@ void main() {
       );
 
       test(
-        'registerCommand registers a command',
+        'registerCommand registers the self-test command',
         asyncTest(() async {
           final commands = await _getCommands(true.toJS).toDart;
           final list = commands.toDart.map((c) => c.toDart);
           assertOk(
-            list.contains('dartNodeVsix.test'),
-            'Test command should be registered',
+            list.contains('dartNode.test'),
+            'Self-test command should be registered',
           );
+        }),
+      );
+
+      test(
+        'general-purpose feature commands are registered',
+        asyncTest(() async {
+          final commands = await _getCommands(true.toJS).toDart;
+          final list = commands.toDart.map((c) => c.toDart).toList();
+          for (final id in const [
+            'dartNode.hello',
+            'dartNode.showVersion',
+            'dartNode.echo',
+            'dartNode.count',
+          ]) {
+            assertOk(list.contains(id), '$id should be registered');
+          }
         }),
       );
 

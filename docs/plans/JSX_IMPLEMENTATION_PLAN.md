@@ -569,18 +569,52 @@ void main() {
 3. **Interoperable** - Can mix old and new syntax freely
 4. **No Breaking Changes** - Pure additive feature
 
-## Open Questions
+## Resolved Decisions
 
-1. **Operator Choice** - Is `>>` the best operator? Alternatives: `|`, `%`, `&`
-2. **Naming** - `$div` vs `Div` vs `div_` for factories
-3. **Null Children** - How to handle conditional `null` children in lists?
-4. **Keys** - How to specify React keys in the new syntax?
-5. **Ref Forwarding** - How to attach refs cleanly?
+The five original open questions are now settled and implemented in
+[`jsx.dart`](../../packages/dart_node_react/lib/src/jsx.dart):
 
-## Next Steps
+1. **Operator Choice** — `>>` is the child operator. It reads top-to-bottom like
+   nesting and avoids clashing with common arithmetic/bitwise usage.
+2. **Naming** — `$`-prefixed factories (`$div`, `$h1`, `$button`, …). The sigil
+   keeps the DSL distinct from the existing lowercase `div()`/`h1()` factories so
+   the two can coexist without import juggling.
+3. **Null Children** — `null` is filtered out, so `if (cond) $p >> '...'` inside a
+   children list "just works" for conditional rendering.
+4. **Keys** — every list-style factory takes an optional `key:` parameter
+   (`$li(key: 'item-1')`), threaded straight into the React props.
+5. **Ref Forwarding** — interactive and media factories (`$div`, `$input`,
+   `$button`, `$textarea`, `$a`, `$select`, `$form`, `$img`, `$video`, `$audio`)
+   take an optional `ref:` (a `JsRef` from `createRef`). Because React 18 hoists
+   `ref`/`key` out of `props`, the `>>` operator recomposes elements with
+   `cloneElement` (not `createElement`), so `ref` and `key` survive when children
+   are attached.
 
-1. Create `jsx.dart` with Phase 1 implementation
-2. Add tests for operator behavior
-3. Document usage patterns
-4. Gather feedback on syntax preferences
-5. Iterate on API design
+## Phase Status
+
+- **Phase 1 — Operator DSL:** ✅ shipped (`>>`, `$`-factories, fragments, events,
+  conditional rendering, keys, refs).
+- **Phase 2 — Fluent Builders:** ⏸ deferred. The operator DSL covers the ergonomic
+  need; revisit only if users ask for a chained-builder style.
+- **Phase 3 — Convenience Extensions:** ⏸ deferred (`'text'.el`, `20.px`, etc.).
+- **Phase 4 — Code Generation:** ⏸ deferred until adoption warrants typed-prop
+  generation from React type defs.
+- **Phase 5 — Macros:** ⏸ blocked on stable Dart macros.
+
+## TODO
+
+- [x] Phase 1: `El` operator type with `>>` for text / element / list children
+- [x] Phase 1: `$`-prefixed element factories (container, heading, semantic,
+      interactive, form, list, media, table, text, misc)
+- [x] Phase 1: fragment support (`$fragment`) and generic `$el(tag)` escape hatch
+- [x] Conditional rendering via `null` children filtering
+- [x] React `key:` parameter on list factories
+- [x] Ref forwarding via `ref:` on interactive factories
+- [x] Integration tests in
+      [`test/jsx_test.dart`](../../packages/dart_node_react/test/jsx_test.dart)
+- [x] Remove the duplicate `test/jsx/jsx_dsl_test.dart`
+- [x] Export the DSL from `dart_node_react.dart`
+- [ ] Phase 2: fluent builders (`Div.className(...).children([...])`) — deferred
+- [ ] Phase 3: convenience extensions (`'text'.el`, `20.px`) — deferred
+- [ ] Phase 4: code generation for typed props — deferred
+- [ ] Phase 5: macro-based `jsx'''...'''` literals — blocked on stable macros

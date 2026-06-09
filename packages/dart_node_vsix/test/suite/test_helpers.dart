@@ -37,8 +37,8 @@ external JSObject _createJSObjectFromProto(JSAny? proto);
 /// Create an empty JS object.
 JSObject createJSObject() => _createJSObjectFromProto(null);
 
-/// Extension ID for the test extension.
-const extensionId = 'Nimblesite.dart-node-vsix-test';
+/// Extension ID for the Dart Node extension.
+const extensionId = 'Nimblesite.dart-node';
 
 /// Cached TestAPI instance.
 TestAPI? _cachedTestAPI;

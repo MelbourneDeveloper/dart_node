@@ -59,6 +59,24 @@ void main() {
           assertOk(hasActivated, 'Must log activated');
         }),
       );
+
+      test(
+        'globalState memento round-trips through the binding',
+        syncTest(() {
+          final api = getTestAPI();
+          final logs = api.getLogMessages();
+          var roundTripped = false;
+          for (var i = 0; i < logs.length; i++) {
+            if (logs[i].toDart.contains('globalState round-trip: 7')) {
+              roundTripped = true;
+            }
+          }
+          assertOk(
+            roundTripped,
+            'globalState.update then get must return the stored value (7)',
+          );
+        }),
+      );
     }),
   );
 }

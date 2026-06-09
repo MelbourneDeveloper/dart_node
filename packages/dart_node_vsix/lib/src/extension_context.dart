@@ -35,14 +35,19 @@ extension type ExtensionContext._(JSObject _) implements JSObject {
 /// A memento for storing extension state.
 extension type Memento._(JSObject _) implements JSObject {
   /// Gets a value from the memento.
-  T? get<T extends JSAny?>(String key) => _mementoGet<T>(_, key.toJS);
+  T? get<T extends JSAny?>(String key) => _.callMethod<T>('get'.toJS, key.toJS);
 
   /// Updates a value in the memento.
-  Future<void> update(String key, Object? value) =>
-      _mementoUpdate(_, key.toJS, value.jsify()).toDart;
+  Future<void> update(String key, Object? value) => _
+      .callMethod<JSPromise<JSAny?>>('update'.toJS, key.toJS, value.jsify())
+      .toDart;
 
   /// Gets all keys in the memento.
-  List<String> keys() => _mementoKeys(_).toDart.cast<String>();
+  List<String> keys() => _
+      .callMethod<JSArray<JSString>>('keys'.toJS)
+      .toDart
+      .map((k) => k.toDart)
+      .toList();
 }
 
 List<Disposable> _getSubscriptions(JSObject context) {
@@ -54,16 +59,3 @@ void _pushSubscription(JSObject context, Disposable disposable) {
   final subs = context['subscriptions']! as JSObject;
   (subs['push']! as JSFunction).callAsFunction(subs, disposable);
 }
-
-@JS()
-external T? _mementoGet<T extends JSAny?>(JSObject memento, JSString key);
-
-@JS()
-external JSPromise<JSAny?> _mementoUpdate(
-  JSObject memento,
-  JSString key,
-  JSAny? value,
-);
-
-@JS()
-external JSArray<JSString> _mementoKeys(JSObject memento);

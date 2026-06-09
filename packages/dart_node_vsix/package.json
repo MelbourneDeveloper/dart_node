@@ -1,12 +1,15 @@
 {
-  "name": "dart-node-vsix-test",
-  "displayName": "Dart Node VSIX Test",
-  "description": "Test extension for dart_node_vsix package",
+  "name": "dart-node",
+  "displayName": "Dart Node",
+  "description": "General-purpose VS Code extension written entirely in Dart via dart_node_vsix.",
   "publisher": "Nimblesite",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.100.0"
   },
+  "categories": [
+    "Other"
+  ],
   "main": "./out/lib/extension.js",
   "activationEvents": [
     "*"
@@ -14,15 +17,31 @@
   "contributes": {
     "commands": [
       {
-        "command": "dartNodeVsix.test",
-        "title": "Test dart_node_vsix"
+        "command": "dartNode.hello",
+        "title": "Dart Node: Hello"
+      },
+      {
+        "command": "dartNode.showVersion",
+        "title": "Dart Node: Show VS Code Version"
+      },
+      {
+        "command": "dartNode.echo",
+        "title": "Dart Node: Echo Input"
+      },
+      {
+        "command": "dartNode.count",
+        "title": "Dart Node: Increment Run Counter"
+      },
+      {
+        "command": "dartNode.test",
+        "title": "Dart Node: Run Bindings Self-Test"
       }
     ],
     "views": {
       "explorer": [
         {
-          "id": "dartNodeVsix.testTree",
-          "name": "VSIX Test Tree"
+          "id": "dartNode.tree",
+          "name": "Dart Node"
         }
       ]
     }

@@ -172,6 +172,40 @@ void main() {
     final result = render(fc(component));
     final link = result.getByTestId('link');
     expect(link.textContent, equals('Click me'));
+    expect(link.getAttribute('href'), equals('https://example.com'));
+    result.unmount();
+  });
+
+  test('ref forwards to the rendered DOM node', () {
+    final inputRef = createRef<JSObject>();
+    final component = registerFunctionComponent(
+      (props) =>
+          $div() >>
+          $input(
+            ref: inputRef.jsRef,
+            type: 'text',
+            spread: {'data-testid': 'reffed'},
+          ),
+    );
+
+    final result = render(fc(component));
+    expect(result.getByTestId('reffed'), isNotNull);
+    expect(inputRef.jsRef.current, isNotNull);
+    result.unmount();
+  });
+
+  test('ref survives recomposition when children are added with >>', () {
+    final buttonRef = createRef<JSObject>();
+    final component = registerFunctionComponent(
+      (props) =>
+          $div() >>
+          ($button(ref: buttonRef.jsRef, spread: {'data-testid': 'save'}) >>
+              'Save'),
+    );
+
+    final result = render(fc(component));
+    expect(result.getByTestId('save').textContent, equals('Save'));
+    expect(buttonRef.jsRef.current, isNotNull);
     result.unmount();
   });
 
