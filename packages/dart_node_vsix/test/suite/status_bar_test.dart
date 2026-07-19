@@ -24,8 +24,8 @@ void main() {
           final api = getTestAPI();
           final text = api.getStatusBarText();
           assertOk(
-            text.contains('VSIX Test'),
-            'Status bar should have test text',
+            text.contains('Dart Node'),
+            'Status bar should show the Dart Node label',
           );
         }),
       );

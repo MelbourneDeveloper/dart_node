@@ -269,9 +269,23 @@ void main() {
 | `event_emitter.dart` | Custom event handling |
 | `mocha.dart` | Testing utilities |
 
-## Example
+## Bundled extension: Dart Node
 
-Too Many Cooks, an MCP server originally built in this ecosystem, shipped a VSCode extension. It has since moved to its own home at [tmc-mcp.dev](https://tmc-mcp.dev) and is no longer part of this repository.
+This package ships **Dart Node**, a small general-purpose VS Code extension
+written entirely in Dart ([`lib/extension.dart`](lib/extension.dart)). It doubles
+as the self-test that exercises every binding in a real Extension Host, so the
+APIs above are validated end-to-end. Its commands are a starting point you can
+copy from:
+
+| Command | What it does | Bindings shown |
+|---------|--------------|----------------|
+| `dartNode.hello` | Shows a greeting | `window.showInformationMessage` |
+| `dartNode.showVersion` | Shows the running VS Code version | `vscode.version` |
+| `dartNode.echo` | Prompts for input and echoes it back | `window.showInputBox` |
+| `dartNode.count` | Increments a persisted run counter | `context.globalState` memento |
+| `dartNode.test` | Runs the bindings self-test | commands, status bar, tree view |
+
+Build it with `bash build.sh` and package a `.vsix` with `npm run package`.
 
 ## Source Code
 

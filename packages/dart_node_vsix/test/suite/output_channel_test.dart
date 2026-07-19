@@ -22,7 +22,7 @@ void main() {
         'Extension creates output channel',
         syncTest(() {
           final api = getTestAPI();
-          assertEqual(api.getOutputChannelName(), 'VSIX Test');
+          assertEqual(api.getOutputChannelName(), 'Dart Node');
         }),
       );
 

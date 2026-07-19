@@ -141,6 +141,18 @@ JSObject _createElementApply(JSAny type, JSObject props, JSArray children) {
 @JS('Array.prototype.concat.call')
 external JSArray _concatArrays(JSArray arr1, JSArray arr2);
 
+/// Clone a React element, replacing its children while preserving the
+/// original element's props, `ref`, and `key`.
+///
+/// React 18 hoists `ref`/`key` out of `props`, so rebuilding an element from
+/// its `props` alone loses them. `cloneElement` carries them across, which is
+/// what the JSX `>>` operator needs when it attaches children. Delegates to the
+/// existing clone-with-children machinery, passing no config so props are kept.
+ReactElement cloneElementWithRawChildren(
+  JSObject element,
+  List<JSAny> children,
+) => ReactElement._(_cloneElementWithChildren(element, null, children.toJS));
+
 /// Create props object from a Map (with function conversion)
 JSObject createProps(Map<String, dynamic> props) {
   final obj = JSObject();

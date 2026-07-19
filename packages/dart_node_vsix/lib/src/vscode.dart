@@ -10,6 +10,9 @@ extension type VSCode._(JSObject _) implements JSObject {
   /// Gets the vscode module.
   factory VSCode() => _requireVscode('vscode');
 
+  /// The version of the running VS Code application (e.g. `1.100.0`).
+  external String get version;
+
   /// The commands namespace.
   external Commands get commands;
 
