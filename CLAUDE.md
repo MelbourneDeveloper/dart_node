@@ -2,6 +2,8 @@
 
 <!-- agent-pmo:76596cb -->
 
+⚠️ DO NOT USE GIT - ESPECIALLY, DO NOT SIGN YOURSELF AS COAUTHOR ⚠️
+
 Dart packages for building Node.js apps. Strongly Typed Dart layer over JS interop.
 
 ## Rules
