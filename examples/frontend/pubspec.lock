@@ -90,7 +90,7 @@ packages:
     source: hosted
     version: "3.0.7"
   dart_node_core:
-    dependency: transitive
+    dependency: "direct main"
     description:
       path: "../../packages/dart_node_core"
       relative: true

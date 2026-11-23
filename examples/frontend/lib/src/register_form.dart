@@ -23,47 +23,45 @@ ReactElement buildRegisterForm(
       final errorState = useState<String?>(null);
       final loadingState = useState(false);
 
-      Future<void> handleSubmit() async {
+      void handleSubmit() {
         loadingState.set(true);
         errorState.set(null);
 
-        try {
-          final result = await doFetch(
-            '$baseUrl/auth/register',
-            method: 'POST',
-            body: {
-              'email': emailState.value,
-              'password': passState.value,
-              'name': nameState.value,
-            },
-          );
-          result.match(
-            onSuccess: (response) {
-              final data = response['data'];
-              switch (data) {
-                case null:
-                  errorState.set('Registration failed');
-                case final JSObject details:
-                  switch (details['token']) {
-                    case final JSString token:
-                      auth.setToken(token);
-                      final user = switch (details['user']) {
-                        final JSObject u => u,
-                        _ => null,
-                      };
-                      auth.setUser(user);
-                    default:
-                      errorState.set('No token');
-                  }
-              }
-            },
-            onError: errorState.set,
-          );
-        } on Object catch (e) {
-          errorState.set(e.toString());
-        } finally {
-          loadingState.set(false);
-        }
+        unawaited(
+          doFetch(
+                '$baseUrl/auth/register',
+                method: 'POST',
+                body: {
+                  'email': emailState.value,
+                  'password': passState.value,
+                  'name': nameState.value,
+                },
+              )
+              .then((result) {
+                result.match(
+                  onSuccess: (response) {
+                    final data = response['data'];
+                    switch (data) {
+                      case null:
+                        errorState.set('Registration failed');
+                      case final JSObject details:
+                        switch (details['token']) {
+                          case final JSString token:
+                            auth.setToken(token);
+                            auth.setUser(details['user'] as JSObject?);
+                          default:
+                            errorState.set('No token');
+                        }
+                    }
+                  },
+                  onError: errorState.set,
+                );
+              })
+              .catchError((Object e) {
+                errorState.set(e.toString());
+              })
+              .whenComplete(() => loadingState.set(false)),
+        );
       }
 
       return div(

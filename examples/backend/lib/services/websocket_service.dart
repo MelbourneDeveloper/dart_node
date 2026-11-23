@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:backend/services/token_service.dart';
 import 'package:dart_node_core/dart_node_core.dart';
 import 'package:dart_node_ws/dart_node_ws.dart';
-import 'package:nadz/nadz.dart';
 import 'package:shared/models/task.dart';
 
 /// Event types for task changes
@@ -26,20 +25,18 @@ class WebSocketService {
 
   void _handleConnection(WebSocketClient client, String? url) {
     final token = _extractToken(url);
-    if (token == null) {
-      client.close(4001, 'Unauthorized');
-      return;
-    }
+    final payload = (token != null) ? _tokenService.verify(token) : null;
 
-    switch (_tokenService.verify(token)) {
-      case Error(:final error):
-        client.close(4001, error.message);
-      case Success(:final value):
-        client.userId = value.userId;
-        _addClient(value.userId, client);
-        client.onClose((_) => _removeClient(value.userId, client));
-        client.onError((_) => _removeClient(value.userId, client));
-        consoleLog('WebSocket client connected: ${value.userId}');
+    switch (payload) {
+      case null:
+        client.close(4001, 'Unauthorized');
+        return;
+      case final p:
+        client.userId = p.userId;
+        _addClient(p.userId, client);
+        client.onClose((_) => _removeClient(p.userId, client));
+        client.onError((_) => _removeClient(p.userId, client));
+        consoleLog('WebSocket client connected: ${p.userId}');
     }
   }
 

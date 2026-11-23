@@ -99,10 +99,9 @@ final class Context<T> {
 ///
 /// See: https://reactjs.org/docs/context.html#reactcreatecontext
 Context<T> createContext<T>(T defaultValue) {
-  final jsDefault = switch (defaultValue) {
-    null => null,
-    final Object obj => obj.jsify(),
-  };
+  final jsDefault = (defaultValue == null)
+      ? null
+      : (defaultValue as Object).jsify();
   final jsContext = JsContext.fromJs(_reactCreateContext(jsDefault));
   return Context._(jsContext, defaultValue);
 }
@@ -137,11 +136,5 @@ Context<T> createContext<T>(T defaultValue) {
 /// See: https://reactjs.org/docs/hooks-reference.html#usecontext
 T useContext<T>(Context<T> context) {
   final jsValue = _reactUseContext(context.jsContext);
-  return switch (jsValue) {
-    null => context.defaultValue,
-    final v => switch (v.dartify()) {
-      final T val => val,
-      _ => context.defaultValue,
-    },
-  };
+  return (jsValue == null) ? context.defaultValue : jsValue.dartify() as T;
 }

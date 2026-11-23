@@ -270,13 +270,12 @@ JSAny memo2(
 ///
 /// See: https://reactjs.org/docs/code-splitting.html#reactlazy
 JSAny lazy(Future<JSAny> Function() load) {
-  Future<JSObject> jsLoad() async {
-    final component = await load();
+  JSPromise<JSObject> jsLoad() => load().then((component) {
     // React.lazy expects a module with a 'default' export
     final module = JSObject();
     module['default'] = component;
     return module;
-  }
+  }).toJS;
 
-  return _reactLazy((() => jsLoad().toJS).toJS);
+  return _reactLazy(jsLoad.toJS);
 }

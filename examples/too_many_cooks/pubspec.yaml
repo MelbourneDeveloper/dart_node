@@ -1,0 +1,23 @@
+name: too_many_cooks
+description: Multi-agent Git coordination MCP server
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  austerity: ^1.3.0
+  dart_logging:
+    path: ../../packages/dart_logging
+  dart_node_better_sqlite3:
+    path: ../../packages/dart_node_better_sqlite3
+  dart_node_core:
+    path: ../../packages/dart_node_core
+  dart_node_mcp:
+    path: ../../packages/dart_node_mcp
+  nadz: ^0.0.7-beta
+  path: ^1.9.0
+
+dev_dependencies:
+  test: ^1.24.0

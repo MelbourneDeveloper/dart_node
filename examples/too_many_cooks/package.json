@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.24.3",
+    "better-sqlite3": "^12.5.0",
+    "zod": "^3.24.0"
+  }
+}

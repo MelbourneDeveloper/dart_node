@@ -1,0 +1,7 @@
+include: package:austerity/analysis_options.yaml
+
+analyzer:
+  errors:
+    avoid_catches_without_on_clauses: ignore
+    require_trailing_commas: ignore
+    public_member_api_docs: error

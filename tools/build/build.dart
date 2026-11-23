@@ -143,6 +143,7 @@ List<Directory> _findNpmDirs(Directory pkg) {
 
 String? _findEntryPoint(String exampleDir) {
   final candidates = [
+    'bin/server.dart',
     'server.dart',
     'main.dart',
     'app.dart',
@@ -193,15 +194,14 @@ String? _searchEntryPoints(String exampleDir, List<String> remaining) {
   String target,
   String buildDir,
 ) {
-  final outputName = switch (target) {
-    'backend' => 'server.js',
-    'mobile' => 'app.js',
-    _ => '$target.js',
-  };
-  final tempOutput = '$buildDir/temp_$outputName';
-  final finalOutput = '$buildDir/$outputName';
-  // Get relative path from exampleDir (entryPoint is absolute)
+  // Get output name from entry point (bin/server.dart -> bin/server.js)
   final entryRelative = entryPoint.replaceFirst('$exampleDir/', '');
+  final outputPath = entryRelative.replaceAll('.dart', '.js');
+  final outputDir = '$buildDir/${outputPath.contains('/') ? outputPath.substring(0, outputPath.lastIndexOf('/')) : ''}';
+  Directory(outputDir).createSync(recursive: true);
+  final outputName = outputPath.split('/').last;
+  final tempOutput = '$outputDir/temp_$outputName';
+  final finalOutput = '$outputDir/$outputName';
 
   print('  Compiling Dart to JS...');
   final compileResult = Process.runSync('dart', [
