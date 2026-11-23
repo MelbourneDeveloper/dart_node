@@ -1,6 +1,6 @@
 ---
 layout: layouts/blog.njk
-title: "Introducing dart_node: Full-Stack Dart for JavaScript"
+title: "Introducing dart_node: Full-Stack Dart for the JavaScript Ecosystem"
 description: "We're excited to announce dart_node, a framework for building React, React Native, and Express applications entirely in Dart."
 date: 2024-01-15
 author: "dart_node team"
@@ -79,19 +79,14 @@ The foundation layer. Provides JavaScript interop utilities, Node.js bindings, a
 Type-safe Express.js bindings. Build REST APIs with the same patterns you know from Express, but with Dart's type safety.
 
 ```dart
-import 'dart:js_interop';
-import 'package:dart_node_express/dart_node_express.dart';
+final app = createExpressApp();
 
-final app = express();
-
-app.get('/users/:id', handler((req, res) {
+app.get('/users/:id', (req, res) {
   final id = req.params['id'];
-  res.jsonMap({'user': {'id': id}});
-}));
+  res.json({'user': {'id': id}});
+});
 
-app.listen(3000, () {
-  print('Server running on port 3000');
-}.toJS);
+app.listen(3000);
 ```
 
 ### dart_node_react
@@ -100,11 +95,11 @@ React bindings with hooks, components, and JSX-like syntax. Everything you love 
 
 ```dart
 ReactElement counter() {
-  final count = useState(0);
+  final (count, setCount) = useState(0);
 
   return button(
-    text: 'Count: ${count.value}',
-    onClick: () => count.setWithUpdater((c) => c + 1),
+    onClick: (_) => setCount((c) => c + 1),
+    children: [text('Count: $count')],
   );
 }
 ```
@@ -117,7 +112,7 @@ React Native bindings for mobile development. Use with Expo for a complete mobil
 ReactElement app() {
   return safeAreaView(children: [
     view(style: {'padding': 20}, children: [
-      text('Hello from Dart!'),
+      rnText(children: [text('Hello from Dart!')]),
     ]),
   ]);
 }
@@ -130,9 +125,9 @@ WebSocket bindings for real-time communication. Build chat apps, dashboards, and
 ```dart
 final server = createWebSocketServer(port: 8080);
 
-server.onConnection((client, url) {
-  client.onMessage((message) {
-    client.send('Echo: ${message.text}');
+server.on('connection', (client) {
+  client.on('message', (data) {
+    client.send('Echo: $data');
   });
 });
 ```
@@ -150,19 +145,18 @@ dart pub add dart_node_core dart_node_express
 Write your server:
 
 ```dart
-import 'dart:js_interop';
 import 'package:dart_node_express/dart_node_express.dart';
 
 void main() {
-  final app = express();
+  final app = createExpressApp();
 
-  app.get('/', handler((req, res) {
-    res.jsonMap({'message': 'Hello from Dart!'});
-  }));
+  app.get('/', (req, res) {
+    res.json({'message': 'Hello from Dart!'});
+  });
 
   app.listen(3000, () {
     print('Server running on port 3000');
-  }.toJS);
+  });
 }
 ```
 

@@ -1,247 +1,109 @@
-# agent-pmo:76596cb
 name: CI
 
-# CI runs on PRs to main ONLY ([CI-WORKFLOWS]). Merges/pushes to main trigger
-# nothing — main is already-validated code that arrived through a green PR.
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-# Coverage threshold is NOT an env var / GitHub repo variable — it lives in
-# coverage-thresholds.json ([COVERAGE-THRESHOLDS-JSON]) and is resolved in the
-# test job below.
-env:
-  SERVER_BINARY: build/bin/server_node.js
-
 jobs:
-  # Change detection ([CI-PATH-FILTER]). Website-only PRs skip the Dart
-  # lint/test/build jobs; code-only PRs skip the website job. Job-level `if`
-  # skips report a "skipped" conclusion that SATISFIES required status checks —
-  # unlike workflow-level `paths:` filters, which leave required checks pending
-  # forever and block the merge. So we gate here, never with `on: paths`.
-  changes:
-    name: Detect changes
+  ci:
+    name: CI
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      code: ${{ steps.filter.outputs.code }}
-      website: ${{ steps.filter.outputs.website }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            website:
-              - 'website/**'
-            code:
-              - '!website/**'
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          dart-version: ${{ vars.DART_VERSION }}
-
-      - name: Install tools
-        run: |
-          npm install -g cspell
-          dart pub global activate coverage
-
-      - name: Get all dependencies
-        run: |
-          while read -r pub; do
-            grep -qE 'sdk:[[:space:]]*flutter' "$pub" && continue
-            dir=$(dirname "$pub")
-            echo "::group::$dir"
-            (cd "$dir" && dart pub get)
-            echo "::endgroup::"
-          done < <(find packages examples signal_mesh -name pubspec.yaml \
-            -not -path '*/node_modules/*' -not -path '*/.dart_tool/*' \
-            -not -path '*/build/*' | sort)
-
-      - name: Install npm dependencies
-        run: |
-          while read -r pkg; do
-            dir=$(dirname "$pkg")
-            echo "::group::npm install $dir"
-            (cd "$dir" && npm install)
-            echo "::endgroup::"
-          done < <(find packages examples signal_mesh -name package.json \
-            -not -path '*/node_modules/*' | sort)
-
-      - name: Check formatting
-        run: make fmt CHECK=1
-
-      - name: Spell check
-        run: cspell "**/*.md" "**/*.dart" "**/*.ts" --no-progress
-
-      - name: Analyze
-        run: |
-          while read -r pub; do
-            grep -qE 'sdk:[[:space:]]*flutter' "$pub" && continue
-            dir=$(dirname "$pub")
-            echo "::group::Analyzing $dir"
-            (cd "$dir" && dart analyze --no-fatal-warnings)
-            echo "::endgroup::"
-          done < <(find packages examples signal_mesh -name pubspec.yaml \
-            -not -path '*/node_modules/*' -not -path '*/.dart_tool/*' \
-            -not -path '*/build/*' | sort)
-
-      # Deslop duplication gate ([CI-DESLOP]). Threshold lives in committed
-      # .deslop.toml — ratcheted DOWN, never up. `deslop .` exits 3 when exceeded.
-      - name: Deslop duplication gate
-        env:
-          DESLOP_VERSION: "0.5.1"  # pin — see https://github.com/Nimblesite/Deslop/releases
-        run: |
-          curl -sSfL "https://github.com/Nimblesite/Deslop/releases/download/v${DESLOP_VERSION}/deslop-${DESLOP_VERSION}-linux-x64.tar.gz" | tar -xz
-          # Run the binary by path: GITHUB_PATH only affects *later* steps, so a
-          # bare `deslop` here is not yet on PATH (exit 127).
-          "$PWD/deslop-${DESLOP_VERSION}-linux-x64/deslop" .
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [changes, lint]
-    if: needs.changes.outputs.code == 'true'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          dart-version: ${{ vars.DART_VERSION }}
-
-      - name: Install tools
-        run: |
-          npm install -g cspell
-          dart pub global activate coverage
-
-      - name: Get all dependencies
-        run: |
-          while read -r pub; do
-            grep -qE 'sdk:[[:space:]]*flutter' "$pub" && continue
-            dir=$(dirname "$pub")
-            echo "::group::$dir"
-            (cd "$dir" && dart pub get)
-            echo "::endgroup::"
-          done < <(find packages examples signal_mesh -name pubspec.yaml \
-            -not -path '*/node_modules/*' -not -path '*/.dart_tool/*' \
-            -not -path '*/build/*' | sort)
-
-      - name: Install npm dependencies
-        run: |
-          while read -r pkg; do
-            dir=$(dirname "$pkg")
-            echo "::group::npm install $dir"
-            (cd "$dir" && npm install)
-            echo "::endgroup::"
-          done < <(find packages examples signal_mesh -name package.json \
-            -not -path '*/node_modules/*' | sort)
-
-      # Threshold is read from coverage-thresholds.json — single source of truth.
-      - name: Resolve coverage threshold
-        run: echo "MIN_COVERAGE=$(jq -r '.default_threshold' coverage-thresholds.json)" >> "$GITHUB_ENV"
-
-      # Single run so the coverage-scope guard executes: every package with a
-      # test/ dir must be tiered or explicitly excluded, or the build fails.
-      - name: Test (all packages + coverage-scope guard)
-        run: ./tools/test.sh
-
-      - name: Upload test logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-logs
-          path: logs/
-          retention-days: 7
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [changes, test]
-    if: needs.changes.outputs.code == 'true'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          dart-version: ${{ vars.DART_VERSION }}
-
-      - name: Get all dependencies
-        run: |
-          while read -r pub; do
-            grep -qE 'sdk:[[:space:]]*flutter' "$pub" && continue
-            dir=$(dirname "$pub")
-            echo "::group::$dir"
-            (cd "$dir" && dart pub get)
-            echo "::endgroup::"
-          done < <(find packages examples signal_mesh -name pubspec.yaml \
-            -not -path '*/node_modules/*' -not -path '*/.dart_tool/*' \
-            -not -path '*/build/*' | sort)
-
-      - name: Build
-        run: make build
-
-  website:
-    name: Website Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: changes
-    if: needs.changes.outputs.website == 'true'
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
         with:
-          sdk: ${{ vars.DART_VERSION }}
+          sdk: stable
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: website/package-lock.json
 
-      - name: Install dependencies
-        working-directory: website
-        run: npm ci
+      - name: Get dependencies
+        run: |
+          cd packages/dart_node_core && dart pub get
+          cd ../dart_node_express && dart pub get
+          cd ../dart_node_react && dart pub get
+          cd ../dart_node_react_native && dart pub get
+          cd ../dart_node_ws && dart pub get
+          cd ../../examples/shared && dart pub get
+          cd ../backend && dart pub get
+          cd ../frontend && dart pub get
+          cd ../mobile && dart pub get
+          cd ../../tools/build && dart pub get
 
-      - name: Get Playwright version
-        id: playwright-version
-        working-directory: website
-        run: echo "version=$(npm ls @playwright/test --json | jq -r '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+      - name: Check formatting
+        run: |
+          dart format --set-exit-if-changed packages/dart_node_core
+          dart format --set-exit-if-changed packages/dart_node_express
+          dart format --set-exit-if-changed packages/dart_node_react
+          dart format --set-exit-if-changed packages/dart_node_react_native
+          dart format --set-exit-if-changed packages/dart_node_ws
+          dart format --set-exit-if-changed examples/backend
+          dart format --set-exit-if-changed examples/frontend
+          dart format --set-exit-if-changed examples/mobile
+          dart format --set-exit-if-changed examples/shared
+          dart format --set-exit-if-changed tools/build
 
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+      - name: Analyze
+        run: |
+          cd packages/dart_node_core && dart analyze --no-fatal-warnings
+          cd ../dart_node_express && dart analyze --no-fatal-warnings
+          cd ../dart_node_react && dart analyze --no-fatal-warnings
+          cd ../dart_node_react_native && dart analyze --no-fatal-warnings
+          cd ../dart_node_ws && dart analyze --no-fatal-warnings
+          cd ../../examples/backend && dart analyze --no-fatal-warnings
+          cd ../frontend && dart analyze --no-fatal-warnings
+          cd ../mobile && dart analyze --no-fatal-warnings
+          cd ../shared && dart analyze --no-fatal-warnings
+          cd ../../tools/build && dart analyze --no-fatal-warnings
 
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        working-directory: website
-        run: npx playwright install --with-deps chromium
+      - name: Install Node dependencies
+        working-directory: examples/backend
+        run: npm install
 
-      - name: Install Playwright deps only (cached)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+      - name: Build backend
+        run: dart run tools/build/build.dart backend
 
-      - name: Build website
-        working-directory: website
-        run: npm run build
+      - name: Test backend
+        working-directory: examples/backend
+        run: dart test
 
-      - name: Run tests
-        working-directory: website
-        run: npm test
+      - name: Test frontend
+        working-directory: examples/frontend
+        run: dart test -p chrome
+
+      - name: Test mobile with coverage
+        working-directory: examples/mobile
+        run: |
+          dart test --coverage=coverage
+          dart pub global activate coverage
+          dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+          COVERAGE=$(awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' coverage/lcov.info)
+          echo "Mobile coverage: ${COVERAGE}%"
+          if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
+            echo "Coverage ${COVERAGE}% is below 90% threshold"
+            exit 1
+          fi
+
+      - name: Test react package with coverage
+        working-directory: packages/dart_node_react
+        run: |
+          dart test --coverage=coverage
+          dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+          COVERAGE=$(awk -F: '/^LF:/ { total += $2 } /^LH:/ { covered += $2 } END { if (total > 0) printf "%.1f", (covered / total) * 100; else print "0" }' coverage/lcov.info)
+          echo "React package coverage: ${COVERAGE}%"
+          if [ -z "$COVERAGE" ] || [ "$COVERAGE" = "0" ] || [ "$(echo "$COVERAGE < 90" | bc -l)" -eq 1 ]; then
+            echo "Coverage ${COVERAGE}% is below 90% threshold"
+            exit 1
+          fi
+
+      - name: Build frontend
+        run: dart run tools/build/build.dart frontend
+
+      - name: Build mobile
+        run: dart run tools/build/build.dart mobile

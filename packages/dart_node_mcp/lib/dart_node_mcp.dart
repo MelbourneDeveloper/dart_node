@@ -51,11 +51,6 @@ export 'src/stdio_transport.dart'
         StdioServerTransport,
         createStdioServerTransport,
         createStdioServerTransportWithStreams;
-export 'src/streamable_http_transport.dart'
-    show
-        StreamableHttpTransport,
-        StreamableHttpTransportOptions,
-        createStreamableHttpTransport;
 export 'src/transport.dart'
     show
         Transport,

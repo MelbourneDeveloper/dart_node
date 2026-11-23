@@ -1,103 +1,105 @@
-import { readFileSync } from "fs";
-import { execSync } from "child_process";
-import { dirname, resolve, join } from "path";
-import { fileURLToPath } from "url";
-
-// Import plugin submodules via file paths (workaround for #9:
-// virtual templates override local layouts, so we register non-layout
-// virtual templates separately. Package only exports "." so we use
-// direct file paths.)
-import { registerFilters } from "./node_modules/eleventy-plugin-techdoc/lib/filters/index.js";
-import { registerCollections } from "./node_modules/eleventy-plugin-techdoc/lib/plugins/collections.js";
-import { registerShortcodes } from "./node_modules/eleventy-plugin-techdoc/lib/shortcodes/index.js";
-import { configureMarkdown } from "./node_modules/eleventy-plugin-techdoc/lib/plugins/markdown.js";
 import syntaxHighlight from "@11ty/eleventy-plugin-syntaxhighlight";
-import rss from "@11ty/eleventy-plugin-rss";
-import navigation from "@11ty/eleventy-navigation";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const packagesDir = resolve(__dirname, "..", "packages");
-
-const techdocOptions = {
-  site: {
-    name: "dart_node",
-    title: "dart_node - Full-Stack Dart for the JavaScript Ecosystem",
-    url: "https://dartnode.org",
-    description: "Write React, React Native, and Express apps entirely in Dart. One language for frontend, backend, and mobile.",
-    author: "dart_node team",
-    themeColor: "#0E7C6B",
-    stylesheet: "/assets/css/styles.css",
-    twitterSite: "@cfdevelop",
-    twitterCreator: "@cfdevelop",
-    ogImage: "/assets/images/og-image.png",
-    ogImageWidth: "1200",
-    ogImageHeight: "630",
-    organization: {
-      name: "dart_node",
-      logo: "/assets/images/og-image.png",
-      sameAs: [
-        "https://github.com/MelbourneDeveloper/dart_node",
-        "https://x.com/cfdevelop",
-        "https://pub.dev/publishers/christianfindlay.com/packages"
-      ]
-    }
-  },
-  features: {
-    blog: true,
-    docs: true,
-    darkMode: true,
-    i18n: true,
-  },
-  i18n: {
-    defaultLanguage: "en",
-    languages: ["en", "zh"],
-  },
-};
+import pluginRss from "@11ty/eleventy-plugin-rss";
+import eleventyNavigationPlugin from "@11ty/eleventy-navigation";
 
 export default function(eleventyConfig) {
-  eleventyConfig.setUseGitIgnore(false);
-
-  // === techdoc plugin features (without layout virtual templates) ===
-  // We use the plugin's filters, collections, shortcodes, markdown config,
-  // and bundled plugins, but NOT its layout virtual templates because
-  // dart_node's layouts are superior (see GitHub issue #9).
-
-  // Global data (same as plugin sets)
-  eleventyConfig.addGlobalData("techdocOptions", techdocOptions);
-  eleventyConfig.addGlobalData("supportedLanguages", techdocOptions.i18n.languages);
-  eleventyConfig.addGlobalData("defaultLanguage", techdocOptions.i18n.defaultLanguage);
-
-  // Plugin submodules
-  configureMarkdown(eleventyConfig);
-  registerFilters(eleventyConfig, techdocOptions);
-  registerCollections(eleventyConfig, techdocOptions);
-  registerShortcodes(eleventyConfig);
-
-  // Bundled plugins
+  // Plugins
   eleventyConfig.addPlugin(syntaxHighlight);
-  eleventyConfig.addPlugin(rss);
-  eleventyConfig.addPlugin(navigation);
+  eleventyConfig.addPlugin(pluginRss);
+  eleventyConfig.addPlugin(eleventyNavigationPlugin);
 
-  // Plugin structural CSS (no colors - site provides visual styling)
-  const techdocAssetsDir = join(__dirname, "node_modules", "eleventy-plugin-techdoc", "assets");
-  eleventyConfig.addPassthroughCopy({ [techdocAssetsDir]: "techdoc" });
-
-  // Register only NON-LAYOUT virtual templates from the plugin
-  // (feed, sitemap, robots.txt, llms.txt, blog scaffold pages)
-  // Layouts come from our local src/_includes/layouts/ which are superior.
-  registerSeoVirtualTemplates(eleventyConfig);
-
-  // === Site-specific config ===
+  // Passthrough copy for assets
   eleventyConfig.addPassthroughCopy("src/assets");
   eleventyConfig.addPassthroughCopy("src/api");
+  eleventyConfig.addPassthroughCopy("src/robots.txt");
+
+  // Watch targets
   eleventyConfig.addWatchTarget("src/assets/");
 
-  eleventyConfig.addWatchTarget(packagesDir);
-  eleventyConfig.on("eleventy.beforeWatch", (changedFiles) => {
-    if (changedFiles.some(f => f.endsWith("README.md"))) {
-      execSync("node scripts/copy-readmes.js", { stdio: "inherit" });
-    }
+  // Collections
+  eleventyConfig.addCollection("posts", function(collectionApi) {
+    return collectionApi.getFilteredByGlob("src/blog/*.md").sort((a, b) => {
+      return b.date - a.date;
+    });
   });
+
+  eleventyConfig.addCollection("docs", function(collectionApi) {
+    return collectionApi.getFilteredByGlob("src/docs/**/*.md");
+  });
+
+  // Tag collection - get all unique tags from blog posts
+  eleventyConfig.addCollection("tagList", function(collectionApi) {
+    const tagSet = new Set();
+    collectionApi.getFilteredByGlob("src/blog/*.md").forEach(post => {
+      (post.data.tags || []).forEach(tag => {
+        tag !== 'post' && tag !== 'posts' && tagSet.add(tag);
+      });
+    });
+    return [...tagSet].sort();
+  });
+
+  // Category collection - get all unique categories from blog posts
+  eleventyConfig.addCollection("categoryList", function(collectionApi) {
+    const categorySet = new Set();
+    collectionApi.getFilteredByGlob("src/blog/*.md").forEach(post => {
+      post.data.category && categorySet.add(post.data.category);
+    });
+    return [...categorySet].sort();
+  });
+
+  // Posts by tag - creates a collection for each tag
+  eleventyConfig.addCollection("postsByTag", function(collectionApi) {
+    const postsByTag = {};
+    collectionApi.getFilteredByGlob("src/blog/*.md").forEach(post => {
+      (post.data.tags || []).forEach(tag => {
+        tag !== 'post' && tag !== 'posts' && (postsByTag[tag] = postsByTag[tag] || []).push(post);
+      });
+    });
+    Object.keys(postsByTag).forEach(tag => {
+      postsByTag[tag].sort((a, b) => b.date - a.date);
+    });
+    return postsByTag;
+  });
+
+  // Posts by category - creates a collection for each category
+  eleventyConfig.addCollection("postsByCategory", function(collectionApi) {
+    const postsByCategory = {};
+    collectionApi.getFilteredByGlob("src/blog/*.md").forEach(post => {
+      post.data.category && (postsByCategory[post.data.category] = postsByCategory[post.data.category] || []).push(post);
+    });
+    Object.keys(postsByCategory).forEach(cat => {
+      postsByCategory[cat].sort((a, b) => b.date - a.date);
+    });
+    return postsByCategory;
+  });
+
+  // Filters
+  eleventyConfig.addFilter("dateFormat", (dateObj) => {
+    return new Date(dateObj).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  });
+
+  eleventyConfig.addFilter("isoDate", (dateObj) => {
+    return new Date(dateObj).toISOString();
+  });
+
+  eleventyConfig.addFilter("limit", (arr, limit) => {
+    return arr.slice(0, limit);
+  });
+
+  eleventyConfig.addFilter("capitalize", (str) => {
+    return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+  });
+
+  eleventyConfig.addFilter("slugify", (str) => {
+    return str ? str.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '') : '';
+  });
+
+  // Shortcodes
+  eleventyConfig.addShortcode("year", () => `${new Date().getFullYear()}`);
 
   return {
     dir: {
@@ -110,31 +112,4 @@ export default function(eleventyConfig) {
     markdownTemplateEngine: "njk",
     htmlTemplateEngine: "njk"
   };
-}
-
-/**
- * Register only SEO virtual templates from the techdoc plugin.
- * Layouts and blog scaffold pages come from local files (dart_node's are superior).
- */
-function registerSeoVirtualTemplates(eleventyConfig) {
-  const templatesDir = join(
-    __dirname, "node_modules", "eleventy-plugin-techdoc", "templates"
-  );
-
-  eleventyConfig.addTemplate(
-    "feed.njk",
-    readFileSync(join(templatesDir, "pages/feed.njk"), "utf-8")
-  );
-  eleventyConfig.addTemplate(
-    "sitemap.njk",
-    readFileSync(join(templatesDir, "pages/sitemap.njk"), "utf-8")
-  );
-  eleventyConfig.addTemplate(
-    "robots.txt.njk",
-    readFileSync(join(templatesDir, "pages/robots.txt.njk"), "utf-8")
-  );
-  eleventyConfig.addTemplate(
-    "llms.txt.njk",
-    readFileSync(join(templatesDir, "pages/llms.txt.njk"), "utf-8")
-  );
 }

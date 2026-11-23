@@ -11,8 +11,7 @@ import 'package:dart_node_react/src/react.dart';
 /// - Only call Hooks at the top level.
 /// - Only call Hooks from inside a function component.
 ///
-/// - [useState documentation](https://react.dev/reference/react/useState)
-/// - [useState 是一个 React Hook，它允许你向组件添加一个状态变量](https://zh-hans.react.dev/reference/react/useState)
+/// Learn more: https://reactjs.org/docs/hooks-state.html
 final class StateHook<T> {
   StateHook._(this._value, this._setValue);
 
@@ -24,40 +23,25 @@ final class StateHook<T> {
 
   /// The current value of the state.
   ///
-  /// - [useState documentation](https://react.dev/reference/react/useState)
-  /// - [useState 是一个 React Hook，它允许你向组件添加一个状态变量](https://zh-hans.react.dev/reference/react/useState)
+  /// See: https://reactjs.org/docs/hooks-reference.html#usestate
   T get value => _value;
 
   /// Updates [value] to [newValue].
   ///
-  /// - [setState documentation](https://react.dev/reference/react/useState#setstate)
-  /// - [useState 是一个 React Hook，它允许你向组件添加一个状态变量](https://zh-hans.react.dev/reference/react/useState#setstate)
+  /// See: https://reactjs.org/docs/hooks-state.html#updating-state
   void set(T newValue) {
-    final jsValue = switch (newValue) {
-      null => null,
-      final Object obj => obj.jsify(),
-    };
+    final jsValue = (newValue == null) ? null : (newValue as Object).jsify();
     _setValue(jsValue);
   }
 
   /// Updates [value] to the return value of [computeNewValue].
   ///
-  /// - [Updating state based on previous state](https://react.dev/reference/react/useState#updating-state-based-on-the-previous-state)
-  /// - [useState 是一个 React Hook，它允许你向组件添加一个状态变量](https://zh-hans.react.dev/reference/react/useState#updating-state-based-on-the-previous-state)
+  /// See: https://reactjs.org/docs/hooks-reference.html#functional-updates
   void setWithUpdater(T Function(T oldValue) computeNewValue) {
     JSAny? updater(JSAny? oldValue) {
-      final dartOld = switch (oldValue) {
-        null => null as T,
-        final v => switch (v.dartify()) {
-          final T val => val,
-          _ => null as T,
-        },
-      };
+      final dartOld = oldValue.dartify() as T;
       final newVal = computeNewValue(dartOld);
-      return switch (newVal) {
-        null => null,
-        final Object obj => obj.jsify(),
-      };
+      return (newVal == null) ? null : (newVal as Object).jsify();
     }
 
     _setValue(updater.toJS);
@@ -85,26 +69,17 @@ final class StateHook<T> {
 /// });
 /// ```
 ///
-/// - [useState documentation](https://react.dev/reference/react/useState)
-/// - [useState 是一个 React Hook，它允许你向组件添加一个状态变量](https://zh-hans.react.dev/reference/react/useState)
+/// Learn more: https://reactjs.org/docs/hooks-state.html
 StateHook<T> useState<T>(T initialValue) {
-  final jsInitial = switch (initialValue) {
-    null => null,
-    final Object obj => obj.jsify(),
-  };
+  final jsInitial = (initialValue == null)
+      ? null
+      : (initialValue as Object).jsify();
   final result = React.useState(jsInitial);
   final jsValue = result[0];
   final value = (jsValue == null) ? null : jsValue.dartify();
-  final setter = switch (result[1]) {
-    final JSFunction fn => fn,
-    _ => throw StateError('useState setter is not a function'),
-  };
-  final typedValue = switch (value) {
-    final T v => v,
-    null => null as T,
-    _ => throw StateError('useState value type mismatch'),
-  };
-  return StateHook._(typedValue, (v) => setter.callAsFunction(null, v));
+  final setter = result[1];
+  final fn = setter! as JSFunction;
+  return StateHook._(value as T, (v) => fn.callAsFunction(null, v));
 }
 
 /// Adds local state to a function component by returning a [StateHook] with
@@ -126,30 +101,19 @@ StateHook<T> useState<T>(T initialValue) {
 /// });
 /// ```
 ///
-/// - [Avoiding recreating the initial state](https://react.dev/reference/react/useState#avoiding-recreating-the-initial-state)
-/// - [useState 是一个 React Hook，它允许你向组件添加一个状态变量](https://zh-hans.react.dev/reference/react/useState#avoiding-recreating-the-initial-state)
+/// Learn more: https://reactjs.org/docs/hooks-reference.html#lazy-initial-state
 StateHook<T> useStateLazy<T>(T Function() init) {
   JSAny? jsInit() {
     final val = init();
-    return switch (val) {
-      null => null,
-      final Object obj => obj.jsify(),
-    };
+    return (val == null) ? null : (val as Object).jsify();
   }
 
   final result = React.useState(jsInit.toJS);
   final jsValue = result[0];
   final value = (jsValue == null) ? null : jsValue.dartify();
-  final setter = switch (result[1]) {
-    final JSFunction fn => fn,
-    _ => throw StateError('useState setter is not a function'),
-  };
-  final typedValue = switch (value) {
-    final T v => v,
-    null => null as T,
-    _ => throw StateError('useState value type mismatch'),
-  };
-  return StateHook._(typedValue, (v) => setter.callAsFunction(null, v));
+  final setter = result[1];
+  final fn = setter! as JSFunction;
+  return StateHook._(value as T, (v) => fn.callAsFunction(null, v));
 }
 
 /// State hook for JS interop types (JSString, JSObject, etc).
@@ -183,11 +147,9 @@ final class StateHookJS {
 StateHookJS useStateJS(JSAny? initialValue) {
   final result = React.useState(initialValue);
   final jsValue = result[0];
-  final setter = switch (result[1]) {
-    final JSFunction fn => fn,
-    _ => throw StateError('useState setter is not a function'),
-  };
-  return StateHookJS._(jsValue, (v) => setter.callAsFunction(null, v));
+  final setter = result[1];
+  final fn = setter! as JSFunction;
+  return StateHookJS._(jsValue, (v) => fn.callAsFunction(null, v));
 }
 
 /// State hook for lists of JS objects.
@@ -210,11 +172,7 @@ final class StateHookJSArray<T extends JSAny> {
   /// Updates [value] to the return value of [computeNewValue].
   void setWithUpdater(List<T> Function(List<T> oldValue) computeNewValue) {
     JSAny? updater(JSAny? oldValue) {
-      final jsArray = switch (oldValue) {
-        final JSArray arr => arr,
-        _ => null,
-      };
-      final dartOld = _jsArrayToList<T>(jsArray);
+      final dartOld = _jsArrayToList<T>(oldValue as JSArray?);
       return computeNewValue(dartOld).toJS;
     }
 
@@ -228,12 +186,8 @@ List<T> _jsArrayToList<T extends JSAny>(JSArray? jsArray) {
   final length = jsArray.length;
   final result = <T>[];
   for (var i = 0; i < length; i++) {
-    switch (jsArray[i]) {
-      case final T item:
-        result.add(item);
-      case _:
-        break;
-    }
+    final item = jsArray[i];
+    if (item != null) result.add(item as T);
   }
   return result;
 }
@@ -253,14 +207,8 @@ List<T> _jsArrayToList<T extends JSAny>(JSArray? jsArray) {
 StateHookJSArray<T> useStateJSArray<T extends JSAny>(JSAny? initialValue) {
   final result = React.useState(initialValue);
   final jsValue = result[0];
-  final setter = switch (result[1]) {
-    final JSFunction fn => fn,
-    _ => throw StateError('useState setter is not a function'),
-  };
-  final jsArray = switch (jsValue) {
-    final JSArray arr => arr,
-    _ => null,
-  };
-  final value = _jsArrayToList<T>(jsArray);
-  return StateHookJSArray._(value, (v) => setter.callAsFunction(null, v));
+  final setter = result[1];
+  final fn = setter! as JSFunction;
+  final value = _jsArrayToList<T>(jsValue as JSArray?);
+  return StateHookJSArray._(value, (v) => fn.callAsFunction(null, v));
 }

@@ -1,6 +1,5 @@
 // This is a console logger
 // ignore_for_file: avoid_print
-// coverage:ignore-file
 
 import 'dart:io';
 

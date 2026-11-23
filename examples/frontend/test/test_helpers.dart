@@ -18,19 +18,10 @@ AuthEffects createMockAuth() => (
 
 /// Create a JSObject from a Dart map
 JSObject createJSObject(Map<String, Object?> map) {
-  final json = switch (globalContext['JSON']) {
-    final JSObject o => o,
-    _ => throw StateError('JSON not available'),
-  };
-  final parseFn = switch (json['parse']) {
-    final JSFunction f => f,
-    _ => throw StateError('JSON.parse not available'),
-  };
+  final json = globalContext['JSON']! as JSObject;
+  final parseFn = json['parse']! as JSFunction;
   final jsonStr = _toJsonString(map);
-  return switch (parseFn.callAsFunction(null, jsonStr.toJS)) {
-    final JSObject o => o,
-    _ => throw StateError('Failed to parse JSON'),
-  };
+  return parseFn.callAsFunction(null, jsonStr.toJS)! as JSObject;
 }
 
 /// Create a JSTask from a Dart map
@@ -135,14 +126,10 @@ void simulateWsMessage(String json) {
   final ws = _lastMockWs;
   if (ws == null) return;
   final onmessage = ws['onmessage'];
-  switch (onmessage) {
-    case final JSFunction f:
-      final event = JSObject();
-      event['data'] = json.toJS;
-      f.callAsFunction(null, event);
-    case _:
-      return;
-  }
+  if (onmessage == null) return;
+  final event = JSObject();
+  event['data'] = json.toJS;
+  (onmessage as JSFunction).callAsFunction(null, event);
 }
 
 // --- Wait Helpers ---

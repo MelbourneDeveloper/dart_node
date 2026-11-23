@@ -93,11 +93,7 @@ ReactElement taskListScreen({
   return view(
     style: AppStyles.container,
     children: [
-      _buildHeader(
-        getUserDisplayName(user),
-        handleLogout,
-        () => authEffects.setView('pomodoro'),
-      ),
+      _buildHeader(getUserDisplayName(user), handleLogout),
       loading
           ? view(
               style: {'flex': 1, 'justifyContent': 'center'},
@@ -131,21 +127,12 @@ ReactElement taskListScreen({
   );
 });
 
-RNViewElement _buildHeader(
-  String userName,
-  void Function() onLogout,
-  void Function() onTimerPress,
-) => view(
+RNViewElement _buildHeader(String userName, void Function() onLogout) => view(
   style: AppStyles.header,
   children: [
     text('TaskFlow', style: AppStyles.headerTitle),
-    touchableOpacity(
-      onPress: onTimerPress,
-      style: _styles.timerButton,
-      child: text('Timer', style: _styles.timerIcon),
-    ),
     view(
-      style: {'flexDirection': 'row', 'alignItems': 'center', 'gap': 12},
+      style: {'flexDirection': 'row', 'alignItems': 'center', 'gap': 16},
       children: [
         text('Hi, $userName', style: AppStyles.headerUserName),
         touchableOpacity(
@@ -248,34 +235,36 @@ RNViewElement _buildTaskItem(JSTask task, TaskEffects effects) => view(
   ],
 );
 
-Future<void> _loadTasks(
+void _loadTasks(
   String token,
   StateHookJSArray<JSTask> tasksState,
   StateHook<bool> loadingState,
   StateHook<String?> errorState,
   Fetch? fetchFn,
-) async {
+) {
   final doFetch = fetchFn ?? fetchJson;
-  try {
-    final result = await doFetch('$apiUrl/tasks', token: token);
-    result.match(
-      onSuccess: (response) {
-        final data = response['data'];
-        switch (data) {
-          case final JSArray arr:
-            tasksState.set(_jsArrayToTasks(arr));
-          case _:
-            tasksState.set([]);
-        }
-        errorState.set(null);
-      },
-      onError: (message) => errorState.set(message),
-    );
-  } on Object catch (e) {
-    errorState.set(e.toString());
-  } finally {
-    loadingState.set(false);
-  }
+  doFetch('$apiUrl/tasks', token: token)
+      .then((result) {
+        result.match(
+          onSuccess: (response) {
+            final data = response['data'];
+            switch (data) {
+              case final JSArray arr:
+                tasksState.set(_jsArrayToTasks(arr));
+              case _:
+                tasksState.set([]);
+            }
+            errorState.set(null);
+          },
+          onError: (message) => errorState.set(message),
+        );
+      })
+      .catchError((Object e) {
+        errorState.set(e.toString());
+      })
+      .whenComplete(() {
+        loadingState.set(false);
+      });
 }
 
 List<JSTask> _jsArrayToTasks(JSArray arr) {
@@ -291,103 +280,97 @@ List<JSTask> _jsArrayToTasks(JSArray arr) {
   return result;
 }
 
-Future<void> _toggleTask(
+void _toggleTask(
   String token,
   String id,
   bool completed,
   StateHookJSArray<JSTask> tasksState,
   StateHook<String?> errorState,
   Fetch? fetchFn,
-) async {
+) {
   final doFetch = fetchFn ?? fetchJson;
-  try {
-    final result = await doFetch(
-      '$apiUrl/tasks/$id',
-      method: 'PUT',
-      token: token,
-      body: {'completed': completed},
-    );
-    result.match(
-      onSuccess: (_) {
-        tasksState.setWithUpdater((tasks) {
-          return tasks.map((t) {
-            return (t.id == id) ? t.withCompleted(completed) : t;
-          }).toList();
-        });
-        errorState.set(null);
-      },
-      onError: (message) => errorState.set(message),
-    );
-  } on Object catch (e) {
-    errorState.set(e.toString());
-  }
+  doFetch(
+        '$apiUrl/tasks/$id',
+        method: 'PUT',
+        token: token,
+        body: {'completed': completed},
+      )
+      .then((result) {
+        result.match(
+          onSuccess: (_) {
+            tasksState.setWithUpdater((tasks) {
+              return tasks.map((t) {
+                return (t.id == id) ? t.withCompleted(completed) : t;
+              }).toList();
+            });
+            errorState.set(null);
+          },
+          onError: (message) => errorState.set(message),
+        );
+      })
+      .catchError((Object e) {
+        errorState.set(e.toString());
+      });
 }
 
-Future<void> _deleteTask(
+void _deleteTask(
   String token,
   String id,
   StateHookJSArray<JSTask> tasksState,
   StateHook<String?> errorState,
   Fetch? fetchFn,
-) async {
+) {
   final doFetch = fetchFn ?? fetchJson;
-  try {
-    final result = await doFetch(
-      '$apiUrl/tasks/$id',
-      method: 'DELETE',
-      token: token,
-    );
-    result.match(
-      onSuccess: (_) {
-        tasksState.setWithUpdater((tasks) {
-          return tasks.where((t) => t.id != id).toList();
-        });
-        errorState.set(null);
-      },
-      onError: (message) => errorState.set(message),
-    );
-  } on Object catch (e) {
-    errorState.set(e.toString());
-  }
+  doFetch('$apiUrl/tasks/$id', method: 'DELETE', token: token)
+      .then((result) {
+        result.match(
+          onSuccess: (_) {
+            tasksState.setWithUpdater((tasks) {
+              return tasks.where((t) => t.id != id).toList();
+            });
+            errorState.set(null);
+          },
+          onError: (message) => errorState.set(message),
+        );
+      })
+      .catchError((Object e) {
+        errorState.set(e.toString());
+      });
 }
 
-Future<void> _createTask(
+void _createTask(
   String token,
   String title,
   StateHookJSArray<JSTask> tasksState,
   StateHook<String?> errorState,
   Fetch? fetchFn,
   void Function() onSuccess,
-) async {
+) {
   final doFetch = fetchFn ?? fetchJson;
-  try {
-    final result = await doFetch(
-      '$apiUrl/tasks',
-      method: 'POST',
-      token: token,
-      body: {'title': title},
-    );
-    result.match(
-      onSuccess: (response) {
-        final data = response['data'];
-        switch (data) {
-          case final JSObject obj:
-            final newTask = JSTask.fromJS(obj);
-            // Deduplicate: only add if not already present (WS might have added it)
-            tasksState.setWithUpdater(
-              (tasks) => addTaskIfNotExists(tasks, newTask),
-            );
-          case _:
-            break;
-        }
-        errorState.set(null);
-        onSuccess();
-      },
-      onError: (message) => errorState.set(message),
-    );
-  } on Object catch (e) {
-    errorState.set(e.toString());
-  }
+  doFetch('$apiUrl/tasks', method: 'POST', token: token, body: {'title': title})
+      .then((result) {
+        result.match(
+          onSuccess: (response) {
+            final data = response['data'];
+            switch (data) {
+              case final JSObject obj:
+                final newTask = JSTask.fromJS(obj);
+                // Deduplicate: only add if not already present (WS might have added it)
+                tasksState.setWithUpdater(
+                  (tasks) => addTaskIfNotExists(tasks, newTask),
+                );
+              case _:
+                break;
+            }
+            errorState.set(null);
+            onSuccess();
+          },
+          onError: (message) => errorState.set(message),
+        );
+      })
+      .catchError((Object e) {
+        errorState.set(e.toString());
+      });
 }
 
 /// Handle incoming WebSocket task events using functional updater
@@ -397,25 +380,4 @@ void _handleTaskEvent(
   StateHookJSArray<JSTask> tasksState,
 ) {
   tasksState.setWithUpdater((current) => handleTaskEvent(type, task, current));
-}
-
-final _styles = _TaskListStyles();
-
-class _TaskListStyles {
-  Map<String, Object?> get timerButton => {
-    'paddingHorizontal': AppSpacing.lg,
-    'paddingVertical': AppSpacing.sm,
-    'backgroundColor': AppColors.accentPrimary,
-    'borderRadius': AppSpacing.md,
-    'minWidth': 44,
-    'minHeight': 36,
-    'alignItems': 'center',
-    'justifyContent': 'center',
-  };
-
-  Map<String, Object?> get timerIcon => {
-    'fontSize': 18,
-    'color': '#ffffff',
-    'textAlign': 'center',
-  };
 }

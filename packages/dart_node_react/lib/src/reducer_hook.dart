@@ -17,8 +17,7 @@ external JSArray _reactUseReducer(
 /// - Only call Hooks at the top level.
 /// - Only call Hooks from inside a function component.
 ///
-/// - [useReducer documentation](https://react.dev/reference/react/useReducer)
-/// - [useReducer – React 中文文档](https://zh-hans.react.dev/reference/react/useReducer)
+/// Learn more: https://reactjs.org/docs/hooks-reference.html#usereducer
 final class ReducerHook<TState, TAction> {
   ReducerHook._(this._state, this._dispatchFn);
 
@@ -30,8 +29,7 @@ final class ReducerHook<TState, TAction> {
 
   /// The current state of the component.
   ///
-  /// - [useReducer documentation](https://react.dev/reference/react/useReducer)
-  /// - [useReducer – React 中文文档](https://zh-hans.react.dev/reference/react/useReducer)
+  /// See: https://reactjs.org/docs/hooks-reference.html#usereducer
   TState get state => _state;
 
   /// Dispatches [action] and triggers state changes.
@@ -39,8 +37,7 @@ final class ReducerHook<TState, TAction> {
   /// Note: The dispatch function identity is stable and will not change on
   /// re-renders.
   ///
-  /// - [useReducer documentation](https://react.dev/reference/react/useReducer)
-  /// - [useReducer – React 中文文档](https://zh-hans.react.dev/reference/react/useReducer)
+  /// See: https://reactjs.org/docs/hooks-reference.html#usereducer
   void dispatch(TAction action) => _dispatchFn(action);
 }
 
@@ -80,8 +77,7 @@ final class ReducerHook<TState, TAction> {
 /// });
 /// ```
 ///
-/// - [useReducer documentation](https://react.dev/reference/react/useReducer)
-/// - [useReducer – React 中文文档](https://zh-hans.react.dev/reference/react/useReducer)
+/// Learn more: https://reactjs.org/docs/hooks-reference.html#usereducer
 ReducerHook<TState, TAction> useReducer<TState, TAction>(
   TState Function(TState state, TAction action) reducer,
   TState initialState,
@@ -155,8 +151,7 @@ ReducerHook<TState, TAction> useReducer<TState, TAction>(
 /// });
 /// ```
 ///
-/// - [useReducer lazy initialization](https://react.dev/reference/react/useReducer#avoiding-recreating-the-initial-state)
-/// - [useReducer – React 中文文档](https://zh-hans.react.dev/reference/react/useReducer#avoiding-recreating-the-initial-state)
+/// Learn more: https://reactjs.org/docs/hooks-reference.html#lazy-initialization
 ReducerHook<TState, TAction> useReducerLazy<TState, TAction, TInit>(
   TState Function(TState state, TAction action) reducer,
   TInit initialArg,

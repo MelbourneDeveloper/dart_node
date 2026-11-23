@@ -2,15 +2,12 @@ import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
 import 'package:backend/schemas.dart';
-import 'package:backend/services/pomodoro_service.dart';
 import 'package:backend/services/task_service.dart';
 import 'package:backend/services/token_service.dart';
 import 'package:backend/services/user_service.dart';
 import 'package:backend/services/websocket_service.dart';
 import 'package:dart_node_core/dart_node_core.dart';
 import 'package:dart_node_express/dart_node_express.dart';
-import 'package:nadz/nadz.dart';
-import 'package:shared/models/pomodoro.dart';
 import 'package:shared/models/task.dart';
 import 'package:shared/models/user.dart';
 
@@ -18,7 +15,6 @@ void main() {
   final tokenService = TokenService('super-secret-jwt-key-change-in-prod');
   final userService = UserService();
   final taskService = TaskService();
-  final pomodoroService = PomodoroService();
   final wsService = WebSocketService(tokenService)..start(port: 3001);
 
   express()
@@ -37,121 +33,84 @@ void main() {
     ..postWithMiddleware('/auth/register', [
       validateBody(createUserSchema),
       asyncHandler((req, res) async {
-        switch (getValidatedBody<CreateUserData>(req)) {
-          case Error(:final error):
-            res
-              ..status(400)
-              ..jsonMap({'error': error});
-          case Success(:final value):
-            if (userService.findByEmail(value.email) != null) {
-              throw const ConflictError('Email already registered');
-            }
-            final user = userService.create(
-              email: value.email,
-              password: value.password,
-              name: value.name,
-            );
-            final token = tokenService.generate(user.id);
-            res
-              ..status(201)
-              ..jsonMap({
-                'success': true,
-                'data': {'user': user.toJson(), 'token': token},
-              });
+        final data = getValidatedBody<CreateUserData>(req);
+        if (userService.findByEmail(data.email) != null) {
+          throw const ConflictError('Email already registered');
         }
+        final user = userService.create(
+          email: data.email,
+          password: data.password,
+          name: data.name,
+        );
+        final token = tokenService.generate(user.id);
+        res
+          ..status(201)
+          ..jsonMap({
+            'success': true,
+            'data': {'user': user.toJson(), 'token': token},
+          });
       }),
     ])
     ..postWithMiddleware('/auth/login', [
       validateBody(loginSchema),
       asyncHandler((req, res) async {
-        switch (getValidatedBody<LoginData>(req)) {
-          case Error(:final error):
-            res
-              ..status(400)
-              ..jsonMap({'error': error});
-          case Success(:final value):
-            final user = userService.findByEmail(value.email);
-            if (user == null) {
-              throw const UnauthorizedError('Invalid email or password');
-            }
-            if (!userService.verifyPassword(user, value.password)) {
-              throw const UnauthorizedError('Invalid email or password');
-            }
-            userService.updateLastLogin(user.id);
-            res.jsonMap({
-              'success': true,
-              'data': {
-                'user': user.toJson(),
-                'token': tokenService.generate(user.id),
-              },
-            });
+        final data = getValidatedBody<LoginData>(req);
+        final user = userService.findByEmail(data.email);
+        if (user == null || !userService.verifyPassword(user, data.password)) {
+          throw const UnauthorizedError('Invalid email or password');
         }
+        userService.updateLastLogin(user.id);
+        res.jsonMap({
+          'success': true,
+          'data': {
+            'user': user.toJson(),
+            'token': tokenService.generate(user.id),
+          },
+        });
       }),
     ])
     ..getWithMiddleware('/tasks', [
       authenticate(tokenService, userService),
       asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(:final value):
-            res.jsonMap({
-              'success': true,
-              'data': taskService
-                  .findByUser(value.user.id)
-                  .map((t) => t.toJson())
-                  .toList(),
-            });
-        }
+        final auth = getAuthContext(req);
+        res.jsonMap({
+          'success': true,
+          'data': taskService
+              .findByUser(auth.user.id)
+              .map((t) => t.toJson())
+              .toList(),
+        });
       }),
     ])
     ..postWithMiddleware('/tasks', [
       authenticate(tokenService, userService),
       validateBody(createTaskSchema),
       asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            switch (getValidatedBody<CreateTaskData>(req)) {
-              case Error(:final error):
-                res
-                  ..status(400)
-                  ..jsonMap({'error': error});
-              case Success(:final value):
-                final task = taskService.create(
-                  userId: auth.user.id,
-                  title: value.title,
-                  description: value.description,
-                );
-                wsService.notifyTaskChange(
-                  auth.user.id,
-                  TaskEventType.created,
-                  task,
-                );
-                res
-                  ..status(201)
-                  ..jsonMap({'success': true, 'data': task.toJson()});
-            }
-        }
+        final auth = getAuthContext(req);
+        final data = getValidatedBody<CreateTaskData>(req);
+        final task = taskService.create(
+          userId: auth.user.id,
+          title: data.title,
+          description: data.description,
+        );
+        wsService.notifyTaskChange(auth.user.id, TaskEventType.created, task);
+        res
+          ..status(201)
+          ..jsonMap({'success': true, 'data': task.toJson()});
       }),
     ])
     ..getWithMiddleware('/tasks/:id', [
       authenticate(tokenService, userService),
       asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            final task = taskService.findById(getParam(req, 'id'));
-            switch (task) {
-              case null:
-                throw const NotFoundError('Task');
-              case Task(:final userId) when userId != auth.user.id:
-                throw const ForbiddenError('Cannot access this task');
-              case final Task t:
-                res.jsonMap({'success': true, 'data': t.toJson()});
-            }
+        final auth = getAuthContext(req);
+        final task = taskService.findById(getParam(req, 'id'));
+        switch (task) {
+          case null:
+            throw const NotFoundError('Task');
+          case Task(:final userId) when userId != auth.user.id:
+            throw const ForbiddenError('Cannot access this task');
+          case final Task t:
+            res.jsonMap({'success': true, 'data': t.toJson()});
         }
       }),
     ])
@@ -159,282 +118,46 @@ void main() {
       authenticate(tokenService, userService),
       validateBody(updateTaskSchema),
       asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            final taskId = getParam(req, 'id');
-            switch (getValidatedBody<UpdateTaskData>(req)) {
-              case Error(:final error):
-                res
-                  ..status(400)
-                  ..jsonMap({'error': error});
-              case Success(:final value):
-                final task = taskService.findById(taskId);
-                switch (task) {
-                  case null:
-                    throw const NotFoundError('Task');
-                  case Task(:final userId) when userId != auth.user.id:
-                    throw const ForbiddenError('Cannot modify this task');
-                  case Task():
-                    switch (taskService.update(
-                      taskId,
-                      title: value.title,
-                      description: value.description,
-                      completed: value.completed,
-                    )) {
-                      case Error(:final error):
-                        throw NotFoundError(error);
-                      case Success(value: final updated):
-                        wsService.notifyTaskChange(
-                          auth.user.id,
-                          TaskEventType.updated,
-                          updated,
-                        );
-                        res.jsonMap({
-                          'success': true,
-                          'data': updated.toJson(),
-                        });
-                    }
-                }
-            }
+        final auth = getAuthContext(req);
+        final taskId = getParam(req, 'id');
+        final data = getValidatedBody<UpdateTaskData>(req);
+        final task = taskService.findById(taskId);
+        switch (task) {
+          case null:
+            throw const NotFoundError('Task');
+          case Task(:final userId) when userId != auth.user.id:
+            throw const ForbiddenError('Cannot modify this task');
+          case Task():
+            final updated = taskService.update(
+              taskId,
+              title: data.title,
+              description: data.description,
+              completed: data.completed,
+            );
+            wsService.notifyTaskChange(
+              auth.user.id,
+              TaskEventType.updated,
+              updated!,
+            );
+            res.jsonMap({'success': true, 'data': updated.toJson()});
         }
       }),
     ])
     ..deleteWithMiddleware('/tasks/:id', [
       authenticate(tokenService, userService),
       asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            final taskId = getParam(req, 'id');
-            final task = taskService.findById(taskId);
-            switch (task) {
-              case null:
-                throw const NotFoundError('Task');
-              case Task(:final userId) when userId != auth.user.id:
-                throw const ForbiddenError('Cannot delete this task');
-              case final Task t:
-                switch (taskService.delete(taskId)) {
-                  case Error(:final error):
-                    throw NotFoundError(error);
-                  case Success():
-                    wsService.notifyTaskChange(
-                      auth.user.id,
-                      TaskEventType.deleted,
-                      t,
-                    );
-                    res.jsonMap({'success': true, 'message': 'Task deleted'});
-                }
-            }
-        }
-      }),
-    ])
-    ..getWithMiddleware('/pomodoro/active', [
-      authenticate(tokenService, userService),
-      asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            final activeSession = pomodoroService.getActiveSession(
-              auth.user.id,
-            );
-            res.jsonMap({'success': true, 'data': activeSession?.toJson()});
-        }
-      }),
-    ])
-    ..postWithMiddleware('/pomodoro/start', [
-      authenticate(tokenService, userService),
-      validateBody(createPomodoroSessionSchema),
-      asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            switch (getValidatedBody<CreatePomodoroSessionData>(req)) {
-              case Error(:final error):
-                res
-                  ..status(400)
-                  ..jsonMap({'error': error});
-              case Success(:final value):
-                final session = pomodoroService.create(
-                  userId: auth.user.id,
-                  title: value.title,
-                  duration: value.duration ?? 25,
-                  breakDuration: value.breakDuration ?? 5,
-                  linkedTaskId: value.linkedTaskId,
-                );
-                final started = pomodoroService.start(session.id);
-                res
-                  ..status(201)
-                  ..jsonMap({'success': true, 'data': started?.toJson()});
-            }
-        }
-      }),
-    ])
-    ..getWithMiddleware('/pomodoro', [
-      authenticate(tokenService, userService),
-      asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            res.jsonMap({
-              'success': true,
-              'data': pomodoroService
-                  .findByUser(auth.user.id)
-                  .map((s) => s.toJson())
-                  .toList(),
-            });
-        }
-      }),
-    ])
-    ..postWithMiddleware('/pomodoro', [
-      authenticate(tokenService, userService),
-      validateBody(createPomodoroSessionSchema),
-      asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            switch (getValidatedBody<CreatePomodoroSessionData>(req)) {
-              case Error(:final error):
-                res
-                  ..status(400)
-                  ..jsonMap({'error': error});
-              case Success(:final value):
-                final session = pomodoroService.create(
-                  userId: auth.user.id,
-                  title: value.title,
-                  duration: value.duration ?? 25,
-                  breakDuration: value.breakDuration ?? 5,
-                  linkedTaskId: value.linkedTaskId,
-                );
-                res
-                  ..status(201)
-                  ..jsonMap({'success': true, 'data': session.toJson()});
-            }
-        }
-      }),
-    ])
-    ..postWithMiddleware('/pomodoro/:id/start', [
-      authenticate(tokenService, userService),
-      asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            final session = pomodoroService.findById(getParam(req, 'id'));
-            switch (session) {
-              case null:
-                throw const NotFoundError('Pomodoro session');
-              case final s when s.userId != auth.user.id:
-                throw const ForbiddenError('Cannot start this session');
-              case final s:
-                final started = pomodoroService.start(s.id);
-                res.jsonMap({'success': true, 'data': started?.toJson()});
-            }
-        }
-      }),
-    ])
-    ..postWithMiddleware('/pomodoro/:id/pause', [
-      authenticate(tokenService, userService),
-      asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            final session = pomodoroService.findById(getParam(req, 'id'));
-            switch (session) {
-              case null:
-                throw const NotFoundError('Pomodoro session');
-              case final s when s.userId != auth.user.id:
-                throw const ForbiddenError('Cannot pause this session');
-              case final s:
-                final paused = pomodoroService.pauseSession(s.id);
-                res.jsonMap({'success': true, 'data': paused?.toJson()});
-            }
-        }
-      }),
-    ])
-    ..postWithMiddleware('/pomodoro/:id/resume', [
-      authenticate(tokenService, userService),
-      asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            final session = pomodoroService.findById(getParam(req, 'id'));
-            switch (session) {
-              case null:
-                throw const NotFoundError('Pomodoro session');
-              case final s when s.userId != auth.user.id:
-                throw const ForbiddenError('Cannot resume this session');
-              case final s:
-                final resumed = pomodoroService.resumeSession(s.id);
-                res.jsonMap({'success': true, 'data': resumed?.toJson()});
-            }
-        }
-      }),
-    ])
-    ..postWithMiddleware('/pomodoro/:id/complete', [
-      authenticate(tokenService, userService),
-      asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            final session = pomodoroService.findById(getParam(req, 'id'));
-            switch (session) {
-              case null:
-                throw const NotFoundError('Pomodoro session');
-              case final s when s.userId != auth.user.id:
-                throw const ForbiddenError('Cannot complete this session');
-              case final s:
-                final completed = pomodoroService.completeSession(s.id);
-                res.jsonMap({'success': true, 'data': completed?.toJson()});
-            }
-        }
-      }),
-    ])
-    ..getWithMiddleware('/pomodoro/:id', [
-      authenticate(tokenService, userService),
-      asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            final session = pomodoroService.findById(getParam(req, 'id'));
-            switch (session) {
-              case null:
-                throw const NotFoundError('Pomodoro session');
-              case final s when s.userId != auth.user.id:
-                throw const ForbiddenError('Cannot access this session');
-              case final s:
-                res.jsonMap({'success': true, 'data': s.toJson()});
-            }
-        }
-      }),
-    ])
-    ..deleteWithMiddleware('/pomodoro/:id', [
-      authenticate(tokenService, userService),
-      asyncHandler((req, res) async {
-        switch (getAuthContextWithService(req, userService)) {
-          case Error(:final error):
-            throw UnauthorizedError(error);
-          case Success(value: final auth):
-            final session = pomodoroService.findById(getParam(req, 'id'));
-            switch (session) {
-              case null:
-                throw const NotFoundError('Pomodoro session');
-              case final s when s.userId != auth.user.id:
-                throw const ForbiddenError('Cannot delete this session');
-              case final s:
-                pomodoroService.delete(s.id);
-                res.jsonMap({'success': true, 'message': 'Session deleted'});
-            }
+        final auth = getAuthContext(req);
+        final taskId = getParam(req, 'id');
+        final task = taskService.findById(taskId);
+        switch (task) {
+          case null:
+            throw const NotFoundError('Task');
+          case Task(:final userId) when userId != auth.user.id:
+            throw const ForbiddenError('Cannot delete this task');
+          case final Task t:
+            taskService.delete(taskId);
+            wsService.notifyTaskChange(auth.user.id, TaskEventType.deleted, t);
+            res.jsonMap({'success': true, 'message': 'Task deleted'});
         }
       }),
     ])
@@ -452,18 +175,9 @@ String getParam(Request req, String name) => req.params[name].toString();
 
 /// JSON body parser middleware
 JSFunction jsonParser() {
-  final express = switch (requireModule('express')) {
-    final JSObject o => o,
-    _ => throw StateError('Express module not found'),
-  };
-  final jsonFn = switch (express['json']) {
-    final JSFunction f => f,
-    _ => throw StateError('Express json function not found'),
-  };
-  return switch (jsonFn.callAsFunction()) {
-    final JSFunction f => f,
-    _ => throw StateError('Failed to create JSON parser'),
-  };
+  final express = requireModule('express') as JSObject;
+  final jsonFn = express['json']! as JSFunction;
+  return jsonFn.callAsFunction()! as JSFunction;
 }
 
 /// CORS middleware
@@ -481,12 +195,11 @@ JSFunction cors() => ((Request req, Response res, JSNextFunction next) {
   next();
 }).toJS;
 
-/// Authentication context stored in request
+/// Authentication context
 typedef AuthContext = ({User user, String token});
 
-/// Internal storage key for user ID
-const _authUserIdKey = '__auth_user_id__';
-const _authTokenKey = '__auth_token__';
+/// Storage for auth contexts (keyed by request object identity via hash)
+final _authContexts = <int, AuthContext>{};
 
 /// Auth middleware
 JSFunction authenticate(TokenService tokenService, UserService userService) =>
@@ -505,15 +218,15 @@ JSFunction authenticate(TokenService tokenService, UserService userService) =>
           return;
         case final header:
           final token = header.toString().substring(7);
-          final verifyResult = tokenService.verify(token);
-          switch (verifyResult) {
-            case Error(:final error):
+          final payload = tokenService.verify(token);
+          switch (payload) {
+            case null:
               res
                 ..status(401)
-                ..jsonMap({'error': error.message});
+                ..jsonMap({'error': 'Invalid or expired token'});
               return;
-            case Success(:final value):
-              final user = userService.findById(value.userId);
+            case final p:
+              final user = userService.findById(p.userId);
               switch (user) {
                 case null:
                   res
@@ -521,34 +234,18 @@ JSFunction authenticate(TokenService tokenService, UserService userService) =>
                     ..jsonMap({'error': 'User not found'});
                   return;
                 case final u:
-                  // Store user ID and token in request object
-                  req[_authUserIdKey] = u.id.toJS;
-                  req[_authTokenKey] = token.toJS;
+                  _authContexts[(req as JSObject).hashCode] = (
+                    user: u,
+                    token: token,
+                  );
                   next();
               }
           }
       }
     }).toJS;
 
-/// Get auth context from request - requires userService to look up user
-Result<AuthContext, String> getAuthContextWithService(
-  Request req,
-  UserService userService,
-) {
-  final userId = switch (req[_authUserIdKey]) {
-    final JSString s => s.toDart,
-    _ => null,
-  };
-  final token = switch (req[_authTokenKey]) {
-    final JSString s => s.toDart,
-    _ => null,
-  };
-  if (userId == null || token == null) {
-    return const Error('No auth context found');
-  }
-  final user = userService.findById(userId);
-  if (user == null) {
-    return const Error('User not found');
-  }
-  return Success((user: user, token: token));
+/// Get auth context
+AuthContext getAuthContext(Request req) {
+  final ctx = _authContexts[(req as JSObject).hashCode];
+  return ctx ?? (throw StateError('No auth context'));
 }

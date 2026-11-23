@@ -1,0 +1,9 @@
+name: build_tool
+description: Build tool for compiling Dart to Node.js compatible JS
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  node_preamble: ^2.0.2

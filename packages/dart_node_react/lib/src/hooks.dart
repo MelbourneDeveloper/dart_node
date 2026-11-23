@@ -71,8 +71,7 @@ JSAny? _toJsAny(Object? value) => (value == null) ? null : value.jsify();
 /// });
 /// ```
 ///
-/// - [useEffect documentation](https://react.dev/reference/react/useEffect)
-/// - [useEffect 是一个 React Hook，它允许你将组件与外部系统同步](https://zh-hans.react.dev/reference/react/useEffect)
+/// Learn more: https://reactjs.org/docs/hooks-effect.html
 void useEffect(Object? Function() sideEffect, [List<Object?>? dependencies]) {
   JSAny? wrappedSideEffect() {
     final result = sideEffect();
@@ -111,8 +110,7 @@ void useEffect(Object? Function() sideEffect, [List<Object?>? dependencies]) {
 /// });
 /// ```
 ///
-/// - [useLayoutEffect documentation](https://react.dev/reference/react/useLayoutEffect)
-/// - [useLayoutEffect 是 useEffect 的一个版本，在浏览器重新绘制屏幕之前触发](https://zh-hans.react.dev/reference/react/useLayoutEffect)
+/// Learn more: https://reactjs.org/docs/hooks-reference.html#uselayouteffect
 void useLayoutEffect(
   Object? Function() sideEffect, [
   List<Object?>? dependencies,
@@ -157,8 +155,7 @@ void useLayoutEffect(
 /// });
 /// ```
 ///
-/// - [useRef documentation](https://react.dev/reference/react/useRef)
-/// - [useRef 是一个 React Hook，它能帮助引用一个不需要渲染的值](https://zh-hans.react.dev/reference/react/useRef)
+/// Learn more: https://reactjs.org/docs/hooks-reference.html#useref
 Ref<T?> useRef<T>([T? initialValue]) => useRefInit<T?>(initialValue);
 
 /// Returns a mutable [Ref] object with [Ref.current] property initialized to
@@ -189,8 +186,7 @@ Ref<T?> useRef<T>([T? initialValue]) => useRefInit<T?>(initialValue);
 /// });
 /// ```
 ///
-/// - [useRef documentation](https://react.dev/reference/react/useRef)
-/// - [useRef 是一个 React Hook，它能帮助引用一个不需要渲染的值](https://zh-hans.react.dev/reference/react/useRef)
+/// Learn more: https://reactjs.org/docs/hooks-reference.html#useref
 Ref<T> useRefInit<T>(T initialValue) {
   final jsInitial = _toJsAny(initialValue);
   final jsRef = React.useRef(jsInitial);
@@ -230,8 +226,7 @@ Ref<T> useRefInit<T>(T initialValue) {
 /// });
 /// ```
 ///
-/// - [useImperativeHandle documentation](https://react.dev/reference/react/useImperativeHandle)
-/// - [useImperativeHandle 是 React 中的一个 Hook，它能让你自定义由 ref 暴露出来的句柄](https://zh-hans.react.dev/reference/react/useImperativeHandle)
+/// Learn more: https://reactjs.org/docs/hooks-reference.html#useimperativehandle
 void useImperativeHandle<T>(
   Object? ref,
   T Function() createHandle, [
@@ -243,8 +238,7 @@ void useImperativeHandle<T>(
   final jsRef = switch (ref) {
     final Ref<Object?> r => r.jsRef,
     final JsRef jr => jr,
-    final JSAny js => js,
-    _ => null,
+    _ => ref as JSAny?,
   };
 
   final jsDeps = dependencies?.map(_toJsAny).toList().toJS;
@@ -285,17 +279,13 @@ void useImperativeHandle<T>(
 /// });
 /// ```
 ///
-/// - [useMemo documentation](https://react.dev/reference/react/useMemo)
-/// - [useMemo 是一个 React Hook，它在每次重新渲染的时候能够缓存计算的结果](https://zh-hans.react.dev/reference/react/useMemo)
+/// Learn more: https://reactjs.org/docs/hooks-reference.html#usememo
 T useMemo<T>(T Function() createFunction, [List<Object?>? dependencies]) {
   JSAny? jsCreateFunction() => _toJsAny(createFunction());
 
   final jsDeps = (dependencies ?? <Object?>[]).map(_toJsAny).toList().toJS;
   final result = React.useMemo(jsCreateFunction.toJS, jsDeps);
-  return switch (result.dartify()) {
-    final T v => v,
-    _ => throw StateError('useMemo returned unexpected type'),
-  };
+  return result.dartify() as T;
 }
 
 /// Returns a memoized version of [callback] that only changes if one of the
@@ -323,14 +313,13 @@ T useMemo<T>(T Function() createFunction, [List<Object?>? dependencies]) {
 /// });
 /// ```
 ///
-/// - [useCallback documentation](https://react.dev/reference/react/useCallback)
-/// - [useCallback 是一个允许你在多次渲染中缓存函数的 React Hook](https://zh-hans.react.dev/reference/react/useCallback)
+/// Learn more: https://reactjs.org/docs/hooks-reference.html#usecallback
 JSFunction useCallback(Function callback, List<Object?> dependencies) {
-  final jsCallback = switch (callback) {
-    final void Function() fn => fn.toJS,
-    final void Function(JSAny) fn => fn.toJS,
-    _ => throw StateError('Unsupported callback type: ${callback.runtimeType}'),
-  };
+  final jsCallback = (callback is void Function())
+      ? callback.toJS
+      : (callback is void Function(JSAny))
+      ? callback.toJS
+      : throw StateError('Unsupported callback type: ${callback.runtimeType}');
 
   final jsDeps = dependencies.map(_toJsAny).toList().toJS;
   return React.useCallback(jsCallback, jsDeps);
@@ -374,21 +363,10 @@ JSFunction useCallback(Function callback, List<Object?> dependencies) {
 /// }
 /// ```
 ///
-/// - [useDebugValue documentation](https://react.dev/reference/react/useDebugValue)
-/// - [useDebugValue 是一个 React Hook，可以让你在 React 开发工具中为自定义 Hook 添加标签](https://zh-hans.react.dev/reference/react/useDebugValue)
+/// Learn more: https://reactjs.org/docs/hooks-reference.html#usedebugvalue
 void useDebugValue<T>(T value, [String Function(T)? format]) {
   final jsValue = _toJsAny(value);
-  JSString jsFormatFn(JSAny? v) {
-    final dartValue = switch (v) {
-      null => value,
-      final jsVal => switch (jsVal.dartify()) {
-        final T val => val,
-        _ => value, // fallback to original value
-      },
-    };
-    return format!(dartValue).toJS;
-  }
-
+  JSString jsFormatFn(JSAny? v) => format!(v.dartify() as T).toJS;
   final jsFormat = (format != null) ? jsFormatFn.toJS : null;
 
   _reactUseDebugValue(jsValue, jsFormat);

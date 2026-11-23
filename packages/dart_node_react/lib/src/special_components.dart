@@ -42,8 +42,7 @@ external JSAny _reactLazy(JSFunction factory);
 /// createElement(Fragment, null, [child1, child2, child3]);
 /// ```
 ///
-/// - [Fragment documentation](https://react.dev/reference/react/Fragment)
-/// - [Fragment – React 中文文档](https://zh-hans.react.dev/reference/react/Fragment)
+/// See: https://reactjs.org/docs/fragments.html
 JSAny get Fragment => _reactFragment;
 
 /// Creates a Fragment element that groups children without adding extra
@@ -57,8 +56,7 @@ JSAny get Fragment => _reactFragment;
 /// ]);
 /// ```
 ///
-/// - [Fragment documentation](https://react.dev/reference/react/Fragment)
-/// - [Fragment – React 中文文档](https://zh-hans.react.dev/reference/react/Fragment)
+/// See: https://reactjs.org/docs/fragments.html
 ReactElement fragment({List<ReactElement>? children}) =>
     (children != null && children.isNotEmpty)
     ? createElementWithChildren(_reactFragment, null, children)
@@ -81,8 +79,7 @@ ReactElement fragment({List<ReactElement>? children}) =>
 /// );
 /// ```
 ///
-/// - [Suspense documentation](https://react.dev/reference/react/Suspense)
-/// - [Suspense – React 中文文档](https://zh-hans.react.dev/reference/react/Suspense)
+/// See: https://reactjs.org/docs/concurrent-mode-suspense.html
 JSAny get Suspense => _reactSuspense;
 
 /// Creates a Suspense element that displays [fallback] while [child] is
@@ -96,8 +93,7 @@ JSAny get Suspense => _reactSuspense;
 /// );
 /// ```
 ///
-/// - [Suspense documentation](https://react.dev/reference/react/Suspense)
-/// - [Suspense – React 中文文档](https://zh-hans.react.dev/reference/react/Suspense)
+/// See: https://reactjs.org/docs/concurrent-mode-suspense.html
 ReactElement suspense({
   required ReactElement fallback,
   ReactElement? child,
@@ -128,8 +124,7 @@ ReactElement suspense({
 /// createElement(StrictMode, null, appRoot);
 /// ```
 ///
-/// - [StrictMode documentation](https://react.dev/reference/react/StrictMode)
-/// - [StrictMode – React 中文文档](https://zh-hans.react.dev/reference/react/StrictMode)
+/// See: https://reactjs.org/docs/strict-mode.html
 JSAny get StrictMode => _reactStrictMode;
 
 /// Creates a StrictMode wrapper element.
@@ -139,8 +134,7 @@ JSAny get StrictMode => _reactStrictMode;
 /// strictMode(child: myApp);
 /// ```
 ///
-/// - [StrictMode documentation](https://react.dev/reference/react/StrictMode)
-/// - [StrictMode – React 中文文档](https://zh-hans.react.dev/reference/react/StrictMode)
+/// See: https://reactjs.org/docs/strict-mode.html
 ReactElement strictMode({ReactElement? child, List<ReactElement>? children}) =>
     (children != null && children.isNotEmpty)
     ? createElementWithChildren(_reactStrictMode, null, children)
@@ -178,8 +172,7 @@ typedef ForwardRefRenderFunction =
 /// }));
 /// ```
 ///
-/// - [forwardRef documentation](https://react.dev/reference/react/forwardRef)
-/// - [forwardRef – React 中文文档](https://zh-hans.react.dev/reference/react/forwardRef)
+/// See: https://reactjs.org/docs/forwarding-refs.html
 JSAny forwardRef2(ForwardRefRenderFunction render, {String? displayName}) {
   JSAny jsRender(JSObject jsProps, JSAny? jsRef) {
     final dartified = jsProps.dartify();
@@ -227,8 +220,7 @@ JSAny forwardRef2(ForwardRefRenderFunction render, {String? displayName}) {
 /// );
 /// ```
 ///
-/// - [memo documentation](https://react.dev/reference/react/memo)
-/// - [memo – React 中文文档](https://zh-hans.react.dev/reference/react/memo)
+/// See: https://reactjs.org/docs/react-api.html#reactmemo
 JSAny memo2(
   JSAny component, {
   bool Function(Map<String, Object?> prevProps, Map<String, Object?> nextProps)?
@@ -276,16 +268,14 @@ JSAny memo2(
 /// );
 /// ```
 ///
-/// - [lazy documentation](https://react.dev/reference/react/lazy)
-/// - [lazy – React 中文文档](https://zh-hans.react.dev/reference/react/lazy)
+/// See: https://reactjs.org/docs/code-splitting.html#reactlazy
 JSAny lazy(Future<JSAny> Function() load) {
-  Future<JSObject> jsLoad() async {
-    final component = await load();
+  JSPromise<JSObject> jsLoad() => load().then((component) {
     // React.lazy expects a module with a 'default' export
     final module = JSObject();
     module['default'] = component;
     return module;
-  }
+  }).toJS;
 
-  return _reactLazy((() => jsLoad().toJS).toJS);
+  return _reactLazy(jsLoad.toJS);
 }

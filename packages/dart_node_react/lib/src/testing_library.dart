@@ -2,8 +2,6 @@
 ///
 /// Provides idiomatic Dart wrappers around @testing-library/react for testing
 /// React components with user-centric queries and interactions.
-///
-/// - [React Testing Library documentation](https://testing-library.com/docs/react-testing-library/intro)
 library;
 
 import 'dart:async';
@@ -124,8 +122,6 @@ external JSAny? _reactAct(JSFunction callback);
 // =============================================================================
 
 /// Wrapper around a DOM node providing query and interaction methods.
-///
-/// - [About Queries](https://testing-library.com/docs/queries/about)
 final class DomNode {
   DomNode._(this._node);
 
@@ -194,8 +190,6 @@ final class DomNode {
 // =============================================================================
 
 /// Query methods for finding elements in the rendered output.
-///
-/// - [Queries documentation](https://testing-library.com/docs/queries/about)
 final class ScreenQuery {
   /// Creates a Screen with the given container.
   ScreenQuery._(this._container);
@@ -447,8 +441,6 @@ final class ScreenQuery {
 // =============================================================================
 
 /// Result of rendering a React component for testing.
-///
-/// - [render documentation](https://testing-library.com/docs/react-testing-library/api#render)
 final class TestRenderResult extends ScreenQuery {
   TestRenderResult._(this._root, DomNode container, this._baseElement)
     : super._(container);
@@ -483,8 +475,6 @@ final class TestRenderResult extends ScreenQuery {
 // =============================================================================
 
 /// Renders a React element into a detached DOM container for testing.
-///
-/// - [render documentation](https://testing-library.com/docs/react-testing-library/api#render)
 TestRenderResult render(ReactElement element, {JSObject? container}) {
   final baseElement = container ?? _createElement('div');
   _appendChild(baseElement);
@@ -502,17 +492,11 @@ TestRenderResult render(ReactElement element, {JSObject? container}) {
 // =============================================================================
 
 /// Wraps code that causes React state updates in an act() block.
-///
-/// - [act documentation](https://react.dev/reference/react/act)
-/// - [act 允许你在断言之前等待所有挂起的更新完成](https://zh-hans.react.dev/reference/react/act)
 void act(void Function() callback) {
   _reactAct(callback.toJS);
 }
 
 /// Async version of act for operations that return a Future.
-///
-/// - [act documentation](https://react.dev/reference/react/act)
-/// - [act 允许你在断言之前等待所有挂起的更新完成](https://zh-hans.react.dev/reference/react/act)
 Future<void> actAsync(Future<void> Function() callback) async {
   await callback();
   await Future<void>.delayed(Duration.zero);
@@ -523,8 +507,6 @@ Future<void> actAsync(Future<void> Function() callback) async {
 // =============================================================================
 
 /// Fires a click event on the element.
-///
-/// - [fireEvent documentation](https://testing-library.com/docs/dom-testing-library/api-events)
 void fireClick(DomNode element, [Map<String, Object?>? eventInit]) {
   act(() {
     final event = _createMouseEvent(
@@ -741,8 +723,6 @@ external void _objectDefineProperty(
 // =============================================================================
 
 /// Simulates a user clicking on an element.
-///
-/// - [user-event documentation](https://testing-library.com/docs/user-event/intro)
 Future<void> userClick(DomNode element) async {
   fireMouseDown(element);
   fireFocus(element);
@@ -758,8 +738,6 @@ Future<void> userDblClick(DomNode element) async {
 }
 
 /// Simulates a user typing text into an input.
-///
-/// - [type documentation](https://testing-library.com/docs/user-event/utility#type)
 Future<void> userType(DomNode element, String text) async {
   fireFocus(element);
   final buffer = StringBuffer(element.value);
@@ -802,8 +780,6 @@ Future<void> userPaste(DomNode element, String text) async {
 // =============================================================================
 
 /// Waits for a condition to be true.
-///
-/// - [waitFor documentation](https://testing-library.com/docs/dom-testing-library/api-async#waitfor)
 Future<T> waitFor<T>(
   T Function() callback, {
   Duration timeout = const Duration(seconds: 1),
@@ -825,8 +801,6 @@ Future<T> waitFor<T>(
 }
 
 /// Waits for an element to be removed from the DOM.
-///
-/// - [waitForElementToBeRemoved documentation](https://testing-library.com/docs/dom-testing-library/api-async#waitforelementtoberemoved)
 Future<void> waitForElementToBeRemoved(
   DomNode? Function() callback, {
   Duration timeout = const Duration(seconds: 1),

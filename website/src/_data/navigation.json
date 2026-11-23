@@ -13,12 +13,8 @@
       "url": "/blog/"
     },
     {
-      "text": "Releases",
-      "url": "/releases/"
-    },
-    {
       "text": "GitHub",
-      "url": "https://github.com/MelbourneDeveloper/dart_node",
+      "url": "https://github.com/melbournedeveloper/dart_node",
       "external": true
     }
   ],
@@ -72,10 +68,6 @@
           "url": "/docs/sqlite/"
         },
         {
-          "text": "dart_node_sql_js",
-          "url": "/docs/sql-js/"
-        },
-        {
           "text": "dart_node_mcp",
           "url": "/docs/mcp/"
         },
@@ -84,12 +76,8 @@
           "url": "/docs/logging/"
         },
         {
-          "text": "reflux",
-          "url": "/docs/reflux/"
-        },
-        {
-          "text": "dart_jsx",
-          "url": "/docs/jsx/"
+          "text": "dart_node_statecore",
+          "url": "/docs/statecore/"
         }
       ]
     }
@@ -108,8 +96,7 @@
         },
         {
           "text": "Examples",
-          "url": "https://github.com/MelbourneDeveloper/dart_node/tree/main/examples",
-          "external": true
+          "url": "/docs/examples/"
         }
       ]
     },
@@ -118,15 +105,15 @@
       "items": [
         {
           "text": "GitHub",
-          "url": "https://github.com/MelbourneDeveloper/dart_node"
+          "url": "https://github.com/melbournedeveloper/dart_node"
         },
         {
-          "text": "pub.dev",
-          "url": "https://pub.dev/publishers/christianfindlay.com/packages"
+          "text": "Discord",
+          "url": "#"
         },
         {
-          "text": "X (Twitter)",
-          "url": "https://x.com/cfdevelop"
+          "text": "Twitter",
+          "url": "https://twitter.com/dart_node"
         }
       ]
     },
@@ -136,10 +123,6 @@
         {
           "text": "Blog",
           "url": "/blog/"
-        },
-        {
-          "text": "Releases",
-          "url": "/releases/"
         },
         {
           "text": "Dart Official",

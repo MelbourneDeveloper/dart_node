@@ -18,26 +18,33 @@ extension type ExpressApp._(JSObject _) implements JSObject {
 
 /// Extension for routes with multiple handlers (middleware + handler)
 extension ExpressAppMultiHandler on ExpressApp {
-  JSFunction _getMethod(String name) => switch (_[name]) {
-    final JSFunction f => f,
-    _ => throw StateError('Method $name not found'),
-  };
-
   /// GET with middleware chain
-  void getWithMiddleware(String path, List<JSFunction> handlers) =>
-      _getMethod('get').callAsFunction(this, path.toJS, handlers.toJS);
+  void getWithMiddleware(String path, List<JSFunction> handlers) {
+    final jsHandlers = handlers.toJS;
+    final getFn = (this as JSObject)['get'] as JSFunction;
+    getFn.callAsFunction(this, path.toJS, jsHandlers);
+  }
 
   /// POST with middleware chain
-  void postWithMiddleware(String path, List<JSFunction> handlers) =>
-      _getMethod('post').callAsFunction(this, path.toJS, handlers.toJS);
+  void postWithMiddleware(String path, List<JSFunction> handlers) {
+    final jsHandlers = handlers.toJS;
+    final postFn = (this as JSObject)['post'] as JSFunction;
+    postFn.callAsFunction(this, path.toJS, jsHandlers);
+  }
 
   /// PUT with middleware chain
-  void putWithMiddleware(String path, List<JSFunction> handlers) =>
-      _getMethod('put').callAsFunction(this, path.toJS, handlers.toJS);
+  void putWithMiddleware(String path, List<JSFunction> handlers) {
+    final jsHandlers = handlers.toJS;
+    final putFn = (this as JSObject)['put'] as JSFunction;
+    putFn.callAsFunction(this, path.toJS, jsHandlers);
+  }
 
   /// DELETE with middleware chain
-  void deleteWithMiddleware(String path, List<JSFunction> handlers) =>
-      _getMethod('delete').callAsFunction(this, path.toJS, handlers.toJS);
+  void deleteWithMiddleware(String path, List<JSFunction> handlers) {
+    final jsHandlers = handlers.toJS;
+    final deleteFn = (this as JSObject)['delete'] as JSFunction;
+    deleteFn.callAsFunction(this, path.toJS, jsHandlers);
+  }
 }
 
 /// Handler function type
@@ -45,14 +52,8 @@ typedef RequestHandler = void Function(Request req, Response res);
 
 /// Create an Express application
 ExpressApp express() {
-  final expressFactory = switch (requireModule('express')) {
-    final JSFunction f => f,
-    _ => throw StateError('Express module not found'),
-  };
-  return switch (expressFactory.callAsFunction(null)) {
-    final ExpressApp app => app,
-    _ => throw StateError('Express app creation failed'),
-  };
+  final expressFactory = requireModule('express') as JSFunction;
+  return expressFactory.callAsFunction(null) as ExpressApp;
 }
 
 /// Convert a Dart handler to a JS function

@@ -95,14 +95,7 @@ packages:
       path: "../dart_node_core"
       relative: true
     source: path
-    version: "0.0.0-dev"
-  dart_node_coverage:
-    dependency: "direct dev"
-    description:
-      path: "../dart_node_coverage"
-      relative: true
-    source: path
-    version: "0.0.0-dev"
+    version: "0.2.0-beta"
   file:
     dependency: transitive
     description:

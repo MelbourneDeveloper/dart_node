@@ -15,16 +15,10 @@ extension type JsRef._(JSObject _) implements JSObject {
   external set current(JSAny? value);
 }
 
-/// Storage for complex Dart objects that can't survive jsify/dartify.
-final Expando<Object> _dartObjectStore = Expando<Object>('refDartValue');
-
 /// When this is provided as the ref prop, a reference to the rendered
 /// component will be available via [current].
 ///
 /// See [createRef] for usage examples and more info.
-///
-/// - [createRef documentation](https://react.dev/reference/react/createRef)
-/// - [createRef – React 中文文档](https://zh-hans.react.dev/reference/react/createRef)
 final class Ref<T> {
   /// Creates a Ref from a JavaScript ref object.
   Ref._(this.jsRef);
@@ -38,19 +32,13 @@ final class Ref<T> {
   /// A reference to the latest instance of the rendered component.
   ///
   /// See [createRef] for usage examples and more info.
-  T get current {
-    final stored = _dartObjectStore[jsRef];
-    if (stored != null) return stored as T;
-    final jsCurrent = jsRef.current;
-    return (jsCurrent == null) ? null as T : jsCurrent.dartify() as T;
-  }
+  T get current => jsRef.current.dartify() as T;
 
   /// Sets the value of [current].
   ///
-  /// - [Referencing values with refs](https://react.dev/learn/referencing-values-with-refs)
-  /// - [使用 ref 引用值 – React 中文文档](https://zh-hans.react.dev/learn/referencing-values-with-refs)
+  /// See:
+  /// https://reactjs.org/docs/hooks-faq.html#is-there-something-like-instance-variables
   set current(T value) {
-    if (value != null) _dartObjectStore[jsRef] = value;
     jsRef.current = (value == null) ? null : (value as Object).jsify();
   }
 }
@@ -73,6 +61,5 @@ external JsRef _reactCreateRef();
 /// inputRef.current?.focus();
 /// ```
 ///
-/// - [createRef documentation](https://react.dev/reference/react/createRef)
-/// - [createRef – React 中文文档](https://zh-hans.react.dev/reference/react/createRef)
+/// Learn more: https://reactjs.org/docs/refs-and-the-dom.html#creating-refs
 Ref<T?> createRef<T>() => Ref<T?>.fromJs(_reactCreateRef());

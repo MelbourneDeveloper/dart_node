@@ -50,15 +50,6 @@
 /// $button(onClick: handleClick) >> 'Submit'
 /// ```
 ///
-/// ### Refs
-///
-/// Attach a [JsRef] (from `createRef`) to wire up imperative access:
-/// ```dart
-/// final inputRef = createRef<InputElement>();
-/// $input(ref: inputRef.jsRef, type: 'text')
-/// // later: inputRef.current?.focus();
-/// ```
-///
 /// ### Conditional Rendering
 /// ```dart
 /// $div() >> [
@@ -72,7 +63,6 @@ import 'dart:js_interop';
 
 import 'package:dart_node_react/src/elements.dart';
 import 'package:dart_node_react/src/react.dart';
-import 'package:dart_node_react/src/ref.dart';
 import 'package:dart_node_react/src/synthetic_event.dart';
 
 // =============================================================================
@@ -85,10 +75,16 @@ import 'package:dart_node_react/src/synthetic_event.dart';
 /// Uses a class instead of extension type to enable runtime type checking.
 final class El {
   /// Wraps an existing element for operator composition.
-  El(this._element);
+  El(this._element) : _type = _element.type, _props = _element.props;
 
   /// The wrapped element.
   final ReactElement _element;
+
+  /// The element's type for recreation.
+  final JSAny _type;
+
+  /// The element's props for recreation.
+  final JSObject? _props;
 
   /// Access the underlying element.
   ReactElement get element => _element;
@@ -115,10 +111,10 @@ final class El {
   };
 
   ReactElement _withTextChild(String text) =>
-      ReactElement.fromJS(React.cloneElement(_element, null, text.toJS));
+      ReactElement.fromJS(React.createElement(_type, _props, text.toJS));
 
   ReactElement _withSingleChild(ReactElement child) =>
-      ReactElement.fromJS(React.cloneElement(_element, null, child));
+      ReactElement.fromJS(React.createElement(_type, _props, child));
 
   ReactElement _withChildren(List<Object?> children) {
     final normalized = <JSAny>[];
@@ -126,7 +122,7 @@ final class El {
       final jsChild = _normalizeChild(child);
       if (jsChild != null) normalized.add(jsChild);
     }
-    return cloneElementWithRawChildren(_element, normalized);
+    return createElementWithChildren(_type, _props, normalized);
   }
 
   JSAny? _normalizeChild(Object? child) => switch (child) {
@@ -164,7 +160,6 @@ Map<String, dynamic> _buildJsxProps({
   String? key,
   String? className,
   String? id,
-  JsRef? ref,
   Map<String, dynamic>? style,
   Map<String, dynamic>? spread,
   Map<String, dynamic>? props,
@@ -209,7 +204,6 @@ Map<String, dynamic> _buildJsxProps({
   if (key != null) p['key'] = key;
   if (className != null) p['className'] = className;
   if (id != null) p['id'] = id;
-  if (ref != null) p['ref'] = ref;
   if (style != null) p['style'] = convertStyle(style);
   // Mouse events
   if (onClick != null) p['onClick'] = onClick;
@@ -363,7 +357,6 @@ El $div({
   String? key,
   String? className,
   String? id,
-  JsRef? ref,
   Map<String, dynamic>? style,
   Map<String, dynamic>? spread,
   void Function()? onClick,
@@ -377,7 +370,6 @@ El $div({
         key: key,
         className: className,
         id: id,
-        ref: ref,
         style: style,
         spread: spread,
         onClick: onClick,
@@ -616,7 +608,6 @@ El $button({
   String? id,
   String? type,
   bool? disabled,
-  JsRef? ref,
   Map<String, dynamic>? style,
   Map<String, dynamic>? spread,
   void Function()? onClick,
@@ -625,7 +616,6 @@ El $button({
     key: key,
     className: className,
     id: id,
-    ref: ref,
     style: style,
     spread: spread,
     onClick: onClick,
@@ -643,7 +633,6 @@ El $a({
   String? id,
   String? target,
   String? rel,
-  JsRef? ref,
   Map<String, dynamic>? style,
   Map<String, dynamic>? spread,
   void Function()? onClick,
@@ -652,7 +641,6 @@ El $a({
     key: key,
     className: className,
     id: id,
-    ref: ref,
     style: style,
     spread: spread,
     onClick: onClick,
@@ -673,7 +661,6 @@ El $form({
   String? id,
   String? action,
   String? method,
-  JsRef? ref,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
   void Function(SyntheticEvent)? onSubmit,
@@ -681,7 +668,6 @@ El $form({
   final p = _buildJsxProps(
     className: className,
     id: id,
-    ref: ref,
     style: style,
     props: props,
     onSubmit: onSubmit,
@@ -703,7 +689,6 @@ El $input({
   bool? disabled,
   bool? readOnly,
   bool? required,
-  JsRef? ref,
   Map<String, dynamic>? style,
   Map<String, dynamic>? spread,
   void Function(SyntheticEvent)? onChange,
@@ -717,7 +702,6 @@ El $input({
     key: key,
     className: className,
     id: id,
-    ref: ref,
     style: style,
     spread: spread,
     onChange: onChange,
@@ -749,7 +733,6 @@ El $textarea({
   bool? disabled,
   bool? readOnly,
   bool? required,
-  JsRef? ref,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
   void Function(SyntheticEvent)? onChange,
@@ -760,7 +743,6 @@ El $textarea({
   final p = _buildJsxProps(
     className: className,
     id: id,
-    ref: ref,
     style: style,
     props: props,
     onChange: onChange,
@@ -788,7 +770,6 @@ El $select({
   bool? disabled,
   bool? multiple,
   bool? required,
-  JsRef? ref,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
   void Function(SyntheticEvent)? onChange,
@@ -798,7 +779,6 @@ El $select({
   final p = _buildJsxProps(
     className: className,
     id: id,
-    ref: ref,
     style: style,
     props: props,
     onChange: onChange,
@@ -925,7 +905,6 @@ ImgElement $img({
   String? id,
   int? width,
   int? height,
-  JsRef? ref,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
   void Function()? onClick,
@@ -933,7 +912,6 @@ ImgElement $img({
   final p = _buildJsxProps(
     className: className,
     id: id,
-    ref: ref,
     style: style,
     props: props,
     onClick: onClick,
@@ -957,14 +935,12 @@ El $video({
   bool? loop,
   bool? muted,
   String? poster,
-  JsRef? ref,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
 }) {
   final p = _buildJsxProps(
     className: className,
     id: id,
-    ref: ref,
     style: style,
     props: props,
   );
@@ -988,14 +964,12 @@ El $audio({
   bool? autoplay,
   bool? loop,
   bool? muted,
-  JsRef? ref,
   Map<String, dynamic>? style,
   Map<String, dynamic>? props,
 }) {
   final p = _buildJsxProps(
     className: className,
     id: id,
-    ref: ref,
     style: style,
     props: props,
   );

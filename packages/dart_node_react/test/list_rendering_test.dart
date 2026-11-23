@@ -2,7 +2,8 @@
 @TestOn('js')
 library;
 
-import 'package:dart_node_react/dart_node_react.dart' hide RenderResult, render;
+import 'package:dart_node_react/dart_node_react.dart'
+    hide RenderResult, render;
 import 'package:dart_node_react/src/testing_library.dart';
 import 'package:test/test.dart';
 
@@ -36,7 +37,10 @@ void main() {
       final items = itemsStr.value.split(',').where((s) => s.isNotEmpty);
       return div(
         children: [
-          ul(props: {'data-testid': 'list'}, children: items.map(li).toList()),
+          ul(
+            props: {'data-testid': 'list'},
+            children: items.map(li).toList(),
+          ),
           button(
             text: 'Add',
             onClick: () => itemsStr.set('${itemsStr.value},New'),

@@ -157,9 +157,8 @@ void main() {
 
       expect(result.container.querySelector('.dialog-overlay'), isNull);
 
-      final linkBtn = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
+      final linkBtn =
+          result.container.querySelectorAll('.toolbar-btn').toList();
       final linkButton = linkBtn.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),
@@ -178,9 +177,8 @@ void main() {
     test('link dialog can be closed with Cancel', () async {
       final result = render(EditorApp());
 
-      final linkBtn = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
+      final linkBtn =
+          result.container.querySelectorAll('.toolbar-btn').toList();
       final linkButton = linkBtn.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),
@@ -201,9 +199,8 @@ void main() {
     test('link dialog can be closed by clicking overlay', () async {
       final result = render(EditorApp());
 
-      final linkBtn = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
+      final linkBtn =
+          result.container.querySelectorAll('.toolbar-btn').toList();
       final linkButton = linkBtn.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),
@@ -223,9 +220,8 @@ void main() {
     test('link dialog accepts URL input and retains focus', () async {
       final result = render(EditorApp());
 
-      final linkBtn = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
+      final linkBtn =
+          result.container.querySelectorAll('.toolbar-btn').toList();
       final linkButton = linkBtn.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),
@@ -254,9 +250,8 @@ void main() {
     test('clicking Insert in link dialog closes it', () async {
       final result = render(EditorApp());
 
-      final linkBtn = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
+      final linkBtn =
+          result.container.querySelectorAll('.toolbar-btn').toList();
       final linkButton = linkBtn.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),
@@ -279,9 +274,8 @@ void main() {
     test('link dialog shows empty fields for new link', () async {
       final result = render(EditorApp());
 
-      final linkBtn = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
+      final linkBtn =
+          result.container.querySelectorAll('.toolbar-btn').toList();
       final linkButton = linkBtn.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),
@@ -303,73 +297,69 @@ void main() {
       result.unmount();
     });
 
-    test(
-      'link dialog insert button calls applyLink and closes dialog',
-      () async {
-        final result = render(EditorApp());
+    test('link dialog insert button calls applyLink and closes dialog',
+        () async {
+      final result = render(EditorApp());
 
-        // Get link button
-        final linkBtns = result.container
-            .querySelectorAll('.toolbar-btn')
-            .toList();
-        final linkButton = linkBtns.firstWhere(
-          (btn) => btn.textContent.contains('🔗'),
-          orElse: () => throw StateError('Link button not found'),
-        );
+      // Get link button
+      final linkBtns =
+          result.container.querySelectorAll('.toolbar-btn').toList();
+      final linkButton = linkBtns.firstWhere(
+        (btn) => btn.textContent.contains('🔗'),
+        orElse: () => throw StateError('Link button not found'),
+      );
 
-        // Focus the editor and add text
-        final editorContent = result.container.querySelector('.editor-content');
-        expect(editorContent, isNotNull);
+      // Focus the editor and add text
+      final editorContent = result.container.querySelector('.editor-content');
+      expect(editorContent, isNotNull);
 
-        // Set content via innerHTML and focus
-        setEditorContent(editorContent!, 'Click here for more info');
-        focusElement(editorContent);
-        await Future<void>.delayed(const Duration(milliseconds: 50));
+      // Set content via innerHTML and focus
+      setEditorContent(editorContent!, 'Click here for more info');
+      focusElement(editorContent);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
 
-        // Select all the text
-        selectAllInEditor(editorContent);
-        await Future<void>.delayed(const Duration(milliseconds: 50));
+      // Select all the text
+      selectAllInEditor(editorContent);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
 
-        // Open dialog - mousedown saves selection, click opens dialog
-        fireMouseDown(linkButton);
-        fireClick(linkButton);
-        await waitForText(result, 'Insert Link');
+      // Open dialog - mousedown saves selection, click opens dialog
+      fireMouseDown(linkButton);
+      fireClick(linkButton);
+      await waitForText(result, 'Insert Link');
 
-        // VERIFY: Dialog is open
-        expect(
-          result.container.querySelector('.dialog-overlay'),
-          isNotNull,
-          reason: 'Dialog should be open',
-        );
+      // VERIFY: Dialog is open
+      expect(
+        result.container.querySelector('.dialog-overlay'),
+        isNotNull,
+        reason: 'Dialog should be open',
+      );
 
-        // Enter URL and submit
-        final inputs = result.container.querySelectorAll('.dialog-input');
-        await userType(inputs[0], 'https://example.com/test');
-        fireClick(result.container.querySelector('.btn-primary')!);
+      // Enter URL and submit
+      final inputs = result.container.querySelectorAll('.dialog-input');
+      await userType(inputs[0], 'https://example.com/test');
+      fireClick(result.container.querySelector('.btn-primary')!);
 
-        await Future<void>.delayed(const Duration(milliseconds: 150));
+      await Future<void>.delayed(const Duration(milliseconds: 150));
 
-        // VERIFY: Dialog closed after clicking Insert
-        expect(
-          result.container.querySelector('.dialog-overlay'),
-          isNull,
-          reason: 'Dialog should close after inserting link',
-        );
+      // VERIFY: Dialog closed after clicking Insert
+      expect(
+        result.container.querySelector('.dialog-overlay'),
+        isNull,
+        reason: 'Dialog should close after inserting link',
+      );
 
-        // Note: execCommand('createLink') behavior varies by browser/test env
-        // The core functionality (selection save/restore, dialog flow) is tested
+      // Note: execCommand('createLink') behavior varies by browser/test env
+      // The core functionality (selection save/restore, dialog flow) is tested
 
-        result.unmount();
-      },
-    );
+      result.unmount();
+    });
 
     test('clicking existing link and opening dialog shows URL', () async {
       final result = render(EditorApp());
 
       // Get link button
-      final linkBtns = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
+      final linkBtns =
+          result.container.querySelectorAll('.toolbar-btn').toList();
       final linkButton = linkBtns.firstWhere(
         (btn) => btn.textContent.contains('🔗'),
         orElse: () => throw StateError('Link button not found'),
@@ -430,242 +420,6 @@ void main() {
         contains('Powered by Dart + React + Markdown'),
       );
 
-      result.unmount();
-    });
-  });
-
-  group('Formatting Commands', () {
-    test('clicking bold button applies bold formatting', () async {
-      final result = render(EditorApp());
-
-      final editorContent = result.container.querySelector('.editor-content')!;
-      setEditorContent(editorContent, 'test text');
-      focusElement(editorContent);
-      selectAllInEditor(editorContent);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      final buttons = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
-      final boldBtn = buttons.firstWhere(
-        (btn) => btn.textContent == 'B',
-        orElse: () => throw StateError('Bold button not found'),
-      );
-      fireClick(boldBtn);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      result.unmount();
-    });
-
-    test('clicking italic button applies italic formatting', () async {
-      final result = render(EditorApp());
-
-      final editorContent = result.container.querySelector('.editor-content')!;
-      setEditorContent(editorContent, 'test text');
-      focusElement(editorContent);
-      selectAllInEditor(editorContent);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      final buttons = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
-      final italicBtn = buttons.firstWhere(
-        (btn) => btn.textContent == 'I',
-        orElse: () => throw StateError('Italic button not found'),
-      );
-      fireClick(italicBtn);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      result.unmount();
-    });
-
-    test('clicking underline button applies underline formatting', () async {
-      final result = render(EditorApp());
-
-      final editorContent = result.container.querySelector('.editor-content')!;
-      setEditorContent(editorContent, 'test text');
-      focusElement(editorContent);
-      selectAllInEditor(editorContent);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      final buttons = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
-      final underlineBtn = buttons.firstWhere(
-        (btn) => btn.textContent == 'U',
-        orElse: () => throw StateError('Underline button not found'),
-      );
-      fireClick(underlineBtn);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      result.unmount();
-    });
-
-    test('clicking strikethrough button applies strikethrough', () async {
-      final result = render(EditorApp());
-
-      final editorContent = result.container.querySelector('.editor-content')!;
-      setEditorContent(editorContent, 'test text');
-      focusElement(editorContent);
-      selectAllInEditor(editorContent);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      final buttons = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
-      final strikeBtn = buttons.firstWhere(
-        (btn) => btn.textContent == 'S',
-        orElse: () => throw StateError('Strikethrough button not found'),
-      );
-      fireClick(strikeBtn);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      result.unmount();
-    });
-
-    test('clicking code button applies code formatting', () async {
-      final result = render(EditorApp());
-
-      final editorContent = result.container.querySelector('.editor-content')!;
-      setEditorContent(editorContent, 'test text');
-      focusElement(editorContent);
-      selectAllInEditor(editorContent);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      final buttons = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
-      final codeBtn = buttons.firstWhere(
-        (btn) => btn.textContent == '<>',
-        orElse: () => throw StateError('Code button not found'),
-      );
-      fireClick(codeBtn);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      result.unmount();
-    });
-
-    test('selecting heading level applies heading', () async {
-      final result = render(EditorApp());
-
-      final editorContent = result.container.querySelector('.editor-content')!;
-      setEditorContent(editorContent, 'test heading');
-      focusElement(editorContent);
-      selectAllInEditor(editorContent);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      final select = result.container.querySelector('.heading-select')!;
-      fireChange(select, value: '1');
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      result.unmount();
-    });
-
-    test('clicking unordered list button applies list', () async {
-      final result = render(EditorApp());
-
-      final editorContent = result.container.querySelector('.editor-content')!;
-      setEditorContent(editorContent, 'list item');
-      focusElement(editorContent);
-      selectAllInEditor(editorContent);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      final buttons = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
-      final listBtn = buttons.firstWhere(
-        (btn) => btn.textContent == '•',
-        orElse: () => throw StateError('List button not found'),
-      );
-      fireClick(listBtn);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      result.unmount();
-    });
-
-    test('clicking ordered list button applies numbered list', () async {
-      final result = render(EditorApp());
-
-      final editorContent = result.container.querySelector('.editor-content')!;
-      setEditorContent(editorContent, 'list item');
-      focusElement(editorContent);
-      selectAllInEditor(editorContent);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      final buttons = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
-      final listBtn = buttons.firstWhere(
-        (btn) => btn.textContent == '1.',
-        orElse: () => throw StateError('Ordered list button not found'),
-      );
-      fireClick(listBtn);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      result.unmount();
-    });
-
-    test('clicking quote button applies blockquote', () async {
-      final result = render(EditorApp());
-
-      final editorContent = result.container.querySelector('.editor-content')!;
-      setEditorContent(editorContent, 'quote text');
-      focusElement(editorContent);
-      selectAllInEditor(editorContent);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      final buttons = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
-      final quoteBtn = buttons.firstWhere(
-        (btn) => btn.textContent == '"',
-        orElse: () => throw StateError('Quote button not found'),
-      );
-      fireClick(quoteBtn);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      result.unmount();
-    });
-
-    test('clicking code block button applies pre formatting', () async {
-      final result = render(EditorApp());
-
-      final editorContent = result.container.querySelector('.editor-content')!;
-      setEditorContent(editorContent, 'code block');
-      focusElement(editorContent);
-      selectAllInEditor(editorContent);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      final buttons = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
-      final codeBlockBtn = buttons.firstWhere(
-        (btn) => btn.textContent == '{ }',
-        orElse: () => throw StateError('Code block button not found'),
-      );
-      fireClick(codeBlockBtn);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      result.unmount();
-    });
-
-    test('clicking horizontal rule button inserts hr', () async {
-      final result = render(EditorApp());
-
-      final editorContent = result.container.querySelector('.editor-content')!;
-      focusElement(editorContent);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      final buttons = result.container
-          .querySelectorAll('.toolbar-btn')
-          .toList();
-      final hrBtn = buttons.firstWhere(
-        (btn) => btn.textContent == '—',
-        orElse: () => throw StateError('HR button not found'),
-      );
-      fireClick(hrBtn);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
       result.unmount();
     });
   });

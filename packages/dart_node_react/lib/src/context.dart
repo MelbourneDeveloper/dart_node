@@ -29,8 +29,7 @@ extension type JsContext._(JSObject _) implements JSObject {
 /// Every Context object comes with a Provider React component that allows
 /// consuming components to subscribe to context changes.
 ///
-/// - [createContext documentation](https://react.dev/reference/react/createContext)
-/// - [使用 createContext 创建组件能够提供与读取的上下文（context）](https://zh-hans.react.dev/reference/react/createContext)
+/// See: https://reactjs.org/docs/context.html
 final class Context<T> {
   Context._(this._jsContext, this._defaultValue);
 
@@ -98,13 +97,11 @@ final class Context<T> {
 /// });
 /// ```
 ///
-/// - [createContext documentation](https://react.dev/reference/react/createContext)
-/// - [使用 createContext 创建组件能够提供与读取的上下文（context）](https://zh-hans.react.dev/reference/react/createContext)
+/// See: https://reactjs.org/docs/context.html#reactcreatecontext
 Context<T> createContext<T>(T defaultValue) {
-  final jsDefault = switch (defaultValue) {
-    null => null,
-    final Object obj => obj.jsify(),
-  };
+  final jsDefault = (defaultValue == null)
+      ? null
+      : (defaultValue as Object).jsify();
   final jsContext = JsContext.fromJs(_reactCreateContext(jsDefault));
   return Context._(jsContext, defaultValue);
 }
@@ -136,15 +133,8 @@ Context<T> createContext<T>(T defaultValue) {
 /// });
 /// ```
 ///
-/// - [useContext documentation](https://react.dev/reference/react/useContext)
-/// - [useContext 是一个 React Hook，可以让你读取和订阅组件中的 context](https://zh-hans.react.dev/reference/react/useContext)
+/// See: https://reactjs.org/docs/hooks-reference.html#usecontext
 T useContext<T>(Context<T> context) {
   final jsValue = _reactUseContext(context.jsContext);
-  return switch (jsValue) {
-    null => context.defaultValue,
-    final v => switch (v.dartify()) {
-      final T val => val,
-      _ => context.defaultValue,
-    },
-  };
+  return (jsValue == null) ? context.defaultValue : jsValue.dartify() as T;
 }

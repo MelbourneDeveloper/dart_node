@@ -22,19 +22,10 @@ AuthEffects createMockAuth({
 
 /// Create a JSObject from a Dart map
 JSObject createJSObject(Map<String, Object?> map) {
-  final json = switch (globalContext['JSON']) {
-    final JSObject o => o,
-    _ => throw StateError('JSON not available'),
-  };
-  final parseFn = switch (json['parse']) {
-    final JSFunction f => f,
-    _ => throw StateError('JSON.parse not available'),
-  };
+  final json = globalContext['JSON']! as JSObject;
+  final parseFn = json['parse']! as JSFunction;
   final jsonStr = _toJsonString(map);
-  return switch (parseFn.callAsFunction(null, jsonStr.toJS)) {
-    final JSObject o => o,
-    _ => throw StateError('Failed to parse JSON'),
-  };
+  return parseFn.callAsFunction(null, jsonStr.toJS)! as JSObject;
 }
 
 String _toJsonString(Map<String, Object?> map) {
@@ -132,43 +123,17 @@ Fetch createThrowingFetch() =>
 
 // --- WebSocket Mock ---
 
-/// Setup mock WebSocket for testing
-/// Uses eval to create a proper JS class that works with `new` keyword
-void mockWebSocket() {
-  // Create a proper JS class that can be instantiated with `new`
-  // and stores a reference to itself in a global array
-  final evalFn = globalContext['eval']! as JSFunction;
-  globalContext['WebSocket'] = evalFn.callAsFunction(
-    null,
-    '''
-    (function() {
-      var instances = [];
-      function MockWebSocket(url) {
-        this.url = url;
-        this.readyState = 1;
-        this.close = function() {};
-        this.send = function() {};
-        this.onmessage = null;
-        this.onopen = null;
-        this.onclose = null;
-        this.onerror = null;
-        instances.push(this);
-      }
-      MockWebSocket.instances = instances;
-      return MockWebSocket;
-    })()
-    '''
-        .toJS,
-  );
-}
+JSObject? _lastMockWs;
 
-/// Get the most recently created mock WebSocket
-JSObject? get _lastMockWs {
-  final wsCtor = globalContext['WebSocket'];
-  if (wsCtor == null) return null;
-  final instances = (wsCtor as JSObject)['instances'] as JSArray?;
-  if (instances == null || instances.toDart.isEmpty) return null;
-  return instances[instances.length - 1] as JSObject?;
+/// Setup mock WebSocket for testing
+void mockWebSocket() {
+  globalContext['WebSocket'] = ((JSString url) {
+    final ws = JSObject();
+    ws['close'] = (() {}).toJS;
+    ws['send'] = ((JSAny _) {}).toJS;
+    _lastMockWs = ws;
+    return ws;
+  }).toJS;
 }
 
 /// Simulate a WebSocket message from the server
@@ -176,14 +141,10 @@ void simulateWsMessage(String json) {
   final ws = _lastMockWs;
   if (ws == null) return;
   final onmessage = ws['onmessage'];
-  switch (onmessage) {
-    case final JSFunction f:
-      final event = JSObject();
-      event['data'] = json.toJS;
-      f.callAsFunction(null, event);
-    case _:
-      return;
-  }
+  if (onmessage == null) return;
+  final event = JSObject();
+  event['data'] = json.toJS;
+  (onmessage as JSFunction).callAsFunction(null, event);
 }
 
 // --- Setup ---

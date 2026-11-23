@@ -30,7 +30,10 @@ void main() {
       final items = useStateJSArray<JSObject>(<JSObject>[].toJS);
       return div(
         children: [
-          pEl('Count: ${items.value.length}', props: {'data-testid': 'count'}),
+          pEl(
+            'Count: ${items.value.length}',
+            props: {'data-testid': 'count'},
+          ),
           button(
             text: 'Add',
             props: {'data-testid': 'add'},
@@ -61,7 +64,10 @@ void main() {
       final items = useStateJSArray<JSObject>(<JSObject>[].toJS);
       return div(
         children: [
-          pEl('Count: ${items.value.length}', props: {'data-testid': 'count'}),
+          pEl(
+            'Count: ${items.value.length}',
+            props: {'data-testid': 'count'},
+          ),
           button(
             text: 'Add',
             props: {'data-testid': 'add'},
@@ -155,7 +161,10 @@ void main() {
       final items = useStateJSArray<JSObject>(<JSObject>[].toJS);
       return div(
         children: [
-          pEl('Count: ${items.value.length}', props: {'data-testid': 'count'}),
+          pEl(
+            'Count: ${items.value.length}',
+            props: {'data-testid': 'count'},
+          ),
           button(
             text: 'Add Done',
             props: {'data-testid': 'add-done'},

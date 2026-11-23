@@ -11,98 +11,64 @@ ReactElement buildToolbar({
   required void Function() onShowLinkDialog,
   void Function()? onSaveSelection,
 }) => createElement(
-  ((JSAny props) =>
-          $div(className: 'editor-toolbar') >>
-          [
-            // Text formatting group
-            $div(className: 'toolbar-group') >>
-                [
-                  _toolbarBtn(
-                    'B',
-                    'Bold',
-                    () => callbacks.onFormat(FormatAction.bold),
-                  ),
-                  _toolbarBtn(
-                    'I',
-                    'Italic',
-                    () => callbacks.onFormat(FormatAction.italic),
-                  ),
-                  _toolbarBtn(
-                    'U',
-                    'Underline',
-                    () => callbacks.onFormat(FormatAction.underline),
-                  ),
-                  _toolbarBtn(
-                    'S',
-                    'Strikethrough',
-                    () => callbacks.onFormat(FormatAction.strikethrough),
-                  ),
-                  _toolbarBtn(
-                    '<>',
-                    'Code',
-                    () => callbacks.onFormat(FormatAction.code),
-                  ),
-                ],
-            $span(className: 'toolbar-divider') >> '',
-            // Heading selector
-            _headingSelect(callbacks.onHeading),
-            $span(className: 'toolbar-divider') >> '',
-            // List buttons
-            $div(className: 'toolbar-group') >>
-                [
-                  _toolbarBtn(
-                    '•',
-                    'Bullet List',
-                    () => callbacks.onList(ordered: false),
-                  ),
-                  _toolbarBtn(
-                    '1.',
-                    'Numbered List',
-                    () => callbacks.onList(ordered: true),
-                  ),
-                ],
-            $span(className: 'toolbar-divider') >> '',
-            // Block formatting
-            $div(className: 'toolbar-group') >>
-                [
-                  _toolbarBtn(
-                    '"',
-                    'Quote',
-                    () => callbacks.onBlock(BlockAction.quote),
-                  ),
-                  _toolbarBtn(
-                    '{ }',
-                    'Code Block',
-                    () => callbacks.onBlock(BlockAction.codeBlock),
-                  ),
-                  _toolbarBtn(
-                    '—',
-                    'Horizontal Rule',
-                    () => callbacks.onBlock(BlockAction.horizontalRule),
-                  ),
-                ],
-            $span(className: 'toolbar-divider') >> '',
-            // Link button
-            $div(className: 'toolbar-group') >>
-                [
-                  _toolbarBtn(
-                    '🔗',
-                    'Insert Link',
-                    onShowLinkDialog,
-                    onMouseDown: onSaveSelection,
-                  ),
-                ],
-            // Mode toggle
-            $button(
-                  className: 'mode-toggle',
-                  onClick: callbacks.onToggleMode,
-                ) >>
-                switch (mode) {
-                  EditorMode.wysiwyg => 'View Markdown',
-                  EditorMode.markdown => 'View Formatted',
-                },
-          ])
-      .toJS,
+  ((JSAny props) => $div(className: 'editor-toolbar') >> [
+    // Text formatting group
+    $div(className: 'toolbar-group') >> [
+      _toolbarBtn('B', 'Bold', () => callbacks.onFormat(FormatAction.bold)),
+      _toolbarBtn('I', 'Italic', () => callbacks.onFormat(FormatAction.italic)),
+      _toolbarBtn(
+        'U',
+        'Underline',
+        () => callbacks.onFormat(FormatAction.underline),
+      ),
+      _toolbarBtn(
+        'S',
+        'Strikethrough',
+        () => callbacks.onFormat(FormatAction.strikethrough),
+      ),
+      _toolbarBtn('<>', 'Code', () => callbacks.onFormat(FormatAction.code)),
+    ],
+    $span(className: 'toolbar-divider') >> '',
+    // Heading selector
+    _headingSelect(callbacks.onHeading),
+    $span(className: 'toolbar-divider') >> '',
+    // List buttons
+    $div(className: 'toolbar-group') >> [
+      _toolbarBtn('•', 'Bullet List', () => callbacks.onList(ordered: false)),
+      _toolbarBtn('1.', 'Numbered List', () => callbacks.onList(ordered: true)),
+    ],
+    $span(className: 'toolbar-divider') >> '',
+    // Block formatting
+    $div(className: 'toolbar-group') >> [
+      _toolbarBtn('"', 'Quote', () => callbacks.onBlock(BlockAction.quote)),
+      _toolbarBtn(
+        '{ }',
+        'Code Block',
+        () => callbacks.onBlock(BlockAction.codeBlock),
+      ),
+      _toolbarBtn(
+        '—',
+        'Horizontal Rule',
+        () => callbacks.onBlock(BlockAction.horizontalRule),
+      ),
+    ],
+    $span(className: 'toolbar-divider') >> '',
+    // Link button
+    $div(className: 'toolbar-group') >> [
+      _toolbarBtn(
+        '🔗',
+        'Insert Link',
+        onShowLinkDialog,
+        onMouseDown: onSaveSelection,
+      ),
+    ],
+    // Mode toggle
+    $button(className: 'mode-toggle', onClick: callbacks.onToggleMode) >>
+        switch (mode) {
+          EditorMode.wysiwyg => 'View Markdown',
+          EditorMode.markdown => 'View Formatted',
+        },
+  ]).toJS,
 );
 
 ReactElement _toolbarBtn(
