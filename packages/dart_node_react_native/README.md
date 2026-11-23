@@ -1,21 +1,36 @@
 # dart_node_react_native
 
-React Native bindings for Dart. Build mobile apps with Expo entirely in Dart with full type safety and native performance.
+React Native bindings for Dart. Build mobile apps with Expo entirely in Dart.
 
-Write your entire stack in Dart: React web apps, React Native mobile apps with Expo, and Node.js Express backends.
+## Getting Started
 
-## Package Architecture
+```dart
+import 'package:dart_node_react_native/dart_node_react_native.dart';
 
-```mermaid
-graph TD
-    B[dart_node_express] --> A[dart_node_core]
-    C[dart_node_ws] --> A
-    D[dart_node_react] --> A
-    E[dart_node_react_native] --> D
-    B -.-> F[express npm]
-    C -.-> G[ws npm]
-    D -.-> H[react npm]
-    E -.-> I[react-native npm]
+void main() {
+  final app = View(
+    props: {'style': {'flex': 1, 'justifyContent': 'center'}},
+    children: [
+      Text(children: ['Hello from Dart!']),
+      Button(
+        props: {'title': 'Press me', 'onPress': () => print('Pressed!')},
+      ),
+    ],
+  );
+
+  registerComponent('App', () => app);
+}
 ```
 
-Part of the [dart_node](https://github.com/MelbourneDeveloper/dart_node) package family.
+## Run
+
+Use VSCode launch config `Mobile: Build & Run (Expo)` or:
+
+```bash
+dart compile js -o App.js lib/main.dart
+npx expo start
+```
+
+## Part of dart_node
+
+[GitHub](https://github.com/MelbourneDeveloper/dart_node)

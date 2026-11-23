@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "too-many-cooks": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks/build/bin/server.js"
+      ],
+      "env": {}
+    }
+  }
+}

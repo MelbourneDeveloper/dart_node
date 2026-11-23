@@ -36,20 +36,30 @@ function log(message: string): void {
 
 export class Store {
   private client: McpClient | null = null;
-  private serverPath: string;
   private pollInterval: ReturnType<typeof setInterval> | null = null;
+  private serverPath: string | undefined;
+  private connectPromise: Promise<void> | null = null;
 
-  constructor(serverPath: string) {
+  /**
+   * @param serverPath Optional path to server JS file for testing.
+   *                   If not provided, uses 'npx too-many-cooks'.
+   */
+  constructor(serverPath?: string) {
     this.serverPath = serverPath;
-    log(`Store created with serverPath: ${serverPath}`);
-  }
-
-  setServerPath(path: string): void {
-    this.serverPath = path;
+    log(serverPath
+      ? `Store created with serverPath: ${serverPath}`
+      : 'Store created (will use npx too-many-cooks)');
   }
 
   async connect(): Promise<void> {
-    log(`connect() called, serverPath: ${this.serverPath}`);
+    log('connect() called');
+
+    // If already connecting, wait for that to complete
+    if (this.connectPromise) {
+      log('Connect already in progress, waiting...');
+      return this.connectPromise;
+    }
+
     if (this.client?.isConnected()) {
       log('Already connected, returning');
       return;
@@ -58,8 +68,19 @@ export class Store {
     connectionStatus.value = 'connecting';
     log('Connection status: connecting');
 
+    this.connectPromise = this.doConnect();
     try {
-      log('Creating McpClient...');
+      await this.connectPromise;
+    } finally {
+      this.connectPromise = null;
+    }
+  }
+
+  private async doConnect(): Promise<void> {
+    try {
+      log(this.serverPath
+        ? `Creating McpClient with path: ${this.serverPath}`
+        : 'Creating McpClient (using npx too-many-cooks)...');
       this.client = new McpClient(this.serverPath);
 
       // Handle notifications
@@ -110,6 +131,11 @@ export class Store {
   }
 
   async disconnect(): Promise<void> {
+    log('disconnect() called');
+
+    // Clear the connect promise - we're aborting any in-progress connection
+    this.connectPromise = null;
+
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
       this.pollInterval = null;
@@ -118,8 +144,11 @@ export class Store {
     if (this.client) {
       await this.client.stop();
       this.client = null;
+      log('Client stopped');
     }
     resetState();
+    connectionStatus.value = 'disconnected';
+    log('State reset, disconnected');
   }
 
   async refreshStatus(): Promise<void> {
@@ -267,5 +296,75 @@ export class Store {
       throw new Error('Not connected');
     }
     return this.client.callTool(name, args);
+  }
+
+  /**
+   * Force release a lock (admin operation).
+   * Uses admin tool which can delete any lock regardless of expiry.
+   */
+  async forceReleaseLock(filePath: string): Promise<void> {
+    const result = await this.callTool('admin', {
+      action: 'delete_lock',
+      file_path: filePath,
+    });
+    const parsed = JSON.parse(result);
+    if (parsed.error) {
+      throw new Error(parsed.error);
+    }
+    // Remove from local state
+    locks.value = locks.value.filter((l) => l.filePath !== filePath);
+    log(`Force released lock: ${filePath}`);
+  }
+
+  /**
+   * Delete an agent (admin operation).
+   * Requires admin_delete_agent tool on the MCP server.
+   */
+  async deleteAgent(agentName: string): Promise<void> {
+    const result = await this.callTool('admin', {
+      action: 'delete_agent',
+      agent_name: agentName,
+    });
+    const parsed = JSON.parse(result);
+    if (parsed.error) {
+      throw new Error(parsed.error);
+    }
+    // Remove from local state
+    agents.value = agents.value.filter((a) => a.agentName !== agentName);
+    plans.value = plans.value.filter((p) => p.agentName !== agentName);
+    locks.value = locks.value.filter((l) => l.agentName !== agentName);
+    log(`Deleted agent: ${agentName}`);
+  }
+
+  /**
+   * Send a message from VSCode user to an agent.
+   * Registers the sender if needed, then sends the message.
+   */
+  async sendMessage(
+    fromAgent: string,
+    toAgent: string,
+    content: string
+  ): Promise<void> {
+    // Register sender and get key
+    const registerResult = await this.callTool('register', { name: fromAgent });
+    const registerParsed = JSON.parse(registerResult);
+    if (registerParsed.error) {
+      throw new Error(registerParsed.error);
+    }
+    const agentKey = registerParsed.agent_key;
+
+    // Send the message
+    const sendResult = await this.callTool('message', {
+      action: 'send',
+      agent_name: fromAgent,
+      agent_key: agentKey,
+      to_agent: toAgent,
+      content: content,
+    });
+    const sendParsed = JSON.parse(sendResult);
+    if (sendParsed.error) {
+      throw new Error(sendParsed.error);
+    }
+    log(`Message sent from ${fromAgent} to ${toAgent}`);
   }
 }

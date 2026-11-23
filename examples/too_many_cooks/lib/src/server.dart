@@ -7,6 +7,7 @@ import 'package:nadz/nadz.dart';
 import 'package:too_many_cooks/src/config.dart';
 import 'package:too_many_cooks/src/db/db.dart';
 import 'package:too_many_cooks/src/notifications.dart';
+import 'package:too_many_cooks/src/tools/admin_tool.dart';
 import 'package:too_many_cooks/src/tools/lock_tool.dart';
 import 'package:too_many_cooks/src/tools/message_tool.dart';
 import 'package:too_many_cooks/src/tools/plan_tool.dart';
@@ -78,6 +79,11 @@ Result<McpServer, String> createTooManyCooksServer({
       'subscribe',
       subscribeToolConfig,
       createSubscribeHandler(emitter),
+    )
+    ..registerTool(
+      'admin',
+      adminToolConfig,
+      createAdminHandler(db, emitter, log),
     );
 
   log.info('Server initialized with all tools registered');

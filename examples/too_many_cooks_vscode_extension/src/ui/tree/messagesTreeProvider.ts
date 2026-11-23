@@ -17,26 +17,25 @@ export class MessageTreeItem extends vscode.TreeItem {
     super(label, collapsibleState);
     this.description = description;
     this.iconPath = this.getIcon();
+    this.contextValue = message ? 'message' : undefined;
 
     if (message) {
       this.tooltip = this.createTooltip(message);
     }
   }
 
-  private getIcon(): vscode.ThemeIcon {
+  private getIcon(): vscode.ThemeIcon | undefined {
     if (!this.message) {
       return new vscode.ThemeIcon('mail');
     }
-    if (this.message.toAgent === '*') {
-      return new vscode.ThemeIcon('broadcast');
-    }
+    // Status icon: unread = yellow circle, read = none
     if (this.message.readAt === undefined) {
       return new vscode.ThemeIcon(
-        'mail-read',
+        'circle-filled',
         new vscode.ThemeColor('charts.yellow')
       );
     }
-    return new vscode.ThemeIcon('mail');
+    return undefined;
   }
 
   private createTooltip(msg: Message): vscode.MarkdownString {
@@ -110,6 +109,7 @@ export class MessagesTreeProvider
   }
 
   getChildren(element?: MessageTreeItem): MessageTreeItem[] {
+    // No children - flat list
     if (element) {
       return [];
     }
@@ -131,20 +131,33 @@ export class MessagesTreeProvider
       (a, b) => b.createdAt - a.createdAt
     );
 
+    // Single row per message: "from → to | time | content"
     return sorted.map((msg) => {
-      const isBroadcast = msg.toAgent === '*';
-      const target = isBroadcast ? 'all' : msg.toAgent;
-      const preview =
-        msg.content.length > 30
-          ? msg.content.substring(0, 30) + '...'
-          : msg.content;
+      const target = msg.toAgent === '*' ? 'all' : msg.toAgent;
+      const relativeTime = this.getRelativeTime(msg.createdAt);
+      const status = msg.readAt === undefined ? 'unread' : '';
+      const statusPart = status ? ` [${status}]` : '';
 
       return new MessageTreeItem(
-        `${msg.fromAgent} → ${target}`,
-        preview,
+        `${msg.fromAgent} → ${target} | ${relativeTime}${statusPart}`,
+        msg.content,
         vscode.TreeItemCollapsibleState.None,
         msg
       );
     });
+  }
+
+  private getRelativeTime(timestamp: number): string {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days}d`;
+    if (hours > 0) return `${hours}h`;
+    if (minutes > 0) return `${minutes}m`;
+    return 'now';
   }
 }

@@ -1,0 +1,17 @@
+name: 'Publish Package'
+description: 'Publish a single Dart package to pub.dev'
+
+inputs:
+  package:
+    description: 'Package name (directory under packages/)'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Publish ${{ inputs.package }}
+      shell: bash
+      run: |
+        cd packages/${{ inputs.package }}
+        dart pub get
+        dart pub publish --force

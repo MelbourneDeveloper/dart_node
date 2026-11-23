@@ -5,10 +5,13 @@ library;
 import 'dart:js_interop';
 
 import 'package:dart_node_core/dart_node_core.dart';
+import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:nadz/nadz.dart';
 import 'package:test/test.dart';
 
 void main() {
+  setUp(initCoverage);
+
   group('requireModule', () {
     test('loads fs module', () {
       final fs = requireModule('fs');
@@ -58,19 +61,13 @@ void main() {
   group('NullableExtensions', () {
     test('match calls some for non-null value', () {
       const value = 'hello';
-      final result = value.match(
-        some: (v) => 'got: $v',
-        none: () => 'nothing',
-      );
+      final result = value.match(some: (v) => 'got: $v', none: () => 'nothing');
       expect(result, equals('got: hello'));
     });
 
     test('match calls none for null value', () {
       const String? value = null;
-      final result = value.match(
-        some: (v) => 'got: $v',
-        none: () => 'nothing',
-      );
+      final result = value.match(some: (v) => 'got: $v', none: () => 'nothing');
       expect(result, equals('nothing'));
     });
   });
@@ -90,14 +87,10 @@ void main() {
   group('withRetry', () {
     test('returns success on first attempt', () {
       var attempts = 0;
-      final result = withRetry(
-        defaultRetryPolicy,
-        (e) => true,
-        () {
-          attempts++;
-          return const Success<int, String>(42);
-        },
-      );
+      final result = withRetry(defaultRetryPolicy, (e) => true, () {
+        attempts++;
+        return const Success<int, String>(42);
+      });
       expect(result, isA<Success<int, String>>());
       expect((result as Success<int, String>).value, equals(42));
       expect(attempts, equals(1));
@@ -165,4 +158,6 @@ void main() {
       expect(retryLog[1].$3, equals(20));
     });
   });
+
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
 }

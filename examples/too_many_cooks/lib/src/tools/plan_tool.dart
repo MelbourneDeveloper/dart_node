@@ -40,7 +40,8 @@ const planInputSchema = <String, Object?>{
 /// Tool config for plan.
 const planToolConfig = (
   title: 'Plan',
-  description: 'Manage agent plans: update, get, list. REQUIRED: action. '
+  description:
+      'Manage agent plans: update, get, list. REQUIRED: action. '
       'For update: agent_name, agent_key, goal, current_task. '
       'For get: agent_name. Example update: {"action":"update",'
       ' "agent_name":"me","agent_key":"xxx","goal":"Fix bug",'
@@ -55,40 +56,37 @@ ToolCallback createPlanHandler(
   TooManyCooksDb db,
   NotificationEmitter emitter,
   Logger logger,
-) =>
-    (args, meta) async {
-      final actionArg = args['action'];
-      if (actionArg == null || actionArg is! String) {
-        return (
-          content: <Object>[
-            textContent('{"error":"missing_parameter: action is required"}'),
-          ],
-          isError: true,
-        );
-      }
-      final action = actionArg;
-      final log = logger.child({'tool': 'plan', 'action': action});
+) => (args, meta) async {
+  final actionArg = args['action'];
+  if (actionArg == null || actionArg is! String) {
+    return (
+      content: <Object>[
+        textContent('{"error":"missing_parameter: action is required"}'),
+      ],
+      isError: true,
+    );
+  }
+  final action = actionArg;
+  final log = logger.child({'tool': 'plan', 'action': action});
 
-      return switch (action) {
-        'update' => _update(
-            db,
-            emitter,
-            log,
-            args['agent_name'] as String?,
-            args['agent_key'] as String?,
-            args['goal'] as String?,
-            args['current_task'] as String?,
-          ),
-        'get' => _get(db, args['agent_name'] as String?),
-        'list' => _list(db),
-        _ => (
-            content: <Object>[
-              textContent('{"error":"Unknown action: $action"}'),
-            ],
-            isError: true,
-          ),
-      };
-    };
+  return switch (action) {
+    'update' => _update(
+      db,
+      emitter,
+      log,
+      args['agent_name'] as String?,
+      args['agent_key'] as String?,
+      args['goal'] as String?,
+      args['current_task'] as String?,
+    ),
+    'get' => _get(db, args['agent_name'] as String?),
+    'list' => _list(db),
+    _ => (
+      content: <Object>[textContent('{"error":"Unknown action: $action"}')],
+      isError: true,
+    ),
+  };
+};
 
 CallToolResult _update(
   TooManyCooksDb db,
@@ -115,17 +113,17 @@ CallToolResult _update(
   }
   return switch (db.updatePlan(agentName, agentKey, goal, currentTask)) {
     Success() => () {
-        emitter.emit(eventPlanUpdated, {
-          'agent_name': agentName,
-          'goal': goal,
-          'current_task': currentTask,
-        });
-        log.info('Plan updated for $agentName: $currentTask');
-        return (
-          content: <Object>[textContent('{"updated":true}')],
-          isError: false,
-        );
-      }(),
+      emitter.emit(eventPlanUpdated, {
+        'agent_name': agentName,
+        'goal': goal,
+        'current_task': currentTask,
+      });
+      log.info('Plan updated for $agentName: $currentTask');
+      return (
+        content: <Object>[textContent('{"updated":true}')],
+        isError: false,
+      );
+    }(),
     Error(:final error) => _errorResult(error),
   };
 }
@@ -133,38 +131,35 @@ CallToolResult _update(
 CallToolResult _get(TooManyCooksDb db, String? agentName) {
   if (agentName == null) {
     return (
-      content: <Object>[
-        textContent( '{"error":"get requires agent_name"}'),
-      ],
+      content: <Object>[textContent('{"error":"get requires agent_name"}')],
       isError: true,
     );
   }
   return switch (db.getPlan(agentName)) {
     Success(:final value) when value == null => (
-        content: <Object>[textContent( '{"plan":null}')],
-        isError: false,
-      ),
+      content: <Object>[textContent('{"plan":null}')],
+      isError: false,
+    ),
     Success(:final value) => (
-        content: <Object>[
-          textContent( '{"plan":${_planJson(value!)}}'),
-        ],
-        isError: false,
-      ),
+      content: <Object>[textContent('{"plan":${_planJson(value!)}}')],
+      isError: false,
+    ),
     Error(:final error) => _errorResult(error),
   };
 }
 
 CallToolResult _list(TooManyCooksDb db) => switch (db.listPlans()) {
-      Success(:final value) => (
-          content: <Object>[
-            textContent('{"plans":[${value.map(_planJson).join(',')}]}'),
-          ],
-          isError: false,
-        ),
-      Error(:final error) => _errorResult(error),
-    };
+  Success(:final value) => (
+    content: <Object>[
+      textContent('{"plans":[${value.map(_planJson).join(',')}]}'),
+    ],
+    isError: false,
+  ),
+  Error(:final error) => _errorResult(error),
+};
 
-String _planJson(AgentPlan p) => '{"agent_name":"${p.agentName}",'
+String _planJson(AgentPlan p) =>
+    '{"agent_name":"${p.agentName}",'
     '"goal":"${_escapeJson(p.goal)}",'
     '"current_task":"${_escapeJson(p.currentTask)}",'
     '"updated_at":${p.updatedAt}}';
@@ -173,8 +168,6 @@ String _escapeJson(String s) =>
     s.replaceAll(r'\', r'\\').replaceAll('"', r'\"').replaceAll('\n', r'\n');
 
 CallToolResult _errorResult(DbError e) => (
-      content: <Object>[
-        textContent( '{"error":"${e.code}: ${e.message}"}'),
-      ],
-      isError: true,
-    );
+  content: <Object>[textContent('{"error":"${e.code}: ${e.message}"}')],
+  isError: true,
+);

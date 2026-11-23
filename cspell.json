@@ -1,0 +1,30 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "dictionaryDefinitions": [
+    {
+      "name": "project-words",
+      "path": "./cspell-dictionary.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": ["project-words"],
+  "ignorePaths": [
+    "node_modules",
+    "**/node_modules",
+    "**/*.g.dart",
+    "**/coverage",
+    "**/.vscode-test",
+    "**/build",
+    "**/*.lock",
+    "**/pubspec.lock",
+    "**/package-lock.json",
+    "website/src/api/**",
+    "website/_site/api/**",
+    "**/.dart_tool"
+  ],
+  "files": ["**/*.md", "**/*.dart", "**/*.ts"],
+  "words": [],
+  "flagWords": [],
+  "import": []
+}

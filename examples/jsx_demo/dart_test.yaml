@@ -1,0 +1,8 @@
+platforms: [chrome]
+
+override_platforms:
+  chrome:
+    settings:
+      arguments: --disable-gpu --no-sandbox
+
+custom_html_template_path: test/test_template.html

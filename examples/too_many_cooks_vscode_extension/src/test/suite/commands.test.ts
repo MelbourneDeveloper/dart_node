@@ -5,7 +5,10 @@
 
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { waitForExtensionActivation, getTestAPI } from '../test-helpers';
+import { waitForExtensionActivation, getTestAPI, restoreDialogMocks } from '../test-helpers';
+
+// Ensure any dialog mocks from previous tests are restored
+restoreDialogMocks();
 
 suite('Commands', () => {
   suiteSetup(async () => {

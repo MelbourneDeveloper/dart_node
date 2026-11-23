@@ -15,6 +15,9 @@ extension type JsRef._(JSObject _) implements JSObject {
   external set current(JSAny? value);
 }
 
+/// Storage for complex Dart objects that can't survive jsify/dartify.
+final Expando<Object> _dartObjectStore = Expando<Object>('refDartValue');
+
 /// When this is provided as the ref prop, a reference to the rendered
 /// component will be available via [current].
 ///
@@ -32,13 +35,19 @@ final class Ref<T> {
   /// A reference to the latest instance of the rendered component.
   ///
   /// See [createRef] for usage examples and more info.
-  T get current => jsRef.current.dartify() as T;
+  T get current {
+    final stored = _dartObjectStore[jsRef];
+    if (stored != null) return stored as T;
+    final jsCurrent = jsRef.current;
+    return (jsCurrent == null) ? null as T : jsCurrent.dartify() as T;
+  }
 
   /// Sets the value of [current].
   ///
   /// See:
   /// https://reactjs.org/docs/hooks-faq.html#is-there-something-like-instance-variables
   set current(T value) {
+    if (value != null) _dartObjectStore[jsRef] = value;
     jsRef.current = (value == null) ? null : (value as Object).jsify();
   }
 }

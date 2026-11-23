@@ -179,8 +179,11 @@ void main() {
         null,
         1000,
       );
-      final result =
-          db.releaseLock('/path/file.dart', agent1.agentName, agent1.agentKey);
+      final result = db.releaseLock(
+        '/path/file.dart',
+        agent1.agentName,
+        agent1.agentKey,
+      );
       expect(result, isA<Success<void, DbError>>());
     });
 
@@ -192,8 +195,11 @@ void main() {
         null,
         10000,
       );
-      final result =
-          db.releaseLock('/path/file.dart', agent2.agentName, agent2.agentKey);
+      final result = db.releaseLock(
+        '/path/file.dart',
+        agent2.agentName,
+        agent2.agentKey,
+      );
       expect(result, isA<Error<void, DbError>>());
     });
 
@@ -413,16 +419,18 @@ void main() {
         agent2.agentName,
         'Hello!',
       );
-      final messagesResult =
-          db.getMessages(agent2.agentName, agent2.agentKey);
+      final messagesResult = db.getMessages(agent2.agentName, agent2.agentKey);
       final messages = switch (messagesResult) {
         Success(:final value) => value,
         Error() => throw StateError('Expected success'),
       };
       final msgId = messages.first.id;
       db.markRead(msgId, agent2.agentName, agent2.agentKey);
-      final unread =
-          db.getMessages(agent2.agentName, agent2.agentKey, unreadOnly: true);
+      final unread = db.getMessages(
+        agent2.agentName,
+        agent2.agentKey,
+        unreadOnly: true,
+      );
       final unreadMessages = switch (unread) {
         Success(:final value) => value,
         Error() => throw StateError('Expected success'),
@@ -466,12 +474,7 @@ void main() {
     });
 
     test('getPlan returns agent plan', () {
-      db.updatePlan(
-        agent1.agentName,
-        agent1.agentKey,
-        'Fix bugs',
-        'Reviewing',
-      );
+      db.updatePlan(agent1.agentName, agent1.agentKey, 'Fix bugs', 'Reviewing');
       final result = db.getPlan(agent1.agentName);
       expect(result, isA<Success<AgentPlan?, DbError>>());
       final plan = switch (result) {
@@ -567,11 +570,7 @@ void main() {
         backoffMultiplier: 1.0,
       );
       final start = DateTime.now();
-      final result = createDb(
-        config,
-        logger: logger,
-        retryPolicy: fastPolicy,
-      );
+      final result = createDb(config, logger: logger, retryPolicy: fastPolicy);
       final elapsed = DateTime.now().difference(start);
       expect(result, isA<Error<TooManyCooksDb, String>>());
       // Should be fast - no retries on path errors (not I/O errors)

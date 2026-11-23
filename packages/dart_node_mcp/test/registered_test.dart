@@ -1,8 +1,12 @@
 // Pure Dart registered type tests - import only types to avoid JS interop
+import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:dart_node_mcp/src/types.dart';
 import 'package:test/test.dart';
 
 void main() {
+  setUp(initCoverage);
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
+
   group('RegisteredTool', () {
     test('has correct structure', () {
       var removeCallCount = 0;

@@ -14,10 +14,10 @@ void main() {
 
   group('processTemplate', () {
     test('replaces placeholders with values', () {
-      final result = processTemplate(
-        'User {id} logged in from {ip}',
-        {'id': '123', 'ip': '192.168.1.1'},
-      );
+      final result = processTemplate('User {id} logged in from {ip}', {
+        'id': '123',
+        'ip': '192.168.1.1',
+      });
       expect(result, 'User 123 logged in from 192.168.1.1');
     });
 

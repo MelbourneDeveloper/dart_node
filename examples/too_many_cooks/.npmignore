@@ -1,0 +1,30 @@
+# Source files
+lib/
+bin/
+test/
+
+# Dart files
+pubspec.yaml
+pubspec.lock
+analysis_options.yaml
+dart_test.yaml
+.dart_tool/
+.packages
+
+# Build artifacts (except server_node.js)
+build/bin/*.js
+!build/bin/server_node.js
+build/test/
+
+# Development files
+*.sh
+*.db
+.too_many_cooks/
+
+# IDE
+.idea/
+.vscode/
+
+# Node
+node_modules/
+package-lock.json

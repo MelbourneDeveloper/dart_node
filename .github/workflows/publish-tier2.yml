@@ -1,0 +1,37 @@
+name: Publish Tier 2
+
+on:
+  push:
+    tags:
+      - 'Release-Tier2/[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pub.dev-tier2
+    steps:
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/Release-Tier2/}" >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout release branch
+        run: |
+          git fetch origin "release/${{ steps.version.outputs.VERSION }}"
+          git checkout "release/${{ steps.version.outputs.VERSION }}"
+
+      - uses: ./.github/actions/setup
+        with:
+          dart-version: ${{ vars.DART_VERSION }}
+
+      - name: Publish packages
+        run: |
+          chmod +x .github/scripts/publish-packages.sh
+          .github/scripts/publish-packages.sh "${{ steps.version.outputs.VERSION }}" reflux dart_node_express dart_node_ws dart_node_better_sqlite3 dart_node_mcp

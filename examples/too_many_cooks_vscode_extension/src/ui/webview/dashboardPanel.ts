@@ -1,5 +1,5 @@
 /**
- * Dashboard webview panel showing relationship graph.
+ * Dashboard webview panel showing agent coordination status.
  */
 
 import * as vscode from 'vscode';
@@ -165,13 +165,6 @@ export class DashboardPanel {
       color: var(--vscode-descriptionForeground);
       font-style: italic;
     }
-    #graph {
-      grid-column: 1 / -1;
-      height: 400px;
-      background: var(--vscode-editor-background);
-      border-radius: 8px;
-      border: 1px solid var(--vscode-panel-border);
-    }
   </style>
 </head>
 <body>
@@ -216,11 +209,6 @@ export class DashboardPanel {
     <div class="card">
       <h2><span class="icon">🎯</span> Agent Plans</h2>
       <ul class="list" id="plansList"></ul>
-    </div>
-
-    <div id="graph" class="card">
-      <h2><span class="icon">🕸️</span> Relationship Graph</h2>
-      <canvas id="graphCanvas"></canvas>
     </div>
   </div>
 
@@ -308,89 +296,6 @@ export class DashboardPanel {
             </div>
           </li>
         \`).join('');
-
-      // Draw graph
-      drawGraph();
-    }
-
-    function drawGraph() {
-      const canvas = document.getElementById('graphCanvas');
-      const container = document.getElementById('graph');
-      canvas.width = container.clientWidth - 32;
-      canvas.height = 350;
-
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (state.agents.length === 0) {
-        ctx.fillStyle = 'var(--vscode-descriptionForeground)';
-        ctx.font = '14px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('No data to display', canvas.width / 2, canvas.height / 2);
-        return;
-      }
-
-      // Position agents in a circle
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const radius = Math.min(centerX, centerY) - 60;
-
-      const agentPositions = {};
-      state.agents.forEach((agent, i) => {
-        const angle = (2 * Math.PI * i) / state.agents.length - Math.PI / 2;
-        agentPositions[agent.agentName] = {
-          x: centerX + radius * Math.cos(angle),
-          y: centerY + radius * Math.sin(angle),
-        };
-      });
-
-      // Draw message connections
-      ctx.strokeStyle = '#4a9eff';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([5, 5]);
-      state.messages.forEach(msg => {
-        const from = agentPositions[msg.fromAgent];
-        const to = msg.toAgent === '*' ? null : agentPositions[msg.toAgent];
-        if (from && to) {
-          ctx.beginPath();
-          ctx.moveTo(from.x, from.y);
-          ctx.lineTo(to.x, to.y);
-          ctx.stroke();
-        }
-      });
-      ctx.setLineDash([]);
-
-      // Draw agent nodes
-      Object.entries(agentPositions).forEach(([name, pos]) => {
-        // Node circle
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, 25, 0, 2 * Math.PI);
-        ctx.fillStyle = '#3c3c3c';
-        ctx.fill();
-        ctx.strokeStyle = '#4a9eff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Agent name
-        ctx.fillStyle = '#cccccc';
-        ctx.font = '12px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const shortName = name.length > 8 ? name.substring(0, 7) + '…' : name;
-        ctx.fillText(shortName, pos.x, pos.y);
-
-        // Lock count badge
-        const lockCount = state.locks.filter(l => l.agentName === name).length;
-        if (lockCount > 0) {
-          ctx.beginPath();
-          ctx.arc(pos.x + 20, pos.y - 20, 10, 0, 2 * Math.PI);
-          ctx.fillStyle = '#f0ad4e';
-          ctx.fill();
-          ctx.fillStyle = '#000';
-          ctx.font = 'bold 10px sans-serif';
-          ctx.fillText(lockCount.toString(), pos.x + 20, pos.y - 20);
-        }
-      });
     }
 
     function escapeHtml(str) {

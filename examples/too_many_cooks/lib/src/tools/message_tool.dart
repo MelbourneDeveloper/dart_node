@@ -17,14 +17,8 @@ const messageInputSchema = <String, Object?>{
       'enum': ['send', 'get', 'mark_read'],
       'description': 'Message action to perform',
     },
-    'agent_name': {
-      'type': 'string',
-      'description': 'Your agent name',
-    },
-    'agent_key': {
-      'type': 'string',
-      'description': 'Your secret key',
-    },
+    'agent_name': {'type': 'string', 'description': 'Your agent name'},
+    'agent_key': {'type': 'string', 'description': 'Your secret key'},
     'to_agent': {
       'type': 'string',
       'description': 'Recipient name or * for broadcast (for send)',
@@ -48,7 +42,8 @@ const messageInputSchema = <String, Object?>{
 /// Tool config for message.
 const messageToolConfig = (
   title: 'Message',
-  description: 'Send/receive messages. '
+  description:
+      'Send/receive messages. '
       'REQUIRED: action (send|get|mark_read), agent_name, agent_key. '
       'For send: to_agent, content. For mark_read: message_id. '
       'Example send: {"action":"send","agent_name":"me","agent_key":"xxx",'
@@ -63,74 +58,67 @@ ToolCallback createMessageHandler(
   TooManyCooksDb db,
   NotificationEmitter emitter,
   Logger logger,
-) =>
-    (args, meta) async {
-      final actionArg = args['action'];
-      final agentNameArg = args['agent_name'];
-      final agentKeyArg = args['agent_key'];
-      if (actionArg == null || actionArg is! String) {
-        return (
-          content: <Object>[
-            textContent('{"error":"missing_parameter: action is required"}'),
-          ],
-          isError: true,
-        );
-      }
-      if (agentNameArg == null || agentNameArg is! String) {
-        return (
-          content: <Object>[
-            textContent(
-              '{"error":"missing_parameter: agent_name is required"}',
-            ),
-          ],
-          isError: true,
-        );
-      }
-      if (agentKeyArg == null || agentKeyArg is! String) {
-        return (
-          content: <Object>[
-            textContent(
-              '{"error":"missing_parameter: agent_key is required"}',
-            ),
-          ],
-          isError: true,
-        );
-      }
-      final action = actionArg;
-      final agentName = agentNameArg;
-      final agentKey = agentKeyArg;
-      final log = logger.child({'tool': 'message', 'action': action});
+) => (args, meta) async {
+  final actionArg = args['action'];
+  final agentNameArg = args['agent_name'];
+  final agentKeyArg = args['agent_key'];
+  if (actionArg == null || actionArg is! String) {
+    return (
+      content: <Object>[
+        textContent('{"error":"missing_parameter: action is required"}'),
+      ],
+      isError: true,
+    );
+  }
+  if (agentNameArg == null || agentNameArg is! String) {
+    return (
+      content: <Object>[
+        textContent('{"error":"missing_parameter: agent_name is required"}'),
+      ],
+      isError: true,
+    );
+  }
+  if (agentKeyArg == null || agentKeyArg is! String) {
+    return (
+      content: <Object>[
+        textContent('{"error":"missing_parameter: agent_key is required"}'),
+      ],
+      isError: true,
+    );
+  }
+  final action = actionArg;
+  final agentName = agentNameArg;
+  final agentKey = agentKeyArg;
+  final log = logger.child({'tool': 'message', 'action': action});
 
-      return switch (action) {
-        'send' => _send(
-            db,
-            emitter,
-            log,
-            agentName,
-            agentKey,
-            args['to_agent'] as String?,
-            args['content'] as String?,
-          ),
-        'get' => _get(
-            db,
-            agentName,
-            agentKey,
-            args['unread_only'] as bool? ?? true,
-          ),
-        'mark_read' => _markRead(
-            db,
-            agentName,
-            agentKey,
-            args['message_id'] as String?,
-          ),
-        _ => (
-            content: <Object>[
-              textContent('{"error":"Unknown action: $action"}'),
-            ],
-            isError: true,
-          ),
-      };
-    };
+  return switch (action) {
+    'send' => _send(
+      db,
+      emitter,
+      log,
+      agentName,
+      agentKey,
+      args['to_agent'] as String?,
+      args['content'] as String?,
+    ),
+    'get' => _get(
+      db,
+      agentName,
+      agentKey,
+      args['unread_only'] as bool? ?? true,
+    ),
+    'mark_read' => _markRead(
+      db,
+      agentName,
+      agentKey,
+      args['message_id'] as String?,
+    ),
+    _ => (
+      content: <Object>[textContent('{"error":"Unknown action: $action"}')],
+      isError: true,
+    ),
+  };
+};
 
 CallToolResult _send(
   TooManyCooksDb db,
@@ -151,20 +139,18 @@ CallToolResult _send(
   }
   return switch (db.sendMessage(agentName, agentKey, toAgent, content)) {
     Success(:final value) => () {
-        emitter.emit(eventMessageSent, {
-          'message_id': value,
-          'from_agent': agentName,
-          'to_agent': toAgent,
-          'content': content,
-        });
-        log.info('Message sent from $agentName to $toAgent');
-        return (
-          content: <Object>[
-            textContent('{"sent":true,"message_id":"$value"}'),
-          ],
-          isError: false,
-        );
-      }(),
+      emitter.emit(eventMessageSent, {
+        'message_id': value,
+        'from_agent': agentName,
+        'to_agent': toAgent,
+        'content': content,
+      });
+      log.info('Message sent from $agentName to $toAgent');
+      return (
+        content: <Object>[textContent('{"sent":true,"message_id":"$value"}')],
+        isError: false,
+      );
+    }(),
     Error(:final error) => _errorResult(error),
   };
 }
@@ -174,18 +160,15 @@ CallToolResult _get(
   String agentName,
   String agentKey,
   bool unreadOnly,
-) =>
-    switch (db.getMessages(agentName, agentKey, unreadOnly: unreadOnly)) {
-      Success(:final value) => (
-          content: <Object>[
-            textContent(
-              '{"messages":[${value.map(_messageJson).join(',')}]}',
-            ),
-          ],
-          isError: false,
-        ),
-      Error(:final error) => _errorResult(error),
-    };
+) => switch (db.getMessages(agentName, agentKey, unreadOnly: unreadOnly)) {
+  Success(:final value) => (
+    content: <Object>[
+      textContent('{"messages":[${value.map(_messageJson).join(',')}]}'),
+    ],
+    isError: false,
+  ),
+  Error(:final error) => _errorResult(error),
+};
 
 CallToolResult _markRead(
   TooManyCooksDb db,
@@ -196,21 +179,22 @@ CallToolResult _markRead(
   if (messageId == null) {
     return (
       content: <Object>[
-        textContent( '{"error":"mark_read requires message_id"}'),
+        textContent('{"error":"mark_read requires message_id"}'),
       ],
       isError: true,
     );
   }
   return switch (db.markRead(messageId, agentName, agentKey)) {
     Success() => (
-        content: <Object>[textContent( '{"marked":true}')],
-        isError: false,
-      ),
+      content: <Object>[textContent('{"marked":true}')],
+      isError: false,
+    ),
     Error(:final error) => _errorResult(error),
   };
 }
 
-String _messageJson(Message m) => '{"id":"${m.id}",'
+String _messageJson(Message m) =>
+    '{"id":"${m.id}",'
     '"from_agent":"${m.fromAgent}",'
     '"content":"${_escapeJson(m.content)}",'
     '"created_at":${m.createdAt}'
@@ -220,8 +204,6 @@ String _escapeJson(String s) =>
     s.replaceAll(r'\', r'\\').replaceAll('"', r'\"').replaceAll('\n', r'\n');
 
 CallToolResult _errorResult(DbError e) => (
-      content: <Object>[
-        textContent( '{"error":"${e.code}: ${e.message}"}'),
-      ],
-      isError: true,
-    );
+  content: <Object>[textContent('{"error":"${e.code}: ${e.message}"}')],
+  isError: true,
+);

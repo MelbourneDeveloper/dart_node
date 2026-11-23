@@ -1,10 +1,14 @@
 // McpServer tests - factory tests and pure Dart type tests
 // Actual McpServer instance creation requires Node.js runtime
+import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:dart_node_mcp/dart_node_mcp.dart';
 import 'package:nadz/nadz.dart';
 import 'package:test/test.dart';
 
 void main() {
+  setUp(initCoverage);
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
+
   group('McpServer.create', () {
     test('function exists and can be called', () {
       expect(McpServer.create, isA<Function>());

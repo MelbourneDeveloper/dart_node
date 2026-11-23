@@ -7,6 +7,7 @@ export 'src/elements.dart';
 export 'src/function_component.dart';
 export 'src/hooks.dart';
 export 'src/html_elements.dart';
+export 'src/jsx.dart';
 export 'src/react.dart';
 export 'src/react_dom.dart';
 export 'src/reducer_hook.dart';

@@ -1,0 +1,5 @@
+analyzer:
+  exclude:
+    - "**/*.jsx"
+    - "**/node_modules/**"
+    - "**/.dart_tool/**"

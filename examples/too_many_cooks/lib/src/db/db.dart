@@ -101,6 +101,10 @@ typedef TooManyCooksDb = ({
   Result<List<AgentPlan>, DbError> Function() listPlans,
   Result<List<Message>, DbError> Function() listAllMessages,
   Result<void, DbError> Function() close,
+  // Admin operations (no auth required - for VSCode extension)
+  Result<void, DbError> Function(String filePath) adminDeleteLock,
+  Result<void, DbError> Function(String agentName) adminDeleteAgent,
+  Result<AgentRegistration, DbError> Function(String agentName) adminResetKey,
 });
 
 /// Create database instance with retry policy.
@@ -147,7 +151,6 @@ Result<TooManyCooksDb, String> _tryCreateDb(
     Error(:final error) => Error<TooManyCooksDb, String>(error),
   };
 }
-
 
 Logger _noOpLogger() => createLoggerWithContext(createLoggingContext());
 
@@ -200,6 +203,9 @@ TooManyCooksDb _createDbOps(
       Error(:final error) => Error((code: errDatabase, message: error)),
     };
   },
+  adminDeleteLock: (path) => _adminDeleteLock(db, log, path),
+  adminDeleteAgent: (name) => _adminDeleteAgent(db, log, name),
+  adminResetKey: (name) => _adminResetKey(db, log, name),
 );
 
 extension type _Crypto(JSObject _) implements JSObject {
@@ -624,8 +630,8 @@ ORDER BY created_at DESC''';
   final stmtResult = db.prepare(sql);
   return switch (stmtResult) {
     Success(:final value) => switch (value.all([agentName])) {
-      Success(:final value) => Success(
-        value
+      Success(:final value) => () {
+        final messageList = value
             .map(
               (r) => (
                 id: r['id']! as String,
@@ -636,12 +642,52 @@ ORDER BY created_at DESC''';
                 readAt: r['read_at'] as int?,
               ),
             )
-            .toList(),
-      ),
-      Error(:final error) => Error((code: errDatabase, message: error)),
+            .toList();
+        // Auto-mark fetched messages as read (agent proved identity with key)
+        _autoMarkRead(db, log, agentName, messageList);
+        return Success<List<Message>, DbError>(messageList);
+      }(),
+      Error(:final error) => Error<List<Message>, DbError>((
+        code: errDatabase,
+        message: error,
+      )),
     },
-    Error(:final error) => Error((code: errDatabase, message: error)),
+    Error(:final error) => Error<List<Message>, DbError>((
+      code: errDatabase,
+      message: error,
+    )),
   };
+}
+
+void _autoMarkRead(
+  Database db,
+  Logger log,
+  String agentName,
+  List<Message> messageList,
+) {
+  final unreadIds = messageList
+      .where((m) => m.readAt == null)
+      .map((m) => m.id)
+      .toList();
+  if (unreadIds.isEmpty) return;
+
+  final now = _now();
+  final stmtResult = db.prepare('''
+    UPDATE messages SET read_at = ?
+    WHERE id = ? AND to_agent = ? AND read_at IS NULL
+  ''');
+  if (stmtResult case Error(:final error)) {
+    log.warn('Failed to auto-mark messages read: $error');
+    return;
+  }
+  final stmt = (stmtResult as Success<Statement, String>).value;
+  for (final id in unreadIds) {
+    final result = stmt.run([now, id, agentName]);
+    if (result case Error(:final error)) {
+      log.warn('Failed to mark message $id as read: $error');
+    }
+  }
+  log.debug('Auto-marked ${unreadIds.length} messages as read for $agentName');
 }
 
 Result<void, DbError> _markRead(
@@ -657,7 +703,7 @@ Result<void, DbError> _markRead(
 
   final stmtResult = db.prepare('''
     UPDATE messages SET read_at = ?
-    WHERE id = ? AND (to_agent = ? OR to_agent = '*')
+    WHERE id = ? AND to_agent = ?
   ''');
   return switch (stmtResult) {
     Success(:final value) => switch (value.run([
@@ -781,6 +827,123 @@ Result<List<Message>, DbError> _listAllMessages(Database db, Logger log) {
             )
             .toList(),
       ),
+      Error(:final error) => Error((code: errDatabase, message: error)),
+    },
+    Error(:final error) => Error((code: errDatabase, message: error)),
+  };
+}
+
+// === Admin Operations (no auth required) ===
+
+Result<void, DbError> _adminDeleteLock(
+  Database db,
+  Logger log,
+  String filePath,
+) {
+  log.warn('Admin deleting lock on $filePath');
+  final stmtResult = db.prepare('DELETE FROM locks WHERE file_path = ?');
+  return switch (stmtResult) {
+    Success(:final value) => switch (value.run([filePath])) {
+      Success(:final value) when value.changes == 0 => const Error((
+        code: errNotFound,
+        message: 'Lock not found',
+      )),
+      Success() => const Success(null),
+      Error(:final error) => Error((code: errDatabase, message: error)),
+    },
+    Error(:final error) => Error((code: errDatabase, message: error)),
+  };
+}
+
+Result<void, DbError> _adminDeleteAgent(
+  Database db,
+  Logger log,
+  String agentName,
+) {
+  log.warn('Admin deleting agent $agentName');
+  // Delete agent's locks, messages, plans, then identity
+  final deleteLocks = db.prepare('DELETE FROM locks WHERE agent_name = ?');
+  final deleteMessages = db.prepare(
+    'DELETE FROM messages WHERE from_agent = ? OR to_agent = ?',
+  );
+  final deletePlans = db.prepare('DELETE FROM plans WHERE agent_name = ?');
+  final deleteIdentity = db.prepare(
+    'DELETE FROM identity WHERE agent_name = ?',
+  );
+
+  // Check all prepared successfully
+  for (final stmtResult in [deleteLocks, deleteMessages, deletePlans]) {
+    if (stmtResult case Error(:final error)) {
+      return Error((code: errDatabase, message: error));
+    }
+  }
+  if (deleteIdentity case Error(:final error)) {
+    return Error((code: errDatabase, message: error));
+  }
+
+  // Run the deletes
+  final locksStmt = (deleteLocks as Success<Statement, String>).value;
+  final msgsStmt = (deleteMessages as Success<Statement, String>).value;
+  final plansStmt = (deletePlans as Success<Statement, String>).value;
+  final idStmt = (deleteIdentity as Success<Statement, String>).value;
+
+  if (locksStmt.run([agentName]) case Error(:final error)) {
+    return Error((code: errDatabase, message: error));
+  }
+  if (msgsStmt.run([agentName, agentName]) case Error(:final error)) {
+    return Error((code: errDatabase, message: error));
+  }
+  if (plansStmt.run([agentName]) case Error(:final error)) {
+    return Error((code: errDatabase, message: error));
+  }
+
+  return switch (idStmt.run([agentName])) {
+    Success(:final value) when value.changes == 0 => const Error((
+      code: errNotFound,
+      message: 'Agent not found',
+    )),
+    Success() => const Success(null),
+    Error(:final error) => Error((code: errDatabase, message: error)),
+  };
+}
+
+Result<AgentRegistration, DbError> _adminResetKey(
+  Database db,
+  Logger log,
+  String agentName,
+) {
+  log.warn('Admin resetting key for agent $agentName');
+
+  // Release all locks held by this agent since old key is now invalid
+  final deleteLocks = db.prepare('DELETE FROM locks WHERE agent_name = ?');
+  switch (deleteLocks) {
+    case Success(:final value):
+      final result = value.run([agentName]);
+      switch (result) {
+        case Success(:final value):
+          if (value.changes > 0) {
+            log.warn('Released ${value.changes} locks for agent $agentName');
+          }
+        case Error(:final error):
+          log.warn('Failed to release locks: $error');
+      }
+    case Error(:final error):
+      log.warn('Failed to prepare lock deletion: $error');
+  }
+
+  final newKey = _generateKey();
+  final now = _now();
+  final stmtResult = db.prepare('''
+    UPDATE identity SET agent_key = ?, last_active = ?
+    WHERE agent_name = ?
+  ''');
+  return switch (stmtResult) {
+    Success(:final value) => switch (value.run([newKey, now, agentName])) {
+      Success(:final value) when value.changes == 0 => const Error((
+        code: errNotFound,
+        message: 'Agent not found',
+      )),
+      Success() => Success((agentName: agentName, agentKey: newKey)),
       Error(:final error) => Error((code: errDatabase, message: error)),
     },
     Error(:final error) => Error((code: errDatabase, message: error)),

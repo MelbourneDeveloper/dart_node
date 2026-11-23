@@ -1,0 +1,30 @@
+{
+  "name": "dart-jsx-syntax",
+  "displayName": "Dart JSX Syntax",
+  "description": "Syntax highlighting for JSX in Dart files",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "dart-jsx",
+        "aliases": ["Dart JSX", "dart-jsx"],
+        "extensions": [".jsx"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "dart-jsx",
+        "scopeName": "source.dart.jsx",
+        "path": "./syntaxes/dart-jsx.tmLanguage.json",
+        "embeddedLanguages": {
+          "source.dart": "dart"
+        }
+      }
+    ]
+  }
+}

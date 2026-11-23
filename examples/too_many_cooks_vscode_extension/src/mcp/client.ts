@@ -21,10 +21,14 @@ export class McpClient extends EventEmitter {
     { resolve: (value: unknown) => void; reject: (error: Error) => void }
   >();
   private nextId = 1;
-  private serverPath: string;
+  private serverPath: string | undefined;
   private initialized = false;
 
-  constructor(serverPath: string) {
+  /**
+   * @param serverPath Optional path to server JS file. If not provided, uses 'npx too-many-cooks'.
+   *                   Pass a path for testing with local builds.
+   */
+  constructor(serverPath?: string) {
     super();
     this.serverPath = serverPath;
   }
@@ -44,8 +48,16 @@ export class McpClient extends EventEmitter {
   }
 
   async start(): Promise<void> {
-    this.process = spawn('node', [this.serverPath], {
+    // If serverPath is provided (testing), use node with that path
+    // Otherwise use npx to run the globally installed too-many-cooks package
+    // This ensures VSCode extension uses the SAME server as Claude Code
+    const [cmd, args] = this.serverPath
+      ? ['node', [this.serverPath]]
+      : ['npx', ['too-many-cooks']];
+
+    this.process = spawn(cmd, args, {
       stdio: ['pipe', 'pipe', 'pipe'],
+      shell: !this.serverPath, // Only use shell for npx
     });
 
     this.process.stdout?.on('data', (chunk: Buffer) => this.onData(chunk));
@@ -63,7 +75,7 @@ export class McpClient extends EventEmitter {
     await this.request('initialize', {
       protocolVersion: '2024-11-05',
       capabilities: {},
-      clientInfo: { name: 'too-many-cooks-vscode', version: '0.1.0' },
+      clientInfo: { name: 'too-many-cooks-vscode', version: '0.3.0' },
     });
 
     // Send initialized notification
@@ -134,9 +146,8 @@ export class McpClient extends EventEmitter {
 
   private processBuffer(): void {
     // MCP SDK stdio uses newline-delimited JSON
-    while (true) {
-      const newlineIndex = this.buffer.indexOf('\n');
-      if (newlineIndex === -1) return;
+    let newlineIndex = this.buffer.indexOf('\n');
+    while (newlineIndex !== -1) {
 
       const line = this.buffer.substring(0, newlineIndex).replace(/\r$/, '');
       this.buffer = this.buffer.substring(newlineIndex + 1);
@@ -148,6 +159,7 @@ export class McpClient extends EventEmitter {
       } catch (e) {
         this.emit('error', e instanceof Error ? e : new Error(String(e)));
       }
+      newlineIndex = this.buffer.indexOf('\n');
     }
   }
 

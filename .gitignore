@@ -4,6 +4,9 @@ node_modules/
 !tools/build/
 .dart_tool/
 
+coverage/
+logs/
+
 # Generated JS files from dart compile js
 *.js.deps
 *.js.map
@@ -30,3 +33,7 @@ examples/too_many_cooks_vscode_extension/.vscode-test/vscode-darwin-arm64-1.106.
 *.db-wal
 
 *.vsix
+
+examples/too_many_cooks_vscode_extension/.vscode-test/
+
+examples/reflux_demo/flutter_counter/test/failures/

@@ -206,3 +206,33 @@ JSObject _cloneElementWithChildren(
   final fullArgs = _concatArrays(args, children);
   return _reactCloneElementApply(null, fullArgs);
 }
+
+// =============================================================================
+// Functional Components
+// =============================================================================
+
+/// Create a functional component - returns the component function itself.
+///
+/// Example:
+/// ```dart
+/// final MyComponent = createFunctionalComponent((props) {
+///   return div(children: [pEl('Hello')]);
+/// });
+/// ```
+JSFunction createFunctionalComponent(
+  ReactElement Function(JSObject props) render,
+) => ((JSAny props) => render(props as JSObject)).toJS;
+
+/// Create a React element with an inline functional component.
+///
+/// Example:
+/// ```dart
+/// final element = functionalComponent('Counter', (props) {
+///   final count = useState(0);
+///   return div(children: [pEl('Count: ${count.value}')]);
+/// });
+/// ```
+ReactElement functionalComponent(
+  String name,
+  ReactElement Function(JSObject props) render,
+) => createElement(createFunctionalComponent(render));

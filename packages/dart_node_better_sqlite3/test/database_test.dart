@@ -5,6 +5,7 @@ import 'dart:js_interop';
 
 import 'package:dart_node_better_sqlite3/dart_node_better_sqlite3.dart';
 import 'package:dart_node_core/dart_node_core.dart';
+import 'package:dart_node_coverage/dart_node_coverage.dart';
 import 'package:nadz/nadz.dart';
 import 'package:test/test.dart';
 
@@ -26,6 +27,9 @@ void _deleteIfExists(String path) {
 }
 
 void main() {
+  setUp(initCoverage);
+  tearDownAll(() => writeCoverageFile('coverage/coverage.json'));
+
   group('openDatabase', () {
     test('opens in-memory database', () {
       final result = openDatabase(':memory:');
@@ -417,8 +421,7 @@ void main() {
       final selectStmt = (selectResult as Success<Statement, String>).value;
       final getResult = selectStmt.get();
       expect(getResult, isA<Success<Map<String, Object?>?, String>>());
-      final row =
-          (getResult as Success<Map<String, Object?>?, String>).value;
+      final row = (getResult as Success<Map<String, Object?>?, String>).value;
       expect(row!['balance'], 200);
     });
 
@@ -433,8 +436,7 @@ void main() {
       final selectStmt = (selectResult as Success<Statement, String>).value;
       final getResult = selectStmt.get();
       expect(getResult, isA<Success<Map<String, Object?>?, String>>());
-      final row =
-          (getResult as Success<Map<String, Object?>?, String>).value;
+      final row = (getResult as Success<Map<String, Object?>?, String>).value;
       expect(row!['balance'], 100);
     });
   });
