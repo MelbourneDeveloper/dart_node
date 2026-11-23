@@ -1,0 +1,14 @@
+2025-12-11 07:47:02.565 [info] Extension host with pid 78248 started
+2025-12-11 07:47:02.572 [info] ExtensionService#_doActivateExtension vscode.github-authentication, startup: false, activationEvent: 'onAuthenticationRequest:github'
+2025-12-11 07:47:02.583 [info] ExtensionService#_doActivateExtension vscode.emmet, startup: false, activationEvent: 'onLanguage'
+2025-12-11 07:47:02.603 [info] ExtensionService#_doActivateExtension vscode.git-base, startup: true, activationEvent: '*', root cause: vscode.git
+2025-12-11 07:47:02.605 [info] ExtensionService#_doActivateExtension vscode.git, startup: true, activationEvent: '*'
+2025-12-11 07:47:02.624 [info] ExtensionService#_doActivateExtension vscode.github, startup: true, activationEvent: '*'
+2025-12-11 07:47:02.657 [warning] [vscode.git] Accessing a resource scoped configuration without providing a resource is not expected. To get the effective value for 'git.openRepositoryInParentFolders', provide the URI of a resource or 'null' for any resource.
+2025-12-11 07:47:02.657 [warning] [vscode.git] Accessing a resource scoped configuration without providing a resource is not expected. To get the effective value for 'git.showProgress', provide the URI of a resource or 'null' for any resource.
+2025-12-11 07:47:02.671 [info] Eager extensions activated
+2025-12-11 07:47:02.692 [info] ExtensionService#_doActivateExtension vscode.debug-auto-launch, startup: false, activationEvent: 'onStartupFinished'
+2025-12-11 07:47:02.692 [info] ExtensionService#_doActivateExtension vscode.merge-conflict, startup: false, activationEvent: 'onStartupFinished'
+2025-12-11 07:47:02.699 [info] ExtensionService#_doActivateExtension Nimblesite.too-many-cooks, startup: false, activationEvent: 'onStartupFinished'
+2025-12-11 07:47:02.717 [info] Extension host terminating: renderer closed the MessagePort
+2025-12-11 07:47:02.722 [info] Extension host with pid 78248 exiting with code 0

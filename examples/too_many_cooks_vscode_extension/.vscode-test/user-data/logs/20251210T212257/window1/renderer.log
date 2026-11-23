@@ -1,0 +1,34 @@
+2025-12-10 21:22:58.206 [info] ChatSessionStore: Migrating 0 chat sessions from storage service to file system
+2025-12-10 21:22:58.270 [info] Loading development extension at /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension
+2025-12-10 21:22:58.411 [info] MCP Registry configured: https://api.mcp.github.com
+2025-12-10 21:22:58.447 [info] Settings Sync: Account status changed from uninitialized to unavailable
+2025-12-10 21:22:58.598 [info] Started local extension host with pid 24268.
+2025-12-10 21:22:58.909 [info] ["start",{"total":2}]
+2025-12-10 21:22:58.909 [info] ["suiteStart",{"path":[]}]
+2025-12-10 21:22:58.910 [info] ["suiteStart",{"path":["Status Bar"],"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/status-bar.test.js"}]
+2025-12-10 21:22:58.921 [info] [TEST HELPER] Starting extension activation wait...
+2025-12-10 21:22:58.921 [info] [TEST HELPER] Extension found, checking activation status...
+2025-12-10 21:22:58.922 [info] [TEST HELPER] Extension not active, activating now...
+2025-12-10 21:22:58.929 [info] [TEST HELPER] Extension activate() completed
+2025-12-10 21:22:58.929 [info] [TEST HELPER] Checking exports - type: object
+2025-12-10 21:22:58.929 [info] [TEST HELPER] Test API verified
+2025-12-10 21:22:58.930 [info] [TEST HELPER] Extension activation complete
+2025-12-10 21:22:58.930 [info] ["testStart",{"path":["Status Bar","Status bar exists after activation"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/status-bar.test.js","speed":"fast"}]
+2025-12-10 21:22:58.931 [info] ["pass",{"path":["Status Bar","Status bar exists after activation"],"duration":0,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/status-bar.test.js","speed":"fast"}]
+2025-12-10 21:22:58.931 [info] ["testStart",{"path":["Status Bar","Connection status changes are reflected"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/status-bar.test.js","speed":"fast"}]
+2025-12-10 21:22:58.932 [info] ["pass",{"path":["Status Bar","Connection status changes are reflected"],"duration":1,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/status-bar.test.js","speed":"fast"}]
+2025-12-10 21:22:58.932 [error] Auto-connect failed: Error: Client stopped
+	at McpClient.stop (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/mcp/client.js:145:28)
+	at Store.disconnect (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/state/store.js:90:31)
+	at Object.disconnect (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test-api.js:92:33)
+	at Context.<anonymous> (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/status-bar.test.js:56:19)
+	at callFn (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runnable.js:366:21)
+	at Runnable.run (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runnable.js:354:5)
+	at Runner.runTest (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:719:10)
+	at /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:842:12
+	at next (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:634:14)
+	at /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:644:7
+	at next (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:527:14)
+	at Immediate.<anonymous> (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:612:5)
+	at process.processImmediate (node:internal/timers:485:21)
+2025-12-10 21:22:58.951 [info] ["end",{}]

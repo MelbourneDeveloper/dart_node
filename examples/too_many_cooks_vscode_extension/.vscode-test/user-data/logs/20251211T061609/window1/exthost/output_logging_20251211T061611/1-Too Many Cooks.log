@@ -1,0 +1,44 @@
+[2025-12-10T19:16:11.298Z] Extension activating...
+[2025-12-10T19:16:11.298Z] WARNING: No server path configured and auto-detect failed
+[2025-12-10T19:16:11.298Z] Server path: 
+[2025-12-10T19:16:11.298Z] [Store] Store created with serverPath: 
+[2025-12-10T19:16:11.299Z] Auto-connect: true
+[2025-12-10T19:16:11.299Z] Attempting auto-connect...
+[2025-12-10T19:16:11.299Z] [Store] connect() called, serverPath: 
+[2025-12-10T19:16:11.299Z] [Store] Connection status: connecting
+[2025-12-10T19:16:11.299Z] [Store] Creating McpClient...
+[2025-12-10T19:16:11.299Z] [Store] Calling client.start()...
+[2025-12-10T19:16:11.300Z] Extension activated
+[2025-12-10T19:16:11.349Z] [Store] Connection failed: Client stopped
+[2025-12-10T19:16:11.349Z] Auto-connect failed: Client stopped
+[2025-12-10T19:16:11.349Z] [Store] Client closed
+[2025-12-10T19:16:14.529Z] [Store] connect() called, serverPath: /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks/build/bin/server_node.js
+[2025-12-10T19:16:14.529Z] [Store] Connection status: connecting
+[2025-12-10T19:16:14.529Z] [Store] Creating McpClient...
+[2025-12-10T19:16:14.529Z] [Store] Calling client.start()...
+[2025-12-10T19:16:14.616Z] [Store] Client started, subscribing...
+[2025-12-10T19:16:14.620Z] [Store] Subscribed, refreshing status...
+[2025-12-10T19:16:14.622Z] [Store] Connection status: connected
+[2025-12-10T19:16:14.622Z] [Store] Polling started (every 2s)
+[2025-12-10T19:16:14.629Z] [Store] Notification received: agent_registered
+[2025-12-10T19:16:14.637Z] [Store] Notification received: agent_registered
+[2025-12-10T19:16:14.639Z] [Store] Notification received: lock_acquired
+[2025-12-10T19:16:14.641Z] [Store] Notification received: lock_acquired
+[2025-12-10T19:16:14.642Z] [Store] Notification received: lock_acquired
+[2025-12-10T19:16:14.643Z] [Store] Notification received: lock_released
+[2025-12-10T19:16:14.645Z] [Store] Notification received: plan_updated
+[2025-12-10T19:16:14.646Z] [Store] Notification received: message_sent
+[2025-12-10T19:16:14.648Z] [Store] Notification received: message_sent
+[2025-12-10T19:16:14.649Z] [Store] Notification received: message_sent
+[2025-12-10T19:16:14.651Z] [Store] Polling stopped
+[2025-12-10T19:16:14.652Z] [Store] connect() called, serverPath: /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks/build/bin/server_node.js
+[2025-12-10T19:16:14.652Z] [Store] Connection status: connecting
+[2025-12-10T19:16:14.652Z] [Store] Creating McpClient...
+[2025-12-10T19:16:14.652Z] [Store] Calling client.start()...
+[2025-12-10T19:16:14.653Z] [Store] Client closed
+[2025-12-10T19:16:14.730Z] [Store] Client started, subscribing...
+[2025-12-10T19:16:14.734Z] [Store] Subscribed, refreshing status...
+[2025-12-10T19:16:14.737Z] [Store] Connection status: connected
+[2025-12-10T19:16:14.737Z] [Store] Polling started (every 2s)
+[2025-12-10T19:16:14.738Z] [Store] Polling stopped
+[2025-12-10T19:16:14.742Z] [Store] Client closed

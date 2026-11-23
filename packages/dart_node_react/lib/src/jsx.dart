@@ -73,12 +73,12 @@ import 'package:dart_node_react/src/synthetic_event.dart';
 ///
 /// Wraps a ReactElement and provides the `>>` operator for adding children.
 /// Uses a class instead of extension type to enable runtime type checking.
-final class El {
+final class El<T extends ReactElement> {
   /// Wraps an existing element for operator composition.
   El(this._element) : _type = _element.type, _props = _element.props;
 
   /// The wrapped element.
-  final ReactElement _element;
+  final T _element;
 
   /// The element's type for recreation.
   final JSAny _type;
@@ -87,7 +87,7 @@ final class El {
   final JSObject? _props;
 
   /// Access the underlying element.
-  ReactElement get element => _element;
+  T get element => _element;
 
   /// Implicit conversion to ReactElement for use in element trees.
   ReactElement toElement() => _element;
@@ -97,44 +97,53 @@ final class El {
   /// Supports:
   /// - `String` → text child
   /// - `ReactElement` → single element child
-  /// - `El` → unwrapped element child
+  /// - `El<T>` → unwrapped element child
   /// - `List<Object>` → multiple children (can contain strings, elements)
   /// - `null` → ignored (supports conditional rendering)
-  ReactElement operator >>(Object? child) => switch (child) {
-    null => _element,
-    final String s => _withTextChild(s),
-    final List<Object?> list => _withChildren(list),
-    final num n => _withTextChild(n.toString()),
-    final El el => _withSingleChild(el._element),
-    final ReactElement re => _withSingleChild(re),
-    _ => _element,
-  };
+  T operator >>(Object? child) {
+    if (child == null) return _element;
+    if (child is String) return _withTextChild(child);
+    if (child is List<Object?>) return _withChildren(child);
+    if (child is num) return _withTextChild(child.toString());
+    if (child is El) return _withSingleChild(child._element);
+    // Assume anything else is a ReactElement (JSObject)
+    return _withJsChild(child as JSAny);
+  }
 
-  ReactElement _withTextChild(String text) =>
-      ReactElement.fromJS(React.createElement(_type, _props, text.toJS));
+  T _withTextChild(String text) {
+    final jsObj = React.createElement(_type, _props, text.toJS);
+    return ReactElement.fromJS(jsObj) as T;
+  }
 
-  ReactElement _withSingleChild(ReactElement child) =>
-      ReactElement.fromJS(React.createElement(_type, _props, child));
+  T _withSingleChild(ReactElement child) {
+    final jsObj = React.createElement(_type, _props, child);
+    return ReactElement.fromJS(jsObj) as T;
+  }
 
-  ReactElement _withChildren(List<Object?> children) {
+  T _withJsChild(JSAny child) {
+    final jsObj = React.createElement(_type, _props, child);
+    return ReactElement.fromJS(jsObj) as T;
+  }
+
+  T _withChildren(List<Object?> children) {
     final normalized = <JSAny>[];
     for (final child in children) {
       final jsChild = _normalizeChild(child);
       if (jsChild != null) normalized.add(jsChild);
     }
-    return createElementWithChildren(_type, _props, normalized);
+    return createElementWithChildren(_type, _props, normalized) as T;
   }
 
-  JSAny? _normalizeChild(Object? child) => switch (child) {
-    null => null,
-    final String s => s.toJS,
-    final num n => n.toString().toJS,
-    final bool b => b.toString().toJS,
-    final El el => el._element,
-    final ReactElement re => re,
-    final List<Object?> list => _flattenChildren(list),
-    _ => null,
-  };
+  JSAny? _normalizeChild(Object? child) {
+    if (child == null) return null;
+    if (child is String) return child.toJS;
+    if (child is num) return child.toString().toJS;
+    if (child is bool) return child.toString().toJS;
+    if (child is El) return child._element;
+    if (child is List<Object?>) return _flattenChildren(child);
+    // Assume JSAny/ReactElement
+    return child as JSAny;
+  }
 
   JSAny? _flattenChildren(List<Object?> children) {
     final normalized = <JSAny>[];
@@ -157,15 +166,11 @@ external JSAny get _fragment;
 // =============================================================================
 
 Map<String, dynamic> _buildJsxProps({
-  String? key,
   String? className,
   String? id,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
   Map<String, dynamic>? props,
   void Function()? onClick,
-  void Function(SyntheticMouseEvent)? onClickEvent,
-  void Function()? onDoubleClick,
   void Function(SyntheticEvent)? onChange,
   void Function(SyntheticEvent)? onInput,
   void Function(SyntheticFocusEvent)? onFocus,
@@ -173,87 +178,15 @@ Map<String, dynamic> _buildJsxProps({
   void Function(SyntheticEvent)? onSubmit,
   void Function(SyntheticKeyboardEvent)? onKeyDown,
   void Function(SyntheticKeyboardEvent)? onKeyUp,
-  void Function(SyntheticKeyboardEvent)? onKeyPress,
-  void Function(SyntheticMouseEvent)? onMouseDown,
-  void Function(SyntheticMouseEvent)? onMouseUp,
   void Function(SyntheticMouseEvent)? onMouseEnter,
   void Function(SyntheticMouseEvent)? onMouseLeave,
-  void Function(SyntheticMouseEvent)? onMouseOver,
-  void Function(SyntheticMouseEvent)? onMouseOut,
-  void Function(SyntheticMouseEvent)? onMouseMove,
-  void Function(SyntheticEvent)? onScroll,
-  void Function(SyntheticWheelEvent)? onWheel,
-  void Function(SyntheticDragEvent)? onDrag,
-  void Function(SyntheticDragEvent)? onDragStart,
-  void Function(SyntheticDragEvent)? onDragEnd,
-  void Function(SyntheticDragEvent)? onDragEnter,
-  void Function(SyntheticDragEvent)? onDragLeave,
-  void Function(SyntheticDragEvent)? onDragOver,
-  void Function(SyntheticDragEvent)? onDrop,
-  void Function(SyntheticTouchEvent)? onTouchStart,
-  void Function(SyntheticTouchEvent)? onTouchMove,
-  void Function(SyntheticTouchEvent)? onTouchEnd,
-  void Function(SyntheticClipboardEvent)? onCopy,
-  void Function(SyntheticClipboardEvent)? onCut,
-  void Function(SyntheticClipboardEvent)? onPaste,
 }) {
   final p = <String, dynamic>{};
-  // Spread props first so explicit props override them
-  if (spread != null) p.addAll(spread);
-  if (props != null) p.addAll(props);
-  if (key != null) p['key'] = key;
   if (className != null) p['className'] = className;
   if (id != null) p['id'] = id;
   if (style != null) p['style'] = convertStyle(style);
-  // Mouse events
+  if (props != null) p.addAll(props);
   if (onClick != null) p['onClick'] = onClick;
-  if (onClickEvent != null) {
-    void handler(JSObject e) => onClickEvent(SyntheticMouseEvent.fromJs(e));
-    p['onClick'] = handler;
-  }
-  if (onDoubleClick != null) p['onDoubleClick'] = onDoubleClick;
-  if (onMouseDown != null) {
-    void handler(JSObject e) => onMouseDown(SyntheticMouseEvent.fromJs(e));
-    p['onMouseDown'] = handler;
-  }
-  if (onMouseUp != null) {
-    void handler(JSObject e) => onMouseUp(SyntheticMouseEvent.fromJs(e));
-    p['onMouseUp'] = handler;
-  }
-  if (onMouseEnter != null) {
-    void handler(JSObject e) => onMouseEnter(SyntheticMouseEvent.fromJs(e));
-    p['onMouseEnter'] = handler;
-  }
-  if (onMouseLeave != null) {
-    void handler(JSObject e) => onMouseLeave(SyntheticMouseEvent.fromJs(e));
-    p['onMouseLeave'] = handler;
-  }
-  if (onMouseOver != null) {
-    void handler(JSObject e) => onMouseOver(SyntheticMouseEvent.fromJs(e));
-    p['onMouseOver'] = handler;
-  }
-  if (onMouseOut != null) {
-    void handler(JSObject e) => onMouseOut(SyntheticMouseEvent.fromJs(e));
-    p['onMouseOut'] = handler;
-  }
-  if (onMouseMove != null) {
-    void handler(JSObject e) => onMouseMove(SyntheticMouseEvent.fromJs(e));
-    p['onMouseMove'] = handler;
-  }
-  // Keyboard events
-  if (onKeyDown != null) {
-    void handler(JSObject e) => onKeyDown(SyntheticKeyboardEvent.fromJs(e));
-    p['onKeyDown'] = handler;
-  }
-  if (onKeyUp != null) {
-    void handler(JSObject e) => onKeyUp(SyntheticKeyboardEvent.fromJs(e));
-    p['onKeyUp'] = handler;
-  }
-  if (onKeyPress != null) {
-    void handler(JSObject e) => onKeyPress(SyntheticKeyboardEvent.fromJs(e));
-    p['onKeyPress'] = handler;
-  }
-  // Form events
   if (onChange != null) {
     void handler(JSObject e) => onChange(SyntheticEvent.fromJs(e));
     p['onChange'] = handler;
@@ -262,11 +195,6 @@ Map<String, dynamic> _buildJsxProps({
     void handler(JSObject e) => onInput(SyntheticEvent.fromJs(e));
     p['onInput'] = handler;
   }
-  if (onSubmit != null) {
-    void handler(JSObject e) => onSubmit(SyntheticEvent.fromJs(e));
-    p['onSubmit'] = handler;
-  }
-  // Focus events
   if (onFocus != null) {
     void handler(JSObject e) => onFocus(SyntheticFocusEvent.fromJs(e));
     p['onFocus'] = handler;
@@ -275,69 +203,25 @@ Map<String, dynamic> _buildJsxProps({
     void handler(JSObject e) => onBlur(SyntheticFocusEvent.fromJs(e));
     p['onBlur'] = handler;
   }
-  // Scroll/wheel events
-  if (onScroll != null) {
-    void handler(JSObject e) => onScroll(SyntheticEvent.fromJs(e));
-    p['onScroll'] = handler;
+  if (onSubmit != null) {
+    void handler(JSObject e) => onSubmit(SyntheticEvent.fromJs(e));
+    p['onSubmit'] = handler;
   }
-  if (onWheel != null) {
-    void handler(JSObject e) => onWheel(SyntheticWheelEvent.fromJs(e));
-    p['onWheel'] = handler;
+  if (onKeyDown != null) {
+    void handler(JSObject e) => onKeyDown(SyntheticKeyboardEvent.fromJs(e));
+    p['onKeyDown'] = handler;
   }
-  // Drag events
-  if (onDrag != null) {
-    void handler(JSObject e) => onDrag(SyntheticDragEvent.fromJs(e));
-    p['onDrag'] = handler;
+  if (onKeyUp != null) {
+    void handler(JSObject e) => onKeyUp(SyntheticKeyboardEvent.fromJs(e));
+    p['onKeyUp'] = handler;
   }
-  if (onDragStart != null) {
-    void handler(JSObject e) => onDragStart(SyntheticDragEvent.fromJs(e));
-    p['onDragStart'] = handler;
+  if (onMouseEnter != null) {
+    void handler(JSObject e) => onMouseEnter(SyntheticMouseEvent.fromJs(e));
+    p['onMouseEnter'] = handler;
   }
-  if (onDragEnd != null) {
-    void handler(JSObject e) => onDragEnd(SyntheticDragEvent.fromJs(e));
-    p['onDragEnd'] = handler;
-  }
-  if (onDragEnter != null) {
-    void handler(JSObject e) => onDragEnter(SyntheticDragEvent.fromJs(e));
-    p['onDragEnter'] = handler;
-  }
-  if (onDragLeave != null) {
-    void handler(JSObject e) => onDragLeave(SyntheticDragEvent.fromJs(e));
-    p['onDragLeave'] = handler;
-  }
-  if (onDragOver != null) {
-    void handler(JSObject e) => onDragOver(SyntheticDragEvent.fromJs(e));
-    p['onDragOver'] = handler;
-  }
-  if (onDrop != null) {
-    void handler(JSObject e) => onDrop(SyntheticDragEvent.fromJs(e));
-    p['onDrop'] = handler;
-  }
-  // Touch events
-  if (onTouchStart != null) {
-    void handler(JSObject e) => onTouchStart(SyntheticTouchEvent.fromJs(e));
-    p['onTouchStart'] = handler;
-  }
-  if (onTouchMove != null) {
-    void handler(JSObject e) => onTouchMove(SyntheticTouchEvent.fromJs(e));
-    p['onTouchMove'] = handler;
-  }
-  if (onTouchEnd != null) {
-    void handler(JSObject e) => onTouchEnd(SyntheticTouchEvent.fromJs(e));
-    p['onTouchEnd'] = handler;
-  }
-  // Clipboard events
-  if (onCopy != null) {
-    void handler(JSObject e) => onCopy(SyntheticClipboardEvent.fromJs(e));
-    p['onCopy'] = handler;
-  }
-  if (onCut != null) {
-    void handler(JSObject e) => onCut(SyntheticClipboardEvent.fromJs(e));
-    p['onCut'] = handler;
-  }
-  if (onPaste != null) {
-    void handler(JSObject e) => onPaste(SyntheticClipboardEvent.fromJs(e));
-    p['onPaste'] = handler;
+  if (onMouseLeave != null) {
+    void handler(JSObject e) => onMouseLeave(SyntheticMouseEvent.fromJs(e));
+    p['onMouseLeave'] = handler;
   }
   return p;
 }
@@ -353,12 +237,11 @@ ReactElement _createJsxElement(String tag, Map<String, dynamic> props) =>
 // =============================================================================
 
 /// Creates a `<div>` element wrapper for JSX-style composition.
-El $div({
-  String? key,
+El<DivElement> $div({
   String? className,
   String? id,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
   void Function()? onClick,
   void Function(SyntheticMouseEvent)? onMouseEnter,
   void Function(SyntheticMouseEvent)? onMouseLeave,
@@ -367,11 +250,10 @@ El $div({
     _createJsxElement(
       'div',
       _buildJsxProps(
-        key: key,
         className: className,
         id: id,
         style: style,
-        spread: spread,
+        props: props,
         onClick: onClick,
         onMouseEnter: onMouseEnter,
         onMouseLeave: onMouseLeave,
@@ -381,23 +263,21 @@ El $div({
 );
 
 /// Creates a `<span>` element wrapper for JSX-style composition.
-El $span({
-  String? key,
+El<SpanElement> $span({
   String? className,
   String? id,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
   void Function()? onClick,
 }) => El(
   SpanElement.fromJS(
     _createJsxElement(
       'span',
       _buildJsxProps(
-        key: key,
         className: className,
         id: id,
         style: style,
-        spread: spread,
+        props: props,
         onClick: onClick,
       ),
     ),
@@ -405,29 +285,22 @@ El $span({
 );
 
 /// Creates a `<p>` element wrapper for JSX-style composition.
-El $p({
-  String? key,
+El<PElement> $p({
   String? className,
   String? id,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
 }) => El(
   PElement.fromJS(
     _createJsxElement(
       'p',
-      _buildJsxProps(
-        key: key,
-        className: className,
-        id: id,
-        style: style,
-        spread: spread,
-      ),
+      _buildJsxProps(className: className, id: id, style: style, props: props),
     ),
   ),
 );
 
 /// Creates a `<section>` element wrapper for JSX-style composition.
-El $section({
+El<ReactElement> $section({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -440,7 +313,7 @@ El $section({
 );
 
 /// Creates an `<article>` element wrapper for JSX-style composition.
-El $article({
+El<ReactElement> $article({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -453,7 +326,7 @@ El $article({
 );
 
 /// Creates a `<nav>` element wrapper for JSX-style composition.
-El $nav({
+El<ReactElement> $nav({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -466,7 +339,7 @@ El $nav({
 );
 
 /// Creates an `<aside>` element wrapper for JSX-style composition.
-El $aside({
+El<ReactElement> $aside({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -483,10 +356,10 @@ El $aside({
 // =============================================================================
 
 /// Creates an `<h1>` element wrapper for JSX-style composition.
-El get $h1 => El(H1Element.fromJS(_createJsxElement('h1', {})));
+El<H1Element> get $h1 => El(H1Element.fromJS(_createJsxElement('h1', {})));
 
 /// Creates an `<h1>` element with props.
-El $h1Props({
+El<H1Element> $h1Props({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -501,10 +374,10 @@ El $h1Props({
 );
 
 /// Creates an `<h2>` element wrapper for JSX-style composition.
-El get $h2 => El(H2Element.fromJS(_createJsxElement('h2', {})));
+El<H2Element> get $h2 => El(H2Element.fromJS(_createJsxElement('h2', {})));
 
 /// Creates an `<h2>` element with props.
-El $h2Props({
+El<H2Element> $h2Props({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -519,10 +392,10 @@ El $h2Props({
 );
 
 /// Creates an `<h3>` element wrapper for JSX-style composition.
-El get $h3 => El(_createJsxElement('h3', {}));
+El<ReactElement> get $h3 => El(_createJsxElement('h3', {}));
 
 /// Creates an `<h3>` element with props.
-El $h3Props({
+El<ReactElement> $h3Props({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -535,20 +408,20 @@ El $h3Props({
 );
 
 /// Creates an `<h4>` element wrapper for JSX-style composition.
-El get $h4 => El(_createJsxElement('h4', {}));
+El<ReactElement> get $h4 => El(_createJsxElement('h4', {}));
 
 /// Creates an `<h5>` element wrapper for JSX-style composition.
-El get $h5 => El(_createJsxElement('h5', {}));
+El<ReactElement> get $h5 => El(_createJsxElement('h5', {}));
 
 /// Creates an `<h6>` element wrapper for JSX-style composition.
-El get $h6 => El(_createJsxElement('h6', {}));
+El<ReactElement> get $h6 => El(_createJsxElement('h6', {}));
 
 // =============================================================================
 // Semantic Structure
 // =============================================================================
 
 /// Creates a `<header>` element wrapper for JSX-style composition.
-El $header({
+El<HeaderElement> $header({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -563,27 +436,22 @@ El $header({
 );
 
 /// Creates a `<main>` element wrapper for JSX-style composition.
-El $main({
+El<MainElement> $main({
   String? className,
   String? id,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
 }) => El(
   MainElement.fromJS(
     _createJsxElement(
       'main',
-      _buildJsxProps(
-        className: className,
-        id: id,
-        style: style,
-        spread: spread,
-      ),
+      _buildJsxProps(className: className, id: id, style: style, props: props),
     ),
   ),
 );
 
 /// Creates a `<footer>` element wrapper for JSX-style composition.
-El $footer({
+El<FooterElement> $footer({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -602,22 +470,20 @@ El $footer({
 // =============================================================================
 
 /// Creates a `<button>` element wrapper for JSX-style composition.
-El $button({
-  String? key,
+El<ButtonElement> $button({
   String? className,
   String? id,
   String? type,
   bool? disabled,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
   void Function()? onClick,
 }) {
   final p = _buildJsxProps(
-    key: key,
     className: className,
     id: id,
     style: style,
-    spread: spread,
+    props: props,
     onClick: onClick,
   );
   if (type != null) p['type'] = type;
@@ -626,23 +492,21 @@ El $button({
 }
 
 /// Creates an `<a>` element wrapper for JSX-style composition.
-El $a({
+El<AElement> $a({
   required String href,
-  String? key,
   String? className,
   String? id,
   String? target,
   String? rel,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
   void Function()? onClick,
 }) {
   final p = _buildJsxProps(
-    key: key,
     className: className,
     id: id,
     style: style,
-    spread: spread,
+    props: props,
     onClick: onClick,
   );
   p['href'] = href;
@@ -656,7 +520,7 @@ El $a({
 // =============================================================================
 
 /// Creates a `<form>` element wrapper for JSX-style composition.
-El $form({
+El<ReactElement> $form({
   String? className,
   String? id,
   String? action,
@@ -678,8 +542,7 @@ El $form({
 }
 
 /// Creates an `<input>` element wrapper for JSX-style composition.
-El $input({
-  String? key,
+El<InputElement> $input({
   String? className,
   String? id,
   String? type,
@@ -690,7 +553,7 @@ El $input({
   bool? readOnly,
   bool? required,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
   void Function(SyntheticEvent)? onChange,
   void Function(SyntheticEvent)? onInput,
   void Function(SyntheticFocusEvent)? onFocus,
@@ -699,11 +562,10 @@ El $input({
   void Function(SyntheticKeyboardEvent)? onKeyUp,
 }) {
   final p = _buildJsxProps(
-    key: key,
     className: className,
     id: id,
     style: style,
-    spread: spread,
+    props: props,
     onChange: onChange,
     onInput: onInput,
     onFocus: onFocus,
@@ -722,7 +584,7 @@ El $input({
 }
 
 /// Creates a `<textarea>` element wrapper for JSX-style composition.
-El $textarea({
+El<ReactElement> $textarea({
   String? className,
   String? id,
   String? name,
@@ -762,7 +624,7 @@ El $textarea({
 }
 
 /// Creates a `<select>` element wrapper for JSX-style composition.
-El $select({
+El<ReactElement> $select({
   String? className,
   String? id,
   String? name,
@@ -794,23 +656,21 @@ El $select({
 }
 
 /// Creates an `<option>` element wrapper for JSX-style composition.
-El $option({
+El<ReactElement> $option({
   required String value,
-  String? key,
   bool? disabled,
   bool? selected,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
 }) {
   final p = <String, dynamic>{'value': value};
-  if (key != null) p['key'] = key;
   if (disabled != null) p['disabled'] = disabled;
   if (selected != null) p['selected'] = selected;
-  if (spread != null) p.addAll(spread);
+  if (props != null) p.addAll(props);
   return El(_createJsxElement('option', p));
 }
 
 /// Creates a `<label>` element wrapper for JSX-style composition.
-El $label({
+El<ReactElement> $label({
   String? className,
   String? id,
   String? htmlFor,
@@ -832,27 +692,22 @@ El $label({
 // =============================================================================
 
 /// Creates a `<ul>` element wrapper for JSX-style composition.
-El $ul({
+El<UlElement> $ul({
   String? className,
   String? id,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
 }) => El(
   UlElement.fromJS(
     _createJsxElement(
       'ul',
-      _buildJsxProps(
-        className: className,
-        id: id,
-        style: style,
-        spread: spread,
-      ),
+      _buildJsxProps(className: className, id: id, style: style, props: props),
     ),
   ),
 );
 
 /// Creates an `<ol>` element wrapper for JSX-style composition.
-El $ol({
+El<ReactElement> $ol({
   String? className,
   String? id,
   int? start,
@@ -874,20 +729,18 @@ El $ol({
 }
 
 /// Creates a `<li>` element wrapper for JSX-style composition.
-El $li({
-  String? key,
+El<LiElement> $li({
   String? className,
   String? id,
   int? value,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
 }) {
   final p = _buildJsxProps(
-    key: key,
     className: className,
     id: id,
     style: style,
-    spread: spread,
+    props: props,
   );
   if (value != null) p['value'] = value;
   return El(LiElement.fromJS(_createJsxElement('li', p)));
@@ -924,7 +777,7 @@ ImgElement $img({
 }
 
 /// Creates a `<video>` element wrapper for JSX-style composition.
-El $video({
+El<ReactElement> $video({
   String? src,
   String? className,
   String? id,
@@ -956,7 +809,7 @@ El $video({
 }
 
 /// Creates an `<audio>` element wrapper for JSX-style composition.
-El $audio({
+El<ReactElement> $audio({
   String? src,
   String? className,
   String? id,
@@ -986,7 +839,7 @@ El $audio({
 // =============================================================================
 
 /// Creates a `<table>` element wrapper for JSX-style composition.
-El $table({
+El<ReactElement> $table({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -999,7 +852,7 @@ El $table({
 );
 
 /// Creates a `<thead>` element wrapper for JSX-style composition.
-El $thead({
+El<ReactElement> $thead({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -1012,7 +865,7 @@ El $thead({
 );
 
 /// Creates a `<tbody>` element wrapper for JSX-style composition.
-El $tbody({
+El<ReactElement> $tbody({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -1025,7 +878,7 @@ El $tbody({
 );
 
 /// Creates a `<tfoot>` element wrapper for JSX-style composition.
-El $tfoot({
+El<ReactElement> $tfoot({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -1038,42 +891,33 @@ El $tfoot({
 );
 
 /// Creates a `<tr>` element wrapper for JSX-style composition.
-El $tr({
-  String? key,
+El<ReactElement> $tr({
   String? className,
   String? id,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
 }) => El(
   _createJsxElement(
     'tr',
-    _buildJsxProps(
-      key: key,
-      className: className,
-      id: id,
-      style: style,
-      spread: spread,
-    ),
+    _buildJsxProps(className: className, id: id, style: style, props: props),
   ),
 );
 
 /// Creates a `<th>` element wrapper for JSX-style composition.
-El $th({
-  String? key,
+El<ReactElement> $th({
   String? className,
   String? id,
   int? colSpan,
   int? rowSpan,
   String? scope,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
 }) {
   final p = _buildJsxProps(
-    key: key,
     className: className,
     id: id,
     style: style,
-    spread: spread,
+    props: props,
   );
   if (colSpan != null) p['colSpan'] = colSpan;
   if (rowSpan != null) p['rowSpan'] = rowSpan;
@@ -1082,21 +926,19 @@ El $th({
 }
 
 /// Creates a `<td>` element wrapper for JSX-style composition.
-El $td({
-  String? key,
+El<ReactElement> $td({
   String? className,
   String? id,
   int? colSpan,
   int? rowSpan,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
 }) {
   final p = _buildJsxProps(
-    key: key,
     className: className,
     id: id,
     style: style,
-    spread: spread,
+    props: props,
   );
   if (colSpan != null) p['colSpan'] = colSpan;
   if (rowSpan != null) p['rowSpan'] = rowSpan;
@@ -1108,16 +950,16 @@ El $td({
 // =============================================================================
 
 /// Creates a `<strong>` element wrapper for JSX-style composition.
-El get $strong => El(_createJsxElement('strong', {}));
+El<ReactElement> get $strong => El(_createJsxElement('strong', {}));
 
 /// Creates an `<em>` element wrapper for JSX-style composition.
-El get $em => El(_createJsxElement('em', {}));
+El<ReactElement> get $em => El(_createJsxElement('em', {}));
 
 /// Creates a `<code>` element wrapper for JSX-style composition.
-El get $code => El(_createJsxElement('code', {}));
+El<ReactElement> get $code => El(_createJsxElement('code', {}));
 
 /// Creates a `<pre>` element wrapper for JSX-style composition.
-El $pre({
+El<ReactElement> $pre({
   String? className,
   String? id,
   Map<String, dynamic>? style,
@@ -1130,7 +972,7 @@ El $pre({
 );
 
 /// Creates a `<blockquote>` element wrapper for JSX-style composition.
-El $blockquote({
+El<ReactElement> $blockquote({
   String? className,
   String? id,
   String? cite,
@@ -1206,7 +1048,7 @@ ReactElement $iframe({
 ///   $p >> 'Content',
 /// ]
 /// ```
-El get $fragment => El(createElement(_fragment));
+El<ReactElement> get $fragment => El(createElement(_fragment));
 
 // =============================================================================
 // Generic Element Factory
@@ -1220,22 +1062,15 @@ El get $fragment => El(createElement(_fragment));
 /// ```dart
 /// $el('custom-element', className: 'my-class') >> 'Content'
 /// ```
-El $el(
+El<ReactElement> $el(
   String tagName, {
-  String? key,
   String? className,
   String? id,
   Map<String, dynamic>? style,
-  Map<String, dynamic>? spread,
+  Map<String, dynamic>? props,
 }) => El(
   _createJsxElement(
     tagName,
-    _buildJsxProps(
-      key: key,
-      className: className,
-      id: id,
-      style: style,
-      spread: spread,
-    ),
+    _buildJsxProps(className: className, id: id, style: style, props: props),
   ),
 );

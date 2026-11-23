@@ -1,0 +1,12 @@
+2025-12-11 07:44:28.300 [info] ChatSessionStore: Migrating 0 chat sessions from storage service to file system
+2025-12-11 07:44:28.405 [info] Loading development extension at /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension
+2025-12-11 07:44:28.602 [info] MCP Registry configured: https://api.mcp.github.com
+2025-12-11 07:44:28.652 [info] Settings Sync: Account status changed from uninitialized to unavailable
+2025-12-11 07:44:28.749 [info] Started local extension host with pid 75773.
+2025-12-11 07:44:29.086 [info] ["start",{"total":38}]
+2025-12-11 07:44:29.086 [info] ["suiteStart",{"path":[]}]
+2025-12-11 07:44:29.086 [info] ["suiteStart",{"path":["Commands"],"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js"}]
+2025-12-11 07:44:29.099 [info] [TEST HELPER] Starting extension activation wait...
+2025-12-11 07:44:29.100 [info] ["fail",{"path":["Commands","\"before all\" hook for \"tooManyCooks.connect command is registered\""],"duration":0,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js","speed":"fast","actual":"undefined","expected":"undefined","err":"Extension not found - check publisher name in package.json","stack":"Error: Extension not found - check publisher name in package.json\n\tat waitForExtensionActivation (out/test/test-helpers.js:79:15)\n\tat Context.<anonymous> (out/test/suite/commands.test.js:45:61)\n\tat process.processImmediate (node:internal/timers:485:21)"}]
+2025-12-11 07:44:29.113 [info] ["end",{}]
+2025-12-11 07:44:29.114 [error] 1 test failed.

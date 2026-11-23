@@ -1,0 +1,20 @@
+2025-12-10 21:44:53.024 [info] Extension host with pid 68704 started
+2025-12-10 21:44:53.025 [info] Skipping acquiring lock for /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/.vscode-test/user-data/User/workspaceStorage/f67609fc08ecf740834c97d0469a49c5.
+2025-12-10 21:44:53.034 [info] ExtensionService#_doActivateExtension vscode.github-authentication, startup: false, activationEvent: 'onAuthenticationRequest:github'
+2025-12-10 21:44:53.046 [info] ExtensionService#_doActivateExtension vscode.emmet, startup: false, activationEvent: 'onLanguage'
+2025-12-10 21:44:53.072 [info] ExtensionService#_doActivateExtension vscode.git-base, startup: true, activationEvent: '*', root cause: vscode.git
+2025-12-10 21:44:53.075 [info] ExtensionService#_doActivateExtension vscode.git, startup: true, activationEvent: '*'
+2025-12-10 21:44:53.096 [info] ExtensionService#_doActivateExtension vscode.github, startup: true, activationEvent: '*'
+2025-12-10 21:44:53.145 [warning] [vscode.git] Accessing a resource scoped configuration without providing a resource is not expected. To get the effective value for 'git.openRepositoryInParentFolders', provide the URI of a resource or 'null' for any resource.
+2025-12-10 21:44:53.145 [warning] [vscode.git] Accessing a resource scoped configuration without providing a resource is not expected. To get the effective value for 'git.showProgress', provide the URI of a resource or 'null' for any resource.
+2025-12-10 21:44:53.151 [info] Eager extensions activated
+2025-12-10 21:44:53.199 [info] ExtensionService#_doActivateExtension vscode.debug-auto-launch, startup: false, activationEvent: 'onStartupFinished'
+2025-12-10 21:44:53.200 [info] ExtensionService#_doActivateExtension vscode.merge-conflict, startup: false, activationEvent: 'onStartupFinished'
+2025-12-10 21:44:53.208 [info] ExtensionService#_doActivateExtension dart-node.too-many-cooks, startup: false, activationEvent: 'onStartupFinished'
+2025-12-10 21:44:53.403 [warning] dart-node.too-many-cooks created a webview without a content security policy: https://aka.ms/vscode-webview-missing-csp
+2025-12-10 21:44:56.364 [info] ExtensionService#_doActivateExtension vscode.configuration-editing, startup: false, activationEvent: 'onLanguage:jsonc'
+2025-12-10 21:44:56.368 [info] ExtensionService#_doActivateExtension vscode.json-language-features, startup: false, activationEvent: 'onLanguage:jsonc'
+2025-12-10 21:44:56.392 [info] ExtensionService#_doActivateExtension vscode.typescript-language-features, startup: false, activationEvent: 'onLanguage:jsonc'
+2025-12-10 21:44:56.582 [warning] Accessing a resource scoped configuration without providing a resource is not expected. To get the effective value for 'files.watcherExclude', provide the URI of a resource or 'null' for any resource.
+2025-12-10 21:44:56.899 [info] Extension host terminating: renderer closed the MessagePort
+2025-12-10 21:44:56.908 [info] Extension host with pid 68704 exiting with code 0

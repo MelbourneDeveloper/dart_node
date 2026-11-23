@@ -1,0 +1,19 @@
+2025-12-11 07:47:01.862 [info] ChatSessionStore: Migrating 0 chat sessions from storage service to file system
+2025-12-11 07:47:01.961 [info] Loading development extension at /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension
+2025-12-11 07:47:02.120 [info] MCP Registry configured: https://api.mcp.github.com
+2025-12-11 07:47:02.150 [info] Settings Sync: Account status changed from uninitialized to unavailable
+2025-12-11 07:47:02.355 [info] Started local extension host with pid 78248.
+2025-12-11 07:47:02.689 [info] [0m%s%s[0m  
+2025-12-11 07:47:02.690 [info] [0m%s%s[0m    Views
+2025-12-11 07:47:02.703 [info] [TEST HELPER] Starting extension activation wait...
+2025-12-11 07:47:02.703 [info]   [31m  %d) %s[0m 1 "before all" hook for "Too Many Cooks view container is registered"
+2025-12-11 07:47:02.716 [info] [92m [0m[32m %d passing[0m[90m (%s)[0m 0 22ms
+2025-12-11 07:47:02.717 [info] [31m  %d failing[0m 1
+2025-12-11 07:47:02.717 [info] [0m  %s) %s:
+[0m[31m     %s[0m[90m
+%s
+[0m 1 Views
+       "before all" hook for "Too Many Cooks view container is registered" Error: Extension not found - check publisher name in package.json   	at waitForExtensionActivation (out/test/test-helpers.js:79:15)
+  	at Context.<anonymous> (out/test/suite/views.test.js:44:61)
+  	at process.processImmediate (node:internal/timers:485:21)
+2025-12-11 07:47:02.717 [error] 1 test failed.

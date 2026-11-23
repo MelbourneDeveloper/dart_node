@@ -1,5 +1,0 @@
-include: package:austerity/analysis_options.yaml
-
-analyzer:
-  errors:
-    unsafe_variance: ignore

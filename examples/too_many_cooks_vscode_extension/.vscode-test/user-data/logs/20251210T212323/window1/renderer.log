@@ -1,0 +1,230 @@
+2025-12-10 21:23:23.718 [info] ChatSessionStore: Migrating 0 chat sessions from storage service to file system
+2025-12-10 21:23:23.836 [info] MCP Registry configured: https://api.mcp.github.com
+2025-12-10 21:23:23.840 [info] Loading development extension at /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension
+2025-12-10 21:23:23.959 [info] Settings Sync: Account status changed from uninitialized to unavailable
+2025-12-10 21:23:25.423 [info] Started local extension host with pid 25543.
+2025-12-10 21:23:25.831 [info] ["start",{"total":38}]
+2025-12-10 21:23:25.831 [info] ["suiteStart",{"path":[]}]
+2025-12-10 21:23:25.833 [info] ["suiteStart",{"path":["Commands"],"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js"}]
+2025-12-10 21:23:25.858 [info] [TEST HELPER] Starting extension activation wait...
+2025-12-10 21:23:25.858 [info] [TEST HELPER] Extension found, checking activation status...
+2025-12-10 21:23:25.858 [info] [TEST HELPER] Extension not active, activating now...
+2025-12-10 21:23:25.858 [info] [TEST HELPER] Extension activate() completed
+2025-12-10 21:23:25.859 [info] [TEST HELPER] Checking exports - type: object
+2025-12-10 21:23:25.859 [info] [TEST HELPER] Test API verified
+2025-12-10 21:23:25.859 [info] [TEST HELPER] Extension activation complete
+2025-12-10 21:23:25.860 [info] ["testStart",{"path":["Commands","tooManyCooks.connect command is registered"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js","speed":"fast"}]
+2025-12-10 21:23:25.863 [info] ["pass",{"path":["Commands","tooManyCooks.connect command is registered"],"duration":1,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js","speed":"fast"}]
+2025-12-10 21:23:25.864 [info] ["testStart",{"path":["Commands","tooManyCooks.disconnect command is registered"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js","speed":"fast"}]
+2025-12-10 21:23:25.887 [info] ["pass",{"path":["Commands","tooManyCooks.disconnect command is registered"],"duration":3,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js","speed":"fast"}]
+2025-12-10 21:23:25.887 [info] ["testStart",{"path":["Commands","tooManyCooks.refresh command is registered"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js","speed":"fast"}]
+2025-12-10 21:23:25.893 [info] ["pass",{"path":["Commands","tooManyCooks.refresh command is registered"],"duration":23,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js","speed":"fast"}]
+2025-12-10 21:23:25.893 [info] ["testStart",{"path":["Commands","tooManyCooks.showDashboard command is registered"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js","speed":"fast"}]
+2025-12-10 21:23:25.899 [info] ["pass",{"path":["Commands","tooManyCooks.showDashboard command is registered"],"duration":6,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js","speed":"fast"}]
+2025-12-10 21:23:25.899 [info] ["testStart",{"path":["Commands","disconnect command can be executed without error when not connected"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js","speed":"fast"}]
+2025-12-10 21:23:25.900 [error] Auto-connect failed: Error: Client stopped
+	at McpClient.stop (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/mcp/client.js:145:28)
+	at Store.disconnect (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/state/store.js:90:31)
+	at /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/extension.js:146:22
+	at Zy.h (file:///Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/.vscode-test/vscode-darwin-arm64-1.106.3/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:114:41653)
+	at Zy.g (file:///Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/.vscode-test/vscode-darwin-arm64-1.106.3/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:114:40730)
+	at Zy.executeCommand (file:///Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/.vscode-test/vscode-darwin-arm64-1.106.3/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:114:40637)
+	at Object.executeCommand (file:///Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/.vscode-test/vscode-darwin-arm64-1.106.3/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:210:101000)
+	at Context.<anonymous> (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js:65:31)
+	at callFn (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runnable.js:366:21)
+	at Runnable.run (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runnable.js:354:5)
+	at Runner.runTest (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:719:10)
+	at /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:842:12
+	at next (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:634:14)
+	at /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:644:7
+	at next (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:527:14)
+	at Immediate.<anonymous> (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:612:5)
+	at process.processImmediate (node:internal/timers:485:21)
+2025-12-10 21:23:25.900 [info] ["pass",{"path":["Commands","disconnect command can be executed without error when not connected"],"duration":1,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js","speed":"fast"}]
+2025-12-10 21:23:25.900 [info] ["testStart",{"path":["Commands","showDashboard command opens a webview panel"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js","speed":"fast"}]
+2025-12-10 21:23:26.407 [info] ["pass",{"path":["Commands","showDashboard command opens a webview panel"],"duration":511,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/commands.test.js","speed":"slow"}]
+2025-12-10 21:23:26.407 [info] ["suiteStart",{"path":["Views"],"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/views.test.js"}]
+2025-12-10 21:23:26.407 [info] [TEST HELPER] Starting extension activation wait...
+2025-12-10 21:23:26.408 [info] [TEST HELPER] Extension found, checking activation status...
+2025-12-10 21:23:26.408 [info] [TEST HELPER] Extension already active
+2025-12-10 21:23:26.408 [info] [TEST HELPER] Checking exports - type: object
+2025-12-10 21:23:26.408 [info] [TEST HELPER] Test API verified
+2025-12-10 21:23:26.408 [info] [TEST HELPER] Extension activation complete
+2025-12-10 21:23:26.408 [info] ["testStart",{"path":["Views","Too Many Cooks view container is registered"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/views.test.js","speed":"fast"}]
+2025-12-10 21:23:26.408 [info] [TEST HELPER] Opening Too Many Cooks panel...
+2025-12-10 21:23:26.929 [info] [TEST HELPER] Panel opened
+2025-12-10 21:23:26.929 [info] ["pass",{"path":["Views","Too Many Cooks view container is registered"],"duration":521,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/views.test.js","speed":"slow"}]
+2025-12-10 21:23:26.929 [info] ["testStart",{"path":["Views","Agents view is accessible"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/views.test.js","speed":"fast"}]
+2025-12-10 21:23:26.929 [info] [TEST HELPER] Opening Too Many Cooks panel...
+2025-12-10 21:23:27.432 [info] [TEST HELPER] Panel opened
+2025-12-10 21:23:27.433 [info] ["pass",{"path":["Views","Agents view is accessible"],"duration":504,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/views.test.js","speed":"slow"}]
+2025-12-10 21:23:27.433 [info] ["testStart",{"path":["Views","Locks view is accessible"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/views.test.js","speed":"fast"}]
+2025-12-10 21:23:27.433 [info] [TEST HELPER] Opening Too Many Cooks panel...
+2025-12-10 21:23:27.940 [info] [TEST HELPER] Panel opened
+2025-12-10 21:23:27.942 [info] ["pass",{"path":["Views","Locks view is accessible"],"duration":508,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/views.test.js","speed":"slow"}]
+2025-12-10 21:23:27.942 [info] ["testStart",{"path":["Views","Messages view is accessible"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/views.test.js","speed":"fast"}]
+2025-12-10 21:23:27.942 [info] [TEST HELPER] Opening Too Many Cooks panel...
+2025-12-10 21:23:28.445 [info] [TEST HELPER] Panel opened
+2025-12-10 21:23:28.447 [info] ["pass",{"path":["Views","Messages view is accessible"],"duration":504,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/views.test.js","speed":"slow"}]
+2025-12-10 21:23:28.447 [info] ["testStart",{"path":["Views","Plans view is accessible"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/views.test.js","speed":"fast"}]
+2025-12-10 21:23:28.447 [info] [TEST HELPER] Opening Too Many Cooks panel...
+2025-12-10 21:23:28.953 [info] [TEST HELPER] Panel opened
+2025-12-10 21:23:28.954 [info] ["pass",{"path":["Views","Plans view is accessible"],"duration":507,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/views.test.js","speed":"slow"}]
+2025-12-10 21:23:28.955 [info] ["suiteStart",{"path":["Configuration"],"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/configuration.test.js"}]
+2025-12-10 21:23:28.955 [info] [TEST HELPER] Starting extension activation wait...
+2025-12-10 21:23:28.955 [info] [TEST HELPER] Extension found, checking activation status...
+2025-12-10 21:23:28.955 [info] [TEST HELPER] Extension already active
+2025-12-10 21:23:28.956 [info] [TEST HELPER] Checking exports - type: object
+2025-12-10 21:23:28.956 [info] [TEST HELPER] Test API verified
+2025-12-10 21:23:28.956 [info] [TEST HELPER] Extension activation complete
+2025-12-10 21:23:28.956 [info] ["testStart",{"path":["Configuration","serverPath configuration exists"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/configuration.test.js","speed":"fast"}]
+2025-12-10 21:23:28.957 [info] ["pass",{"path":["Configuration","serverPath configuration exists"],"duration":0,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/configuration.test.js","speed":"fast"}]
+2025-12-10 21:23:28.957 [info] ["testStart",{"path":["Configuration","autoConnect configuration exists"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/configuration.test.js","speed":"fast"}]
+2025-12-10 21:23:28.957 [info] ["pass",{"path":["Configuration","autoConnect configuration exists"],"duration":0,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/configuration.test.js","speed":"fast"}]
+2025-12-10 21:23:28.957 [info] ["testStart",{"path":["Configuration","autoConnect defaults to true"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/configuration.test.js","speed":"fast"}]
+2025-12-10 21:23:28.957 [info] ["pass",{"path":["Configuration","autoConnect defaults to true"],"duration":0,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/configuration.test.js","speed":"fast"}]
+2025-12-10 21:23:28.960 [info] ["testStart",{"path":["Configuration","serverPath can be updated"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/configuration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.087 [info] ["pass",{"path":["Configuration","serverPath can be updated"],"duration":125,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/configuration.test.js","speed":"slow"}]
+2025-12-10 21:23:29.088 [info] ["suiteStart",{"path":["Extension Activation"],"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js"}]
+2025-12-10 21:23:29.088 [info] [TEST HELPER] Starting extension activation wait...
+2025-12-10 21:23:29.088 [info] [TEST HELPER] Extension found, checking activation status...
+2025-12-10 21:23:29.089 [info] [TEST HELPER] Extension already active
+2025-12-10 21:23:29.089 [info] [TEST HELPER] Checking exports - type: object
+2025-12-10 21:23:29.089 [info] [TEST HELPER] Test API verified
+2025-12-10 21:23:29.089 [info] [TEST HELPER] Extension activation complete
+2025-12-10 21:23:29.089 [info] ["testStart",{"path":["Extension Activation","Extension is present and can be activated"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.095 [info] ["pass",{"path":["Extension Activation","Extension is present and can be activated"],"duration":0,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.095 [info] ["testStart",{"path":["Extension Activation","Extension exports TestAPI"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.096 [info] ["pass",{"path":["Extension Activation","Extension exports TestAPI"],"duration":0,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.096 [info] ["testStart",{"path":["Extension Activation","TestAPI has all required methods"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.096 [info] ["pass",{"path":["Extension Activation","TestAPI has all required methods"],"duration":0,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.096 [info] ["testStart",{"path":["Extension Activation","Initial state is disconnected"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.096 [info] ["pass",{"path":["Extension Activation","Initial state is disconnected"],"duration":0,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.096 [info] ["testStart",{"path":["Extension Activation","Initial state has empty arrays"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.096 [info] ["pass",{"path":["Extension Activation","Initial state has empty arrays"],"duration":0,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.096 [info] ["testStart",{"path":["Extension Activation","Initial computed values are zero"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.096 [info] ["pass",{"path":["Extension Activation","Initial computed values are zero"],"duration":1,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.096 [info] ["testStart",{"path":["Extension Activation","Extension logs activation messages"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.096 [info] ["pass",{"path":["Extension Activation","Extension logs activation messages"],"duration":0,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/extension-activation.test.js","speed":"fast"}]
+2025-12-10 21:23:29.096 [info] ["suiteStart",{"path":["MCP Integration - UI Verification"],"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js"}]
+2025-12-10 21:23:29.096 [info] [TEST HELPER] Starting extension activation wait...
+2025-12-10 21:23:29.096 [info] [TEST HELPER] Extension found, checking activation status...
+2025-12-10 21:23:29.096 [info] [TEST HELPER] Extension already active
+2025-12-10 21:23:29.097 [info] [TEST HELPER] Checking exports - type: object
+2025-12-10 21:23:29.097 [info] [TEST HELPER] Test API verified
+2025-12-10 21:23:29.097 [info] [TEST HELPER] Extension activation complete
+2025-12-10 21:23:29.125 [info] ["testStart",{"path":["MCP Integration - UI Verification","Connect to MCP server"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.436 [info] [TEST HELPER] Waiting for MCP connection...
+2025-12-10 21:23:29.437 [info] [TEST HELPER] MCP connection established
+2025-12-10 21:23:29.437 [info] ["pass",{"path":["MCP Integration - UI Verification","Connect to MCP server"],"duration":309,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"slow"}]
+2025-12-10 21:23:29.437 [info] ["testStart",{"path":["MCP Integration - UI Verification","Empty state shows empty trees"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.443 [info] 
+=== AGENTS TREE ===
+2025-12-10 21:23:29.443 [info] === END ===
+
+2025-12-10 21:23:29.443 [info] 
+=== LOCKS TREE ===
+2025-12-10 21:23:29.443 [info] - No locks
+2025-12-10 21:23:29.443 [info] === END ===
+
+2025-12-10 21:23:29.443 [info] 
+=== MESSAGES TREE ===
+2025-12-10 21:23:29.443 [info] - No messages
+2025-12-10 21:23:29.443 [info] === END ===
+
+2025-12-10 21:23:29.444 [info] 
+=== PLANS TREE ===
+2025-12-10 21:23:29.444 [info] - No plans
+2025-12-10 21:23:29.444 [info] === END ===
+
+2025-12-10 21:23:29.444 [info] ["pass",{"path":["MCP Integration - UI Verification","Empty state shows empty trees"],"duration":6,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.444 [info] ["testStart",{"path":["MCP Integration - UI Verification","Register agent-1 → label APPEARS in agents tree"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.457 [info] 
+=== AGENTS after register TREE ===
+2025-12-10 21:23:29.457 [info] - test-agent-1765362205829-1 [idle]
+2025-12-10 21:23:29.458 [info] === END ===
+
+2025-12-10 21:23:29.458 [info] ["pass",{"path":["MCP Integration - UI Verification","Register agent-1 → label APPEARS in agents tree"],"duration":14,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.458 [info] ["testStart",{"path":["MCP Integration - UI Verification","Register agent-2 → both agents visible in tree"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.462 [info] 
+=== AGENTS after second register TREE ===
+2025-12-10 21:23:29.463 [info] - test-agent-1765362205829-1 [idle]
+2025-12-10 21:23:29.463 [info] - test-agent-1765362205829-2 [idle]
+2025-12-10 21:23:29.463 [info] === END ===
+
+2025-12-10 21:23:29.463 [info] ["pass",{"path":["MCP Integration - UI Verification","Register agent-2 → both agents visible in tree"],"duration":4,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.463 [info] ["testStart",{"path":["MCP Integration - UI Verification","Acquire lock on /src/main.ts → file path APPEARS in locks tree"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.469 [info] 
+=== LOCKS after acquire TREE ===
+2025-12-10 21:23:29.469 [info] - Active (1)
+2025-12-10 21:23:29.469 [info]   - /src/main.ts [test-agent-1765362205829-1 - 600s]
+2025-12-10 21:23:29.469 [info] === END ===
+
+2025-12-10 21:23:29.469 [info] ["pass",{"path":["MCP Integration - UI Verification","Acquire lock on /src/main.ts → file path APPEARS in locks tree"],"duration":5,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.470 [info] ["testStart",{"path":["MCP Integration - UI Verification","Acquire 2 more locks → all 3 file paths visible"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.477 [info] 
+=== LOCKS after 3 acquires TREE ===
+2025-12-10 21:23:29.478 [info] - Active (3)
+2025-12-10 21:23:29.478 [info]   - /src/main.ts [test-agent-1765362205829-1 - 600s]
+2025-12-10 21:23:29.478 [info]   - /src/utils.ts [test-agent-1765362205829-1 - 600s]
+2025-12-10 21:23:29.478 [info]   - /src/types.ts [test-agent-1765362205829-2 - 600s]
+2025-12-10 21:23:29.478 [info] === END ===
+
+2025-12-10 21:23:29.478 [info] ["pass",{"path":["MCP Integration - UI Verification","Acquire 2 more locks → all 3 file paths visible"],"duration":9,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.480 [info] ["testStart",{"path":["MCP Integration - UI Verification","Release /src/utils.ts → file path DISAPPEARS from tree"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.493 [info] 
+=== LOCKS after release TREE ===
+2025-12-10 21:23:29.493 [info] - Active (2)
+2025-12-10 21:23:29.493 [info]   - /src/main.ts [test-agent-1765362205829-1 - 600s]
+2025-12-10 21:23:29.493 [info]   - /src/types.ts [test-agent-1765362205829-2 - 600s]
+2025-12-10 21:23:29.493 [info] === END ===
+
+2025-12-10 21:23:29.493 [info] ["pass",{"path":["MCP Integration - UI Verification","Release /src/utils.ts → file path DISAPPEARS from tree"],"duration":4,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.493 [info] ["testStart",{"path":["MCP Integration - UI Verification","Update plan for agent-1 → plan content APPEARS in tree"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.501 [info] 
+=== PLANS after update TREE ===
+2025-12-10 21:23:29.501 [info] - test-agent-1765362205829-1 [Writing tests]
+2025-12-10 21:23:29.501 [info]   - Goal: Implement feature X
+2025-12-10 21:23:29.501 [info]   - Task: Writing tests
+2025-12-10 21:23:29.501 [info] === END ===
+
+2025-12-10 21:23:29.501 [info] ["pass",{"path":["MCP Integration - UI Verification","Update plan for agent-1 → plan content APPEARS in tree"],"duration":6,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.502 [info] ["testStart",{"path":["MCP Integration - UI Verification","Send message agent-1 → agent-2 → message APPEARS in tree"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.514 [info] 
+=== MESSAGES after send TREE ===
+2025-12-10 21:23:29.514 [info] - test-agent-1765362205829-1 → test-agent-1765362205829-2 [Starting work on main.ts]
+2025-12-10 21:23:29.514 [info] === END ===
+
+2025-12-10 21:23:29.514 [info] ["pass",{"path":["MCP Integration - UI Verification","Send message agent-1 → agent-2 → message APPEARS in tree"],"duration":5,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.517 [info] ["testStart",{"path":["MCP Integration - UI Verification","Send 2 more messages → all 3 messages visible with correct labels"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.534 [info] 
+=== MESSAGES after 3 sends TREE ===
+2025-12-10 21:23:29.534 [info] - test-agent-1765362205829-1 → test-agent-1765362205829-2 [Done with main.ts]
+2025-12-10 21:23:29.534 [info] - test-agent-1765362205829-2 → test-agent-1765362205829-1 [Acknowledged]
+2025-12-10 21:23:29.534 [info] - test-agent-1765362205829-1 → test-agent-1765362205829-2 [Starting work on main.ts]
+2025-12-10 21:23:29.534 [info] === END ===
+
+2025-12-10 21:23:29.534 [info] ["pass",{"path":["MCP Integration - UI Verification","Send 2 more messages → all 3 messages visible with correct labels"],"duration":12,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.536 [info] ["testStart",{"path":["MCP Integration - UI Verification","Agent tree shows locks/messages for each agent"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.542 [info] 
+=== AGENTS with children TREE ===
+2025-12-10 21:23:29.542 [info] - test-agent-1765362205829-1 [1 lock, 3 msgs]
+2025-12-10 21:23:29.542 [info]   - Goal: Implement feature X [Task: Writing tests]
+2025-12-10 21:23:29.542 [info]   - /src/main.ts [600s (Editing main)]
+2025-12-10 21:23:29.542 [info]   - Messages [2 sent, 1 received (1 unread)]
+2025-12-10 21:23:29.542 [info] - test-agent-1765362205829-2 [1 lock, 3 msgs]
+2025-12-10 21:23:29.543 [info]   - /src/types.ts [600s (Types)]
+2025-12-10 21:23:29.543 [info]   - Messages [1 sent, 2 received (2 unread)]
+2025-12-10 21:23:29.543 [info] === END ===
+
+2025-12-10 21:23:29.543 [info] ["pass",{"path":["MCP Integration - UI Verification","Agent tree shows locks/messages for each agent"],"duration":1,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.548 [info] ["testStart",{"path":["MCP Integration - UI Verification","Refresh syncs all state from server"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.557 [info] ["pass",{"path":["MCP Integration - UI Verification","Refresh syncs all state from server"],"duration":6,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.560 [info] ["testStart",{"path":["MCP Integration - UI Verification","Disconnect clears all tree views"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.563 [info] ["pass",{"path":["MCP Integration - UI Verification","Disconnect clears all tree views"],"duration":2,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.567 [info] ["testStart",{"path":["MCP Integration - UI Verification","Reconnect restores all state and tree views"],"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"fast"}]
+2025-12-10 21:23:29.778 [info] [TEST HELPER] Waiting for MCP connection...
+2025-12-10 21:23:29.778 [info] [TEST HELPER] MCP connection established
+2025-12-10 21:23:29.814 [info] ["fail",{"path":["MCP Integration - UI Verification","Reconnect restores all state and tree views"],"duration":246,"currentRetry":0,"file":"/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/mcp-integration.test.js","speed":"slow","actual":"false","expected":"true","err":"At least 2 locks restored, got 0","stack":"AssertionError [ERR_ASSERTION]: At least 2 locks restored, got 0\n\tat Context.<anonymous> (out/test/suite/mcp-integration.test.js:359:16)\n\tat process.processTicksAndRejections (node:internal/process/task_queues:105:5)"}]
+2025-12-10 21:23:29.826 [info] ["end",{}]
+2025-12-10 21:23:29.826 [error] 1 test failed.

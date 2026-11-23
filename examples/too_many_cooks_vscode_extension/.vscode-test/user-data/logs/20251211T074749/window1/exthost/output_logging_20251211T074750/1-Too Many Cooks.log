@@ -1,0 +1,13 @@
+[2025-12-10T20:47:50.903Z] Extension activating...
+[2025-12-10T20:47:50.903Z] Server path: /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks/build/bin/server_node.js
+[2025-12-10T20:47:50.903Z] [Store] Store created with serverPath: /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks/build/bin/server_node.js
+[2025-12-10T20:47:50.904Z] Auto-connect: true
+[2025-12-10T20:47:50.904Z] Attempting auto-connect...
+[2025-12-10T20:47:50.904Z] [Store] connect() called, serverPath: /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks/build/bin/server_node.js
+[2025-12-10T20:47:50.904Z] [Store] Connection status: connecting
+[2025-12-10T20:47:50.904Z] [Store] Creating McpClient...
+[2025-12-10T20:47:50.904Z] [Store] Calling client.start()...
+[2025-12-10T20:47:50.904Z] Extension activated
+[2025-12-10T20:47:50.950Z] [Store] Connection failed: Client stopped
+[2025-12-10T20:47:50.951Z] Auto-connect failed: Client stopped
+[2025-12-10T20:47:50.952Z] [Store] Client closed

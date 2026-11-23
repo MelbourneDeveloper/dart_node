@@ -10,12 +10,7 @@ import 'package:dart_node_react/dart_node_react.dart';
 // Re-export React core and hooks from dart_node_react
 export 'package:dart_node_react/src/hooks.dart';
 export 'package:dart_node_react/src/react.dart'
-    show
-        createElement,
-        createElementWithChildren,
-        createFunctionalComponent,
-        createProps,
-        functionalComponent;
+    show createElement, createElementWithChildren, createProps;
 
 /// React Native core - accessed via require('react-native')
 @JS()
@@ -92,3 +87,14 @@ ReactElement rnElement(
     _ => throw StateError('Component $componentName not found'),
   };
 }
+
+/// Create a functional component - returns the component function itself
+JSFunction createFunctionalComponent(
+  ReactElement Function(JSObject props) render,
+) => ((JSAny props) => render(props as JSObject)).toJS;
+
+/// Create a React element with an inline functional component
+ReactElement functionalComponent(
+  String name,
+  ReactElement Function(JSObject props) render,
+) => createElement(createFunctionalComponent(render));

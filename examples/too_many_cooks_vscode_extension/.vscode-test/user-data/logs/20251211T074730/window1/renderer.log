@@ -1,0 +1,207 @@
+2025-12-11 07:47:31.017 [info] ChatSessionStore: Migrating 0 chat sessions from storage service to file system
+2025-12-11 07:47:31.110 [info] Loading development extension at /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension
+2025-12-11 07:47:31.279 [info] MCP Registry configured: https://api.mcp.github.com
+2025-12-11 07:47:31.314 [info] Settings Sync: Account status changed from uninitialized to unavailable
+2025-12-11 07:47:31.520 [info] Started local extension host with pid 79242.
+2025-12-11 07:47:31.845 [info] [0m%s%s[0m  
+2025-12-11 07:47:31.845 [info] [0m%s%s[0m    Views
+2025-12-11 07:47:31.858 [info] [TEST HELPER] Starting extension activation wait...
+2025-12-11 07:47:31.859 [info] [TEST HELPER] Extension found, checking activation status...
+2025-12-11 07:47:31.859 [info] [TEST HELPER] Extension not active, activating now...
+2025-12-11 07:47:31.867 [info] [TEST HELPER] Extension activate() completed
+2025-12-11 07:47:31.867 [info] [TEST HELPER] Checking exports - type: object
+2025-12-11 07:47:31.867 [info] [TEST HELPER] Test API verified
+2025-12-11 07:47:31.867 [info] [TEST HELPER] Extension activation complete
+2025-12-11 07:47:31.868 [info] [TEST HELPER] Opening Too Many Cooks panel...
+2025-12-11 07:47:32.393 [info] [TEST HELPER] Panel opened
+2025-12-11 07:47:32.393 [info]   [32m  ✔[0m[90m %s[0m[31m (%dms)[0m Too Many Cooks view container is registered 524
+2025-12-11 07:47:32.393 [info] [TEST HELPER] Opening Too Many Cooks panel...
+2025-12-11 07:47:32.897 [info] [TEST HELPER] Panel opened
+2025-12-11 07:47:32.898 [info]   [32m  ✔[0m[90m %s[0m[31m (%dms)[0m Agents view is accessible 505
+2025-12-11 07:47:32.899 [info] [TEST HELPER] Opening Too Many Cooks panel...
+2025-12-11 07:47:33.407 [info] [TEST HELPER] Panel opened
+2025-12-11 07:47:33.409 [info]   [32m  ✔[0m[90m %s[0m[31m (%dms)[0m Locks view is accessible 511
+2025-12-11 07:47:33.410 [info] [TEST HELPER] Opening Too Many Cooks panel...
+2025-12-11 07:47:33.914 [info] [TEST HELPER] Panel opened
+2025-12-11 07:47:33.916 [info]   [32m  ✔[0m[90m %s[0m[31m (%dms)[0m Messages view is accessible 506
+2025-12-11 07:47:33.916 [info] [TEST HELPER] Opening Too Many Cooks panel...
+2025-12-11 07:47:34.423 [info] [TEST HELPER] Panel opened
+2025-12-11 07:47:34.425 [info]   [32m  ✔[0m[90m %s[0m[31m (%dms)[0m Plans view is accessible 508
+2025-12-11 07:47:34.425 [info] [0m%s%s[0m    Status Bar
+2025-12-11 07:47:34.425 [info] [TEST HELPER] Starting extension activation wait...
+2025-12-11 07:47:34.425 [info] [TEST HELPER] Extension found, checking activation status...
+2025-12-11 07:47:34.426 [info] [TEST HELPER] Extension already active
+2025-12-11 07:47:34.426 [info] [TEST HELPER] Checking exports - type: object
+2025-12-11 07:47:34.426 [info] [TEST HELPER] Test API verified
+2025-12-11 07:47:34.426 [info] [TEST HELPER] Extension activation complete
+2025-12-11 07:47:34.426 [info]   [32m  ✔[0m[90m %s[0m Status bar exists after activation
+2025-12-11 07:47:34.428 [info]   [32m  ✔[0m[90m %s[0m Connection status changes are reflected
+2025-12-11 07:47:34.429 [error] Auto-connect failed: Error: Client stopped
+	at McpClient.stop (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/mcp/client.js:145:28)
+	at Store.disconnect (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/state/store.js:90:31)
+	at Object.disconnect (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test-api.js:92:33)
+	at Context.<anonymous> (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/out/test/suite/status-bar.test.js:56:19)
+	at callFn (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runnable.js:366:21)
+	at Runnable.run (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runnable.js:354:5)
+	at Runner.runTest (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:719:10)
+	at /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:842:12
+	at next (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:634:14)
+	at /Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:644:7
+	at next (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:527:14)
+	at Immediate.<anonymous> (/Users/christianfindlay/Documents/Code/dart_node/examples/too_many_cooks_vscode_extension/node_modules/@vscode/test-cli/node_modules/mocha/lib/runner.js:612:5)
+	at process.processImmediate (node:internal/timers:485:21)
+2025-12-11 07:47:34.430 [info] [0m%s%s[0m    MCP Integration - UI Verification
+2025-12-11 07:47:34.430 [info] [TEST HELPER] Starting extension activation wait...
+2025-12-11 07:47:34.430 [info] [TEST HELPER] Extension found, checking activation status...
+2025-12-11 07:47:34.430 [info] [TEST HELPER] Extension already active
+2025-12-11 07:47:34.431 [info] [TEST HELPER] Checking exports - type: object
+2025-12-11 07:47:34.431 [info] [TEST HELPER] Test API verified
+2025-12-11 07:47:34.431 [info] [TEST HELPER] Extension activation complete
+2025-12-11 07:47:34.618 [info] [TEST HELPER] Waiting for MCP connection...
+2025-12-11 07:47:34.618 [info] [TEST HELPER] MCP connection established
+2025-12-11 07:47:34.618 [info]   [32m  ✔[0m[90m %s[0m[31m (%dms)[0m Connect to MCP server 99
+2025-12-11 07:47:34.618 [info] 
+=== AGENTS TREE ===
+2025-12-11 07:47:34.619 [info] === END ===
+
+2025-12-11 07:47:34.619 [info] 
+=== LOCKS TREE ===
+2025-12-11 07:47:34.619 [info] - No locks
+2025-12-11 07:47:34.619 [info] === END ===
+
+2025-12-11 07:47:34.619 [info] 
+=== MESSAGES TREE ===
+2025-12-11 07:47:34.619 [info] - No messages
+2025-12-11 07:47:34.619 [info] === END ===
+
+2025-12-11 07:47:34.619 [info] 
+=== PLANS TREE ===
+2025-12-11 07:47:34.619 [info] - No plans
+2025-12-11 07:47:34.619 [info] === END ===
+
+2025-12-11 07:47:34.619 [info]   [32m  ✔[0m[90m %s[0m Empty state shows empty trees
+2025-12-11 07:47:34.632 [info] 
+=== AGENTS after register TREE ===
+2025-12-11 07:47:34.632 [info] - test-agent-1765399651843-1 [idle]
+2025-12-11 07:47:34.632 [info] === END ===
+
+2025-12-11 07:47:34.632 [info]   [32m  ✔[0m[90m %s[0m Register agent-1 → label APPEARS in agents tree
+2025-12-11 07:47:34.633 [info] 
+=== AGENTS after second register TREE ===
+2025-12-11 07:47:34.633 [info] - test-agent-1765399651843-1 [idle]
+2025-12-11 07:47:34.633 [info] - test-agent-1765399651843-2 [idle]
+2025-12-11 07:47:34.634 [info] === END ===
+
+2025-12-11 07:47:34.634 [info]   [32m  ✔[0m[90m %s[0m Register agent-2 → both agents visible in tree
+2025-12-11 07:47:34.635 [info] 
+=== LOCKS after acquire TREE ===
+2025-12-11 07:47:34.635 [info] - Active (1)
+2025-12-11 07:47:34.635 [info]   - /src/main.ts [test-agent-1765399651843-1 - 600s]
+2025-12-11 07:47:34.635 [info] === END ===
+
+2025-12-11 07:47:34.635 [info]   [32m  ✔[0m[90m %s[0m Acquire lock on /src/main.ts → file path APPEARS in locks tree
+2025-12-11 07:47:34.637 [info] 
+=== LOCKS after 3 acquires TREE ===
+2025-12-11 07:47:34.637 [info] - Active (3)
+2025-12-11 07:47:34.637 [info]   - /src/main.ts [test-agent-1765399651843-1 - 600s]
+2025-12-11 07:47:34.638 [info]   - /src/utils.ts [test-agent-1765399651843-1 - 600s]
+2025-12-11 07:47:34.638 [info]   - /src/types.ts [test-agent-1765399651843-2 - 600s]
+2025-12-11 07:47:34.638 [info] === END ===
+
+2025-12-11 07:47:34.638 [info]   [32m  ✔[0m[90m %s[0m Acquire 2 more locks → all 3 file paths visible
+2025-12-11 07:47:34.638 [info] 
+=== LOCKS after release TREE ===
+2025-12-11 07:47:34.639 [info] - Active (2)
+2025-12-11 07:47:34.639 [info]   - /src/main.ts [test-agent-1765399651843-1 - 600s]
+2025-12-11 07:47:34.639 [info]   - /src/types.ts [test-agent-1765399651843-2 - 600s]
+2025-12-11 07:47:34.639 [info] === END ===
+
+2025-12-11 07:47:34.639 [info]   [32m  ✔[0m[90m %s[0m Release /src/utils.ts → file path DISAPPEARS from tree
+2025-12-11 07:47:34.639 [info] 
+=== PLANS after update TREE ===
+2025-12-11 07:47:34.640 [info] - test-agent-1765399651843-1 [Writing tests]
+2025-12-11 07:47:34.640 [info]   - Goal: Implement feature X
+2025-12-11 07:47:34.640 [info]   - Task: Writing tests
+2025-12-11 07:47:34.640 [info] === END ===
+
+2025-12-11 07:47:34.640 [info]   [32m  ✔[0m[90m %s[0m Update plan for agent-1 → plan content APPEARS in tree
+2025-12-11 07:47:34.641 [info] 
+=== MESSAGES after send TREE ===
+2025-12-11 07:47:34.641 [info] - test-agent-1765399651843-1 → test-agent-1765399651843-2 [Starting work on main.ts]
+2025-12-11 07:47:34.641 [info] === END ===
+
+2025-12-11 07:47:34.641 [info]   [32m  ✔[0m[90m %s[0m Send message agent-1 → agent-2 → message APPEARS in tree
+2025-12-11 07:47:34.643 [info] 
+=== MESSAGES after 3 sends TREE ===
+2025-12-11 07:47:34.643 [info] - test-agent-1765399651843-1 → test-agent-1765399651843-2 [Done with main.ts]
+2025-12-11 07:47:34.643 [info] - test-agent-1765399651843-2 → test-agent-1765399651843-1 [Acknowledged]
+2025-12-11 07:47:34.644 [info] - test-agent-1765399651843-1 → test-agent-1765399651843-2 [Starting work on main.ts]
+2025-12-11 07:47:34.644 [info] === END ===
+
+2025-12-11 07:47:34.644 [info]   [32m  ✔[0m[90m %s[0m Send 2 more messages → all 3 messages visible with correct labels
+2025-12-11 07:47:34.644 [info] 
+=== AGENTS with children TREE ===
+2025-12-11 07:47:34.644 [info] - test-agent-1765399651843-1 [1 lock, 3 msgs]
+2025-12-11 07:47:34.644 [info]   - Goal: Implement feature X [Task: Writing tests]
+2025-12-11 07:47:34.644 [info]   - /src/main.ts [600s (Editing main)]
+2025-12-11 07:47:34.644 [info]   - Messages [2 sent, 1 received (1 unread)]
+2025-12-11 07:47:34.644 [info] - test-agent-1765399651843-2 [1 lock, 3 msgs]
+2025-12-11 07:47:34.645 [info]   - /src/types.ts [600s (Types)]
+2025-12-11 07:47:34.645 [info]   - Messages [1 sent, 2 received (2 unread)]
+2025-12-11 07:47:34.645 [info] === END ===
+
+2025-12-11 07:47:34.645 [info]   [32m  ✔[0m[90m %s[0m Agent tree shows locks/messages for each agent
+2025-12-11 07:47:34.645 [info]   [32m  ✔[0m[90m %s[0m Refresh syncs all state from server
+2025-12-11 07:47:34.645 [info]   [32m  ✔[0m[90m %s[0m Disconnect clears all tree views
+2025-12-11 07:47:34.733 [info] [TEST HELPER] Waiting for MCP connection...
+2025-12-11 07:47:34.733 [info] [TEST HELPER] MCP connection established
+2025-12-11 07:47:34.733 [info] 
+=== AGENTS after reconnect TREE ===
+2025-12-11 07:47:34.734 [info] - test-agent-1765399651843-1 [1 lock, 3 msgs]
+2025-12-11 07:47:34.734 [info]   - Goal: Implement feature X [Task: Writing tests]
+2025-12-11 07:47:34.734 [info]   - /src/main.ts [600s (Editing main)]
+2025-12-11 07:47:34.734 [info]   - Messages [2 sent, 1 received (1 unread)]
+2025-12-11 07:47:34.734 [info] - test-agent-1765399651843-2 [1 lock, 3 msgs]
+2025-12-11 07:47:34.734 [info]   - /src/types.ts [600s (Types)]
+2025-12-11 07:47:34.734 [info]   - Messages [1 sent, 2 received (2 unread)]
+2025-12-11 07:47:34.734 [info] === END ===
+
+2025-12-11 07:47:34.734 [info] 
+=== LOCKS after reconnect TREE ===
+2025-12-11 07:47:34.734 [info] - Active (2)
+2025-12-11 07:47:34.734 [info]   - /src/main.ts [test-agent-1765399651843-1 - 600s]
+2025-12-11 07:47:34.734 [info]   - /src/types.ts [test-agent-1765399651843-2 - 600s]
+2025-12-11 07:47:34.734 [info] === END ===
+
+2025-12-11 07:47:34.734 [info] 
+=== PLANS after reconnect TREE ===
+2025-12-11 07:47:34.735 [info] - test-agent-1765399651843-1 [Writing tests]
+2025-12-11 07:47:34.735 [info]   - Goal: Implement feature X
+2025-12-11 07:47:34.735 [info]   - Task: Writing tests
+2025-12-11 07:47:34.735 [info] === END ===
+
+2025-12-11 07:47:34.735 [info] 
+=== MESSAGES after reconnect TREE ===
+2025-12-11 07:47:34.735 [info] - test-agent-1765399651843-2 → test-agent-1765399651843-1 [Acknowledged]
+2025-12-11 07:47:34.735 [info] - test-agent-1765399651843-1 → test-agent-1765399651843-2 [Done with main.ts]
+2025-12-11 07:47:34.735 [info] - test-agent-1765399651843-1 → test-agent-1765399651843-2 [Starting work on main.ts]
+2025-12-11 07:47:34.735 [info] === END ===
+
+2025-12-11 07:47:34.735 [info]   [32m  ✔[0m[90m %s[0m[31m (%dms)[0m Reconnect restores all state and tree views 89
+2025-12-11 07:47:34.736 [info] [0m%s%s[0m    Extension Activation
+2025-12-11 07:47:34.736 [info] [TEST HELPER] Starting extension activation wait...
+2025-12-11 07:47:34.737 [info] [TEST HELPER] Extension found, checking activation status...
+2025-12-11 07:47:34.737 [info] [TEST HELPER] Extension already active
+2025-12-11 07:47:34.737 [info] [TEST HELPER] Checking exports - type: object
+2025-12-11 07:47:34.737 [info] [TEST HELPER] Test API verified
+2025-12-11 07:47:34.737 [info] [TEST HELPER] Extension activation complete
+2025-12-11 07:47:34.737 [info]   [31m  %d) %s[0m 1 Extension is present and can be activated
+2025-12-11 07:47:34.737 [info] [92m [0m[32m %d passing[0m[90m (%s)[0m 21 3s
+2025-12-11 07:47:34.737 [info] [31m  %d failing[0m 1
+2025-12-11 07:47:34.738 [info] [0m  %s) %s:
+[0m[31m     %s[0m[90m
+%s
+[0m 1 Extension Activation
+       Extension is present and can be activated AssertionError [ERR_ASSERTION]: Extension should be present   	at Context.<anonymous> (out/test/suite/extension-activation.test.js:49:16)
+  	at process.processImmediate (node:internal/timers:485:21)
+2025-12-11 07:47:34.738 [error] 1 test failed.

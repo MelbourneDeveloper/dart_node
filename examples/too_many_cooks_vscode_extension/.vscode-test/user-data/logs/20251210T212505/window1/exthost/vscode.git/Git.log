@@ -1,0 +1,9 @@
+2025-12-10 21:25:06.587 [info] [main] Log level: Info
+2025-12-10 21:25:06.587 [info] [main] Validating found git in: "/usr/bin/git"
+2025-12-10 21:25:06.587 [info] [main] Using git "2.50.1 (Apple Git-155)" from "/usr/bin/git"
+2025-12-10 21:25:06.587 [info] [Model][doInitialScan] Initial repository scan started
+2025-12-10 21:25:06.587 [info] > git rev-parse --show-toplevel [35ms]
+2025-12-10 21:25:06.597 [info] [Model][doInitialScan] Initial repository scan completed - repositories (0), closed repositories (0), parent repositories (1), unsafe repositories (0)
+2025-12-10 21:25:08.362 [info] > git rev-parse --show-toplevel [9ms]
+2025-12-10 21:25:09.475 [info] > git rev-parse --show-toplevel [8ms]
+2025-12-10 21:25:09.491 [info] > git rev-parse --show-toplevel [8ms]

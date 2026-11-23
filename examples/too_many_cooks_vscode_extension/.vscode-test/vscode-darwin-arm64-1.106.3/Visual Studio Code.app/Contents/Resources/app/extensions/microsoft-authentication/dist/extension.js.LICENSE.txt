@@ -1,0 +1,16 @@
+/*!
+ * NevWare21 Solutions LLC - ts-async, 0.5.4
+ * https://github.com/nevware21/ts-async
+ * Copyright (c) NevWare21 Solutions LLC and contributors. All rights reserved.
+ * Licensed under the MIT license.
+ */
+
+/*! @azure/msal-common v15.13.0 2025-09-24 */
+
+/*! @azure/msal-node v3.8.0 2025-09-24 */
+
+/*! @azure/msal-node-extensions v1.5.23 2025-09-24 */
+
+/*! https://github.com/nevware21/ts-utils v0.11.6 */
+
+/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */

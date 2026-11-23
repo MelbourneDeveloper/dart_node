@@ -1,0 +1,3 @@
+2025-12-11 17:14:37.768 [info] update#setState disabled
+2025-12-11 17:14:37.768 [info] update#ctor - updates are disabled by the environment
+2025-12-11 17:14:45.259 [info] Extension host with pid 24656 exited with code: 0, signal: unknown.
