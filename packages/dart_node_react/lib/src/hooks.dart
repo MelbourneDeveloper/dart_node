@@ -238,7 +238,8 @@ void useImperativeHandle<T>(
   final jsRef = switch (ref) {
     final Ref<Object?> r => r.jsRef,
     final JsRef jr => jr,
-    _ => ref as JSAny?,
+    final JSAny js => js,
+    _ => null,
   };
 
   final jsDeps = dependencies?.map(_toJsAny).toList().toJS;
@@ -285,7 +286,10 @@ T useMemo<T>(T Function() createFunction, [List<Object?>? dependencies]) {
 
   final jsDeps = (dependencies ?? <Object?>[]).map(_toJsAny).toList().toJS;
   final result = React.useMemo(jsCreateFunction.toJS, jsDeps);
-  return result.dartify() as T;
+  return switch (result.dartify()) {
+    final T v => v,
+    _ => throw StateError('useMemo returned unexpected type'),
+  };
 }
 
 /// Returns a memoized version of [callback] that only changes if one of the
@@ -315,11 +319,11 @@ T useMemo<T>(T Function() createFunction, [List<Object?>? dependencies]) {
 ///
 /// Learn more: https://reactjs.org/docs/hooks-reference.html#usecallback
 JSFunction useCallback(Function callback, List<Object?> dependencies) {
-  final jsCallback = (callback is void Function())
-      ? callback.toJS
-      : (callback is void Function(JSAny))
-      ? callback.toJS
-      : throw StateError('Unsupported callback type: ${callback.runtimeType}');
+  final jsCallback = switch (callback) {
+    final void Function() fn => fn.toJS,
+    final void Function(JSAny) fn => fn.toJS,
+    _ => throw StateError('Unsupported callback type: ${callback.runtimeType}'),
+  };
 
   final jsDeps = dependencies.map(_toJsAny).toList().toJS;
   return React.useCallback(jsCallback, jsDeps);
@@ -366,7 +370,16 @@ JSFunction useCallback(Function callback, List<Object?> dependencies) {
 /// Learn more: https://reactjs.org/docs/hooks-reference.html#usedebugvalue
 void useDebugValue<T>(T value, [String Function(T)? format]) {
   final jsValue = _toJsAny(value);
-  JSString jsFormatFn(JSAny? v) => format!(v.dartify() as T).toJS;
+  JSString jsFormatFn(JSAny? v) {
+    final dartValue = switch (v) {
+      null => value,
+      final jsVal => switch (jsVal.dartify()) {
+        final T val => val,
+        _ => value, // fallback to original value
+      },
+    };
+    return format!(dartValue).toJS;
+  }
   final jsFormat = (format != null) ? jsFormatFn.toJS : null;
 
   _reactUseDebugValue(jsValue, jsFormat);

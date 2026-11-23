@@ -96,49 +96,47 @@ ReactElement loginScreen({required AuthEffects authEffects, Fetch? fetchFn}) =>
       );
     });
 
-void _performLogin({
+Future<void> _performLogin({
   required String email,
   required String password,
   required AuthEffects authEffects,
   required FormEffects formEffects,
   Fetch? fetchFn,
-}) {
+}) async {
   final doFetch = fetchFn ?? fetchJson;
-  doFetch(
-        '$apiUrl/auth/login',
-        method: 'POST',
-        body: {'email': email, 'password': password},
-      )
-      .then((result) {
-        result.match(
-          onSuccess: (response) {
-            final data = response['data'];
-            switch (data) {
-              case final JSObject d:
-                final token = d['token'];
-                final user = switch (d['user']) {
-                  final JSObject u => u,
-                  _ => null,
-                };
-                switch (token) {
-                  case final JSString t:
-                    authEffects.setToken(t);
-                    authEffects.setUser(user);
-                    authEffects.setView('tasks');
-                  case _:
-                    formEffects.setError('No token in response');
-                }
+  try {
+    final result = await doFetch(
+      '$apiUrl/auth/login',
+      method: 'POST',
+      body: {'email': email, 'password': password},
+    );
+    result.match(
+      onSuccess: (response) {
+        final data = response['data'];
+        switch (data) {
+          case final JSObject d:
+            final token = d['token'];
+            final user = switch (d['user']) {
+              final JSObject u => u,
+              _ => null,
+            };
+            switch (token) {
+              case final JSString t:
+                authEffects.setToken(t);
+                authEffects.setUser(user);
+                authEffects.setView('tasks');
               case _:
-                formEffects.setError('Login failed');
+                formEffects.setError('No token in response');
             }
-          },
-          onError: (message) => formEffects.setError(message),
-        );
-      })
-      .catchError((Object e) {
-        formEffects.setError(e.toString());
-      })
-      .whenComplete(() {
-        formEffects.setLoading(false);
-      });
+          case _:
+            formEffects.setError('Login failed');
+        }
+      },
+      onError: (message) => formEffects.setError(message),
+    );
+  } on Object catch (e) {
+    formEffects.setError(e.toString());
+  } finally {
+    formEffects.setLoading(false);
+  }
 }

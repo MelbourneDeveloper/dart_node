@@ -1,3 +1,4 @@
+import 'package:nadz/nadz.dart';
 import 'package:shared/models/task.dart';
 
 /// In-memory task storage and operations
@@ -35,8 +36,8 @@ class TaskService {
   List<Task> findByUser(String userId) =>
       _tasks.values.where((t) => t.userId == userId).toList();
 
-  /// Update a task
-  Task? update(
+  /// Update a task - returns Error if task not found
+  Result<Task, String> update(
     String id, {
     String? title,
     String? description,
@@ -44,7 +45,9 @@ class TaskService {
     TaskPriority? priority,
   }) {
     final task = _tasks[id];
-    if (task == null) return null;
+    if (task == null) {
+      return const Error('Task not found');
+    }
 
     final updated = task.copyWith(
       title: title,
@@ -54,9 +57,11 @@ class TaskService {
       updatedAt: DateTime.now(),
     );
     _tasks[id] = updated;
-    return updated;
+    return Success(updated);
   }
 
-  /// Delete a task
-  bool delete(String id) => _tasks.remove(id) != null;
+  /// Delete a task - returns Error if task not found
+  Result<void, String> delete(String id) => (_tasks.remove(id) != null)
+      ? const Success(null)
+      : const Error('Task not found');
 }
